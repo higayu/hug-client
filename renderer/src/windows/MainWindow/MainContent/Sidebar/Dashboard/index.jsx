@@ -8,12 +8,12 @@ function Dashboard() {
   return (
     <div
       ref={DashboardRef}
-      className="text-black bg-gray-50 flex flex-col h-full"
+      className="relative isolate text-black bg-gray-50 flex flex-col h-full"
     >
       <DashboardHeader />
 
       {/* メインコンテンツ */}
-      <div className="flex flex-1 min-h-0 overflow-hidden">
+      <div className="relative z-0 flex flex-1 min-h-0 overflow-hidden">
         <TabsContainer />
       </div>
     </div>

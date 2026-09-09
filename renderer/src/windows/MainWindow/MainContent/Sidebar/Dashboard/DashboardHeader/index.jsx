@@ -1,18 +1,24 @@
 import DateSelect from "@/components/ui/DateSelect";
 import WeekdaySelect from "@/components/ui/WeekdaySelect";
+import FanMenuButton from "./FanMenuButton";
 
 function DashboardHeader() {
   return (
     <div
       className="
         sidebar-header
-        flex items-start
+        relative z-[100]
+        flex items-center
         max-h-none
         overflow-visible
         w-full
       "
     >
-      <div className="flex w-full">
+      <div className="shrink-0">
+        <FanMenuButton />
+      </div>
+
+      <div className="flex flex-1 min-w-0">
 
         {/* 日付入力：60% */}
         <div
