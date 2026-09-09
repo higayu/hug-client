@@ -7,9 +7,9 @@ export default function SelectChildren() {
   }, [])
 
   return (
-    <div className="flex h-full min-h-0 w-full flex-col">
-      <div className="tool-content flex min-h-0 flex-1 overflow-visible">
-        <div className="min-w-0 flex-1">
+    <div className="flex h-full min-h-0 w-full flex-col overflow-hidden">
+      <div className="tool-content min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
+        <div className="min-w-0">
           <TodayChildrenList />
         </div>
       </div>
