@@ -9,6 +9,8 @@ import { useToast } from "@/provider/ToastProvider/ToastContext.jsx";
 import { useAppState } from "@/AppStateContext";
 import { useNote } from "@/hooks/useNote";
 import PersonalRecordButton from "@/components/common/PersonalRecordButton";
+import CopyButton from "@/components/ui/CopyButton";
+
 
 export default function MemoInputBox({
   memoType,
@@ -406,6 +408,13 @@ export default function MemoInputBox({
       />
 
       <div className="mt-2 flex gap-2 items-stretch">
+        <CopyButton 
+          text={value}
+          className='bg-white hover:bg-slate-500 inline-flex items-center gap-2 rounded-2xl px-3 py-2 text-sm shadow-sm active:scale-[0.98]'
+          fontStyle='text-black'
+          title='個人記録用メモをコピー'
+         />
+
         <button
           type="button"
           onClick={handleSave}
