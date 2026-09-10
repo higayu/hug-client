@@ -76,7 +76,7 @@ export function AppStateProvider({ children }) {
   const authenticatedStaffId = useSelector(selectAuthenticatedStaffId)
 
   const [isInitialized, setIsInitialized] = useState(false)
-  const [activeSidebarTab, setActiveSidebarTab] = useState('tools')
+  const [activeSidebarTab, setActiveSidebarTab] = useState('FanContent')
   const [activeFanContentPanel, setActiveFanContentPanel] = useState(
     FAN_CONTENT_PANELS.AI_SUPPORT
   )
