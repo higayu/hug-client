@@ -55,6 +55,7 @@ export default function PersonalRecordGetMonthBtn({
   monthStr,
   disabled = false,
   onServiceRecordsUpdated,
+  onDebugResult,
 }) {
   const {
     SELECT_CHILD,
@@ -119,6 +120,8 @@ export default function PersonalRecordGetMonthBtn({
         facilityId,
         year_month: yearMonth,
       });
+
+      onDebugResult?.(result);
 
       if (!result.ok) {
         console.error(`[${LOG_TAG}] 取得失敗:`, result.error);
@@ -199,6 +202,10 @@ export default function PersonalRecordGetMonthBtn({
       });
       onServiceRecordsUpdated?.();
     } catch (error) {
+      onDebugResult?.({
+        ok: false,
+        error: error instanceof Error ? error.message : String(error),
+      });
       console.error(`[${LOG_TAG}] 例外:`, error);
       showErrorToast(
         "個人記録の取得・保存でエラーが発生しました"
@@ -219,6 +226,7 @@ export default function PersonalRecordGetMonthBtn({
     showErrorToast,
     loadDataBase,
     onServiceRecordsUpdated,
+    onDebugResult,
   ]);
 
   const isDisabled =

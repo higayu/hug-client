@@ -6,6 +6,7 @@ export default function MonthControls({
   onMonthChange,
   disabled = false,
   onServiceRecordsUpdated,
+  onDebugResult,
 }) {
   const handleMonthChange = (event) => {
     onMonthChange(event.target.value);
@@ -32,6 +33,7 @@ export default function MonthControls({
         monthStr={month}
         disabled={disabled}
         onServiceRecordsUpdated={onServiceRecordsUpdated}
+        onDebugResult={onDebugResult}
       />
     </div>
   );

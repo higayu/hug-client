@@ -27,6 +27,7 @@ export default function PersonalRecordGetDayBtn({
   dateStr,
   disabled = false,
   onServiceRecordsUpdated,
+  onDebugResult,
 }) {
   const { SELECT_CHILD, FACILITY_ID, STAFF_ID, CURRENT_YMD, DATABASE_TYPE } = useAppState();
   const { showSuccessToast, showErrorToast } = useToast();
@@ -70,6 +71,8 @@ export default function PersonalRecordGetDayBtn({
         facilityId,
         currentYmd,
       });
+
+      onDebugResult?.(result);
 
       if (!result.ok) {
         console.error(`[${LOG_TAG}] 取得失敗:`, result.error);
@@ -135,6 +138,10 @@ export default function PersonalRecordGetDayBtn({
       });
       onServiceRecordsUpdated?.();
     } catch (e) {
+      onDebugResult?.({
+        ok: false,
+        error: e instanceof Error ? e.message : String(e),
+      });
       console.error(`[${LOG_TAG}] 例外:`, e);
       showErrorToast("個人記録の取得・保存でエラーが発生しました");
     } finally {
@@ -153,6 +160,7 @@ export default function PersonalRecordGetDayBtn({
     DATABASE_TYPE,
     loadDataBase,
     onServiceRecordsUpdated,
+    onDebugResult,
   ]);
 
   return (

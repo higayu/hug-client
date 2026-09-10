@@ -1,4 +1,5 @@
 // @/common/hug_function/PersonalRecordManagerPanel2/SwitchPanel/index.jsx
+import { useState } from "react";
 import MonthControls from "./MonthControls";
 import DayControls from "./DayControls";
 
@@ -23,6 +24,7 @@ export default function PersonSwitchPanel({
   onServiceRecordsUpdated,
   className=''
 }) {
+  const [debugResult, setDebugResult] = useState(null);
   const isMonth = value === PERIOD_TYPES.MONTH;
 
   const nextValue = isMonth
@@ -42,9 +44,8 @@ export default function PersonSwitchPanel({
   };
 
   return (
-    <div
-      className={className}
-    >
+    <div className="w-full">
+      <div className={className}>
       {/* 切替ボタン */}
       <button
         type="button"
@@ -88,6 +89,7 @@ export default function PersonSwitchPanel({
             onMonthChange={onMonthChange}
             disabled={disabled}
             onServiceRecordsUpdated={onServiceRecordsUpdated}
+            onDebugResult={setDebugResult}
           />
         ) : (
           <DayControls
@@ -95,8 +97,21 @@ export default function PersonSwitchPanel({
             onDateChange={onDateChange}
             disabled={disabled}
             onServiceRecordsUpdated={onServiceRecordsUpdated}
+            onDebugResult={setDebugResult}
           />
         )}
+      </div>
+      </div>
+
+      <div className="mt-3 w-full rounded border border-gray-300 bg-gray-50 p-3">
+        <div className="mb-2 text-xs font-bold text-gray-700">
+          取得処理デバッグ
+        </div>
+        <pre className="max-h-64 overflow-auto whitespace-pre-wrap break-all text-xs text-gray-800">
+          {debugResult === null
+            ? "取得処理はまだ実行されていません。"
+            : JSON.stringify(debugResult, null, 2)}
+        </pre>
       </div>
     </div>
   );

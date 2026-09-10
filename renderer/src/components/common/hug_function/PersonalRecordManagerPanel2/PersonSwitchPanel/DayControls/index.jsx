@@ -7,6 +7,7 @@ export default function DayControls({
   onDateChange,
   disabled = false,
   onServiceRecordsUpdated,
+  onDebugResult,
 }) {
   const handleDateChange = (event) => {
     onDateChange(event.target.value);
@@ -33,6 +34,7 @@ export default function DayControls({
         dateStr={date}
         disabled={disabled}
         onServiceRecordsUpdated={onServiceRecordsUpdated}
+        onDebugResult={onDebugResult}
       />
     </div>
   );
