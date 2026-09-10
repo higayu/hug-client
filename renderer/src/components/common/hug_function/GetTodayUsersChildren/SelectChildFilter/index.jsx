@@ -9,7 +9,7 @@ export default function SelectChildFilter() {
   return (
     <div>
       <select
-        className="w-full p-1 border border-gray-300 rounded text-xs bg-white text-black"
+        className="p-1 border border-gray-300 rounded text-sm bg-white text-black"
         value={String(SELECT_CHILD_FILTER_MODE ?? 1)} // 初期値を 1 に変更
         onChange={(e) => setSelectChildFilterMode(Number(e.target.value))}
       >

@@ -3,7 +3,7 @@ import { useAppState } from '@/AppStateContext'
 import { splitChildrenData } from '@/AppStateContext/splitChildrenData'
 import { TABS } from '@/components/common/constants'
 import { useTodayChildrenListController } from './useTodayChildrenListController'
-import ChildMemoPanel from './ChildMemoPanel'
+import ChildAttendancePanel from './ChildAttendancePanel'
 import GetTodayUsersChildren from './GetTodayUsersChildren'
 
 const TAB_ITEMS = [
@@ -475,7 +475,7 @@ export default function TodayChildrenList() {
 
       {/* 元の SelectChildren と同じ実データ連動のメモ/出欠パネル */}
       <div className="mt-2 min-h-0 flex-1">
-        <ChildMemoPanel />
+        <ChildAttendancePanel />
       </div>
     </div>
   )

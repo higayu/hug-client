@@ -12,7 +12,6 @@ import { isAttendanceDataLoaded } from '@/utils/attendance/helpers/attendanceSta
 import './index.css'
 import PersonalRecordCheckPanel from '@/components/common/hug_function/PersonalRecordCheckPanel'
 import ProfessionalSupportCheckPanel2 from '@/components/common/hug_function/ProfessionalSupportCheckPanel2'
-import GetTodayUsersChildren from '@/components/common/hug_function/GetTodayUsersChildren'
 
 const pickValue = (...values) => {
   for (const value of values) {
@@ -32,7 +31,7 @@ const isTimeFormat = (value) => {
   return /^\d{2}:\d{2}$/.test(value.trim())
 }
 
-export default function ChildMemoPanel() {
+export default function ChildAttendancePanel() {
   const dispatch = useDispatch()
   const appStateValue = useAppState()
 
@@ -328,7 +327,7 @@ export default function ChildMemoPanel() {
   // 入退室ボタン調査ログ
   // =============================================================
   useEffect(() => {
-    console.group('[ChildMemoPanel] 入退室ボタン調査')
+    console.group('[ChildAttendancePanel] 入退室ボタン調査')
 
     console.log('selectChild:', selectChild)
     console.log('SELECT_CHILD:', SELECT_CHILD)
@@ -431,12 +430,6 @@ export default function ChildMemoPanel() {
   const renderPanelShell = (content) => {
     return (
       <div className="child-memo-panel flex-1 border-l border-gray-300 bg-gray-50 flex flex-col">
-        <div className="shrink-0 border-b border-gray-200 bg-white">
-          <div className="flex flex-row items-center justify-center">
-            <GetTodayUsersChildren expandDirection="down"/>
-          </div>
-        </div>
-
         {content}
       </div>
     )
@@ -476,7 +469,7 @@ export default function ChildMemoPanel() {
   // =============================================================
   const runEnter = async () => {
     if (!column5Html) {
-      console.warn('[ChildMemoPanel/runEnter] column5Html が空です', {
+      console.warn('[ChildAttendancePanel/runEnter] column5Html が空です', {
         selectChild,
         childName,
         column5,
@@ -492,7 +485,7 @@ export default function ChildMemoPanel() {
     setLoadingAction('enter')
 
     try {
-      console.group('[ChildMemoPanel/runEnter] START')
+      console.group('[ChildAttendancePanel/runEnter] START')
       console.log('selectChild:', selectChild)
       console.log('childName:', childName)
       console.log('column5:', column5)
@@ -544,7 +537,7 @@ export default function ChildMemoPanel() {
   // =============================================================
   const runLeave = async () => {
     if (!column6Html) {
-      console.warn('[ChildMemoPanel/runLeave] column6Html が空です', {
+      console.warn('[ChildAttendancePanel/runLeave] column6Html が空です', {
         selectChild,
         childName,
         column5,
@@ -561,7 +554,7 @@ export default function ChildMemoPanel() {
     setLoadingAction('leave')
 
     try {
-      console.group('[ChildMemoPanel/runLeave] START')
+      console.group('[ChildAttendancePanel/runLeave] START')
       console.log('selectChild:', selectChild)
       console.log('childName:', childName)
       console.log('column5:', column5)
@@ -614,7 +607,7 @@ export default function ChildMemoPanel() {
   // =============================================================
   const runAbsence = async () => {
     if (!column5Html) {
-      console.warn('[ChildMemoPanel/runAbsence] column5Html が空です', {
+      console.warn('[ChildAttendancePanel/runAbsence] column5Html が空です', {
         selectChild,
         childName,
         column5,
@@ -630,7 +623,7 @@ export default function ChildMemoPanel() {
     setLoadingAction('absence')
 
     try {
-      console.group('[ChildMemoPanel/runAbsence] START')
+      console.group('[ChildAttendancePanel/runAbsence] START')
       console.log('selectChild:', selectChild)
       console.log('childName:', childName)
       console.log('column5:', column5)
@@ -691,13 +684,20 @@ export default function ChildMemoPanel() {
         )}
       </div>
 
-      <PersonalRecordCheckPanel className="py-2" />
+      <div className="mt-2 flex w-full gap-1">
+        <PersonalRecordCheckPanel
+          className="min-w-0 flex-1"
+          expandDirection="up"
+        />
 
-      <ProfessionalSupportCheckPanel2
-        logTag="ChildMemoPanel"
-        className="mt-2 w-full items-stretch px-0"
-        labelClassName="w-full"
-      />
+        <ProfessionalSupportCheckPanel2
+          logTag="ChildAttendancePanel"
+          className="min-w-0 flex-1 items-stretch px-0"
+          labelClassName="w-full"
+          expandDirection="up"
+        />
+      </div>
+
     </div>
   )
 }

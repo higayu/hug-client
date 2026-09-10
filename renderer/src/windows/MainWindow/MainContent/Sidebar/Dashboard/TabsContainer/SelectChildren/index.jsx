@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import TodayChildrenList from './TodayChildrenList';
-import ChildMemoPanel from './ChildMemoPanel';
+import ChildAttendancePanel from './ChildAttendancePanel';
 import MainPanel from "./MainPanel";
 
 function ToolContent() {
@@ -14,13 +14,13 @@ function ToolContent() {
 
   return (
     <div className="w-full flex flex-col">
-      {/* SidebarContent と ChildMemoPanel を横並びに配置 */}
+      {/* SidebarContent と ChildAttendancePanel を横並びに配置 */}
       <div className="tool-content flex flex-1 min-h-0 overflow-hidden">
         <div className="flex-[5] min-w-0">
           <TodayChildrenList />
         </div>
         <div className="flex-[5] min-w-0">
-          <ChildMemoPanel />
+          <ChildAttendancePanel />
         </div>
       </div>
       {/* AI + メモツール */}
