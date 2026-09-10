@@ -19,6 +19,11 @@ export const PROMPT_DEFINITIONS = [
     itemId: 3,
     label: '専門的支援2',
   },
+  {
+    key: 'F-SOAIP',
+    itemId: 50,
+    label: 'F-SOAIP',
+  },
 ]
 
 export const DEFAULT_PROMPTS = {

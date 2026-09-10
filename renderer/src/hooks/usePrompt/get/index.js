@@ -7,6 +7,9 @@ const PROMPT_KEY_BY_ITEM_ID = {
   2: "professional1",
   3: "professional2",
   4: "personalRecord2",
+  50: "F-SOAIP",
+  100: "健康状態の分析",
+  150: "問い合わせ-個人記録の要約",// staff_idがついてないものは取得出来ない
 };
 
 /**
