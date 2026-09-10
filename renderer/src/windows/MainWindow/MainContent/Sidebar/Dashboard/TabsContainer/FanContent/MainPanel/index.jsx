@@ -84,7 +84,7 @@ export default function MainPanel() {
                 type="button"
                 className={`min-w-[100px] px-3 py-2 text-sm transition-colors ${
                   activePromptKey === key
-                    ? 'bg-sky-400 text-white'
+                    ? 'bg-green-500 text-white'
                     : 'bg-gray-200 text-gray-900 hover:bg-blue-400 hover:text-white'
                 }`}
                 onClick={() => setActivePromptKey(key)}
