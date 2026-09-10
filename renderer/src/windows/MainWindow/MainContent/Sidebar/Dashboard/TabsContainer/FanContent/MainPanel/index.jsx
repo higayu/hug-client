@@ -1,11 +1,19 @@
+import { useState } from 'react'
 import { FAN_CONTENT_PANELS, useAppState } from '@/AppStateContext'
 import PersonalRecordManagerPanel2 from '@/components/common/hug_function/PersonalRecordManagerPanel2'
 import AiContents from './AiContents'
 import ChildKadai from './ChildKadai'
 
+const INITIAL_PROMPT_TABS = [
+  { key: 'personal', label: '個人' },
+  { key: 'professional1', label: '専門的支援1' },
+  { key: 'professional2', label: '専門的支援2' },
+]
+
 export default function MainPanel() {
   const { activeFanContentPanel, USE_AI } = useAppState()
-
+  const [activePromptKey, setActivePromptKey] = useState('personal')
+  const [promptTabs, setPromptTabs] = useState(INITIAL_PROMPT_TABS)
 
   const aiNameMap = {
     gemini: 'Gemini',
@@ -25,6 +33,7 @@ export default function MainPanel() {
         : activeFanContentPanel === FAN_CONTENT_PANELS.PERSONAL_RECORD
           ? '個人記録'
           : '未選択'
+
 
   return (
     <section className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden" aria-label="メインパネル">
@@ -50,7 +59,11 @@ export default function MainPanel() {
 
       <div className="min-h-0 min-w-0 flex-1 overflow-y-auto bg-white" role="tabpanel">
         {activeFanContentPanel === FAN_CONTENT_PANELS.AI_SUPPORT && (
-          <AiContents />
+          <AiContents
+            activePromptKey={activePromptKey}
+            onPromptChange={setActivePromptKey}
+            onPromptTabsChange={setPromptTabs}
+          />
         )}
 
         {activeFanContentPanel === FAN_CONTENT_PANELS.CHILD_KADAI && (
@@ -61,6 +74,27 @@ export default function MainPanel() {
           <PersonalRecordManagerPanel2 />
         )}
       </div>
+
+      {activeFanContentPanel === FAN_CONTENT_PANELS.AI_SUPPORT && promptTabs.length > 0 && (
+        <footer className="shrink-0 border-t border-gray-600 bg-gray-700">
+          <div className="flex flex-wrap">
+            {promptTabs.map(({ key, label }) => (
+              <button
+                key={key}
+                type="button"
+                className={`min-w-[100px] px-3 py-2 text-sm transition-colors ${
+                  activePromptKey === key
+                    ? 'bg-sky-400 text-white'
+                    : 'bg-gray-200 text-gray-900 hover:bg-blue-400 hover:text-white'
+                }`}
+                onClick={() => setActivePromptKey(key)}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </footer>
+      )}
     </section>
   )
 }

@@ -6,7 +6,7 @@ import AccountInfoPanel from "@/components/ui/AccountInfoPanel";
 import { AI_PROMPT_COMPONENT_MAP } from "./PromptBox"
 import { sendPromptToOllama } from "./send/sendPromptToOllama";
 
-export default function OllamaContent() {
+export default function OllamaContent({ activePromptKey, onPromptChange, onPromptTabsChange }) {
   const { appState } = useAppState();
   const { showSuccessToast, showErrorToast, showInfoToast } = useToast();
   const [ollamaResults, setOllamaResults] = useState({});
@@ -70,6 +70,9 @@ export default function OllamaContent() {
     <div className="flex flex-col items-center justify-center w-full p-2 space-y-3">
       <PromptBox
         componentMap={AI_PROMPT_COMPONENT_MAP}
+        activeKey={activePromptKey}
+        onActiveKeyChange={onPromptChange}
+        onTabsChange={onPromptTabsChange}
         sendPrompt={sendPrompt}
         aiName="Ollama"
         renderOllamaResultArea={renderOllamaResultArea}

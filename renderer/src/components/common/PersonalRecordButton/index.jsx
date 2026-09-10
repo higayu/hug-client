@@ -21,10 +21,10 @@ export default function PersonalRecordButton({
       disabled={disabled}
       title='個人記録を開く'
       className={`
-        bg-[#4CAF50] text-white
+        bg-[#00a405] text-white
         cursor-pointer transition-all whitespace-nowrap
-        hover:bg-[#66BB6A] hover:scale-105
-        active:bg-[#43A047] active:scale-[0.97]
+        hover:bg-[#006305] hover:scale-105
+        active:bg-[#005004] active:scale-[0.97]
         disabled:grayscale disabled:opacity-50
         disabled:cursor-not-allowed
         disabled:hover:scale-100

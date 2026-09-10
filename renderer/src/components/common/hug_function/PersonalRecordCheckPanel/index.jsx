@@ -186,8 +186,7 @@ export default function PersonalRecordCheckPanel({
             label="個人記録"
             className={[
               "flex h-full items-center justify-center rounded-none border-0 px-2",
-              "text-xs font-bold whitespace-nowrap text-green-300",
-              "bg-transparent hover:bg-gray-700",
+              "text-xs font-bold whitespace-nowrap",
               "focus:outline-none focus:ring-1 focus:ring-inset focus:ring-green-400",
               "disabled:cursor-not-allowed disabled:opacity-40",
             ].join(" ")}

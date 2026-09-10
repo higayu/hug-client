@@ -6,7 +6,7 @@ import AccountInfoPanel from "@/components/ui/AccountInfoPanel";
 import { AI_PROMPT_COMPONENT_MAP } from "./PromptBox"
 import { sendPromptToOpenRouter } from "./send/sendPromptToOpenRouter";
 
-export default function OpenRouterContent() {
+export default function OpenRouterContent({ activePromptKey, onPromptChange, onPromptTabsChange }) {
   const { appState } = useAppState();
   const { showSuccessToast, showErrorToast, showInfoToast } = useToast();
   const [openRouterResults, setopenRouterResults] = useState({});
@@ -76,6 +76,9 @@ export default function OpenRouterContent() {
       <h2>OpenRouter-API</h2>
       <PromptBox
         componentMap={AI_PROMPT_COMPONENT_MAP}
+        activeKey={activePromptKey}
+        onActiveKeyChange={onPromptChange}
+        onTabsChange={onPromptTabsChange}
         sendPrompt={sendPrompt}
         aiName="OpenRouter"
         renderOpenRouterResultArea={renderOpenRouterResultArea}

@@ -6,7 +6,7 @@ import AccountInfoPanel from "@/components/ui/AccountInfoPanel";
 import { AI_PROMPT_COMPONENT_MAP } from "./PromptBox"
 import { sendPromptToGemini } from "./send/sendPromptToGemini";
 
-export default function GeminiContent() {
+export default function GeminiContent({ activePromptKey, onPromptChange, onPromptTabsChange }) {
   const { appState } = useAppState();
   const { showSuccessToast, showErrorToast, showInfoToast } = useToast();
   const [geminiResults, setGeminiResults] = useState({});
@@ -75,6 +75,9 @@ export default function GeminiContent() {
     <div className="flex flex-col items-center justify-center w-full p-2 space-y-3">
       <PromptBox
         componentMap={AI_PROMPT_COMPONENT_MAP}
+        activeKey={activePromptKey}
+        onActiveKeyChange={onPromptChange}
+        onTabsChange={onPromptTabsChange}
         sendPrompt={sendPrompt}
         aiName="Gemini"
         renderGeminiResultArea={renderGeminiResultArea}

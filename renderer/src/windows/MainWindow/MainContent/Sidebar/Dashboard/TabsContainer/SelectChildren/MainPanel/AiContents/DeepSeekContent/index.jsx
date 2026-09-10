@@ -5,7 +5,7 @@ import AccountInfoPanel from "@/components/ui/AccountInfoPanel";
 import { AI_PROMPT_COMPONENT_MAP } from "./PromptBox"
 import { sendPromptToDeepSeek } from "./send/sendPromptToDeepSeek";
 
-export default function DeepSeekContent() {
+export default function DeepSeekContent({ activePromptKey, onPromptChange, onPromptTabsChange }) {
   const { appState, PROMPTS } = useAppState()
 
   useEffect(() => {
@@ -20,7 +20,10 @@ export default function DeepSeekContent() {
       <PromptBox 
         sendPrompt={sendPromptToDeepSeek}
         aiName="DeepSeek"
-        componentMap={AI_PROMPT_COMPONENT_MAP} 
+        componentMap={AI_PROMPT_COMPONENT_MAP}
+        activeKey={activePromptKey}
+        onActiveKeyChange={onPromptChange}
+        onTabsChange={onPromptTabsChange} 
       />
 
       <AccountInfoPanel
