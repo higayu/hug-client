@@ -73,7 +73,6 @@ export default function GeminiContent() {
 
   return (
     <div className="flex flex-col items-center justify-center w-full p-2 space-y-3">
-      <h2>Gemini-API</h2>
       <PromptBox
         componentMap={AI_PROMPT_COMPONENT_MAP}
         sendPrompt={sendPrompt}

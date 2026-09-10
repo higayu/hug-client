@@ -16,7 +16,6 @@ export default function DeepSeekContent() {
 
   return (
     <div className="flex flex-col items-center justify-center w-full p-2 space-y-3">
-      <div>DeepSeek</div>
       <PromptBox 
         sendPrompt={sendPromptToDeepSeek}
         aiName="DeepSeek"

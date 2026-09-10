@@ -17,7 +17,6 @@ export default function OpenAiContent() {
 
   return (
     <div className="flex flex-col items-center justify-center w-full p-2 space-y-3">
-      <div>ChatGPT</div>
       <PromptBox 
         sendPrompt={sendPromptToChatGPT}
         aiName="ChatGpt"
