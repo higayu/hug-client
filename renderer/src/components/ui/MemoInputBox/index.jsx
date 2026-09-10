@@ -346,6 +346,32 @@ export default function MemoInputBox({
     setValue(event.target.value);
   }
 
+  async function handlePaste() {
+    if (!SELECT_CHILD) {
+      return;
+    }
+
+    try {
+      const clipboardText = await navigator.clipboard.readText();
+
+      editingRef.current = true;
+      setValue(clipboardText ?? "");
+
+      showSuccessToastRef.current?.(
+        `${label} に貼り付けました`,
+      );
+    } catch (error) {
+      console.error(
+        "[MemoInputBox] クリップボード貼り付けエラー",
+        error,
+      );
+
+      showErrorToastRef.current?.(
+        "クリップボードからの貼り付けに失敗しました",
+      );
+    }
+  }
+
   function handleCompositionStart() {
     editingRef.current = true;
   }
@@ -375,13 +401,28 @@ export default function MemoInputBox({
 
   return (
     <div className="mt-3">
-      <div className="flex gap-2 mt-1 mb-1 items-start">
+      <div className="flex gap-2 mt-1 mb-1 items-center">
         <label
           htmlFor={textareaId}
           className="px-2 py-1 text-xs font-bold text-gray-700"
         >
           {label}
         </label>
+        <button
+          type="button"
+          onClick={handlePaste}
+          disabled={!SELECT_CHILD}
+          className="
+            bg-white hover:bg-slate-500
+            inline-flex items-center gap-2
+            rounded-2xl px-3 py-2 text-sm text-black shadow-sm
+            active:scale-[0.98]
+            disabled:opacity-50 disabled:cursor-not-allowed
+          "
+          title="クリップボードから貼り付け"
+        >
+          貼り付け
+        </button>
       </div>
 
       <textarea
@@ -414,6 +455,7 @@ export default function MemoInputBox({
           fontStyle='text-black'
           title='個人記録用メモをコピー'
          />
+
 
         <button
           type="button"
