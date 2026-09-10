@@ -684,13 +684,20 @@ export default function ChildMemoPanel() {
         )}
       </div>
 
-      <PersonalRecordCheckPanel className="py-2" />
+      <div className="mt-2 flex w-full gap-1">
+        <PersonalRecordCheckPanel
+          className="min-w-0 flex-1"
+          expandDirection="up"
+        />
 
-      <ProfessionalSupportCheckPanel2
-        logTag="ChildMemoPanel"
-        className="mt-2 w-full items-stretch px-0"
-        labelClassName="w-full"
-      />
+        <ProfessionalSupportCheckPanel2
+          logTag="ChildMemoPanel"
+          className="min-w-0 flex-1 items-stretch px-0"
+          labelClassName="w-full"
+          expandDirection="up"
+        />
+      </div>
+
     </div>
   )
 }

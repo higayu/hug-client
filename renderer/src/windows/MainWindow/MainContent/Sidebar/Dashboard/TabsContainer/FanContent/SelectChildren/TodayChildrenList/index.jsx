@@ -338,7 +338,7 @@ export default function TodayChildrenList() {
       {/* 常時表示: Auto/取得ボタン + 取得時間/フィルター */}
       <div className="rounded-lg border border-gray-200 bg-gray-50 px-2">
         <div className="flex items-center justify-center">
-          <GetTodayUsersChildren />
+          <GetTodayUsersChildren expandDirection="down" />
         </div>
       </div>
       {/* 常時表示: 現在選択中の児童 */}

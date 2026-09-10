@@ -433,7 +433,7 @@ export default function ChildMemoPanel() {
       <div className="child-memo-panel flex-1 border-l border-gray-300 bg-gray-50 flex flex-col">
         <div className="shrink-0 border-b border-gray-200 bg-white">
           <div className="flex flex-row items-center justify-center">
-            <GetTodayUsersChildren />
+            <GetTodayUsersChildren expandDirection="down"/>
           </div>
         </div>
 

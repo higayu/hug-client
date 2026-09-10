@@ -1,4 +1,9 @@
-import { CheckCircleIcon } from "@heroicons/react/24/outline";
+import {
+  CheckCircleIcon,
+  ChevronDownIcon,
+  ChevronUpIcon,
+} from "@heroicons/react/24/outline";
+import { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 
 import PersonalRecordButton from "@/components/common/PersonalRecordButton";
@@ -32,18 +37,15 @@ export const personalRecordRegisteredLabel = (registered, checking) => {
  * @param {boolean | null | undefined} registered
  * @param {boolean} checking
  */
-export const getPersonalRecordRegisteredClass = (
-  registered,
-  checking
-) => {
+export const getPersonalRecordRegisteredClass = (registered, checking) => {
   if (checking) return "text-gray-400";
 
   if (registered === true) {
-    return "text-green-600";
+    return "text-green-400";
   }
 
   if (registered === false) {
-    return "text-orange-600";
+    return "text-orange-400";
   }
 
   return "text-gray-400";
@@ -57,11 +59,7 @@ export function PersonalRecordRegisteredStatus({
   checking,
   recordCount,
 }) {
-  const registeredText = personalRecordRegisteredLabel(
-    registered,
-    checking
-  );
-
+  const registeredText = personalRecordRegisteredLabel(registered, checking);
   const registeredClass = getPersonalRecordRegisteredClass(
     registered,
     checking
@@ -82,76 +80,168 @@ export function PersonalRecordRegisteredStatus({
 }
 
 /**
- * 個人記録 取得ボタン + 結果表示
+ * 個人記録チェックパネル
+ *
+ * 親ボタンには現在状態のみを表示し、操作は子ボタンへまとめる。
+ *
+ * @param {string} className
+ * @param {"up" | "down"} expandDirection
  */
 export default function PersonalRecordCheckPanel({
   className = "",
+  expandDirection = "up",
 }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const panelRef = useRef(null);
+
   const { checking, runCheck } = usePersonRecordCheck();
 
   const currentYmd = useSelector(selectCurrentYmd);
   const selectedChildId = useSelector(selectSelectedChild);
 
   const personalRecordStatus = useSelector((state) =>
-    selectPersonalRecordStatus(
-      state,
-      currentYmd,
-      selectedChildId
-    )
+    selectPersonalRecordStatus(state, currentYmd, selectedChildId)
   );
 
-  const todayPersonalRecordRegistered =
-    personalRecordStatus.registered;
+  const todayPersonalRecordRegistered = personalRecordStatus.registered;
+  const todayPersonalRecordCount = personalRecordStatus.recordCount;
 
-  const todayPersonalRecordCount =
-    personalRecordStatus.recordCount;
+  const expandUp = expandDirection !== "down";
+
+  useEffect(() => {
+    const handlePointerDown = (event) => {
+      if (!panelRef.current?.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handlePointerDown);
+    return () => document.removeEventListener("mousedown", handlePointerDown);
+  }, []);
+
+  const handleCheck = async () => {
+    await runCheck();
+  };
 
   return (
     <div
-      className={`inline-flex items-center gap-2 ${className}`}
+      ref={panelRef}
+      className={`relative inline-flex h-9 items-center ${className}`}
     >
-      <button
-        type="button"
-        onClick={runCheck}
-        disabled={checking}
+      {/* 展開メニュー */}
+      <div
         className={[
-          "inline-flex items-center rounded px-2 py-2 text-sm font-medium",
-          "border border-gray-300 bg-green-400 text-gray-700",
-          "hover:bg-green-700",
-          "disabled:cursor-not-allowed disabled:opacity-50",
+          "absolute left-0 z-50 flex min-w-full items-center gap-1 rounded-md",
+          "border border-gray-600 bg-gray-800 p-1 shadow-lg",
+          "transition-all duration-150 origin-center",
+          expandUp ? "bottom-full mb-1" : "top-full mt-1",
+          isOpen
+            ? "pointer-events-auto translate-y-0 opacity-100 scale-100"
+            : [
+                "pointer-events-none opacity-0 scale-95",
+                expandUp ? "translate-y-1" : "-translate-y-1",
+              ].join(" "),
         ].join(" ")}
       >
-        {checking ? "取得中…" : "個人記録-確認"}
-      </button>
+        <button
+          type="button"
+          onClick={handleCheck}
+          disabled={checking || !selectedChildId}
+          className={[
+            "inline-flex h-8 shrink-0 items-center justify-center rounded px-3",
+            "text-xs font-bold whitespace-nowrap",
+            "border border-green-500/40 bg-green-500/20 text-green-200",
+            "hover:bg-green-500/30",
+            "disabled:cursor-not-allowed disabled:opacity-40",
+          ].join(" ")}
+          title="本日の個人記録登録状態を確認"
+        >
+          {checking ? "確認中…" : "確認"}
+        </button>
 
-      <span className="text-xs text-gray-600">
-        本日の個人：
-      </span>
-
-      <PersonalRecordRegisteredStatus
-        registered={todayPersonalRecordRegistered}
-        checking={checking}
-        recordCount={todayPersonalRecordCount}
-      />
-
-      {todayPersonalRecordRegistered === true && (
-        <CheckCircleIcon
-          className="h-4 w-4 text-green-600 shrink-0"
-          title="本日の個人記録登録済み"
-          aria-label="本日の個人記録登録済み"
+        <PersonalRecordButton
+          disabled={!selectedChildId}
+          label="個人記録"
+          className="flex h-8 shrink-0 items-center justify-center rounded px-3 text-xs font-bold whitespace-nowrap"
         />
-      )}
+      </div>
 
-      <PersonalRecordButton
-        disabled={!selectedChildId}
-        label="個"
-        className="
-          flex items-center rounded-full
-          px-3 py-2
-          font-bold text-xs
-          justify-center shrink-0
-        "
-      />
+      {/* 親ボタン */}
+      <div
+        className={[
+          "inline-flex h-9 min-w-0 items-stretch overflow-hidden rounded-md",
+          "border border-gray-600 bg-gray-800 text-xs text-gray-200",
+        ].join(" ")}
+      >
+        {/*
+          左側は展開メニュー内の「個人記録」と同じ PersonalRecordButton を利用する。
+          そのため、閉じた状態でもここをクリックすれば同じ処理を実行できる。
+        */}
+        <div
+          className="flex shrink-0 items-stretch border-r border-gray-600"
+          onClick={() => setIsOpen(false)}
+        >
+          <PersonalRecordButton
+            disabled={!selectedChildId}
+            label="個人記録"
+            className={[
+              "flex h-full items-center justify-center rounded-none border-0 px-2",
+              "text-xs font-bold whitespace-nowrap text-green-300",
+              "bg-transparent hover:bg-gray-700",
+              "focus:outline-none focus:ring-1 focus:ring-inset focus:ring-green-400",
+              "disabled:cursor-not-allowed disabled:opacity-40",
+            ].join(" ")}
+          />
+        </div>
+
+        {/* 右側は状態表示とメニュー開閉専用 */}
+        <button
+          type="button"
+          onClick={() => setIsOpen((prev) => !prev)}
+          className={[
+            "inline-flex h-full min-w-0 items-center gap-2 px-2",
+            "bg-transparent text-xs text-gray-200 hover:bg-gray-700",
+            "focus:outline-none focus:ring-1 focus:ring-inset focus:ring-green-400",
+          ].join(" ")}
+          aria-expanded={isOpen}
+          title="個人記録メニューを開く"
+        >
+          <span className="inline-flex min-w-0 items-center gap-1 whitespace-nowrap">
+            <span className="text-gray-400">本日</span>
+            <PersonalRecordRegisteredStatus
+              registered={todayPersonalRecordRegistered}
+              checking={checking}
+              recordCount={todayPersonalRecordCount}
+            />
+
+            {todayPersonalRecordRegistered === true && (
+              <CheckCircleIcon
+                className="h-4 w-4 shrink-0 text-green-400"
+                title="本日の個人記録登録済み"
+                aria-label="本日の個人記録登録済み"
+              />
+            )}
+          </span>
+
+          {todayPersonalRecordCount != null && (
+            <span className="shrink-0 whitespace-nowrap text-gray-400">
+              {todayPersonalRecordCount}件
+            </span>
+          )}
+
+          {expandUp ? (
+            isOpen ? (
+              <ChevronDownIcon className="h-4 w-4 shrink-0" />
+            ) : (
+              <ChevronUpIcon className="h-4 w-4 shrink-0" />
+            )
+          ) : isOpen ? (
+            <ChevronUpIcon className="h-4 w-4 shrink-0" />
+          ) : (
+            <ChevronDownIcon className="h-4 w-4 shrink-0" />
+          )}
+        </button>
+      </div>
     </div>
   );
 }

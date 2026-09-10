@@ -3,8 +3,8 @@ import { ChevronDown, ChevronUp } from "lucide-react";
 import ToggleSecretText from "@/components/ui/ToggleSecretText";
 import CopyButton from "@/components/ui/CopyButton";
 
-export default function AccountInfoPanel({ title, items }) {
-  const [open, setOpen] = useState(true);
+export default function AccountInfoPanel({ title, items,isOpen = false }) {
+  const [open, setOpen] = useState(isOpen);
 
   return (
     <div className="w-full text-xs text-left bg-gray-50 border border-gray-200 rounded-lg">
