@@ -13,7 +13,8 @@
     "build:whisper": "cmake -S whisper.cpp -B whisper.cpp/build -DWHISPER_BUILD_EXAMPLES=ON && cmake --build whisper.cpp/build --config Release --target whisper-cli --parallel",
     "dev": "concurrently \"npm run dev:renderer\" \"wait-on http://localhost:5173 && npm run build:preload && electron . --dev\"",
     "dev:renderer": "vite --config renderer/vite.config.mjs",
-    "dist": "npm run build:preload && npm run build:renderer && electron-builder"
+    "dist": "npm run build:preload && npm run build:renderer && electron-builder",
+    "release": "npm run build:preload && npm run build:renderer && electron-builder --publish always"
   },
   "keywords": [],
   "author": "",
