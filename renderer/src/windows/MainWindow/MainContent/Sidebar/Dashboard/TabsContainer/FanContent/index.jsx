@@ -1,5 +1,5 @@
 import SelectChildren from './SelectChildren'
-import MainPanel from './MainPanel'
+import WorkingPanel from './WorkingPanel'
 import FanMenu from './FanMenu'
 
 export default function FanContent() {
@@ -20,7 +20,7 @@ export default function FanContent() {
 
       {/* 右: AppStateContext の選択児童に連動する実データパネル */}
       <div className="min-w-0 flex-1 overflow-auto rounded-lg border border-gray-200 bg-white shadow-sm">
-        <MainPanel />
+        <WorkingPanel />
       </div>
     </section>
   )
