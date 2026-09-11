@@ -4,8 +4,8 @@ import { useDispatch } from "react-redux";
 import { useAppState } from "@/AppStateContext";
 import { useToast } from '@/provider/ToastProvider/ToastContext'
 import { isHugLoggedIn } from "@/hooks/useHugCache/isHugLoggedIn.js";
-import { fetchAttendanceViaHugTab } from "@/utils/attendance/fetchAttendanceViaHugTab";
-import { extractColumnData } from "@/utils/attendance/attendanceTable";
+import { fetchAttendanceViaHugTab } from "./attendance/fetchAttendanceViaHugTab";
+import { extractColumnData } from "./attendance/attendanceTable";
 import { setExtractedData, setTableData } from "@/store/slices/attendanceSlice";
 
 const AUTO_FETCH_INTERVAL_MS = 60_000;

@@ -1,5 +1,5 @@
 import { getHugWebviewForCache } from "./getHugCache.js";
-import { waitForWebviewReady } from "@/utils/attendance/_shared/webview.js";
+import { waitForWebviewReady } from "./waitForWebviewReady.js";
 
 /**
  * HUG WebViewがログイン済みかを判定する。

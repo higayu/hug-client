@@ -5,10 +5,10 @@ import {
   clickEnterButton,
   clickAbsenceButton,
   clickExitButton,
-} from '@/utils/attendance/index.js'
+} from './AttendanceActionSection/attendance/index.js'
 import { useToast } from '@/provider/ToastProvider/ToastContext'
 import AttendanceActionSection from './AttendanceActionSection'
-import { isAttendanceDataLoaded } from '@/utils/attendance/helpers/attendanceStatus.js'
+import { isAttendanceDataLoaded } from './AttendanceActionSection/attendance/helpers/attendanceStatus.js'
 import './index.css'
 import PersonalRecordCheckPanel from '@/components/common/hug_function/PersonalRecordCheckPanel'
 import ProfessionalSupportCheckPanel2 from '@/components/common/hug_function/ProfessionalSupportCheckPanel2'
@@ -474,7 +474,7 @@ export default function ChildAttendancePanel() {
   // =============================================================
   // 入室
   // =============================================================
-  const runEnter = async () => {
+  const runEnter = async (enterOptions = {}) => {
     if (!column5Html) {
       console.warn('[ChildAttendancePanel/runEnter] column5Html が空です', {
         selectChild,
@@ -511,6 +511,9 @@ export default function ChildAttendancePanel() {
         dateStr,
         dispatch,
         updateAppState,
+        mailFlg: Number(enterOptions?.mailFlg ?? enterOptions?.mail_flg ?? 0),
+        mail_flg: Number(enterOptions?.mail_flg ?? enterOptions?.mailFlg ?? 0),
+        skipMailPrompt: enterOptions?.skipMailPrompt === true,
       })
 
       console.log('clickEnterButton result:', res)

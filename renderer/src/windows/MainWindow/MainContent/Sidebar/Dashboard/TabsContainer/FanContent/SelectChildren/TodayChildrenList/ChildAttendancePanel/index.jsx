@@ -5,10 +5,10 @@ import {
   clickEnterButton,
   clickAbsenceButton,
   clickExitButton,
-} from '@/utils/attendance/index.js'
+} from './AttendanceActionSection/attendance/index.js'
 import { useToast } from '@/provider/ToastProvider/ToastContext'
 import AttendanceActionSection from './AttendanceActionSection'
-import { isAttendanceDataLoaded } from '@/utils/attendance/helpers/attendanceStatus.js'
+import { isAttendanceDataLoaded } from './AttendanceActionSection/attendance/helpers/attendanceStatus.js'
 import './index.css'
 import PersonalRecordCheckPanel from '@/components/common/hug_function/PersonalRecordCheckPanel'
 import ProfessionalSupportCheckPanel2 from '@/components/common/hug_function/ProfessionalSupportCheckPanel2'

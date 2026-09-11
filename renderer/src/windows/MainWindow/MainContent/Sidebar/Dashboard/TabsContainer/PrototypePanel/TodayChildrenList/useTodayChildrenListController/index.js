@@ -5,7 +5,7 @@ import {
   getAttendanceItemForChild,
   isChildAbsent,
   isChildExited,
-} from "@/utils/attendance/helpers/attendanceStatus.js";
+} from "./attendanceStatus.js";
 import { TABS } from "@/components/common/constants";
 
 import { isMorningChild } from "./timeUtils";

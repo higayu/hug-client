@@ -1,4 +1,4 @@
-// src/utils/attendance/_shared/extractors.js
+// ChildAttendancePanel 専用の抽出処理
 
 /**
  * column5Html から入室ボタンの onclick を抽出

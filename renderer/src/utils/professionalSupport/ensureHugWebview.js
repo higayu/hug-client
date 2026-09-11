@@ -4,7 +4,7 @@
  */
 
 import { resolveHugWebview } from "@/hooks/useHugCache/getHugCache.js";
-import { waitForWebviewReady } from "@/utils/attendance/_shared/webview.js";
+import { waitForWebviewReady } from "@/hooks/useHugCache/waitForWebviewReady.js";
 
 const HUG_WM_BASE = "https://www.hug-ayumu.link/hug/wm";
 

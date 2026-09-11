@@ -1,4 +1,4 @@
-// src/utils/attendance/index.js
+// ChildAttendancePanel 専用の入退室処理
 
 export { clickEnterButton } from "./actions/enter.js";
 export { clickExitButton } from "./actions/exit.js";

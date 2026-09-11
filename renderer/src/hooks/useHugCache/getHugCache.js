@@ -1,6 +1,6 @@
 import { activateHugViewFirstButton } from "@/hooks/useTabs/common/index.js";
 import { setActiveWebview } from "@/utils/webview/webviewState.js";
-import { waitForWebviewReady } from "@/utils/attendance/_shared/webview.js";
+import { waitForWebviewReady } from "./waitForWebviewReady.js";
 
 export const HUGVIEW_ID = "hugview";
 

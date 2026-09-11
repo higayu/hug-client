@@ -1,10 +1,13 @@
 import {
   useCallback,
   useEffect,
+  useMemo,
+  useState,
 } from "react"
 
 import AttendancePostButton from "./AttendancePostButton"
 import ProfessionalSupportButton from "./ProfessionalSupportButton"
+import MailNotificationModal from "./MailNotificationModal"
 
 import {
   canPostEnter,
@@ -14,7 +17,7 @@ import {
   buildEnterButtonTitle,
   buildLeaveButtonTitle,
   isAfternoonEnterBlocked,
-} from "@/utils/attendance/helpers/attendanceButtonHelpers"
+} from "./attendance/helpers/attendanceButtonHelpers"
 
 /**
  * 拡張入退室フォーム相当の入室・退室・欠席 UI
@@ -49,6 +52,19 @@ export default function AttendanceActionSection({
       childId,
       dateStr,
     )
+
+  const enterHasMail = useMemo(
+    () =>
+      hasEnterMail(
+        column5Html,
+        childId,
+        childName,
+        dateStr,
+      ),
+    [column5Html, childId, childName, dateStr],
+  )
+
+  const [showEnterMailModal, setShowEnterMailModal] = useState(false)
 
   const showEnter =
     canPostEnter(column5Html)
@@ -87,66 +103,62 @@ export default function AttendanceActionSection({
    *
    * onEnterの完了後に後続処理を実行できる。
    */
-  const handleEnterClick = useCallback(
-    async (...args) => {
+  const executeEnter = useCallback(
+    async (mailFlg = 0) => {
       if (typeof onEnter !== "function") {
         console.warn(
           "[AttendanceActionSection] onEnterが設定されていません",
         )
-
-        return
+        return undefined
       }
 
       try {
         console.log(
           "[AttendanceActionSection] 入室処理開始:",
-          {
-            childId,
-            childName,
-            dateStr,
-          },
+          { childId, childName, dateStr, enterHasMail, mailFlg },
         )
 
-        /*
-         * 親コンポーネントから渡された
-         * 入室処理の完了を待つ
-         */
-        const result = await onEnter(
-          ...args,
-        )
+        const result = await onEnter({
+          mailFlg,
+          mail_flg: mailFlg,
+          skipMailPrompt: true,
+        })
 
         console.log(
           "[AttendanceActionSection] 入室処理完了:",
-          {
-            childId,
-            childName,
-            dateStr,
-            result,
-          },
+          { childId, childName, dateStr, mailFlg, result },
         )
-
         return result
       } catch (error) {
         console.error(
           "[AttendanceActionSection] 入室処理に失敗しました:",
-          {
-            childId,
-            childName,
-            dateStr,
-            error,
-          },
+          { childId, childName, dateStr, error },
         )
-
         return undefined
       }
     },
-    [
-      onEnter,
-      childId,
-      childName,
-      dateStr,
-    ],
+    [onEnter, childId, childName, dateStr, enterHasMail],
   )
+
+  const handleEnterClick = useCallback(() => {
+    if (enterHasMail) {
+      setShowEnterMailModal(true)
+      return undefined
+    }
+    return executeEnter(0)
+  }, [enterHasMail, executeEnter])
+
+  const handleMailSelect = useCallback(
+    async (mailFlg) => {
+      setShowEnterMailModal(false)
+      return executeEnter(Number(mailFlg) === 1 ? 1 : 0)
+    },
+    [executeEnter],
+  )
+
+  const handleMailCancel = useCallback(() => {
+    setShowEnterMailModal(false)
+  }, [])
 
   useEffect(() => {
     console.group(
@@ -407,14 +419,7 @@ export default function AttendanceActionSection({
         {showEnter ? (
           <AttendancePostButton
             action="enter"
-            hasMail={
-              hasEnterMail(
-                column5Html,
-                childId,
-                childName,
-                dateStr,
-              )
-            }
+            hasMail={enterHasMail}
             disabled={
               disabled ||
               afternoonBlocked
@@ -465,6 +470,14 @@ export default function AttendanceActionSection({
       ) : null}
 
       {professionalSupportButton}
+
+      <MailNotificationModal
+        open={showEnterMailModal}
+        childName={childName}
+        actionLabel="入室"
+        onSelect={handleMailSelect}
+        onCancel={handleMailCancel}
+      />
     </div>
   )
 }

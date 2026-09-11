@@ -1,4 +1,4 @@
-// src/utils/attendance/_shared/clickExecutor.js
+// PrototypePanel 専用のクリック実行処理
 
 export function buildWebviewClickExecutor({ onclickCode, buttonText, extraSelector }) {
     const hasOnclickCode = onclickCode && typeof onclickCode === "string";

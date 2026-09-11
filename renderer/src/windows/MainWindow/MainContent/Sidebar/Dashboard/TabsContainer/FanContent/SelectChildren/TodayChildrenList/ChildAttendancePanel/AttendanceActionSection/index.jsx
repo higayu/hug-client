@@ -17,7 +17,7 @@ import {
   buildEnterButtonTitle,
   buildLeaveButtonTitle,
   isAfternoonEnterBlocked,
-} from "@/utils/attendance/helpers/attendanceButtonHelpers"
+} from "./attendance/helpers/attendanceButtonHelpers"
 
 /**
  * 拡張入退室フォーム相当の入室・退室・欠席 UI
