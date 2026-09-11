@@ -467,7 +467,7 @@ export default function ChildAttendancePanel() {
   // =============================================================
   // 入室
   // =============================================================
-  const runEnter = async () => {
+  const runEnter = async (enterOptions = {}) => {
     if (!column5Html) {
       console.warn('[ChildAttendancePanel/runEnter] column5Html が空です', {
         selectChild,
@@ -504,6 +504,11 @@ export default function ChildAttendancePanel() {
         dateStr,
         dispatch,
         updateAppState,
+        // renderer の通知確認モーダルで選んだ値を attendance helper へ渡す。
+        // helper 側は mailFlg / mail_flg のどちらでも受け取れるようにすると安全。
+        mailFlg: Number(enterOptions?.mailFlg ?? enterOptions?.mail_flg ?? 0),
+        mail_flg: Number(enterOptions?.mail_flg ?? enterOptions?.mailFlg ?? 0),
+        skipMailPrompt: enterOptions?.skipMailPrompt === true,
       })
 
       console.log('clickEnterButton result:', res)

@@ -157,3 +157,71 @@
   color: #999;
   font-size: 12px;
 }
+
+/* HUG #addtend_dialog_mail 相当: renderer 側の保護者通知確認 */
+.hug-mail-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.hug-mail-dialog-box {
+  min-width: 320px;
+  max-width: 90vw;
+  padding: 20px 24px 18px;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.28);
+  color: #222;
+  text-align: center;
+  font-size: 14px;
+}
+
+.hug-mail-dialog-title {
+  margin: 0 0 8px;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.hug-mail-dialog-sub {
+  margin: 0 0 18px;
+  color: #555;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.hug-mail-dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+.hug-mail-dialog-actions button {
+  min-width: 120px;
+  padding: 8px 16px;
+  border: 1px solid #888;
+  border-radius: 4px;
+  background: #f5f5f5;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.hug-mail-dialog-actions .hug-mail-send-yes {
+  border-color: #2e6da4;
+  background: #337ab7;
+  color: #fff;
+}
+
+.hug-mail-dialog-actions .hug-mail-send-no {
+  background: #fff;
+}
+
+.hug-mail-dialog-actions .hug-mail-cancel {
+  background: #fff;
+  color: #666;
+}

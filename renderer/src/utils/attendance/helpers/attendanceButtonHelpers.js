@@ -65,7 +65,7 @@ export function buildEnterButtonTitle(column5Html, children_id, dateStr) {
   const parts = [];
   if (isEnterMailEnabled(item)) {
     parts.push("メール確認あり（is_mail=1）");
-    parts.push("本番ボタンがあれば本番フローへ委譲");
+    parts.push("rendererで通知有無を選択");
   }
   parts.push("ajax_attendance.php へ POST（Cache）");
   if (
@@ -81,7 +81,7 @@ export function buildLeaveButtonTitle(column6Html, children_id, dateStr) {
   const parts = [];
   if (isLeaveMailEnabled(item)) {
     parts.push("メール確認あり（is_mail=1）");
-    parts.push("本番ボタンがあれば本番フローへ委譲");
+    parts.push("rendererで通知有無を選択");
   }
   parts.push("ajax_attendance.php へ POST（Cache）");
   return parts.join(" / ");
