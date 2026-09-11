@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import PersonalRecordManagerPanel2 from '@/components/common/hug_function/PersonalRecordManagerPanel2'
 import AiContents from './AiContents'
 import ChildKadai from './ChildKadai'
@@ -10,15 +10,49 @@ const TABS = [
 ]
 
 const INITIAL_PROMPT_TABS = [
-  { key: 'personal', label: '個人' },
-  { key: 'professional1', label: '専門的支援1' },
-  { key: 'professional2', label: '専門的支援2' },
+  {
+    key: 'personal',
+    label: '個人',
+    activeClass: 'bg-green-500 text-white',
+    inactiveClass: 'bg-white text-gray-900 hover:bg-green-100',
+  },
+  {
+    key: 'professional1',
+    label: '専門的支援1',
+    activeClass: 'bg-purple-300 text-purple-950',
+    inactiveClass: 'bg-white text-gray-900 hover:bg-purple-100',
+  },
+  {
+    key: 'professional2',
+    label: '専門的支援2',
+    activeClass: 'bg-purple-600 text-white',
+    inactiveClass: 'bg-white text-gray-900 hover:bg-purple-100',
+  },
 ]
 
 export default function MainPanel() {
   const [activeTab, setActiveTab] = useState('ai')
   const [activePromptKey, setActivePromptKey] = useState('personal')
   const [promptTabs, setPromptTabs] = useState(INITIAL_PROMPT_TABS)
+
+  const handlePromptTabsChange = useCallback((tabs) => {
+    const mergedTabs = tabs.map((tab) => {
+      const style = INITIAL_PROMPT_TABS.find(
+        (item) => item.key === tab.key
+      )
+
+      return {
+        ...tab,
+        activeClass:
+          style?.activeClass ?? 'bg-sky-500 text-white',
+        inactiveClass:
+          style?.inactiveClass ??
+          'bg-white text-gray-900 hover:bg-gray-100',
+      }
+    })
+
+    setPromptTabs(mergedTabs)
+  }, [])
 
   return (
     <section
@@ -31,6 +65,7 @@ export default function MainPanel() {
       >
         {TABS.map((tab) => {
           const active = activeTab === tab.id
+
           return (
             <button
               key={tab.id}
@@ -58,30 +93,43 @@ export default function MainPanel() {
           <AiContents
             activePromptKey={activePromptKey}
             onPromptChange={setActivePromptKey}
-            onPromptTabsChange={setPromptTabs}
+            onPromptTabsChange={handlePromptTabsChange}
           />
         )}
-        {activeTab === 'child-kadai' && <ChildKadai />}
-        {activeTab === 'personal-record' && <PersonalRecordManagerPanel2 />}
+
+        {activeTab === 'child-kadai' && (
+          <ChildKadai />
+        )}
+
+        {activeTab === 'personal-record' && (
+          <PersonalRecordManagerPanel2 />
+        )}
       </div>
 
       {activeTab === 'ai' && promptTabs.length > 0 && (
         <footer className="shrink-0 border-t border-gray-600 bg-gray-700">
           <div className="flex flex-wrap">
-            {promptTabs.map(({ key, label }) => (
-              <button
-                key={key}
-                type="button"
-                className={`min-w-[100px] px-3 py-2 text-sm transition-colors ${
-                  activePromptKey === key
-                    ? 'bg-sky-400 text-white'
-                    : 'bg-gray-200 text-gray-900 hover:bg-blue-400 hover:text-white'
-                }`}
-                onClick={() => setActivePromptKey(key)}
-              >
-                {label}
-              </button>
-            ))}
+            {promptTabs.map(
+              ({
+                key,
+                label,
+                activeClass = 'bg-sky-500 text-white',
+                inactiveClass = 'bg-white text-gray-900 hover:bg-gray-100',
+              }) => (
+                <button
+                  key={key}
+                  type="button"
+                  className={`min-w-[100px] px-3 py-2 text-sm font-medium transition-colors ${
+                    activePromptKey === key
+                      ? activeClass
+                      : inactiveClass
+                  }`}
+                  onClick={() => setActivePromptKey(key)}
+                >
+                  {label}
+                </button>
+              )
+            )}
           </div>
         </footer>
       )}

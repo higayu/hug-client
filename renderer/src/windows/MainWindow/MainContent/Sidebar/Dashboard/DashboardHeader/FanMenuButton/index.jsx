@@ -7,16 +7,16 @@ const baseTabs = [
     label: 'クイック操作',
   },
   {
-    id: 'tools',
-    label: '🧰 ツール',
-  },
-  {
     id: 'insertManageChildren',
-    label: '👶 子ども管理',
+    label: '👶 児童追加',
   },
   {
     id: 'updateManager',
     label: '👥 担当編集',
+  },
+  {
+    id: 'tools',
+    label: '旧操作パネル',
   },
 ]
 

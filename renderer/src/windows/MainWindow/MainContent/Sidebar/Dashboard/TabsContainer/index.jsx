@@ -1,5 +1,5 @@
-// renderer/src/components/Sidebar/Dashboard/TabsContainer.jsx
-import ToolContent from './SelectChildren'
+// renderer\src\windows\MainWindow\MainContent\Sidebar\Dashboard\TabsContainer\index.jsx
+import PrototypePanel from './PrototypePanel'
 import InsertChildren from './InsertChildren'
 import UpdateManager from './UpdateManager'
 import { useAppState } from '@/AppStateContext';
@@ -25,7 +25,7 @@ function TabsContainer() {
 
         {activeTab === 'tools' && (
           <div className="h-full flex flex-col">
-            <ToolContent />
+            <PrototypePanel />
           </div>
         )}
 

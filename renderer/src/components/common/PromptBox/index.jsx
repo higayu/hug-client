@@ -30,7 +30,6 @@ export default function PromptBox({
       return;
     }
 
-    // 未選択、または現在のキーがcomponentMapに存在しない場合は先頭を選択。
     if (!activeKey || !componentMap?.[activeKey]) {
       const nextKey = keys[0];
 
