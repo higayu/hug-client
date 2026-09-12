@@ -11,8 +11,26 @@ export default function AddChilledSpaceBtn() {
   const spaceCount = useSelector(selectSpaceCount)
   const canAdd = useSelector(selectCanAddChilledSpace)
 
-  function onClick() {
+  async function onClick() {
     if (!canAdd) {
+      return
+    }
+
+    const confirmDialog =
+      window.electronAPI?.confirmDialog
+
+    if (typeof confirmDialog !== "function") {
+      console.error(
+        "[AddChilledSpaceBtn] confirmDialog API が利用できません"
+      )
+      return
+    }
+
+    const confirmed = await confirmDialog(
+      "作業枠を追加しますか？"
+    )
+
+    if (!confirmed) {
       return
     }
 

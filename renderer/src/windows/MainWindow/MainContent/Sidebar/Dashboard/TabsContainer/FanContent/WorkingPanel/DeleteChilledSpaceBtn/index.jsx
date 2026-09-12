@@ -11,8 +11,26 @@ export default function DeleteChilledSpaceBtn({ spaceId }) {
   const spaceCount = useSelector(selectSpaceCount)
   const canDelete = useSelector(selectCanDeleteChilledSpace)
 
-  function onClick() {
+  async function onClick() {
     if (!canDelete) {
+      return
+    }
+
+    const confirmDialog =
+      window.electronAPI?.confirmDialog
+
+    if (typeof confirmDialog !== "function") {
+      console.error(
+        "[DeleteChilledSpaceBtn] confirmDialog API が利用できません"
+      )
+      return
+    }
+
+    const confirmed = await confirmDialog(
+      "この作業枠を削除しますか？"
+    )
+
+    if (!confirmed) {
       return
     }
 
