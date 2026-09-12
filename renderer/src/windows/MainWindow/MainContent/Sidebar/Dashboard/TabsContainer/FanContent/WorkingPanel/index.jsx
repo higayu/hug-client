@@ -1,5 +1,9 @@
 import { useCallback, useState } from 'react'
+import { useSelector } from 'react-redux'
 import { FAN_CONTENT_PANELS, useAppState } from '@/AppStateContext'
+import {
+  selectSpaceActiveFanContentPanel,
+} from '@/store/slices/chilledspaceSlice'
 import PersonalRecordManagerPanel2 from '@/components/common/hug_function/PersonalRecordManagerPanel2'
 import AiContents from './AiContents'
 import ChildKadai from './ChildKadai'
@@ -27,7 +31,11 @@ const INITIAL_PROMPT_TABS = [
 ]
 
 export default function MainPanel({ spaceId }) {
-  const { activeFanContentPanel, USE_AI } = useAppState()
+  const { USE_AI } = useAppState()
+
+  const activeFanContentPanel = useSelector(
+    selectSpaceActiveFanContentPanel(spaceId)
+  )
   const [activePromptKey, setActivePromptKey] = useState('personal')
   const [promptTabs, setPromptTabs] = useState(INITIAL_PROMPT_TABS)
 

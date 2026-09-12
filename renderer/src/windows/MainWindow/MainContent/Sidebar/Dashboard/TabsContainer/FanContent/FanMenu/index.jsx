@@ -1,14 +1,22 @@
 import { useEffect, useRef, useState } from 'react'
-import { FAN_CONTENT_PANELS, useAppState } from '@/AppStateContext'
+import { useDispatch, useSelector } from 'react-redux'
+import { FAN_CONTENT_PANELS } from '@/AppStateContext'
+import {
+  selectActiveSpaceId,
+  selectSpaceActiveFanContentPanel,
+  setActiveSpaceId,
+  setSpaceActiveFanContentPanel,
+} from '@/store/slices/chilledspaceSlice'
 
-export default function FanMenu() {
+export default function FanMenu({ spaceId }) {
+  const dispatch = useDispatch()
   const [isOpen, setIsOpen] = useState(false)
   const menuRef = useRef(null)
 
-  const {
-    activeFanContentPanel,
-    setActiveFanContentPanel,
-  } = useAppState()
+  const activeSpaceId = useSelector(selectActiveSpaceId)
+  const activeFanContentPanel = useSelector(
+    selectSpaceActiveFanContentPanel(spaceId)
+  )
 
   const menuItems = [
     {
@@ -37,36 +45,53 @@ export default function FanMenu() {
 
   const mainButtonLabel = activeMenuItem?.shortLabel ?? 'AI'
 
+  const activateSpace = () => {
+    if (activeSpaceId !== spaceId) {
+      dispatch(setActiveSpaceId(spaceId))
+    }
+  }
+
   const handleMainButtonClick = () => {
+    activateSpace()
     setIsOpen((prev) => !prev)
   }
 
   const handleItemClick = (item) => {
-    console.log(
-      '[FanMenu] MainPanel切り替え:',
-      item.id
+    activateSpace()
+
+    console.log('[FanMenu] MainPanel切り替え:', {
+      spaceId,
+      panelId: item.id,
+    })
+
+    dispatch(
+      setSpaceActiveFanContentPanel({
+        spaceId,
+        panelId: item.id,
+      })
     )
 
-    setActiveFanContentPanel(item.id)
     setIsOpen(false)
   }
 
-  // ショートカット
+  // Ctrl + M は現在の activeSpaceId の FanMenu だけを開閉する。
   useEffect(() => {
     const handleKeyDown = (event) => {
-      // Ctrl + M で FanMenu を開閉
       if (
         event.ctrlKey &&
         !event.shiftKey &&
         !event.altKey &&
         event.key.toLowerCase() === 'm'
       ) {
+        if (activeSpaceId !== spaceId) {
+          return
+        }
+
         event.preventDefault()
         setIsOpen((prev) => !prev)
         return
       }
 
-      // Esc で閉じる
       if (event.key === 'Escape') {
         setIsOpen(false)
       }
@@ -75,12 +100,9 @@ export default function FanMenu() {
     window.addEventListener('keydown', handleKeyDown)
 
     return () => {
-      window.removeEventListener(
-        'keydown',
-        handleKeyDown
-      )
+      window.removeEventListener('keydown', handleKeyDown)
     }
-  }, [])
+  }, [activeSpaceId, spaceId])
 
   // 外側クリックで閉じる
   useEffect(() => {
@@ -93,16 +115,10 @@ export default function FanMenu() {
       }
     }
 
-    document.addEventListener(
-      'mousedown',
-      handleOutsideClick
-    )
+    document.addEventListener('mousedown', handleOutsideClick)
 
     return () => {
-      document.removeEventListener(
-        'mousedown',
-        handleOutsideClick
-      )
+      document.removeEventListener('mousedown', handleOutsideClick)
     }
   }, [])
 
@@ -111,7 +127,7 @@ export default function FanMenu() {
       ref={menuRef}
       className="
         pointer-events-none
-        fixed
+        absolute
         bottom-2
         left-2
         z-50
@@ -119,30 +135,21 @@ export default function FanMenu() {
         w-[260px]
       "
     >
-      {/* ========================================
-          扇形背景
-      ======================================== */}
+      {/* 扇形背景 */}
       <div
         className={`
           pointer-events-none
           absolute
-
           bottom-[15px]
           left-[15px]
-
           h-[180px]
           w-[190px]
-
           origin-bottom-left
-
           rounded-tr-[190px]
-
           bg-black/[0.04]
-
           transition-all
           duration-500
           ease-out
-
           ${
             isOpen
               ? 'scale-100 opacity-100'
@@ -151,9 +158,7 @@ export default function FanMenu() {
         `}
       />
 
-      {/* ========================================
-          子ボタン
-      ======================================== */}
+      {/* 子ボタン */}
       {menuItems.map((item) => {
         const isActive =
           activeFanContentPanel === item.id
@@ -166,48 +171,34 @@ export default function FanMenu() {
             aria-pressed={isActive}
             className={`
               absolute
-
-              bottom-[0px]
-              left-[0px]
-
+              bottom-0
+              left-0
               z-10
-
               flex
               h-16
               w-16
-
               cursor-pointer
-
               items-center
               justify-center
-
               rounded-full
-
               px-2
-
               text-center
               text-[13px]
               font-semibold
               leading-tight
-
               shadow-lg
-
               ring-0
-
               transition-[background-color,color,box-shadow,opacity,transform]
               duration-300
               ease-out
-
               hover:shadow-xl
               hover:ring-2
               hover:ring-gray-400
               hover:ring-offset-2
-
               focus-visible:outline-none
               focus-visible:ring-2
               focus-visible:ring-gray-500
               focus-visible:ring-offset-2
-
               ${
                 isActive
                   ? `
@@ -223,7 +214,6 @@ export default function FanMenu() {
                     hover:text-gray-900
                   `
               }
-
               ${
                 isOpen
                   ? `
@@ -247,11 +237,7 @@ export default function FanMenu() {
         )
       })}
 
-      {/* ========================================
-          親ボタン
-          選択中モード：
-          AI / 課題 / 個人
-      ======================================== */}
+      {/* 親ボタン */}
       <button
         type="button"
         onClick={handleMainButtonClick}
@@ -261,50 +247,32 @@ export default function FanMenu() {
             : `${activeMenuItem?.label ?? 'メニュー'}を開く`
         }
         aria-expanded={isOpen}
-        title={activeMenuItem?.label}
-        className={`
+        title={`${spaceId}: ${activeMenuItem?.label ?? 'メニュー'}`}
+        className="
           pointer-events-auto
           absolute
-
-          bottom-[0px]
-          left-[0px]
-
+          bottom-0
+          left-0
           z-20
-
           flex
           h-12
           w-12
-
           cursor-pointer
-
           items-center
           justify-center
-
           rounded-full
-
           bg-gray-900
-
           text-sm
           font-bold
           text-white
-
           shadow-xl
-
           transition-all
           duration-300
           ease-out
-
           hover:bg-gray-800
           hover:shadow-2xl
-
           active:scale-95
-
-          ${
-            isOpen
-              ? 'rotate-0'
-              : 'rotate-0'
-          }
-        `}
+        "
       >
         {mainButtonLabel}
       </button>

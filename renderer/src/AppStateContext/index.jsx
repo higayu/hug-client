@@ -83,9 +83,6 @@ export function AppStateProvider({ children }) {
 
   const [isInitialized, setIsInitialized] = useState(false)
   const [activeSidebarTab, setActiveSidebarTab] = useState('FanContent')
-  const [activeFanContentPanel, setActiveFanContentPanel] = useState(
-    FAN_CONTENT_PANELS.AI_SUPPORT
-  )
 
   const [iniState, setIniState] = useState({
     appSettings: {},
@@ -1019,9 +1016,6 @@ export function AppStateProvider({ children }) {
         activeSidebarTab,
         setActiveSidebarTab,
 
-        // FanContent の MainPanel 切り替え
-        activeFanContentPanel,
-        setActiveFanContentPanel,
       }}
     >
       {children}

@@ -15,7 +15,7 @@ function FanContentSpace({ spaceId }) {
         <SelectChildren spaceId={spaceId} />
 
         <div className="pointer-events-none absolute bottom-0 left-0 z-30">
-          <FanMenu />
+          <FanMenu spaceId={spaceId} />
         </div>
       </div>
 

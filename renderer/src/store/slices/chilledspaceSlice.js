@@ -11,6 +11,10 @@ const createSpace = () => ({
   childName: '',
   pcName: '',
 
+  // FanContent内で現在表示している作業パネル。
+  // top / bottom それぞれ独立して管理する。
+  activeFanContentPanel: 'ai',
+
   // 選択中児童の出勤データ列
   selectedChildColumn5: null,
   selectedChildColumn5Html: null,
@@ -87,6 +91,16 @@ const chilledspaceSlice = createSlice({
       state.activeSpaceId = spaceId
     },
 
+    setSpaceActiveFanContentPanel: (state, action) => {
+      const {
+        spaceId,
+        panelId,
+      } = action.payload || {}
+
+      const space = getSpace(state, spaceId)
+      space.activeFanContentPanel = panelId || 'ai'
+    },
+
     setSpaceChild: (state, action) => {
       const { spaceId, childId, childName } = action.payload || {}
       const space = getSpace(state, spaceId)
@@ -146,6 +160,7 @@ export const {
   addChilledSpace,
   deleteChilledSpace,
   setActiveSpaceId,
+  setSpaceActiveFanContentPanel,
   setSpaceChild,
   setSpacePcName,
   setSpaceChildColumns,
@@ -170,6 +185,9 @@ export const selectSpaces = (state) =>
 
 export const selectSpace = (spaceId) => (state) =>
   state.chilledspace.spaces[spaceId]
+
+export const selectSpaceActiveFanContentPanel = (spaceId) => (state) =>
+  state.chilledspace.spaces[spaceId]?.activeFanContentPanel ?? 'ai'
 
 export const selectSpaceChildId = (spaceId) => (state) =>
   state.chilledspace.spaces[spaceId]?.childId ?? ''
