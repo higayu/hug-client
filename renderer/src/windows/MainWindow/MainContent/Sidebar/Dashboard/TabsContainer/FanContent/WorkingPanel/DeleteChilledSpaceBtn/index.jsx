@@ -10,7 +10,7 @@ export default function DeleteChilledSpaceBtn() {
       type="button"
       onClick={onClick}
       className="
-        flex h-10 w-10
+        flex h-5 w-5
         items-center justify-center
         rounded-full
         bg-red-500

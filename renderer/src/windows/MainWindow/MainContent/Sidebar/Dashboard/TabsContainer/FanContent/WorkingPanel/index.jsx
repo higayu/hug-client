@@ -3,6 +3,7 @@ import { FAN_CONTENT_PANELS, useAppState } from '@/AppStateContext'
 import PersonalRecordManagerPanel2 from '@/components/common/hug_function/PersonalRecordManagerPanel2'
 import AiContents from './AiContents'
 import ChildKadai from './ChildKadai'
+import DeleteChilledSpaceBtn from './DeleteChilledSpaceBtn'
 
 const INITIAL_PROMPT_TABS = [
   {
@@ -94,6 +95,7 @@ export default function MainPanel({ spaceId }) {
               </span>
             </div>
           )}
+          <DeleteChilledSpaceBtn />
         </div>
       </header>
 
