@@ -1,12 +1,26 @@
-// PrototypePanel 専用の抽出処理
+// ChildAttendancePanel 専用の抽出処理
 
 /**
  * column5Html から入室ボタンの onclick を抽出
  */
 export function extractEnterButtonOnclick(column5Html) {
     if (!column5Html) return null;
-    const m = String(column5Html).match(/onclick\s*=\s*["']([^"']+)["']/i);
-    return m?.[1] ?? null;
+
+    const html = String(column5Html);
+
+    // onclick 属性を囲っている開始クォートと
+    // 同じクォートまでを取得する。
+    //
+    // 例:
+    // onclick="sendEnterMail('48627',0,90,3,...)"
+    //
+    // 以前の [^"']+ では内部の '48627' の
+    // シングルクォートで途中終了してしまい、
+    // "sendEnterMail(" しか取得できなかった。
+    const match =
+      html.match(/onclick\s*=\s*(["'])([\s\S]*?)\1/i);
+
+    return match?.[2] ?? null;
   }
   
   /**
@@ -14,8 +28,15 @@ export function extractEnterButtonOnclick(column5Html) {
    */
   export function extractExitButtonOnclick(column6Html) {
     if (!column6Html) return null;
-    const m = String(column6Html).match(/onclick\s*=\s*["']([^"']+)["']/i);
-    return m?.[1] ?? null;
+
+    const html = String(column6Html);
+
+    // 入室と同様、属性の開始クォートと
+    // 同じクォートまでを取得する。
+    const match =
+      html.match(/onclick\s*=\s*(["'])([\s\S]*?)\1/i);
+
+    return match?.[2] ?? null;
   }
   
   /**

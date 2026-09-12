@@ -2,6 +2,8 @@
  * 拡張 enter-post.js 相当（renderer 側パース）
  */
 
+import { decodeHtmlEntities } from "../_shared/htmlEntities.js";
+
 const RE_SEND_ENTER_10 =
   /sendEnterMail\s*\(\s*['"]?([^'",)]+)['"]?\s*,\s*([^,]+)\s*,\s*([^,]+)\s*,\s*([^,]+)\s*,\s*([^,]+)\s*,\s*([^,]+)\s*,\s*['"]?([^'",)]+)['"]?\s*,\s*([^,]+)\s*,\s*([^,]+)\s*,\s*([^)]+)\s*\)/;
 
@@ -23,13 +25,19 @@ export function parseEnterOnclick(onclickAttr) {
   let special_support;
   let meal_add;
 
-  const m10 = String(onclickAttr || "").match(RE_SEND_ENTER_10);
+  const normalizedOnclick = decodeHtmlEntities(onclickAttr);
+
+  const m10 = normalizedOnclick.match(RE_SEND_ENTER_10);
   if (m10) {
     [, r_id, is_mail, c_id, f_id, attend_flg, linkage, date, strength_action, special_support, meal_add] =
       m10;
   } else {
-    const m8 = String(onclickAttr || "").match(RE_SEND_ENTER_8);
+    const m8 = normalizedOnclick.match(RE_SEND_ENTER_8);
     if (!m8) {
+      console.error("[parseEnterOnclick] onclick解析失敗", {
+        onclickAttr,
+        normalizedOnclick,
+      });
       throw new Error("sendEnterMail の onclick を解析できません");
     }
     [, r_id, is_mail, c_id, f_id, attend_flg, linkage, date, strength_action] = m8;

@@ -2,6 +2,8 @@
  * 拡張 leave-post.js 相当（renderer 側パース）
  */
 
+import { decodeHtmlEntities } from "../_shared/htmlEntities.js";
+
 const RE_SEND_LEAVE =
   /sendLeaveMail\s*\(\s*['"]?([^'",)]+)['"]?\s*,\s*([^,]+)\s*,\s*([^,]+)\s*,\s*([^,]+)\s*,\s*([^,]+)\s*,\s*([^)]+)\s*\)/;
 
@@ -9,8 +11,13 @@ const RE_SEND_LEAVE =
  * @param {string} onclickAttr
  */
 export function argsFromLeaveButton(onclickAttr) {
-  const m = String(onclickAttr || "").match(RE_SEND_LEAVE);
+  const normalizedOnclick = decodeHtmlEntities(onclickAttr);
+  const m = normalizedOnclick.match(RE_SEND_LEAVE);
   if (!m) {
+    console.error("[argsFromLeaveButton] onclick解析失敗", {
+      onclickAttr,
+      normalizedOnclick,
+    });
     throw new Error("sendLeaveMail の onclick を解析できません");
   }
 

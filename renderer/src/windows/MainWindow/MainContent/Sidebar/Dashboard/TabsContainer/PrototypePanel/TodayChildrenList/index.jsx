@@ -10,6 +10,9 @@ import ChildrenListContent from "./ChildrenListContent";
 import { TABS } from "@/components/common/constants";
 import { useTodayChildrenListController } from "./useTodayChildrenListController";
 
+const getChildId = (child) =>
+  child?.children_id ?? child?.id ?? ""
+
 export default function TodayChildrenList({ spaceId }) {
   const appState = useAppState();
 

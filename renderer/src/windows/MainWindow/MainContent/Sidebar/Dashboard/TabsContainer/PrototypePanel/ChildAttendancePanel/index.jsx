@@ -66,7 +66,18 @@ export default function ChildAttendancePanel({ spaceId }) {
   // 選択中児童ID
   // =============================================================
   const currentSpace = chilledSpaces?.[spaceId] ?? {}
-  const selectChild = currentSpace.childId ?? ''
+
+  const selectChildRaw =
+    currentSpace.childId ??
+    currentSpace.children_id ??
+    currentSpace.id ??
+    ''
+
+  const selectChild =
+    selectChildRaw !== null && selectChildRaw !== undefined
+      ? String(selectChildRaw).trim()
+      : ''
+
   const selectedChildName = currentSpace.childName ?? ''
 
   // =============================================================
@@ -151,13 +162,13 @@ export default function ChildAttendancePanel({ spaceId }) {
 
     return (
       weekChildrenData.find(
-        (child) => String(child?.children_id) === String(selectChild)
+        (child) => String(child?.children_id ?? child?.id ?? '') === String(selectChild)
       ) ||
       waitingChildrenData.find(
-        (child) => String(child?.children_id) === String(selectChild)
+        (child) => String(child?.children_id ?? child?.id ?? '') === String(selectChild)
       ) ||
       experienceChildrenData.find(
-        (child) => String(child?.children_id) === String(selectChild)
+        (child) => String(child?.children_id ?? child?.id ?? '') === String(selectChild)
       ) ||
       null
     )
@@ -455,10 +466,28 @@ export default function ChildAttendancePanel({ spaceId }) {
     )
   }
 
+  const targetChildId =
+    selectChild !== '' && Number.isFinite(Number(selectChild))
+      ? Number(selectChild)
+      : null
+
   // =============================================================
   // 入室
   // =============================================================
   const runEnter = async (enterOptions = {}) => {
+    if (targetChildId == null) {
+      console.error(
+        '[Prototype/ChildAttendancePanel/runEnter] 選択児童IDが不正です',
+        {
+          spaceId,
+          selectChild,
+          currentSpace,
+        },
+      )
+      showErrorToast('選択児童IDを取得できません')
+      return
+    }
+
     if (!column5Html) {
       console.warn('[ChildAttendancePanel/runEnter] column5Html が空です', {
         selectChild,
@@ -486,7 +515,7 @@ export default function ChildAttendancePanel({ spaceId }) {
       console.log('facilityId:', facilityId)
       console.log('dateStr:', dateStr)
 
-      const res = await clickEnterButton(column5Html, Number(selectChild), {
+      const res = await clickEnterButton(column5Html, targetChildId, {
         children_name: childName,
         column5,
         column6,
@@ -532,6 +561,19 @@ export default function ChildAttendancePanel({ spaceId }) {
   // 退室
   // =============================================================
   const runLeave = async () => {
+    if (targetChildId == null) {
+      console.error(
+        '[Prototype/ChildAttendancePanel/runLeave] 選択児童IDが不正です',
+        {
+          spaceId,
+          selectChild,
+          currentSpace,
+        },
+      )
+      showErrorToast('選択児童IDを取得できません')
+      return
+    }
+
     if (!column6Html) {
       console.warn('[ChildAttendancePanel/runLeave] column6Html が空です', {
         selectChild,
@@ -560,7 +602,7 @@ export default function ChildAttendancePanel({ spaceId }) {
       console.log('facilityId:', facilityId)
       console.log('dateStr:', dateStr)
 
-      const res = await clickExitButton(column6Html, Number(selectChild), {
+      const res = await clickExitButton(column6Html, targetChildId, {
         enterTime: column5,
         children_name: childName,
         column5,
@@ -602,6 +644,19 @@ export default function ChildAttendancePanel({ spaceId }) {
   // 欠席
   // =============================================================
   const runAbsence = async () => {
+    if (targetChildId == null) {
+      console.error(
+        '[Prototype/ChildAttendancePanel/runAbsence] 選択児童IDが不正です',
+        {
+          spaceId,
+          selectChild,
+          currentSpace,
+        },
+      )
+      showErrorToast('選択児童IDを取得できません')
+      return
+    }
+
     if (!column5Html) {
       console.warn('[ChildAttendancePanel/runAbsence] column5Html が空です', {
         selectChild,
@@ -625,7 +680,7 @@ export default function ChildAttendancePanel({ spaceId }) {
       console.log('column5:', column5)
       console.log('column5Html:', column5Html)
 
-      const res = await clickAbsenceButton(column5Html, Number(selectChild))
+      const res = await clickAbsenceButton(column5Html, targetChildId)
 
       console.log('clickAbsenceButton result:', res)
       console.groupEnd()
