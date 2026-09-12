@@ -6,6 +6,7 @@ const procedures = require("./procedures");
 const updateStaffLogin = require("./admin/updateStaffLogin");
 const managers2 = require("./managers2");
 const children = require("./children");
+const webAutomationRules = require("./webAutomationRules");
 const laravelApiClient = require("../../../../src/laravelApiClient");
 
 /**
@@ -26,6 +27,13 @@ const IPC_CHANNELS = [
   // ============================================================
 
   "laravel-fetch-table-all",
+
+  // ============================================================
+  // Web自動化ルール
+  // ============================================================
+
+  "laravel:web-automation-rules:list",
+  "laravel:web-automation-rules:get",
 
   // ============================================================
   // 一時メモ
@@ -196,6 +204,20 @@ function registerLaravelAuthHandlers(
   ipcMain.handle(
     "laravel-fetch-table-all",
     fetchTableAllHandler
+  );
+
+  // ============================================================
+  // Web自動化ルール
+  // ============================================================
+
+  ipcMain.handle(
+    "laravel:web-automation-rules:list",
+    webAutomationRules.listHandler
+  );
+
+  ipcMain.handle(
+    "laravel:web-automation-rules:get",
+    webAutomationRules.getHandler
   );
 
   // ============================================================

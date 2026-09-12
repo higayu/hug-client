@@ -148,6 +148,32 @@ var require_electronApi = __commonJS({
         laravel_fetchTableAll: (params = {}) => ipcRenderer2.invoke("laravel-fetch-table-all", params),
         // ---- Laravel 接続確認 ----
         checkLaravelConnection: () => ipcRenderer2.invoke("laravel:connection:check"),
+        // ---- Web自動化ルール ----
+        /**
+         * 有効なWeb自動化ルール一覧を取得する。
+         *
+         * 例:
+         *   await window.electronAPI.laravel_webAutomationRules_getAll()
+         *   await window.electronAPI.laravel_webAutomationRules_getAll({
+         *     category: "attendance",
+         *   })
+         */
+        laravel_webAutomationRules_getAll: (params = {}) => ipcRenderer2.invoke(
+          "laravel:web-automation-rules:list",
+          params
+        ),
+        /**
+         * rule_keyを指定して有効なルールを1件取得する。
+         *
+         * 例:
+         *   await window.electronAPI.laravel_webAutomationRule_get(
+         *     "attendance_enter"
+         *   )
+         */
+        laravel_webAutomationRule_get: (ruleKey) => ipcRenderer2.invoke(
+          "laravel:web-automation-rules:get",
+          ruleKey
+        ),
         // ---- Laravel 認証 ----
         /**
          * config.jsonの
