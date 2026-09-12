@@ -1,6 +1,7 @@
 import DateSelect from "@/components/ui/DateSelect";
 import WeekdaySelect from "@/components/ui/WeekdaySelect";
 import FanMenuButton from "./FanMenuButton";
+import GetTodayUsersChildren from "./GetTodayUsersChildren";
 
 function DashboardHeader() {
   return (
@@ -16,6 +17,10 @@ function DashboardHeader() {
     >
       <div className="shrink-0">
         <FanMenuButton />
+      </div>
+
+      <div className="w-[320px] shrink-0 px-2">
+        <GetTodayUsersChildren expandDirection="down" />
       </div>
 
       <div className="flex flex-1 min-w-0">

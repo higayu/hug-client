@@ -74,7 +74,7 @@ function getAutoSwitchingEnabledForUseDataBase() {
 export function useDataBase({ autoLoad = false } = {}) {
   const {
     isInitialized,
-    setSelectedChild,
+    resetChilledspace,
   } = useAppState()
 
   const dispatch = useDispatch()
@@ -571,7 +571,7 @@ export function useDataBase({ autoLoad = false } = {}) {
         }
       )
 
-      setSelectedChild("", "")
+      resetChilledspace()
 
       await loadDataBase({
         reason: "event/database-type-changed",
@@ -594,7 +594,7 @@ export function useDataBase({ autoLoad = false } = {}) {
   }, [
     autoLoad,
     loadDataBase,
-    setSelectedChild,
+    resetChilledspace,
   ])
 
   // =============================================================

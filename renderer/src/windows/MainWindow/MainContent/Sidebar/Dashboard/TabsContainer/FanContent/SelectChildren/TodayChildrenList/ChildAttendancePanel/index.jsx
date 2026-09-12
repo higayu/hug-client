@@ -651,6 +651,7 @@ export default function ChildAttendancePanel({ spaceId }) {
       <div className="child-memo-attendance-form flex flex-col rounded bg-white border border-gray-300 gap-2 p-2">
         {hasChildAttendance ? (
           <AttendanceActionSection
+            spaceId={spaceId}
             childId={selectChild}
             childName={childName}
             dateStr={dateStr}

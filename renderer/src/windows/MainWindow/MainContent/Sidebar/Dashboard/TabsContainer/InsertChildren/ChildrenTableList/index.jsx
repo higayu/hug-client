@@ -272,7 +272,7 @@ function ChildrenTableList() {
         setSelectedIds([]);
 
         if (typeof setActiveTab === "function") {
-          setActiveTab("tools");
+          setActiveTab("FanContent");
         }
       } else {
         showErrorToast("失敗しました");

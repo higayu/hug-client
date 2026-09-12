@@ -73,7 +73,7 @@ export default function MainPanel({ spaceId }) {
       className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden"
       aria-label="メインパネル"
     >
-      <header className="shrink-0 border-b border-gray-200 bg-gray-50 px-5 py-3">
+      <header className="shrink-0 border-b border-gray-200 bg-gray-50 px-2 py-1">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <span className="text-xs font-semibold tracking-wide text-gray-500">
