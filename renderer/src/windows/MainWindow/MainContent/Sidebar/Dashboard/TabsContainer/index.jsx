@@ -5,7 +5,7 @@ import { useAppState } from '@/AppStateContext'
 import SpeechToText from './SpeechToText'
 import FanContent from './FanContent'
 
-function TabsContainer({ spaceId }) {
+function TabsContainer() {
   const {
     activeSidebarTab: activeTab,
     DEBUG_FLG,
@@ -16,13 +16,13 @@ function TabsContainer({ spaceId }) {
       <div className="flex-1 min-h-0 overflow-auto bg-white">
         {activeTab === 'FanContent' && (
           <div className="h-full flex flex-col">
-            <FanContent spaceId={spaceId} />
+            <FanContent />
           </div>
         )}
 
         {activeTab === 'tools' && (
           <div className="h-full flex flex-col">
-            <PrototypePanel spaceId={spaceId} />
+            <PrototypePanel spaceId="top" />
           </div>
         )}
 

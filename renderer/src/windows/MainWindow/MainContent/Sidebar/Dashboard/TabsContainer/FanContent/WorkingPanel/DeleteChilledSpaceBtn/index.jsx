@@ -1,14 +1,29 @@
 import { X } from "lucide-react"
+import { useDispatch, useSelector } from "react-redux"
+import {
+  deleteChilledSpace,
+  selectCanDeleteChilledSpace,
+  selectSpaceCount,
+} from "@/store/slices/chilledspaceSlice"
 
-export default function DeleteChilledSpaceBtn() {
+export default function DeleteChilledSpaceBtn({ spaceId }) {
+  const dispatch = useDispatch()
+  const spaceCount = useSelector(selectSpaceCount)
+  const canDelete = useSelector(selectCanDeleteChilledSpace)
+
   function onClick() {
-    console.log("DeleteChilledSpace clicked")
+    if (!canDelete) {
+      return
+    }
+
+    dispatch(deleteChilledSpace(spaceId))
   }
 
   return (
     <button
       type="button"
       onClick={onClick}
+      disabled={!canDelete}
       className="
         flex h-5 w-5
         items-center justify-center
@@ -19,10 +34,23 @@ export default function DeleteChilledSpaceBtn() {
         transition
         hover:bg-red-600
         active:scale-95
+        disabled:cursor-not-allowed
+        disabled:bg-gray-400
+        disabled:opacity-40
+        disabled:active:scale-100
       "
-      aria-label="削除"
+      aria-label={
+        canDelete
+          ? `${spaceId} の作業枠を削除`
+          : "作業枠が1つのため削除できません"
+      }
+      title={
+        canDelete
+          ? `この作業枠を削除（${spaceCount}/2）`
+          : "最低1枠は必要です"
+      }
     >
-      <X size={22} strokeWidth={2.5} />
+      <X size={14} strokeWidth={2.5} />
     </button>
   )
 }

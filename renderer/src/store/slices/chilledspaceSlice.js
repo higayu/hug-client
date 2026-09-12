@@ -1,7 +1,10 @@
 // src/store/slices/chilledspaceSlice.js
-// 2人の児童を同時に扱うための作業スペース状態管理
+// Dashboard のクイック操作モードで使用する作業スペース状態管理
 
 import { createSlice } from '@reduxjs/toolkit'
+
+const MIN_SPACE_COUNT = 1
+const MAX_SPACE_COUNT = 2
 
 const createSpace = () => ({
   childId: '',
@@ -16,10 +19,15 @@ const createSpace = () => ({
 })
 
 const initialState = {
-  activeSpaceId: 'left',
+  // 上下分割なので top / bottom で統一する。
+  activeSpaceId: 'top',
+
+  // 現状は 1 ～ 2 枠だけをサポートする。
+  spaceCount: MIN_SPACE_COUNT,
+
   spaces: {
-    left: createSpace(),
-    right: createSpace(),
+    top: createSpace(),
+    bottom: createSpace(),
   },
 }
 
@@ -35,9 +43,47 @@ const chilledspaceSlice = createSlice({
   name: 'chilledspace',
   initialState,
   reducers: {
+    addChilledSpace: (state) => {
+      if (state.spaceCount >= MAX_SPACE_COUNT) {
+        return
+      }
+
+      // 2枠目は常に bottom。
+      state.spaces.bottom = createSpace()
+      state.spaceCount = 2
+      state.activeSpaceId = 'bottom'
+    },
+
+    deleteChilledSpace: (state, action) => {
+      if (state.spaceCount <= MIN_SPACE_COUNT) {
+        return
+      }
+
+      const spaceId = action.payload
+      getSpace(state, spaceId)
+
+      if (spaceId === 'top') {
+        // top を削除した場合は bottom の作業内容を top に繰り上げる。
+        state.spaces.top = state.spaces.bottom
+      }
+
+      // bottom を削除した場合も、top 削除後の繰り上げ時も
+      // bottom は空の状態へ戻す。
+      state.spaces.bottom = createSpace()
+      state.spaceCount = 1
+      state.activeSpaceId = 'top'
+    },
+
     setActiveSpaceId: (state, action) => {
       const spaceId = action.payload
       getSpace(state, spaceId)
+
+      if (spaceId === 'bottom' && state.spaceCount < 2) {
+        throw new Error(
+          '[chilledspaceSlice] bottom space is not active while spaceCount is 1'
+        )
+      }
+
       state.activeSpaceId = spaceId
     },
 
@@ -97,6 +143,8 @@ const chilledspaceSlice = createSlice({
 })
 
 export const {
+  addChilledSpace,
+  deleteChilledSpace,
   setActiveSpaceId,
   setSpaceChild,
   setSpacePcName,
@@ -107,6 +155,15 @@ export const {
 
 export const selectActiveSpaceId = (state) =>
   state.chilledspace.activeSpaceId
+
+export const selectSpaceCount = (state) =>
+  state.chilledspace.spaceCount
+
+export const selectCanAddChilledSpace = (state) =>
+  state.chilledspace.spaceCount < MAX_SPACE_COUNT
+
+export const selectCanDeleteChilledSpace = (state) =>
+  state.chilledspace.spaceCount > MIN_SPACE_COUNT
 
 export const selectSpaces = (state) =>
   state.chilledspace.spaces

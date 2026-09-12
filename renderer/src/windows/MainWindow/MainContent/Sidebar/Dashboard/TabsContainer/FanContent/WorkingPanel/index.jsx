@@ -95,7 +95,7 @@ export default function MainPanel({ spaceId }) {
               </span>
             </div>
           )}
-          <DeleteChilledSpaceBtn />
+          <DeleteChilledSpaceBtn spaceId={spaceId} />
         </div>
       </header>
 
