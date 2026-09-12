@@ -100,6 +100,18 @@ export default function AttendanceActionSection({
     <TestAddProfessional spaceId={spaceId} />
   )
 
+  const professionalButtonsRow = (
+    <div className="flex w-full items-stretch gap-2">
+      <div className="min-w-0 flex-1">
+        {professionalSupportButton}
+      </div>
+
+      <div className="shrink-0">
+        {testAddProfessionalButton}
+      </div>
+    </div>
+  )
+
   useEffect(() => {
     console.group(
       "[AttendanceActionSection] 入退室ボタン表示判定",
@@ -262,8 +274,7 @@ export default function AttendanceActionSection({
           {column5 || "欠席"}
         </span>
 
-        {professionalSupportButton}
-        {testAddProfessionalButton}
+        {professionalButtonsRow}
       </div>
     )
   }
@@ -338,8 +349,7 @@ export default function AttendanceActionSection({
           </span>
         )}
 
-        {professionalSupportButton}
-        {testAddProfessionalButton}
+        {professionalButtonsRow}
       </div>
     )
   }
@@ -402,8 +412,7 @@ export default function AttendanceActionSection({
         </p>
       ) : null}
 
-      {professionalSupportButton}
-      {testAddProfessionalButton}
+      {professionalButtonsRow}
 
     </div>
   )

@@ -8,6 +8,7 @@ import {
 } from './AttendanceActionSection/attendance/index.js'
 import { useToast } from '@/provider/ToastProvider/ToastContext'
 import AttendanceActionSection from './AttendanceActionSection'
+import PersonalRecordButton from './PersonalRecordButton'
 import { isAttendanceDataLoaded } from './AttendanceActionSection/attendance/helpers/attendanceStatus.js'
 import './index.css'
 import PersonalRecordCheckPanel from '@/components/common/hug_function/PersonalRecordCheckPanel'
@@ -706,6 +707,7 @@ export default function ChildAttendancePanel({ spaceId }) {
       <div className="child-memo-attendance-form flex flex-col rounded bg-white border border-gray-300 gap-2 p-2">
         {hasChildAttendance ? (
           <AttendanceActionSection
+            spaceId={spaceId}
             childId={selectChild}
             childName={childName}
             dateStr={dateStr}
@@ -733,6 +735,12 @@ export default function ChildAttendancePanel({ spaceId }) {
             </p>
           </div>
         )}
+      </div>
+
+      <div className="mt-2">
+        <PersonalRecordButton
+          spaceId={spaceId}
+        />
       </div>
 
       <div className="mt-2 flex w-full gap-1">

@@ -19,6 +19,7 @@ import {
  * 拡張入退室フォーム相当の入室・退室・欠席 UI
  */
 export default function AttendanceActionSection({
+  spaceId = 'top',
   childId,
   childName,
   dateStr,

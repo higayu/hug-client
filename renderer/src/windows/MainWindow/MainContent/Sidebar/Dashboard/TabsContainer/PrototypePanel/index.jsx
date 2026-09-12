@@ -5,7 +5,7 @@ import TodayChildrenList from './TodayChildrenList';
 import ChildAttendancePanel from './ChildAttendancePanel';
 import MainPanel from "./MainPanel";
 
-function ToolContent({ spaceId }) {
+function ToolContent({ spaceId = 'top' }) {
   const [activeTool, setActiveTool] = useState('default');
 
   useEffect(() => {
