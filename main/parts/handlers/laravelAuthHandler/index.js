@@ -34,6 +34,7 @@ const IPC_CHANNELS = [
 
   "laravel:web-automation-rules:list",
   "laravel:web-automation-rules:get",
+  "laravel:web-automation-rules:update",
 
   // ============================================================
   // 一時メモ
@@ -218,6 +219,11 @@ function registerLaravelAuthHandlers(
   ipcMain.handle(
     "laravel:web-automation-rules:get",
     webAutomationRules.getHandler
+  );
+
+  ipcMain.handle(
+    "laravel:web-automation-rules:update",
+    webAutomationRules.updateHandler
   );
 
   // ============================================================

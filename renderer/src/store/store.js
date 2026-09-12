@@ -8,6 +8,7 @@ import webviewReducer from "./slices/webviewSlice.js"
 import recordStatusReducer from "./slices/recordStatusSlice.js";
 import modeReducer from './slices/modeSlice.js'
 import chilledspaceReducer from './slices/chilledspaceSlice.js'
+import webAutomationRuleReducer from './slices/webAutomationRuleSlice.js'
 
 export const store = configureStore({
   reducer: {
@@ -15,6 +16,7 @@ export const store = configureStore({
     auth: authReducer,
     appState: appStateReducer,
     chilledspace: chilledspaceReducer,
+    webAutomationRules: webAutomationRuleReducer,
     database: databaseReducer,
     sendText: sendTextReducer,
     webview: webviewReducer,

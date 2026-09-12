@@ -47,6 +47,16 @@ import {
 } from '@/store/slices/chilledspaceSlice'
 
 import {
+  selectWebAutomationRuleState,
+  selectWebAutomationRules,
+  selectWebAutomationRulesByKey,
+  selectWebAutomationRulesMeta,
+  selectWebAutomationRulesLoading,
+  selectWebAutomationRulesError,
+  selectWebAutomationRulesLoadedAt,
+} from '@/store/slices/webAutomationRuleSlice'
+
+import {
   selectAiInquirySelectedItemId,
   selectCurrentMode,
   selectCurrentSelectedItemId,
@@ -344,6 +354,42 @@ export function useReduxBindings() {
   const chilledSpaces = useSelector(
     selectSpaces,
     shallowEqual
+  )
+
+  // ============================================================
+  // webAutomationRuleSlice
+  // ============================================================
+
+  const webAutomationRuleState = useSelector(
+    selectWebAutomationRuleState,
+    shallowEqual
+  )
+
+  const webAutomationRules = useSelector(
+    selectWebAutomationRules,
+    shallowEqual
+  )
+
+  const webAutomationRulesByKey = useSelector(
+    selectWebAutomationRulesByKey,
+    shallowEqual
+  )
+
+  const webAutomationRulesMeta = useSelector(
+    selectWebAutomationRulesMeta,
+    shallowEqual
+  )
+
+  const webAutomationRulesLoading = useSelector(
+    selectWebAutomationRulesLoading
+  )
+
+  const webAutomationRulesError = useSelector(
+    selectWebAutomationRulesError
+  )
+
+  const webAutomationRulesLoadedAt = useSelector(
+    selectWebAutomationRulesLoadedAt
   )
 
   // ============================================================
@@ -766,6 +812,15 @@ export function useReduxBindings() {
 
     activeSpaceId,
     chilledSpaces,
+
+    // web_automation_rules
+    webAutomationRuleState,
+    webAutomationRules,
+    webAutomationRulesByKey,
+    webAutomationRulesMeta,
+    webAutomationRulesLoading,
+    webAutomationRulesError,
+    webAutomationRulesLoadedAt,
 
     CURRENT_DAY_OF_WEEK,
     CURRENT_YMD,

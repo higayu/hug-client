@@ -243,6 +243,141 @@ async function fetchWebAutomationRule(
   };
 }
 
+
+/**
+ * Web自動化ルールを更新する。
+ *
+ * PATCH /api/web-automation-rules/{ruleKey}
+ *
+ * Laravel側で role_id = 1 の管理者だけ更新可能。
+ * 権限がない場合はLaravelの403レスポンスをそのまま返す。
+ */
+async function updateWebAutomationRule(
+  ruleKey,
+  payload = {}
+) {
+  const normalizedRuleKey =
+    normalizeRuleKey(ruleKey);
+
+  if (
+    !payload ||
+    typeof payload !== "object" ||
+    Array.isArray(payload)
+  ) {
+    throw new Error(
+      "更新データをオブジェクトで指定してください。"
+    );
+  }
+
+  const path =
+    `/web-automation-rules/${encodeURIComponent(
+      normalizedRuleKey
+    )}`;
+
+  console.log(
+    "📝 [Laravel WebAutomationRules] update request:",
+    {
+      path,
+      ruleKey:
+        normalizedRuleKey,
+      keys:
+        Object.keys(payload),
+    }
+  );
+
+  const result =
+    await executeAuthenticatedOperation(
+      () =>
+        laravelApiClient.patch(
+          path,
+          payload
+        ),
+      "Web自動化ルールの更新に失敗しました。"
+    );
+
+  if (result?.success === false) {
+    return result;
+  }
+
+  const rule =
+    unwrapData(result);
+
+  if (
+    !rule ||
+    typeof rule !== "object" ||
+    Array.isArray(rule)
+  ) {
+    return {
+      success: false,
+      connected: true,
+      message:
+        "更新後のWeb自動化ルールの形式が正しくありません。",
+      data: null,
+      meta: {
+        authenticated: true,
+        ruleKey:
+          normalizedRuleKey,
+      },
+      error: {
+        status: null,
+        statusText: null,
+        code:
+          "INVALID_WEB_AUTOMATION_RULE_UPDATE_RESPONSE",
+        validationErrors: null,
+        details:
+          result ?? null,
+      },
+    };
+  }
+
+  return {
+    success: true,
+    connected: true,
+    message:
+      result?.message ??
+      "Web自動化ルールを更新しました。",
+    data: rule,
+    meta: {
+      ...(result?.meta ?? {}),
+      authenticated: true,
+      ruleKey:
+        normalizedRuleKey,
+      reauthenticated:
+        result?.meta
+          ?.reauthenticated ??
+        false,
+    },
+    error: null,
+  };
+}
+
+/**
+ * IPC:
+ * laravel:web-automation-rules:update
+ */
+async function updateHandler(
+  _event,
+  ruleKey,
+  payload = {}
+) {
+  try {
+    return await updateWebAutomationRule(
+      ruleKey,
+      payload
+    );
+  } catch (error) {
+    console.error(
+      "❌ [Laravel WebAutomationRules] update error:",
+      error
+    );
+
+    return formatError(
+      error,
+      "Web自動化ルールの更新に失敗しました。"
+    );
+  }
+}
+
 /**
  * IPC:
  * laravel:web-automation-rules:list
@@ -298,6 +433,8 @@ module.exports = {
   normalizeRuleKey,
   fetchWebAutomationRules,
   fetchWebAutomationRule,
+  updateWebAutomationRule,
   listHandler,
   getHandler,
+  updateHandler,
 };

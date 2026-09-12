@@ -13,3 +13,5 @@ export { default as UpdateTab } from "./UpdateTab";//アップデート確認用
 export { default as StaffTab } from './StaffTab';
 export { default as AdminTab } from './Admin';
 export { default as DebugTab } from './Debug';
+
+export { default as AutomationRulesTab } from './AutomationRulesTab';

@@ -38,6 +38,15 @@ import {
   resetChilledspace as resetChilledspaceRedux,
 } from '@/store/slices/chilledspaceSlice'
 
+
+import {
+  setWebAutomationRulesLoading,
+  setWebAutomationRules,
+  upsertWebAutomationRule,
+  setWebAutomationRulesError,
+  clearWebAutomationRules as clearWebAutomationRulesRedux,
+} from '@/store/slices/webAutomationRuleSlice'
+
 import {
   APP_MODES,
   setMode as setModeRedux,
@@ -872,6 +881,237 @@ export function AppStateProvider({ children }) {
     [dispatch]
   )
 
+  // =============================================================
+  // web_automation_rules
+  // =============================================================
+
+  /**
+   * Laravel API から有効な Web 自動化ルール一覧を取得し、
+   * Redux にキャッシュする。
+   *
+   * 使用例:
+   * await loadWebAutomationRules()
+   * await loadWebAutomationRules({ category: 'attendance' })
+   */
+  const loadWebAutomationRules = useCallback(
+    async ({ category } = {}) => {
+      console.group('[AppStateContext/loadWebAutomationRules]')
+      console.log('category:', category)
+
+      dispatch(setWebAutomationRulesLoading(true))
+
+      try {
+        const api =
+          window.electronAPI?.laravel_webAutomationRules_getAll
+
+        if (typeof api !== 'function') {
+          throw new Error(
+            'preload に laravel_webAutomationRules_getAll が公開されていません'
+          )
+        }
+
+        const params = {}
+
+        if (category) {
+          params.category = category
+        }
+
+        const result = await api(params)
+
+        console.log('result:', result)
+
+        if (result?.success === false) {
+          throw new Error(
+            result?.message ??
+              result?.error ??
+              'web_automation_rules の取得に失敗しました'
+          )
+        }
+
+        const items = Array.isArray(result?.data)
+          ? result.data
+          : []
+
+        dispatch(
+          setWebAutomationRules({
+            items,
+            meta: result?.meta ?? {},
+          })
+        )
+
+        console.groupEnd()
+
+        return {
+          success: true,
+          data: items,
+          meta: result?.meta ?? {},
+        }
+      } catch (error) {
+        console.error(
+          '[AppStateContext/loadWebAutomationRules] エラー:',
+          error
+        )
+
+        dispatch(
+          setWebAutomationRulesError(
+            error?.message ?? String(error)
+          )
+        )
+
+        console.groupEnd()
+
+        return {
+          success: false,
+          data: [],
+          meta: {},
+          error:
+            error?.message ?? String(error),
+        }
+      }
+    },
+    [dispatch]
+  )
+
+  /**
+   * rule_key を指定して Laravel API から1件取得する。
+   *
+   * force=false の場合は Redux キャッシュを優先する。
+   */
+  const loadWebAutomationRule = useCallback(
+    async (ruleKey, { force = false } = {}) => {
+      const normalizedRuleKey =
+        ruleKey != null
+          ? String(ruleKey).trim()
+          : ''
+
+      console.group('[AppStateContext/loadWebAutomationRule]')
+      console.log('ruleKey:', normalizedRuleKey)
+      console.log('force:', force)
+
+      if (!normalizedRuleKey) {
+        const result = {
+          success: false,
+          data: null,
+          error: 'ruleKey が空です',
+        }
+
+        console.warn(result.error)
+        console.groupEnd()
+
+        return result
+      }
+
+      if (!force) {
+        const cached =
+          redux.webAutomationRulesByKey?.[
+            normalizedRuleKey
+          ]
+
+        if (cached) {
+          console.log('Redux cache hit:', cached)
+          console.groupEnd()
+
+          return {
+            success: true,
+            data: cached,
+            cached: true,
+          }
+        }
+      }
+
+      dispatch(setWebAutomationRulesLoading(true))
+
+      try {
+        const api =
+          window.electronAPI?.laravel_webAutomationRule_get
+
+        if (typeof api !== 'function') {
+          throw new Error(
+            'preload に laravel_webAutomationRule_get が公開されていません'
+          )
+        }
+
+        const result = await api(
+          normalizedRuleKey
+        )
+
+        console.log('result:', result)
+
+        if (result?.success === false) {
+          throw new Error(
+            result?.message ??
+              result?.error ??
+              `自動化ルール ${normalizedRuleKey} の取得に失敗しました`
+          )
+        }
+
+        const rule = result?.data ?? null
+
+        if (!rule?.rule_key) {
+          throw new Error(
+            `自動化ルール ${normalizedRuleKey} のデータが不正です`
+          )
+        }
+
+        dispatch(upsertWebAutomationRule(rule))
+
+        console.groupEnd()
+
+        return {
+          success: true,
+          data: rule,
+          cached: false,
+        }
+      } catch (error) {
+        console.error(
+          '[AppStateContext/loadWebAutomationRule] エラー:',
+          error
+        )
+
+        dispatch(
+          setWebAutomationRulesError(
+            error?.message ?? String(error)
+          )
+        )
+
+        console.groupEnd()
+
+        return {
+          success: false,
+          data: null,
+          error:
+            error?.message ?? String(error),
+        }
+      }
+    },
+    [
+      dispatch,
+      redux.webAutomationRulesByKey,
+    ]
+  )
+
+  /**
+   * Redux にキャッシュ済みのルールを同期的に取得する。
+   */
+  const getWebAutomationRule = useCallback(
+    (ruleKey) => {
+      if (ruleKey == null) {
+        return null
+      }
+
+      return (
+        redux.webAutomationRulesByKey?.[
+          String(ruleKey)
+        ] ?? null
+      )
+    },
+    [redux.webAutomationRulesByKey]
+  )
+
+  const clearWebAutomationRules = useCallback(() => {
+    dispatch(clearWebAutomationRulesRedux())
+  }, [dispatch])
+
   const setIniStateDirect = useCallback((next) => {
     console.group('[AppStateContext/setIniStateDirect]')
     console.log('next:', next)
@@ -927,6 +1167,13 @@ export function AppStateProvider({ children }) {
       clearSpace,
       resetChilledspace,
       setAttendanceData,
+
+      // Web自動化ルール
+      loadWebAutomationRules,
+      loadWebAutomationRule,
+      getWebAutomationRule,
+      clearWebAutomationRules,
+
       setActiveSidebarTab,
       setIniState: setIniStateDirect,
     },
@@ -1003,6 +1250,12 @@ export function AppStateProvider({ children }) {
 
         setAttendanceData,
         setSelectChildFilterMode,
+
+        // Web自動化ルール
+        loadWebAutomationRules,
+        loadWebAutomationRule,
+        getWebAutomationRule,
+        clearWebAutomationRules,
 
         // -- モードの追加 --
         setAppMode,

@@ -20,6 +20,7 @@ import {
   StaffTab,
   AdminTab,
   DebugTab,
+  AutomationRulesTab,
 } from "./tabs";
 
 import { useAppState } from '@/AppStateContext';
@@ -58,11 +59,18 @@ const BASE_TABS = [
 
 ]
 
-const ADMIN_TAB = {
-  id: 'admin',
-  label: '職員管理',
-  component: AdminTab,
-}
+const ADMIN_TABS = [
+  {
+    id: 'automation-rules',
+    label: '自動化ルール',
+    component: AutomationRulesTab,
+  },
+  {
+    id: 'admin',
+    label: '職員管理',
+    component: AdminTab,
+  },
+]
 
 // デバッグモード用のタブ
 const DEBUG_TABS = [
@@ -118,7 +126,7 @@ export default function SettingsModal({
     ? DEBUG_TABS
     : DEBUG_TABS.filter((tab) => tab.id !== 'debug')
   const baseTabs = isAdmin
-    ? [...BASE_TABS, ADMIN_TAB]
+    ? [...BASE_TABS, ...ADMIN_TABS]
     : BASE_TABS
   const tabs = DEBUG_FLG ? [...baseTabs, ...visibleDebugTabs] : baseTabs;
 
