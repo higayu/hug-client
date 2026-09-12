@@ -7,6 +7,7 @@ import EnterButton from "./EnterButton"
 import LeaveButton from "./LeaveButton"
 import AbsenceButton from "./AbsenceButton"
 import ProfessionalSupportButton from "./ProfessionalSupportButton"
+import TestAddProfessional from "./TestAddProfessional"
 
 import {
   canPostEnter,
@@ -93,6 +94,10 @@ export default function AttendanceActionSection({
       isStop={isStop}
       loadingAction={loadingAction}
     />
+  )
+
+  const testAddProfessionalButton = (
+    <TestAddProfessional spaceId={spaceId} />
   )
 
   useEffect(() => {
@@ -258,6 +263,7 @@ export default function AttendanceActionSection({
         </span>
 
         {professionalSupportButton}
+        {testAddProfessionalButton}
       </div>
     )
   }
@@ -333,6 +339,7 @@ export default function AttendanceActionSection({
         )}
 
         {professionalSupportButton}
+        {testAddProfessionalButton}
       </div>
     )
   }
@@ -396,6 +403,7 @@ export default function AttendanceActionSection({
       ) : null}
 
       {professionalSupportButton}
+      {testAddProfessionalButton}
 
     </div>
   )

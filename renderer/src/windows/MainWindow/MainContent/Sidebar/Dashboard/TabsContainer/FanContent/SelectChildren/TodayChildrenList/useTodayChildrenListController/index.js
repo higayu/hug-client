@@ -11,6 +11,9 @@ import { TABS } from "@/components/common/constants";
 import { isMorningChild } from "./timeUtils";
 import { useAppState } from '@/AppStateContext';
 
+const getChildId = (child) =>
+  child?.children_id ?? child?.id ?? ""
+
 export function useTodayChildrenListController({
   selectedChildId,
   spaceId,
@@ -46,8 +49,8 @@ export function useTodayChildrenListController({
 
       setDoneChildIds((prev) => {
         const next = checked
-          ? [...new Set([...prev, child.children_id])]
-          : prev.filter((id) => id !== child.children_id)
+          ? [...new Set([...prev, getChildId(child)])]
+          : prev.filter((id) => id !== getChildId(child))
 
         return next
       })
@@ -88,7 +91,7 @@ export function useTodayChildrenListController({
       }
 
       const mode = Number(SELECT_CHILD_FILTER_MODE ?? 1) // デフォルトを 1 に変更
-      const attendanceItem = getAttendanceItem(child.children_id)
+      const attendanceItem = getAttendanceItem(getChildId(child))
 
       const absent = isChildAbsent(attendanceItem)
       const exited = isChildExited(attendanceItem)
@@ -135,7 +138,7 @@ export function useTodayChildrenListController({
         return false
       }
 
-      const result = isChildAbsent(getAttendanceItem(child.children_id))
+      const result = isChildAbsent(getAttendanceItem(getChildId(child)))
 
       return result
     },
@@ -148,7 +151,7 @@ export function useTodayChildrenListController({
         return false
       }
 
-      const result = isChildExited(getAttendanceItem(child.children_id))
+      const result = isChildExited(getAttendanceItem(getChildId(child)))
 
       return result
     },
@@ -264,7 +267,7 @@ export function useTodayChildrenListController({
 
     const first = normalChildren[0]
 
-    setSpaceChild(spaceId, first.children_id, first.children_name)
+    setSpaceChild(spaceId, getChildId(first), first.children_name)
     setSpacePcName(spaceId, first.pc_name || "")
   }, [
     activeTab,
@@ -295,7 +298,7 @@ export function useTodayChildrenListController({
     }
 
     const selectedStillVisible = visibleChildren.some(
-      (child) => String(child.children_id) === String(selectedChildId)
+      (child) => String(getChildId(child)) === String(selectedChildId)
     )
 
     if (selectedStillVisible) {
@@ -304,7 +307,7 @@ export function useTodayChildrenListController({
 
     const first = visibleChildren[0]
 
-    setSpaceChild(spaceId, first.children_id, first.children_name)
+    setSpaceChild(spaceId, getChildId(first), first.children_name)
     setSpacePcName(spaceId, first.pc_name || "")
   }, [
     selectedChildId,
@@ -321,8 +324,24 @@ export function useTodayChildrenListController({
   // ==============================
   const handleChildSelect = useCallback(
     (childId, childName, pcName = "") => {
+      const normalizedChildId =
+        childId !== null && childId !== undefined
+          ? String(childId).trim()
+          : ""
 
-      setSpaceChild(spaceId, childId, childName)
+      if (!normalizedChildId) {
+        console.error(
+          "[useTodayChildrenListController] 児童IDが空のため選択を中止しました",
+          {
+            spaceId,
+            childId,
+            childName,
+          }
+        )
+        return
+      }
+
+      setSpaceChild(spaceId, normalizedChildId, childName)
       setSpacePcName(spaceId, pcName || "")
     },
     [

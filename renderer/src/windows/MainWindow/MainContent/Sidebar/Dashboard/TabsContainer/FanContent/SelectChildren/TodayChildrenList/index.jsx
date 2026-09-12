@@ -5,6 +5,9 @@ import { TABS } from '@/components/common/constants'
 import { useTodayChildrenListController } from './useTodayChildrenListController'
 import ChildAttendancePanel from './ChildAttendancePanel'
 
+const getChildId = (child) =>
+  child?.children_id ?? child?.id ?? ""
+
 const TAB_ITEMS = [
   { id: TABS.NORMAL, label: '通常' },
   { id: TABS.SOMETIMES, label: '時折' },
@@ -231,7 +234,7 @@ export default function TodayChildrenList({ spaceId }) {
   const selectedChild = useMemo(
     () =>
       allChildren.find(
-        (child) => String(child?.children_id) === String(selectedChildId),
+        (child) => String(getChildId(child)) === String(selectedChildId),
       ) ?? null,
     [allChildren, selectedChildId],
   )
@@ -239,10 +242,10 @@ export default function TodayChildrenList({ spaceId }) {
   const selectedChildTab = useMemo(() => {
     if (!selectedChild) return null
 
-    if (visibleWaitingChildren.some((child) => String(child.children_id) === String(selectedChildId))) {
+    if (visibleWaitingChildren.some((child) => String(getChildId(child)) === String(selectedChildId))) {
       return TABS.WAITING
     }
-    if (visibleExperienceChildren.some((child) => String(child.children_id) === String(selectedChildId))) {
+    if (visibleExperienceChildren.some((child) => String(getChildId(child)) === String(selectedChildId))) {
       return TABS.EXPERIENCE
     }
 
@@ -277,7 +280,22 @@ export default function TodayChildrenList({ spaceId }) {
   }
 
   const handleSelectChild = (child) => {
-    handleChildSelect(child.children_id, child.children_name, child.pc_name || '')
+    const childId = getChildId(child)
+
+    if (!childId) {
+      console.error(
+        '[TodayChildrenList] 児童IDを取得できませんでした',
+        child,
+      )
+      return
+    }
+
+    handleChildSelect(
+      childId,
+      child.children_name ?? child.name ?? '',
+      child.pc_name || '',
+    )
+
     setIsOpen(false)
   }
 
