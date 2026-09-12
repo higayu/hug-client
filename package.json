@@ -1,6 +1,6 @@
 {
   "name": "hug-client",
-  "version": "4.0.0",
+  "version": "4.0.1",
   "description": "FCC Hug Client",
   "main": "main.js",
   "scripts": {
