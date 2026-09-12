@@ -1,7 +1,7 @@
 import WeekdaySelect from "@/components/ui/WeekdaySelect";
 import FanMenuButton from "./FanMenuButton";
 import GetTodayUsersChildren from "./GetTodayUsersChildren";
-import AddChilledSpace from "./AddChilledSpace";
+import AddChilledSpaceBtn from "./AddChilledSpaceBtn";
 
 function DashboardHeader() {
   return (
@@ -72,7 +72,7 @@ function DashboardHeader() {
           </div>
 
           <div className="flex shrink-0 items-center justify-center">
-            <AddChilledSpace />
+            <AddChilledSpaceBtn />
           </div>
         </div>
       </div>

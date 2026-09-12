@@ -1,6 +1,6 @@
 import { Plus } from "lucide-react"
 
-export default function AddChilledSpace() {
+export default function AddChilledSpaceBtn() {
 
     function onClick() {
             console.log("AddChilledSpace clicked");
