@@ -1,5 +1,7 @@
 import { GlobeAltIcon } from '@heroicons/react/24/outline'
 import { useAppState } from '@/AppStateContext'
+import { useSelector } from 'react-redux'
+import { selectActiveSpaceId, selectSpaceChildId } from '@/store/slices/chilledspaceSlice.js'
 import { addWebManagerAction_OutWindow } from '@/hooks/useTabs/actions/WebManager.js'
 
 export default function BrowserOpenButton({
@@ -7,8 +9,12 @@ export default function BrowserOpenButton({
   path = '',
   disabled_flg = false,
   title = 'Open web page',
+  spaceId,
 }) {
   const { appState, iniState } = useAppState()
+  const activeSpaceId = useSelector(selectActiveSpaceId)
+  const effectiveSpaceId = spaceId || activeSpaceId
+  const childId = useSelector(selectSpaceChildId(effectiveSpaceId))
 
   const handleClick = (e) => {
     if (disabled_flg) {
@@ -32,7 +38,7 @@ export default function BrowserOpenButton({
       iniState,
     })
 
-    addWebManagerAction_OutWindow(appState, iniState, switch_id, path)
+    addWebManagerAction_OutWindow(appState, iniState, switch_id, path, childId)
   }
 
   return (

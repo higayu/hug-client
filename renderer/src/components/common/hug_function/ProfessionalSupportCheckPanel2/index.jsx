@@ -4,8 +4,11 @@ import { useProfessionalSupportCheck2 } from "./useProfessionalSupportCheck2";
 import { CheckCircleIcon, ChevronDownIcon } from "@heroicons/react/24/outline";
 import {
   selectCurrentYmd,
-  selectSelectedChild,
 } from "@/store/slices/appStateSlice.js";
+import {
+  selectActiveSpaceId,
+  selectSpaceChildId,
+} from "@/store/slices/chilledspaceSlice.js";
 import { selectProfessionalSupportStatus } from "@/store/slices/recordStatusSlice.js";
 import ProfessionalSupportListButton from "./ProfessionalSupportListButton";
 
@@ -84,18 +87,25 @@ export default function ProfessionalSupportCheckPanel2({
   className = "",
   labelClassName = "",
   logTag = "ProfessionalSupportCheck",
+  spaceId,
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef(null);
 
+  const activeSpaceId = useSelector(selectActiveSpaceId);
+  const effectiveSpaceId = spaceId || activeSpaceId;
+
   const currentYmd = useSelector(selectCurrentYmd);
-  const selectedChildId = useSelector(selectSelectedChild);
+  const selectedChildId = useSelector(selectSpaceChildId(effectiveSpaceId));
 
   const professionalSupportStatus = useSelector((state) =>
     selectProfessionalSupportStatus(state, currentYmd, selectedChildId)
   );
 
-  const { checking, runCheck } = useProfessionalSupportCheck2(logTag);
+  const { checking, runCheck } = useProfessionalSupportCheck2(
+    effectiveSpaceId,
+    logTag
+  );
 
   const useDays = professionalSupportStatus.useDays;
   const useDaysDisplayKind = professionalSupportStatus.useDaysDisplayKind;
@@ -214,7 +224,7 @@ export default function ProfessionalSupportCheckPanel2({
           {checking ? "確認中" : "チェック"}
         </button>
 
-        <ProfessionalSupportListButton className="h-8 shadow-md" />
+        <ProfessionalSupportListButton spaceId={effectiveSpaceId} className="h-8 shadow-md" />
       </div>
 
       {/* 親ボタン: 現在ステータスを常時表示 */}

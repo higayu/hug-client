@@ -10,13 +10,12 @@ import ChildrenListContent from "./ChildrenListContent";
 import { TABS } from "@/components/common/constants";
 import { useTodayChildrenListController } from "./useTodayChildrenListController";
 
-export default function TodayChildrenList() {
+export default function TodayChildrenList({ spaceId }) {
   const appState = useAppState();
 
   const {
     // appStateSlice
-    SELECT_CHILD,
-    SELECT_CHILD_NAME,
+    chilledSpaces,
     SELECT_CHILD_FILTER_MODE,
     CURRENT_DAY_OF_WEEK,
     STAFF_ID,
@@ -31,9 +30,13 @@ export default function TodayChildrenList() {
 
     // actions
     updateAppState,
-    setSelectedChild,
-    setSelectedPcName,
+    setSpaceChild,
+    setSpacePcName,
   } = appState;
+
+  const currentSpace = chilledSpaces?.[spaceId] ?? {};
+  const selectedChildId = currentSpace.childId ?? '';
+  const selectedChildName = currentSpace.childName ?? '';
 
   const [activeTab, setActiveTab] = useState(TABS.NORMAL);
   const [doneChildIds, setDoneChildIds] = useState([]);
@@ -272,7 +275,8 @@ export default function TodayChildrenList() {
     getChildAbsent,
     getChildExited,
   } = useTodayChildrenListController({
-    SELECT_CHILD,
+    selectedChildId,
+    spaceId,
     SELECT_CHILD_FILTER_MODE,
 
     childrenData: displayChildrenData,
@@ -283,8 +287,8 @@ export default function TodayChildrenList() {
     attendanceData,
     activeTab,
     setDoneChildIds,
-    setSelectedChild,
-    setSelectedPcName,
+    setSpaceChild,
+    setSpacePcName,
   });
 
   // ==============================
@@ -297,8 +301,8 @@ export default function TodayChildrenList() {
         activeTab,
         staffId: STAFF_ID,
         hasStaffId,
-        SELECT_CHILD,
-        SELECT_CHILD_NAME,
+        selectedChildId,
+        selectedChildName,
         weekdayId,
         displayChildrenDataCount:
           displayChildrenData.length,
@@ -317,8 +321,8 @@ export default function TodayChildrenList() {
     activeTab,
     STAFF_ID,
     hasStaffId,
-    SELECT_CHILD,
-    SELECT_CHILD_NAME,
+    selectedChildId,
+    selectedChildName,
     weekdayId,
     displayChildrenData,
     normalChildren,
@@ -364,7 +368,7 @@ export default function TodayChildrenList() {
               experienceChildrenData={
                 visibleExperienceChildren
               }
-              selectedChildId={SELECT_CHILD}
+              selectedChildId={selectedChildId}
               onSelectChild={handleChildSelect}
               getChildNotesTitle={getChildNotesTitle}
               doneChildIds={doneChildIds}

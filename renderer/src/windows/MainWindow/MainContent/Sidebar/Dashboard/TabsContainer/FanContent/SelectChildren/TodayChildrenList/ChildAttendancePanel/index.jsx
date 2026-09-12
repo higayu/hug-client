@@ -31,20 +31,18 @@ const isTimeFormat = (value) => {
   return /^\d{2}:\d{2}$/.test(value.trim())
 }
 
-export default function ChildAttendancePanel() {
+export default function ChildAttendancePanel({ spaceId }) {
   const dispatch = useDispatch()
   const appStateValue = useAppState()
 
   const {
     appState,
     attendanceData,
-    setSelectedChildColumns,
+    setSpaceChildColumns,
+    chilledSpaces,
     updateAppState,
     CURRENT_YMD,
     FACILITY_ID,
-
-    SELECT_CHILD,
-    SELECT_CHILD_NAME,
 
     // 新名称
     week_children,
@@ -67,11 +65,9 @@ export default function ChildAttendancePanel() {
   // =============================================================
   // 選択中児童ID
   // =============================================================
-  const selectChild = pickValue(
-    SELECT_CHILD,
-    appState?.SELECT_CHILD,
-    ''
-  )
+  const currentSpace = chilledSpaces?.[spaceId] ?? {}
+  const selectChild = currentSpace.childId ?? ''
+  const selectedChildName = currentSpace.childName ?? ''
 
   // =============================================================
   // AppState の児童リストを安全に配列化
@@ -175,7 +171,7 @@ export default function ChildAttendancePanel() {
   // =============================================================
   // 表示用の選択児童
   // 重要:
-  // - selectedChildData が null でも SELECT_CHILD があればパネル表示を続行する
+  // - selectedChildData が null でも selectChild があればパネル表示を続行する
   // - 左リストの表示用 state には児童がいるが、AppState の児童リストにいない場合があるため
   // =============================================================
   const selectedChildForDisplay = useMemo(() => {
@@ -190,8 +186,7 @@ export default function ChildAttendancePanel() {
     return {
       children_id: selectChild,
       children_name: pickValue(
-        SELECT_CHILD_NAME,
-        appState?.SELECT_CHILD_NAME,
+        selectedChildName,
         attendanceItem?.children_name,
         ''
       ),
@@ -203,8 +198,7 @@ export default function ChildAttendancePanel() {
   }, [
     selectedChildData,
     selectChild,
-    SELECT_CHILD_NAME,
-    appState?.SELECT_CHILD_NAME,
+    selectedChildName,
     attendanceItem,
   ])
 
@@ -215,23 +209,19 @@ export default function ChildAttendancePanel() {
   // AppState 側の選択児童カラム
   // =============================================================
   const selectedColumn5 = pickValue(
-    appStateValue?.SELECTED_CHILD_COLUMN5,
-    appState?.SELECTED_CHILD_COLUMN5
+    currentSpace.selectedChildColumn5
   )
 
   const selectedColumn5Html = pickValue(
-    appStateValue?.SELECTED_CHILD_COLUMN5_HTML,
-    appState?.SELECTED_CHILD_COLUMN5_HTML
+    currentSpace.selectedChildColumn5Html
   )
 
   const selectedColumn6 = pickValue(
-    appStateValue?.SELECTED_CHILD_COLUMN6,
-    appState?.SELECTED_CHILD_COLUMN6
+    currentSpace.selectedChildColumn6
   )
 
   const selectedColumn6Html = pickValue(
-    appStateValue?.SELECTED_CHILD_COLUMN6_HTML,
-    appState?.SELECTED_CHILD_COLUMN6_HTML
+    currentSpace.selectedChildColumn6Html
   )
 
   // =============================================================
@@ -286,8 +276,7 @@ export default function ChildAttendancePanel() {
 
   const childName = pickValue(
     selectedChildForDisplay?.children_name,
-    SELECT_CHILD_NAME,
-    appState?.SELECT_CHILD_NAME,
+    selectedChildName,
     attendanceItem?.children_name,
     ''
   )
@@ -299,7 +288,7 @@ export default function ChildAttendancePanel() {
     if (!selectChild || !attendanceItem) {
       setIsUIEnabled(false)
 
-      setSelectedChildColumns({
+      setSpaceChildColumns(spaceId, {
         column5: null,
         column5Html: null,
         column6: null,
@@ -311,7 +300,7 @@ export default function ChildAttendancePanel() {
 
     setIsUIEnabled(true)
 
-    setSelectedChildColumns({
+    setSpaceChildColumns(spaceId, {
       column5: pickValue(attendanceItem.column5),
       column5Html: pickValue(attendanceItem.column5Html),
       column6: pickValue(attendanceItem.column6),
@@ -320,7 +309,8 @@ export default function ChildAttendancePanel() {
   }, [
     selectChild,
     attendanceItem,
-    setSelectedChildColumns,
+    setSpaceChildColumns,
+    chilledSpaces,
   ])
 
   // =============================================================
@@ -330,8 +320,9 @@ export default function ChildAttendancePanel() {
     console.group('[ChildAttendancePanel] 入退室ボタン調査')
 
     console.log('selectChild:', selectChild)
-    console.log('SELECT_CHILD:', SELECT_CHILD)
-    console.log('SELECT_CHILD_NAME:', SELECT_CHILD_NAME)
+    console.log('spaceId:', spaceId)
+    console.log('selectChild:', selectChild)
+    console.log('selectedChildName:', selectedChildName)
     console.log('childName:', childName)
     console.log('dateStr:', dateStr)
     console.log('facilityId:', facilityId)
@@ -394,8 +385,8 @@ export default function ChildAttendancePanel() {
     console.groupEnd()
   }, [
     selectChild,
-    SELECT_CHILD,
-    SELECT_CHILD_NAME,
+    spaceId,
+    selectedChildName,
     childName,
     dateStr,
     facilityId,
@@ -522,7 +513,7 @@ export default function ChildAttendancePanel() {
       }
 
       if (res?.attendanceItem) {
-        setSelectedChildColumns({
+        setSpaceChildColumns(spaceId, {
           column5: pickValue(res.attendanceItem.column5),
           column5Html: pickValue(res.attendanceItem.column5Html),
           column6: pickValue(res.attendanceItem.column6),
@@ -592,7 +583,7 @@ export default function ChildAttendancePanel() {
       }
 
       if (res?.attendanceItem) {
-        setSelectedChildColumns({
+        setSpaceChildColumns(spaceId, {
           column5: pickValue(res.attendanceItem.column5),
           column5Html: pickValue(res.attendanceItem.column5Html),
           column6: pickValue(res.attendanceItem.column6),
@@ -691,11 +682,13 @@ export default function ChildAttendancePanel() {
 
       <div className="mt-2 flex w-full gap-1">
         <PersonalRecordCheckPanel
+          spaceId={spaceId}
           className="min-w-0 flex-1"
           expandDirection="up"
         />
 
         <ProfessionalSupportCheckPanel2
+          spaceId={spaceId}
           logTag="ChildAttendancePanel"
           className="min-w-0 flex-1 items-stretch px-0"
           labelClassName="w-full"

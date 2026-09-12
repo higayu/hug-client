@@ -14,6 +14,7 @@ export { PERIOD_TYPES };
  * 月単位・日付単位の取得操作を切り替える専用パネル
  */
 export default function PersonSwitchPanel({
+  spaceId,
   value,
   onChange,
   month,
@@ -85,6 +86,7 @@ export default function PersonSwitchPanel({
       <div className="min-w-0 flex-1">
         {isMonth ? (
           <MonthControls
+            spaceId={spaceId}
             month={month}
             onMonthChange={onMonthChange}
             disabled={disabled}
@@ -93,6 +95,7 @@ export default function PersonSwitchPanel({
           />
         ) : (
           <DayControls
+            spaceId={spaceId}
             date={date}
             onDateChange={onDateChange}
             disabled={disabled}

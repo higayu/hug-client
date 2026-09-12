@@ -1,5 +1,7 @@
 import { useCallback, useRef, useState } from "react";
 import { useAppState } from "@/AppStateContext";
+import { useSelector } from "react-redux";
+import { selectSpaceChildId } from "@/store/slices/chilledspaceSlice.js";
 import { useToast } from '@/provider/ToastProvider/ToastContext'
 import { fetchPersonalRecord } from "@/utils/fetchPersonalRecord";
 import { postServiceRecordsToLocalApi } from "./postServiceRecordsToLocalApi";
@@ -24,12 +26,14 @@ function notifyPostResultToasts(postResult, { showSuccessToast, showErrorToast }
  * 選択中児童の個人記録（活動内容 note）を hugview 経由で取得し、コンソールに出力する（テスト用）
  */
 export default function PersonalRecordGetDayBtn({
+  spaceId,
   dateStr,
   disabled = false,
   onServiceRecordsUpdated,
   onDebugResult,
 }) {
-  const { SELECT_CHILD, FACILITY_ID, STAFF_ID, CURRENT_YMD, DATABASE_TYPE } = useAppState();
+  const { FACILITY_ID, STAFF_ID, CURRENT_YMD, DATABASE_TYPE } = useAppState();
+  const selectedChildId = useSelector(selectSpaceChildId(spaceId));
   const { showSuccessToast, showErrorToast } = useToast();
   const [fetching, setFetching] = useState(false);
   const [permissionErrorCount, setPermissionErrorCount] = useState(0);
@@ -42,7 +46,7 @@ export default function PersonalRecordGetDayBtn({
       return;
     }
 
-    if (!SELECT_CHILD) {
+    if (!selectedChildId) {
       console.warn(`[${LOG_TAG}] 児童が選択されていません`);
       return;
     }
@@ -60,14 +64,14 @@ export default function PersonalRecordGetDayBtn({
     setPermissionErrorCount(0);
 
     console.log(`[${LOG_TAG}] 取得開始`, {
-      childId: SELECT_CHILD,
+      childId: selectedChildId,
       facilityId,
       currentYmd,
     });
 
     try {
       const result = await fetchPersonalRecord({
-        childId: SELECT_CHILD,
+        childId: selectedChildId,
         facilityId,
         currentYmd,
       });
@@ -105,7 +109,7 @@ export default function PersonalRecordGetDayBtn({
       setPermissionErrorCount(fetchedPermissionErrorCount);
 
       const postResult = await postServiceRecordsToLocalApi(result.records, {
-        childrenId: SELECT_CHILD,
+        childrenId: selectedChildId,
         facilityId,
         staffId: STAFF_ID,
         databaseType: DATABASE_TYPE,
@@ -149,7 +153,7 @@ export default function PersonalRecordGetDayBtn({
       setFetching(false);
     }
   }, [
-    SELECT_CHILD,
+    selectedChildId,
     disabled,
     FACILITY_ID,
     CURRENT_YMD,
@@ -169,7 +173,7 @@ export default function PersonalRecordGetDayBtn({
         type="button"
         id="personal-record-get"
         onClick={runFetch}
-        disabled={disabled || !SELECT_CHILD || !(dateStr || CURRENT_YMD) || fetching}
+        disabled={disabled || !selectedChildId || !(dateStr || CURRENT_YMD) || fetching}
         className="
           flex items-center justify-center
           bg-green-700 text-white

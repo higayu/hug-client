@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useSelector } from "react-redux";
 import { useAppState } from "@/AppStateContext";
+import { selectSpaceChildId } from "@/store/slices/chilledspaceSlice.js";
 import { selectServiceRecord } from "@/store/slices/databaseSlice.js";
 import { selectPersonalRecordNote } from "./selectPersonalRecordNote";
 import CopyButton from "@/components/ui/CopyButton";
@@ -10,8 +11,10 @@ import CopyButton from "@/components/ui/CopyButton";
  * 
  * @param {{ monthStr: string, onMonthChange?: (month: string) => void }} props
  */
-export default function ListBox_Text({ monthStr = "", onMonthChange }) {
-  const { SELECT_CHILD, CURRENT_YMD } = useAppState();
+export default function ListBox_Text({
+  spaceId, monthStr = "", onMonthChange }) {
+  const { CURRENT_YMD } = useAppState();
+  const selectedChildId = useSelector(selectSpaceChildId(spaceId));
   const serviceRecords = useSelector(selectServiceRecord);
   
   // 選択された日付（YYYY-MM-DD）
@@ -119,18 +122,18 @@ export default function ListBox_Text({ monthStr = "", onMonthChange }) {
    * 選択された日付のnoteを取得
    */
   useEffect(() => {
-    if (!SELECT_CHILD || !selectedDate) {
+    if (!selectedChildId || !selectedDate) {
       setSelectedNote("");
       return;
     }
 
     const note = selectPersonalRecordNote(serviceRecords, {
-      childrenId: SELECT_CHILD,
+      childrenId: selectedChildId,
       dateStr: selectedDate,
     });
     
     setSelectedNote(note || "");
-  }, [SELECT_CHILD, selectedDate, serviceRecords]);
+  }, [selectedChildId, selectedDate, serviceRecords]);
 
   /**
    * 日付の表示形式を変換 (YYYY-MM-DD → MM/DD(曜日))
@@ -147,9 +150,9 @@ export default function ListBox_Text({ monthStr = "", onMonthChange }) {
    * その日付にnoteが存在するかチェック
    */
   const hasNote = (dateStr) => {
-    if (!SELECT_CHILD) return false;
+    if (!selectedChildId) return false;
     const note = selectPersonalRecordNote(serviceRecords, {
-      childrenId: SELECT_CHILD,
+      childrenId: selectedChildId,
       dateStr: dateStr,
     });
     return note && note.trim().length > 0;
@@ -230,7 +233,7 @@ export default function ListBox_Text({ monthStr = "", onMonthChange }) {
           value={selectedNote}
           readOnly
           placeholder={
-            !SELECT_CHILD 
+            !selectedChildId 
               ? "児童が選択されていません" 
               : !selectedDate 
                 ? "日付を選択してください"

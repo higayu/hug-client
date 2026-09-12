@@ -1,6 +1,8 @@
 // renderer/src/components/common/ProfessionalPlan
 import React from "react";
 import { useAppState } from "@/AppStateContext";
+import { useSelector } from "react-redux";
+import { selectSpaceChildId } from "@/store/slices/chilledspaceSlice.js";
 import { useDataBase } from "@/hooks/useDataBase";
 import { getHugWebviewForCache } from "@/hooks/useHugCache/getHugCache.js";
 import { ArrowPathIcon } from "@heroicons/react/24/solid";
@@ -27,13 +29,14 @@ async function fetchHtmlInWebview(webview, url) {
   return webview.executeJavaScript(script);
 }
 
-export default function ProfessionalPlan() {
-  const { SELECT_CHILD, DATABASE_TYPE } = useAppState();
+export default function ProfessionalPlan({ spaceId }) {
+  const { DATABASE_TYPE } = useAppState();
+  const selectedChildId = useSelector(selectSpaceChildId(spaceId));
   const { loadDataBase } = useDataBase();
 
   const handleGetProfessionalPlan = async () => {
     const listUrl =
-      `https://www.hug-ayumu.link/hug/wm/addition_plan_situation.php?mode=list&c_id=${SELECT_CHILD}`;
+      `https://www.hug-ayumu.link/hug/wm/addition_plan_situation.php?mode=list&c_id=${selectedChildId}`;
 
     const htmlElementToMarkdown = (root) => {
       const lines = [];
@@ -290,7 +293,7 @@ export default function ProfessionalPlan() {
       console.log("[HUG WM] #carebreak Markdown:");
       console.log(markdown);
 
-      if (!markdown || !SELECT_CHILD) {
+      if (!markdown || !selectedChildId) {
         return markdown;
       }
 
@@ -310,7 +313,7 @@ export default function ProfessionalPlan() {
 
       const updateResult = await childrenUpdate({
         pk: "id",
-        values: String(SELECT_CHILD),
+        values: String(selectedChildId),
         data: { notes: markdown },
       });
 

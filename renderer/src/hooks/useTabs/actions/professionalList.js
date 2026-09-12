@@ -10,7 +10,7 @@ import {
 import { getDateString } from '@/utils/date/dateUtils.js'
 import { confirmDialog } from '@/utils/dialog/confirmDialog.js'
 
-export function addProfessionalSupportListAction(appState) {
+export function addProfessionalSupportListAction(appState, space) {
   const tabsContainer =
     document.getElementById('tabs')
 
@@ -63,7 +63,7 @@ export function addProfessionalSupportListAction(appState) {
 
   const tabButton = createTabButton(
     newId,
-    `専門的加算 一覧 : ${appState.SELECT_CHILD_NAME}`,
+    `専門的加算 一覧 : ${space?.childName}`,
     appState.closeButtonsVisible
   )
 
@@ -143,10 +143,10 @@ export function addProfessionalSupportListAction(appState) {
 
           if (select) {
             select.dataset.cid =
-              '${appState.SELECT_CHILD}';
+              '${space?.childId}';
 
             select.value =
-              '${appState.SELECT_CHILD}';
+              '${space?.childId}';
 
             select.dispatchEvent(
               new Event('change', {

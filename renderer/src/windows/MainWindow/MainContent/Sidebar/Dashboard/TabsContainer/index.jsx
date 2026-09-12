@@ -1,31 +1,28 @@
-// renderer\src\windows\MainWindow\MainContent\Sidebar\Dashboard\TabsContainer\index.jsx
 import PrototypePanel from './PrototypePanel'
 import InsertChildren from './InsertChildren'
 import UpdateManager from './UpdateManager'
-import { useAppState } from '@/AppStateContext';
-import SpeechToText from './SpeechToText';
-import FanContent from './FanContent';
+import { useAppState } from '@/AppStateContext'
+import SpeechToText from './SpeechToText'
+import FanContent from './FanContent'
 
-function TabsContainer() {
+function TabsContainer({ spaceId }) {
   const {
     activeSidebarTab: activeTab,
     DEBUG_FLG,
   } = useAppState()
 
   return (
-    <div className="flex flex-col w-full h-full">
-      {/* --- コンテンツ切り替え --- */}
-      <div className="flex-1 overflow-auto bg-white">
-
+    <div className="flex flex-col w-full h-full min-h-0">
+      <div className="flex-1 min-h-0 overflow-auto bg-white">
         {activeTab === 'FanContent' && (
           <div className="h-full flex flex-col">
-            <FanContent />
+            <FanContent spaceId={spaceId} />
           </div>
         )}
 
         {activeTab === 'tools' && (
           <div className="h-full flex flex-col">
-            <PrototypePanel />
+            <PrototypePanel spaceId={spaceId} />
           </div>
         )}
 
@@ -46,7 +43,6 @@ function TabsContainer() {
             <SpeechToText />
           </div>
         )}
-
       </div>
     </div>
   )

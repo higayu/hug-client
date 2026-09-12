@@ -5,8 +5,11 @@ import { usePatchChildUseSpeDate } from "@/components/common/hug_function/GetTod
 import {
   selectCurrentYmd,
   selectFacilityId,
-  selectSelectedChild,
 } from "@/store/slices/appStateSlice.js";
+import {
+  selectActiveSpaceId,
+  selectSpaceChildId,
+} from "@/store/slices/chilledspaceSlice.js";
 import {
   setProfessionalSupportStatus,
   setRecordStatusError,
@@ -27,12 +30,12 @@ import { fetchProfessionalSupportUseDaysViaHugTab } from "./fetchHook1";
  * - 取得結果を recordStatusSlice に保存する
  */
 export function useProfessionalSupportCheck2(
+  spaceId,
   logTag = "ProfessionalSupportCheck2"
 ) {
   const dispatch = useDispatch();
 
   const {
-    SELECT_CHILD,
     FACILITY_ID,
     CURRENT_YMD,
 
@@ -40,7 +43,11 @@ export function useProfessionalSupportCheck2(
     childrenData,
   } = useAppState();
 
-  const selectedChildIdFromStore = useSelector(selectSelectedChild);
+  const activeSpaceId = useSelector(selectActiveSpaceId);
+  const effectiveSpaceId = spaceId || activeSpaceId;
+  const selectedChildIdFromStore = useSelector(
+    selectSpaceChildId(effectiveSpaceId)
+  );
   const facilityIdFromStore = useSelector(selectFacilityId);
   const currentYmdFromStore = useSelector(selectCurrentYmd);
 
@@ -55,7 +62,7 @@ export function useProfessionalSupportCheck2(
     currentYmdFromStoreType: typeof currentYmdFromStore,
   });
 
-  const effectiveChildId = selectedChildIdFromStore || SELECT_CHILD;
+  const effectiveChildId = selectedChildIdFromStore;
   const effectiveFacilityId = facilityIdFromStore || FACILITY_ID || "3";
   const effectiveCurrentYmd = currentYmdFromStore || CURRENT_YMD;
 
@@ -63,7 +70,6 @@ export function useProfessionalSupportCheck2(
     selectedChildIdFromStore,
     facilityIdFromStore,
     currentYmdFromStore,
-    SELECT_CHILD,
     FACILITY_ID,
     CURRENT_YMD,
     effectiveChildId,
@@ -164,8 +170,7 @@ export function useProfessionalSupportCheck2(
         currentYmdFromStore,
       },
       appState: {
-        SELECT_CHILD,
-        FACILITY_ID,
+            FACILITY_ID,
         CURRENT_YMD,
       },
       effective: {
@@ -527,7 +532,6 @@ export function useProfessionalSupportCheck2(
     }
   }, [
     dispatch,
-    SELECT_CHILD,
     FACILITY_ID,
     CURRENT_YMD,
     selectedChildIdFromStore,

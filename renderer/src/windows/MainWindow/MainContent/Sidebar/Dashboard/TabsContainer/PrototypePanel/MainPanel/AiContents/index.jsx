@@ -17,7 +17,7 @@ const AI_COMPONENT_MAP = {
   openrouter:OpenRouterContent,
 };
 
-export default function AiContents({ activePromptKey, onPromptChange, onPromptTabsChange }) {
+export default function AiContents({ spaceId, activePromptKey, onPromptChange, onPromptTabsChange }) {
   const {
     USE_AI,
     DATABASE_TYPE,
@@ -83,6 +83,7 @@ export default function AiContents({ activePromptKey, onPromptChange, onPromptTa
         </div>
       )}
       <AiComponent
+        spaceId={spaceId}
         activePromptKey={activePromptKey}
         onPromptChange={onPromptChange}
         onPromptTabsChange={onPromptTabsChange}

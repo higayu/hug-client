@@ -3,6 +3,8 @@ import { AllCommunityModule, ModuleRegistry, themeQuartz } from 'ag-grid-communi
 import { AgGridReact } from 'ag-grid-react'
 
 import { useAppState } from '@/AppStateContext'
+import { useSelector } from 'react-redux'
+import { selectSpaceChildId } from '@/store/slices/chilledspaceSlice.js'
 
 import ChildKadaiFilter from './common/ChildKadaiFilter'
 import TableRow from './TableRow'
@@ -21,6 +23,7 @@ const formatDate = (value) => {
 }
 
 function ChildKadaiTable({
+  spaceId,
   childRecords,
   recordsLoading,
   recordsError,
@@ -32,7 +35,8 @@ function ChildKadaiTable({
   onDelete,
   onShowGraph,
 }) {
-  const { FACILITY_ID, SELECT_CHILD, databaseState } = useAppState()
+  const { FACILITY_ID, databaseState } = useAppState()
+  const selectedChildId = useSelector(selectSpaceChildId(spaceId))
 
   const children = asArray(databaseState?.children)
   const recordTypes = asArray(databaseState?.record_types)
@@ -41,8 +45,8 @@ function ChildKadaiTable({
   const childTypes = asArray(databaseState?.children_type)
 
   const selectedChild = useMemo(
-    () => children.find((child) => Number(child.id) === Number(SELECT_CHILD)),
-    [SELECT_CHILD, children],
+    () => children.find((child) => Number(child.id) === Number(selectedChildId)),
+    [selectedChildId, children],
   )
 
   const rowData = useMemo(() => {
@@ -61,7 +65,7 @@ function ChildKadaiTable({
           facility_name: facilityById.get(Number(record.facility_id))?.name ?? '',
         }
       })
-      .filter((row) => Number(row.children_id) === Number(SELECT_CHILD))
+      .filter((row) => Number(row.children_id) === Number(selectedChildId))
       .filter((row) => Number(row.record_type_id) === Number(recordTypeId))
   }, [
     FACILITY_ID,
@@ -69,7 +73,7 @@ function ChildKadaiTable({
     childTypes,
     children,
     facilities,
-    SELECT_CHILD,
+    selectedChildId,
     recordTypeId,
     recordTypes,
   ])
@@ -161,7 +165,7 @@ function ChildKadaiTable({
           <button
             type="button"
             onClick={() => onShowGraph?.({
-              childrenId: SELECT_CHILD,
+              childrenId: selectedChildId,
               recordTypeId,
             })}
             disabled={!recordTypeId}
@@ -176,7 +180,7 @@ function ChildKadaiTable({
       </div>
 
       <ChildKadaiFilter
-        selectedChildId={SELECT_CHILD}
+        selectedChildId={selectedChildId}
         selectedChildName={selectedChild?.name ?? ''}
         filterRecordTypeId={recordTypeId}
         setFilterRecordTypeId={onRecordTypeChange}

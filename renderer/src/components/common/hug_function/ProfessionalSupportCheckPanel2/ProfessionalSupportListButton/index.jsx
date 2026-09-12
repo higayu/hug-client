@@ -1,8 +1,8 @@
 // ProfessionalSupportListButton/index.jsx
 import { useTabs } from '@/hooks/useTabs'
 
-export default function ProfessionalSupportListButton({ className = "" }) {
-  const { addProfessionalSupportListTab } = useTabs()
+export default function ProfessionalSupportListButton({ className = "", spaceId }) {
+  const { addProfessionalSupportListTab } = useTabs(spaceId)
 
   return (
     <button

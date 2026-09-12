@@ -12,8 +12,11 @@ import { usePersonRecordCheck } from "./usePersonRecordCheck";
 
 import {
   selectCurrentYmd,
-  selectSelectedChild,
 } from "@/store/slices/appStateSlice.js";
+import {
+  selectActiveSpaceId,
+  selectSpaceChildId,
+} from "@/store/slices/chilledspaceSlice.js";
 
 import { selectPersonalRecordStatus } from "@/store/slices/recordStatusSlice.js";
 
@@ -90,14 +93,18 @@ export function PersonalRecordRegisteredStatus({
 export default function PersonalRecordCheckPanel({
   className = "",
   expandDirection = "up",
+  spaceId,
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const panelRef = useRef(null);
 
-  const { checking, runCheck } = usePersonRecordCheck();
+  const activeSpaceId = useSelector(selectActiveSpaceId);
+  const effectiveSpaceId = spaceId || activeSpaceId;
+
+  const { checking, runCheck } = usePersonRecordCheck(effectiveSpaceId);
 
   const currentYmd = useSelector(selectCurrentYmd);
-  const selectedChildId = useSelector(selectSelectedChild);
+  const selectedChildId = useSelector(selectSpaceChildId(effectiveSpaceId));
 
   const personalRecordStatus = useSelector((state) =>
     selectPersonalRecordStatus(state, currentYmd, selectedChildId)

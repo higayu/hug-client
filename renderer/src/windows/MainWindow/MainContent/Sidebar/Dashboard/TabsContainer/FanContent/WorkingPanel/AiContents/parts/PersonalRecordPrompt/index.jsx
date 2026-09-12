@@ -6,6 +6,7 @@ import { useAppState } from "@/AppStateContext";
 import { useToast } from "@/provider/ToastProvider/ToastContext";
 
 import { useDispatch, useSelector } from "react-redux";
+import { selectSpaceChildId } from "@/store/slices/chilledspaceSlice.js";
 
 import {
   setAiText,
@@ -25,6 +26,7 @@ import ChildNotesTabs from "../ChildNotesTabs";
 const DBG = "PersonalRecordPrompt";
 
 export default function PersonalRecordPrompt({
+  spaceId,
   sendPrompt,
   aiName = "AI",
   promptKey = "personal",
@@ -34,6 +36,7 @@ export default function PersonalRecordPrompt({
 }) {
   const appState = useAppState();
   const { PROMPTS, } = appState;
+  const selectedChildId = useSelector(selectSpaceChildId(spaceId));
 
   // =============================================================
   // 個人記録プロンプト選択
@@ -84,7 +87,7 @@ export default function PersonalRecordPrompt({
   // =============================================================
   const logDbg = (field, msg, extra = {}) => {
     console.log(`[${DBG}:${field}]`, msg, {
-      SELECT_CHILD: appState.SELECT_CHILD,
+      childId: selectedChildId,
       PROMPT_KEY,
       selectedPromptKey,
       useDbNote,
@@ -223,6 +226,7 @@ export default function PersonalRecordPrompt({
       ===================================================== */}
       {useDbNote && (
         <ChildNotesTabs
+          spaceId={spaceId}
           defaultTab={"notes2"}
           onNotesChange={(
             notes,
@@ -435,6 +439,7 @@ export default function PersonalRecordPrompt({
         ================================================= */}
         <div className="mt-2">
           <MemoInputBox
+            spaceId={spaceId}
             memoType={1}
             label="一時メモ１（編集可能）"
             minHeight={200}

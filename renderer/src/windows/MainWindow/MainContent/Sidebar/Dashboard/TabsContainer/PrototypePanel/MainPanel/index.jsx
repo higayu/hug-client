@@ -30,7 +30,7 @@ const INITIAL_PROMPT_TABS = [
   },
 ]
 
-export default function MainPanel() {
+export default function MainPanel({ spaceId }) {
   const [activeTab, setActiveTab] = useState('ai')
   const [activePromptKey, setActivePromptKey] = useState('personal')
   const [promptTabs, setPromptTabs] = useState(INITIAL_PROMPT_TABS)
@@ -91,6 +91,7 @@ export default function MainPanel() {
       >
         {activeTab === 'ai' && (
           <AiContents
+            spaceId={spaceId}
             activePromptKey={activePromptKey}
             onPromptChange={setActivePromptKey}
             onPromptTabsChange={handlePromptTabsChange}
@@ -98,11 +99,11 @@ export default function MainPanel() {
         )}
 
         {activeTab === 'child-kadai' && (
-          <ChildKadai />
+          <ChildKadai spaceId={spaceId} />
         )}
 
         {activeTab === 'personal-record' && (
-          <PersonalRecordManagerPanel2 />
+          <PersonalRecordManagerPanel2 spaceId={spaceId} />
         )}
       </div>
 

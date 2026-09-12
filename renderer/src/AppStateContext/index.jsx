@@ -15,10 +15,7 @@ import { initializeAppState } from './useAppInitializer'
 
 import {
   setCurrentDate as setCurrentDateRedux,
-  setSelectedChild,
-  setSelectedPcName,
   setAttendanceData as setAttendanceDataRedux,
-  setSelectedChildColumns,
   updateAppState as updateAppStateRedux,
   setCurrentYmd as setCurrentYmdRedux,
   setSelectChildFilterMode as setSelectChildFilterModeRedux,
@@ -31,6 +28,15 @@ import {
   setAutoSynchronization as setAutoSynchronizationRedux,
   setAutoSwitching as setAutoSwitchingRedux,
 } from '@/store/slices/appStateSlice'
+
+import {
+  setActiveSpaceId as setActiveSpaceIdRedux,
+  setSpaceChild as setSpaceChildRedux,
+  setSpacePcName as setSpacePcNameRedux,
+  setSpaceChildColumns as setSpaceChildColumnsRedux,
+  clearSpace as clearSpaceRedux,
+  resetChilledspace as resetChilledspaceRedux,
+} from '@/store/slices/chilledspaceSlice'
 
 import {
   APP_MODES,
@@ -779,38 +785,84 @@ export function AppStateProvider({ children }) {
     [dispatch]
   )
 
-  const setSelectedChildCallback = useCallback(
-    (childId, childName) => {
-      console.log('[AppStateContext/setSelectedChild wrapper]', {
+  const setActiveSpaceId = useCallback(
+    (spaceId) => {
+      console.log('[AppStateContext/setActiveSpaceId wrapper]', spaceId)
+      dispatch(setActiveSpaceIdRedux(spaceId))
+    },
+    [dispatch]
+  )
+
+  const setSpaceChild = useCallback(
+    (spaceId, childId, childName) => {
+      console.log('[AppStateContext/setSpaceChild wrapper]', {
+        spaceId,
         childId,
         childName,
       })
 
-      dispatch(setSelectedChild({ childId, childName }))
+      dispatch(
+        setSpaceChildRedux({
+          spaceId,
+          childId,
+          childName,
+        })
+      )
     },
     [dispatch]
   )
 
-  const setSelectedPcNameCallback = useCallback(
-    (pcName) => {
-      console.log('[AppStateContext/setSelectedPcName wrapper]', pcName)
-      dispatch(setSelectedPcName(pcName))
+  const setSpacePcName = useCallback(
+    (spaceId, pcName) => {
+      console.log('[AppStateContext/setSpacePcName wrapper]', {
+        spaceId,
+        pcName,
+      })
+
+      dispatch(
+        setSpacePcNameRedux({
+          spaceId,
+          pcName,
+        })
+      )
     },
     [dispatch]
   )
+
+  const setSpaceChildColumns = useCallback(
+    (spaceId, columns) => {
+      console.log('[AppStateContext/setSpaceChildColumns wrapper]', {
+        spaceId,
+        columns,
+      })
+
+      dispatch(
+        setSpaceChildColumnsRedux({
+          spaceId,
+          ...(columns ?? {}),
+        })
+      )
+    },
+    [dispatch]
+  )
+
+  const clearSpace = useCallback(
+    (spaceId) => {
+      console.log('[AppStateContext/clearSpace wrapper]', spaceId)
+      dispatch(clearSpaceRedux(spaceId))
+    },
+    [dispatch]
+  )
+
+  const resetChilledspace = useCallback(() => {
+    console.log('[AppStateContext/resetChilledspace wrapper]')
+    dispatch(resetChilledspaceRedux())
+  }, [dispatch])
 
   const setAttendanceData = useCallback(
     (data) => {
       console.log('[AppStateContext/setAttendanceData wrapper]', data)
       dispatch(setAttendanceDataRedux(data))
-    },
-    [dispatch]
-  )
-
-  const setSelectedChildColumnsCallback = useCallback(
-    (columns) => {
-      console.log('[AppStateContext/setSelectedChildColumns wrapper]', columns)
-      dispatch(setSelectedChildColumns(columns))
     },
     [dispatch]
   )
@@ -871,8 +923,12 @@ export function AppStateProvider({ children }) {
 
       setCurrentDate,
       setCurrentYmd,
-      setSelectedChild: setSelectedChildCallback,
-      setSelectedPcName: setSelectedPcNameCallback,
+      setActiveSpaceId,
+      setSpaceChild,
+      setSpacePcName,
+      setSpaceChildColumns,
+      clearSpace,
+      resetChilledspace,
       setAttendanceData,
       setActiveSidebarTab,
       setIniState: setIniStateDirect,
@@ -939,10 +995,16 @@ export function AppStateProvider({ children }) {
 
         setCurrentDate,
         setCurrentYmd,
-        setSelectedChild: setSelectedChildCallback,
-        setSelectedPcName: setSelectedPcNameCallback,
+
+        // 児童作業スペース
+        setActiveSpaceId,
+        setSpaceChild,
+        setSpacePcName,
+        setSpaceChildColumns,
+        clearSpace,
+        resetChilledspace,
+
         setAttendanceData,
-        setSelectedChildColumns: setSelectedChildColumnsCallback,
         setSelectChildFilterMode,
 
         // -- モードの追加 --

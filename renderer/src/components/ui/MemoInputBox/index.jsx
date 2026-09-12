@@ -6,7 +6,8 @@ import React, {
 } from "react";
 
 import { useToast } from "@/provider/ToastProvider/ToastContext.jsx";
-import { useAppState } from "@/AppStateContext";
+import { useSelector } from "react-redux";
+import { selectSpaceChildId } from "@/store/slices/chilledspaceSlice.js";
 import { useNote } from "@/hooks/useNote";
 import PersonalRecordButton from "@/components/common/PersonalRecordButton";
 import CopyButton from "@/components/ui/CopyButton";
@@ -16,6 +17,7 @@ export default function MemoInputBox({
   memoType,
   label,
   minHeight = 100,
+  spaceId,
 }) {
   const textareaRef = useRef(null);
 
@@ -26,7 +28,7 @@ export default function MemoInputBox({
   const editingRef = useRef(false);
 
   const { showSuccessToast, showErrorToast } = useToast();
-  const { SELECT_CHILD } = useAppState();
+  const selectedChildId = useSelector(selectSpaceChildId(spaceId));
   const { saveTemp1, saveTemp2, loadTemp } = useNote();
 
   const [value, setValue] = useState("");
@@ -70,12 +72,12 @@ export default function MemoInputBox({
         {
           label,
           memoType,
-          SELECT_CHILD,
+          selectedChildId,
         },
         ...args,
       );
     },
-    [label, memoType, SELECT_CHILD],
+    [label, memoType, selectedChildId],
   );
 
   /*
@@ -84,7 +86,7 @@ export default function MemoInputBox({
   useEffect(() => {
     editingRef.current = false;
 
-    if (!SELECT_CHILD) {
+    if (!selectedChildId) {
       loadSeqRef.current += 1;
       setValue("");
       return undefined;
@@ -142,7 +144,7 @@ export default function MemoInputBox({
         }
 
         await currentLoadTemp(
-          SELECT_CHILD,
+          selectedChildId,
           proxy,
         );
       } catch (error) {
@@ -155,7 +157,7 @@ export default function MemoInputBox({
           {
             label,
             memoType,
-            SELECT_CHILD,
+            selectedChildId,
             error,
           },
         );
@@ -178,7 +180,7 @@ export default function MemoInputBox({
       }
     };
   }, [
-    SELECT_CHILD,
+    selectedChildId,
     memoType,
     label,
     log,
@@ -191,7 +193,7 @@ export default function MemoInputBox({
    */
   useEffect(() => {
     function restoreTextareaFocus() {
-      if (!SELECT_CHILD) {
+      if (!selectedChildId) {
         return;
       }
 
@@ -290,10 +292,10 @@ export default function MemoInputBox({
         handleVisibilityChange,
       );
     };
-  }, [SELECT_CHILD]);
+  }, [selectedChildId]);
 
   async function handleSave() {
-    if (!SELECT_CHILD) {
+    if (!selectedChildId) {
       return;
     }
 
@@ -312,7 +314,7 @@ export default function MemoInputBox({
       }
 
       const result = await saveFunction(
-        SELECT_CHILD,
+        selectedChildId,
         value,
       );
 
@@ -347,7 +349,7 @@ export default function MemoInputBox({
   }
 
   async function handlePaste() {
-    if (!SELECT_CHILD) {
+    if (!selectedChildId) {
       return;
     }
 
@@ -411,7 +413,7 @@ export default function MemoInputBox({
         <button
           type="button"
           onClick={handlePaste}
-          disabled={!SELECT_CHILD}
+          disabled={!selectedChildId}
           className="
             bg-white hover:bg-slate-500
             inline-flex items-center gap-2
@@ -441,7 +443,7 @@ export default function MemoInputBox({
           minHeight,
         }}
         value={value}
-        disabled={!SELECT_CHILD}
+        disabled={!selectedChildId}
         onChange={handleChange}
         onFocus={handleFocus}
         onCompositionStart={handleCompositionStart}
@@ -460,7 +462,7 @@ export default function MemoInputBox({
         <button
           type="button"
           onClick={handleSave}
-          disabled={!SELECT_CHILD}
+          disabled={!selectedChildId}
           className="
             flex-1 px-3 py-2
             bg-blue-600 text-white rounded text-xs
@@ -475,7 +477,7 @@ export default function MemoInputBox({
         {(memoType === 1 || memoType === 2) && (
           <PersonalRecordButton
             id={`kojin-kiroku-${memoType}`}
-            disabled={!SELECT_CHILD}
+            disabled={!selectedChildId}
             label="個人記録"
             className="
               flex items-center justify-center shrink-0

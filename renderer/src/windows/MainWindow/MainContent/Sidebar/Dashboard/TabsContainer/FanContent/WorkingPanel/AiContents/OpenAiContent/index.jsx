@@ -6,7 +6,7 @@ import AccountInfoPanel from "@/components/ui/AccountInfoPanel"
 import { AI_PROMPT_COMPONENT_MAP } from "./PromptBox"
 import { sendPromptToChatGPT } from "./send/sendPromptToChatGPT";
 
-export default function OpenAiContent({ activePromptKey, onPromptChange, onPromptTabsChange }) {
+export default function OpenAiContent({ spaceId, activePromptKey, onPromptChange, onPromptTabsChange }) {
   const { appState, PROMPTS } = useAppState()
 
   useEffect(() => {
@@ -18,6 +18,7 @@ export default function OpenAiContent({ activePromptKey, onPromptChange, onPromp
   return (
     <div className="flex flex-col items-center justify-center w-full p-2 space-y-3">
       <PromptBox 
+        spaceId={spaceId}
         sendPrompt={sendPromptToChatGPT}
         aiName="ChatGpt"
         componentMap={AI_PROMPT_COMPONENT_MAP}

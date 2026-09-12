@@ -1,11 +1,14 @@
 import React, { useState } from "react";
 import { useAppState } from "@/AppStateContext";
+import { useSelector } from "react-redux";
+import { selectSpaceChildId } from "@/store/slices/chilledspaceSlice.js";
 import { useDataBase } from "@/hooks/useDataBase";
 import { ArrowPathIcon } from "@heroicons/react/24/solid";
 import { fetchPersonSupportPlan } from "./function";
 
-export default function PersonSupportPlan() {
-  const { SELECT_CHILD, FACILITY_ID: facilityId } = useAppState();
+export default function PersonSupportPlan({ spaceId }) {
+  const { FACILITY_ID: facilityId } = useAppState();
+  const selectedChildId = useSelector(selectSpaceChildId(spaceId));
   const { loadDataBase } = useDataBase();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -14,7 +17,7 @@ export default function PersonSupportPlan() {
     try {
       await fetchPersonSupportPlan({
         facilityId,
-        selectChild: SELECT_CHILD,
+        selectChild: selectedChildId,
         loadDataBase,
       });
     } catch (error) {

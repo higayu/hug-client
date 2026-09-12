@@ -5,6 +5,8 @@ import {
   useCallback,
   useRef,
 } from 'react'
+import { useSelector } from 'react-redux'
+import { selectActiveSpaceId, selectSpace } from '@/store/slices/chilledspaceSlice.js'
 
 import {
   useAppState,
@@ -45,10 +47,14 @@ import {
 // 初期化はアプリ全体で1回だけ行う
 let tabsSystemInitialized = false
 
-export function useTabs() {
+export function useTabs(spaceId) {
   const {
     appState,
   } = useAppState()
+
+  const activeSpaceId = useSelector(selectActiveSpaceId)
+  const effectiveSpaceId = spaceId || activeSpaceId
+  const space = useSelector(selectSpace(effectiveSpaceId))
 
   const tabsInitializedRef =
     useRef(false)
@@ -65,6 +71,7 @@ export function useTabs() {
       },
       [
         appState,
+        space,
       ]
     )
 
@@ -75,11 +82,13 @@ export function useTabs() {
     useCallback(
       () => {
         addPersonalRecordTabAction4(
-          appState
+          appState,
+          space
         )
       },
       [
         appState,
+        space,
       ]
     )
 
@@ -90,11 +99,13 @@ export function useTabs() {
     useCallback(
       () => {
         addMonitoringTabAction(
-          appState
+          appState,
+          space
         )
       },
       [
         appState,
+        space,
       ]
     )
 
@@ -105,11 +116,13 @@ export function useTabs() {
     useCallback(
       () => {
         addProfessionalSupportListAction(
-          appState
+          appState,
+          space
         )
       },
       [
         appState,
+        space,
       ]
     )
 
@@ -120,11 +133,13 @@ export function useTabs() {
     useCallback(
       () => {
         addProfessionalSupportCheckAction(
-          appState
+          appState,
+          space
         )
       },
       [
         appState,
+        space,
       ]
     )
 
@@ -135,11 +150,13 @@ export function useTabs() {
     useCallback(
       () => {
         addProfessionalSupportNewAction3(
-          appState
+          appState,
+          space
         )
       },
       [
         appState,
+        space,
       ]
     )
 

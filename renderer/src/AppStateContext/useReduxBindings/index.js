@@ -42,6 +42,11 @@ import {
 } from '@/store/slices/databaseSlice'
 
 import {
+  selectActiveSpaceId,
+  selectSpaces,
+} from '@/store/slices/chilledspaceSlice'
+
+import {
   selectAiInquirySelectedItemId,
   selectCurrentMode,
   selectCurrentSelectedItemId,
@@ -328,8 +333,17 @@ export function useReduxBindings() {
     s.selectFacilityId
   )
 
-  const SELECT_CHILD = useSelector(
-    s.selectSelectedChild
+  // ============================================================
+  // chilledspaceSlice
+  // ============================================================
+
+  const activeSpaceId = useSelector(
+    selectActiveSpaceId
+  )
+
+  const chilledSpaces = useSelector(
+    selectSpaces,
+    shallowEqual
   )
 
   // ============================================================
@@ -750,7 +764,8 @@ export function useReduxBindings() {
     STAFF_ID,
     FACILITY_ID,
 
-    SELECT_CHILD,
+    activeSpaceId,
+    chilledSpaces,
 
     CURRENT_DAY_OF_WEEK,
     CURRENT_YMD,

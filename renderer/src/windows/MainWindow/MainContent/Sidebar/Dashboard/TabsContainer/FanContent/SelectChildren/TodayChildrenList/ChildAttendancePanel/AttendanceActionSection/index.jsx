@@ -84,6 +84,7 @@ export default function AttendanceActionSection({
 
   const professionalSupportButton = (
     <ProfessionalSupportButton
+      spaceId={spaceId}
       isAbsent={isAbsent}
       hasEntered={hasEntered}
       hasExited={hasExited}

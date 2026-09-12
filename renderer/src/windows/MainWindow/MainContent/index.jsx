@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import Sidebar from './Sidebar'
-import ResizableSplitPane from '@/components/ui/ResizableSplitPane'
+import HorizonPanel from '@/components/ui/ResizableSplitPane/HorizonPanel'
 
 function MainContent({ preloadPath }) {
   useEffect(() => {
@@ -21,13 +21,12 @@ function MainContent({ preloadPath }) {
       id="content"
       className="relative z-[1] flex h-full min-h-0 min-w-0 flex-1 overflow-hidden"
     >
-      <ResizableSplitPane
+      <HorizonPanel
         defaultLeftPercent={70}
         minLeftWidth={300}
-        minRightWidth={10} // リサイズバー全体の太さ 
-        resizeBarWidth={14} // 中央グリップの太さ 
+        minRightWidth={10}
+        resizeBarWidth={14}
         gripWidth={8}
-
         left={(
           <aside
             id="settings"
@@ -57,4 +56,3 @@ function MainContent({ preloadPath }) {
 }
 
 export default MainContent
-

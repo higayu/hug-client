@@ -3,8 +3,8 @@
 import { createWebview, createTabButton, activateTab, closeTab } from '../common/index.js'
 import { confirmDialog } from '@/utils/dialog/confirmDialog.js'
 
-export function addProfessionalSupportNewAction(appState) {
-  if (!appState.SELECT_CHILD) {
+export function addProfessionalSupportNewAction(appState, space) {
+  if (!space?.childId) {
     alert('子どもを選択してください')
     return
   }
@@ -28,7 +28,7 @@ export function addProfessionalSupportNewAction(appState) {
 
   const tabButton = createTabButton(
     newId,
-    `専門的加算 : ${appState.SELECT_CHILD_NAME || appState.SELECT_CHILD}`,
+    `専門的加算 : ${space?.childName || space?.childId}`,
     appState.closeButtonsVisible
   )
 
@@ -65,8 +65,8 @@ export function addProfessionalSupportNewAction(appState) {
       return m ? { h: String(parseInt(m[1])), m: String(parseInt(m[2])) } : null
     }
 
-    const st = parseTime(appState.SELECTED_CHILD_COLUMN5)
-    const et = parseTime(appState.SELECTED_CHILD_COLUMN6)
+    const st = parseTime(space?.selectedChildColumn5)
+    const et = parseTime(space?.selectedChildColumn6)
 
     newWebview.executeJavaScript(`
       try {
@@ -80,7 +80,7 @@ export function addProfessionalSupportNewAction(appState) {
         // 子ども選択
         const child = document.querySelector('select[name="c_id_list[0][id]"]');
         if (child) {
-          child.value = "${appState.SELECT_CHILD}";
+          child.value = "${space?.childId}";
           child.dispatchEvent(new Event("change", { bubbles: true }));
         }
 
@@ -134,8 +134,8 @@ export function addProfessionalSupportNewAction(appState) {
   activateTab(newId)
 }
 
-export function addProfessionalSupportCheckAction(appState) {
-  if (!appState.SELECT_CHILD) {
+export function addProfessionalSupportCheckAction(appState, space) {
+  if (!space?.childId) {
     alert('子どもを選択してください')
     return
   }
@@ -159,7 +159,7 @@ export function addProfessionalSupportCheckAction(appState) {
 
   const tabButton = createTabButton(
     newId,
-    `専門的加算 : ${appState.SELECT_CHILD_NAME || appState.SELECT_CHILD}`,
+    `専門的加算 : ${space?.childName || space?.childId}`,
     appState.closeButtonsVisible
   )
 
@@ -196,8 +196,8 @@ export function addProfessionalSupportCheckAction(appState) {
       return m ? { h: String(parseInt(m[1])), m: String(parseInt(m[2])) } : null
     }
 
-    const st = parseTime(appState.SELECTED_CHILD_COLUMN5)
-    const et = parseTime(appState.SELECTED_CHILD_COLUMN6)
+    const st = parseTime(space?.selectedChildColumn5)
+    const et = parseTime(space?.selectedChildColumn6)
 
     newWebview.executeJavaScript(`
       try {
@@ -211,7 +211,7 @@ export function addProfessionalSupportCheckAction(appState) {
         // 子ども選択
         const child = document.querySelector('select[name="c_id_list[0][id]"]');
         if (child) {
-          child.value = "${appState.SELECT_CHILD}";
+          child.value = "${space?.childId}";
           child.dispatchEvent(new Event("change", { bubbles: true }));
         }
 
@@ -269,8 +269,8 @@ export function addProfessionalSupportCheckAction(appState) {
   activateTab(newId)
 }
 
-export function addProfessionalSupportNewAction2(appState) {
-  if (!appState.SELECT_CHILD) {
+export function addProfessionalSupportNewAction2(appState, space) {
+  if (!space?.childId) {
     alert('子どもを選択してください')
     return
   }
@@ -294,7 +294,7 @@ export function addProfessionalSupportNewAction2(appState) {
 
   const tabButton = createTabButton(
     newId,
-    `専門的加算 : ${appState.SELECT_CHILD_NAME || appState.SELECT_CHILD}`,
+    `専門的加算 : ${space?.childName || space?.childId}`,
     appState.closeButtonsVisible
   )
 
@@ -331,8 +331,8 @@ export function addProfessionalSupportNewAction2(appState) {
       return m ? { h: String(parseInt(m[1])), m: String(parseInt(m[2])) } : null
     }
 
-    const st = parseTime(appState.SELECTED_CHILD_COLUMN5)
-    const et = parseTime(appState.SELECTED_CHILD_COLUMN6)
+    const st = parseTime(space?.selectedChildColumn5)
+    const et = parseTime(space?.selectedChildColumn6)
 
   newWebview.executeJavaScript(`
     (function () {
@@ -349,7 +349,7 @@ export function addProfessionalSupportNewAction2(appState) {
 
         const child = document.querySelector('select[name="c_id_list[0][id]"]');
         if (child) {
-          child.value = "${appState.SELECT_CHILD}";
+          child.value = "${space?.childId}";
           child.dispatchEvent(new Event("change", { bubbles: true }));
         }
 
@@ -455,8 +455,8 @@ export function addProfessionalSupportNewAction2(appState) {
 // ============================================
 // addProfessionalSupportNewAction3（修正版 - 改行対応 + 初期値設定 + サイズ調整）
 // ============================================
-export function addProfessionalSupportNewAction3(appState) {
-  if (!appState.SELECT_CHILD) {
+export function addProfessionalSupportNewAction3(appState, space) {
+  if (!space?.childId) {
     alert('子どもを選択してください')
     return
   }
@@ -480,7 +480,7 @@ export function addProfessionalSupportNewAction3(appState) {
 
   const tabButton = createTabButton(
     newId,
-    `専門的加算 : ${appState.SELECT_CHILD_NAME || appState.SELECT_CHILD}`,
+    `専門的加算 : ${space?.childName || space?.childId}`,
     appState.closeButtonsVisible
   )
 
@@ -517,8 +517,8 @@ export function addProfessionalSupportNewAction3(appState) {
       return m ? { h: String(parseInt(m[1])), m: String(parseInt(m[2])) } : null
     }
 
-    const st = parseTime(appState.SELECTED_CHILD_COLUMN5)
-    const et = parseTime(appState.SELECTED_CHILD_COLUMN6)
+    const st = parseTime(space?.selectedChildColumn5)
+    const et = parseTime(space?.selectedChildColumn6)
 
   newWebview.executeJavaScript(`
     (function () {
@@ -535,7 +535,7 @@ export function addProfessionalSupportNewAction3(appState) {
 
         const child = document.querySelector('select[name="c_id_list[0][id]"]');
         if (child) {
-          child.value = "${appState.SELECT_CHILD}";
+          child.value = "${space?.childId}";
           child.dispatchEvent(new Event("change", { bubbles: true }));
         }
 

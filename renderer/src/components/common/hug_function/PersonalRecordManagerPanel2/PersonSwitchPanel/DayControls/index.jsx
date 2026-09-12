@@ -3,6 +3,7 @@
 import PersonalRecordGetDayBtn from "./PersonalRecordGetDayBtn";
 
 export default function DayControls({
+  spaceId,
   date,
   onDateChange,
   disabled = false,
@@ -31,6 +32,7 @@ export default function DayControls({
       </div>
 
       <PersonalRecordGetDayBtn
+        spaceId={spaceId}
         dateStr={date}
         disabled={disabled}
         onServiceRecordsUpdated={onServiceRecordsUpdated}

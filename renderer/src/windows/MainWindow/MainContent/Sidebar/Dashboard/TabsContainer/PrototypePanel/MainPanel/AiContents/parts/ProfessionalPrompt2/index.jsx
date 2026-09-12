@@ -6,6 +6,7 @@ import MemoInputBox from '@/components/ui/MemoInputBox';
 const DBG = 'ProfessionalPrompt2';
 
 export default function ProfessionalPrompt2({
+  spaceId,
   sendPrompt,
   aiName = "AI",
   promptKey = "professional2",
@@ -138,6 +139,7 @@ export default function ProfessionalPrompt2({
       )}
 
       <MemoInputBox
+        spaceId={spaceId}
         memoType={2}
         label="一時メモ２（編集可能）"
         minHeight={200}

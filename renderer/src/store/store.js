@@ -7,12 +7,14 @@ import sendTextReducer from './slices/sendTextSlice.js'
 import webviewReducer from "./slices/webviewSlice.js"
 import recordStatusReducer from "./slices/recordStatusSlice.js";
 import modeReducer from './slices/modeSlice.js'
+import chilledspaceReducer from './slices/chilledspaceSlice.js'
 
 export const store = configureStore({
   reducer: {
     attendance: attendanceReducer,
     auth: authReducer,
     appState: appStateReducer,
+    chilledspace: chilledspaceReducer,
     database: databaseReducer,
     sendText: sendTextReducer,
     webview: webviewReducer,

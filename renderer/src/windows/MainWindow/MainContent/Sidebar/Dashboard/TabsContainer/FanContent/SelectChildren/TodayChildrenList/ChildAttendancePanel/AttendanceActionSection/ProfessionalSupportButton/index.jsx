@@ -20,8 +20,9 @@ export default function ProfessionalSupportButton({
   isUIEnabled,
   isStop,
   loadingAction,
+  spaceId,
 }) {
-  const { addProfessionalSupportNewTab } = useTabs()
+  const { addProfessionalSupportNewTab } = useTabs(spaceId)
 
   const disabled =
     !isUIEnabled ||

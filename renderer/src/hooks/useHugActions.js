@@ -2,6 +2,8 @@
 // hugActions.jsの機能をReact hooksに移行
 
 import { useEffect, useCallback, useRef } from 'react'
+import { useSelector } from 'react-redux'
+import { selectActiveSpaceId, selectSpace } from '@/store/slices/chilledspaceSlice.js'
 import { useAppState } from '@/AppStateContext'
 import { useToast } from '@/provider/ToastProvider/ToastContext'
 import { getActiveWebview } from '@/utils/webview/webviewState.js'
@@ -9,8 +11,11 @@ import { loadAllReload } from '@/utils/config/reloadSettings.js'
 // ❌ 削除: import { updateButtonVisibility } from '@/utils/app/buttonVisibility.js'
 import { useCustomButtonManager } from './useCustomButtonManager.js'
 
-export function useHugActions() {
+export function useHugActions(spaceId) {
   const { appState } = useAppState()
+  const activeSpaceId = useSelector(selectActiveSpaceId)
+  const effectiveSpaceId = spaceId || activeSpaceId
+  const space = useSelector(selectSpace(effectiveSpaceId))
   const { showSuccessToast, showErrorToast } = useToast()
   const { reloadCustomButtons } = useCustomButtonManager()
   const initializedRef = useRef(false)
@@ -57,18 +62,18 @@ export function useHugActions() {
   // 個別支援計画（別ウインドウ）
   const handleIndividualSupport = useCallback(() => {
     window.electronAPI.openIndividualSupportPlan(
-      appState.SELECT_CHILD,
+      space?.childId,
       appState.FACILITY_ID
     )
-  }, [appState.SELECT_CHILD, appState.FACILITY_ID])
+  }, [space?.childId, appState.FACILITY_ID])
 
   // 専門的支援計画（別ウインドウ）
   const handleSpecializedSupport = useCallback(() => {
     window.electronAPI.openSpecializedSupportPlan(
-      appState.SELECT_CHILD,
+      space?.childId,
       appState.FACILITY_ID
     )
-  }, [appState.SELECT_CHILD, appState.FACILITY_ID])
+  }, [space?.childId, appState.FACILITY_ID])
 
   // URLの取得
   const handleGetUrl = useCallback(async () => {

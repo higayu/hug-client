@@ -73,16 +73,6 @@ const initialState = {
 
   CURRENT_YMD: getTodayYmdString(),
 
-  SELECT_CHILD: "",
-  SELECT_CHILD_NAME: "",
-  SELECT_PC_NAME: "",
-
-  // 選択中の児童の出勤データ列
-  SELECTED_CHILD_COLUMN5: null,
-  SELECTED_CHILD_COLUMN5_HTML: null,
-  SELECTED_CHILD_COLUMN6: null,
-  SELECTED_CHILD_COLUMN6_HTML: null,
-
   // UI状態
   closeButtonsVisible: true,
   SELECT_CHILD_FILTER_MODE: 1,
@@ -173,25 +163,6 @@ const appStateSlice = createSlice({
       state.STAFF_ID = action.payload != null ? String(action.payload) : ""
     },
 
-    // 選択された児童を設定
-    setSelectedChild: (state, action) => {
-      const { childId, childName } = action.payload || {}
-
-      state.SELECT_CHILD = childId || ""
-      state.SELECT_CHILD_NAME = childName || ""
-
-      // 児童が変更されたときは列データもクリア
-      state.SELECTED_CHILD_COLUMN5 = null
-      state.SELECTED_CHILD_COLUMN5_HTML = null
-      state.SELECTED_CHILD_COLUMN6 = null
-      state.SELECTED_CHILD_COLUMN6_HTML = null
-    },
-
-    // PC名を設定
-    setSelectedPcName: (state, action) => {
-      state.SELECT_PC_NAME = action.payload || ""
-    },
-
     // UI状態を設定
     setCloseButtonsVisible: (state, action) => {
       state.closeButtonsVisible =
@@ -265,28 +236,6 @@ const appStateSlice = createSlice({
       if (checkedAt !== undefined) {
         state.SERVER_CONNECTION_CHECKED_AT = checkedAt
       }
-    },
-
-    // 選択中の児童のcolumn5とcolumn6を設定
-    setSelectedChildColumns: (state, action) => {
-      const {
-        column5,
-        column5Html,
-        column6,
-        column6Html,
-      } = action.payload || {}
-
-      state.SELECTED_CHILD_COLUMN5 =
-        column5 !== undefined ? column5 : null
-
-      state.SELECTED_CHILD_COLUMN5_HTML =
-        column5Html !== undefined ? column5Html : null
-
-      state.SELECTED_CHILD_COLUMN6 =
-        column6 !== undefined ? column6 : null
-
-      state.SELECTED_CHILD_COLUMN6_HTML =
-        column6Html !== undefined ? column6Html : null
     },
 
     // プロンプトデータ設定
@@ -419,37 +368,6 @@ const appStateSlice = createSlice({
         state.CURRENT_YMD = updates.CURRENT_YMD
       }
 
-      if (updates.SELECT_CHILD !== undefined) {
-        state.SELECT_CHILD = updates.SELECT_CHILD
-      }
-
-      if (updates.SELECT_CHILD_NAME !== undefined) {
-        state.SELECT_CHILD_NAME = updates.SELECT_CHILD_NAME
-      }
-
-      if (updates.SELECT_PC_NAME !== undefined) {
-        state.SELECT_PC_NAME = updates.SELECT_PC_NAME
-      }
-
-      // 選択中の児童の出勤データ列
-      if (updates.SELECTED_CHILD_COLUMN5 !== undefined) {
-        state.SELECTED_CHILD_COLUMN5 = updates.SELECTED_CHILD_COLUMN5
-      }
-
-      if (updates.SELECTED_CHILD_COLUMN5_HTML !== undefined) {
-        state.SELECTED_CHILD_COLUMN5_HTML =
-          updates.SELECTED_CHILD_COLUMN5_HTML
-      }
-
-      if (updates.SELECTED_CHILD_COLUMN6 !== undefined) {
-        state.SELECTED_CHILD_COLUMN6 = updates.SELECTED_CHILD_COLUMN6
-      }
-
-      if (updates.SELECTED_CHILD_COLUMN6_HTML !== undefined) {
-        state.SELECTED_CHILD_COLUMN6_HTML =
-          updates.SELECTED_CHILD_COLUMN6_HTML
-      }
-
       // UI状態
       if (updates.closeButtonsVisible !== undefined) {
         state.closeButtonsVisible = updates.closeButtonsVisible
@@ -528,17 +446,6 @@ const appStateSlice = createSlice({
       }
     },
 
-    // 選択状態をクリア
-    clearSelection: (state) => {
-      state.SELECT_CHILD = ""
-      state.SELECT_CHILD_NAME = ""
-      state.SELECT_PC_NAME = ""
-      state.SELECTED_CHILD_COLUMN5 = null
-      state.SELECTED_CHILD_COLUMN5_HTML = null
-      state.SELECTED_CHILD_COLUMN6 = null
-      state.SELECTED_CHILD_COLUMN6_HTML = null
-    },
-
     // すべての状態をリセット
     resetAppState: () => initialState,
   },
@@ -568,8 +475,6 @@ export const {
   setStaffId,
   setCurrentDate,
   setCurrentYmd,
-  setSelectedChild,
-  setSelectedPcName,
   setCloseButtonsVisible,
   setSelectChildFilterMode,
   setStaffData,
@@ -583,9 +488,7 @@ export const {
   setAutoSwitching,
 
   setServerConnectionState,
-  setSelectedChildColumns,
   updateAppState,
-  clearSelection,
   resetAppState,
 
   setDebugFlg,
@@ -662,27 +565,6 @@ export const selectCurrentDate = (state) =>
 
 export const selectCurrentYmd = (state) =>
   state.appState.CURRENT_YMD
-
-export const selectSelectedChild = (state) =>
-  state.appState.SELECT_CHILD
-
-export const selectSelectedChildName = (state) =>
-  state.appState.SELECT_CHILD_NAME
-
-export const selectSelectedPcName = (state) =>
-  state.appState.SELECT_PC_NAME
-
-export const selectSelectedChildColumn5 = (state) =>
-  state.appState.SELECTED_CHILD_COLUMN5
-
-export const selectSelectedChildColumn5Html = (state) =>
-  state.appState.SELECTED_CHILD_COLUMN5_HTML
-
-export const selectSelectedChildColumn6 = (state) =>
-  state.appState.SELECTED_CHILD_COLUMN6
-
-export const selectSelectedChildColumn6Html = (state) =>
-  state.appState.SELECTED_CHILD_COLUMN6_HTML
 
 export const selectCloseButtonsVisible = (state) =>
   state.appState.closeButtonsVisible

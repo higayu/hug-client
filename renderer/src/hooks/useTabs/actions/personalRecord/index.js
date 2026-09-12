@@ -13,8 +13,8 @@ import { openPersonalRecordEdit } from './parts/openPersonalRecordEdit.js'
 import { setupRecordStaff } from './parts/setupRecordStaff.js'
 import { injectPersonalRecordActions } from './parts/injectPersonalRecordActions.js'
 
-export function addPersonalRecordTabAction4(appState) {
-  if (!appState.SELECT_CHILD) {
+export function addPersonalRecordTabAction4(appState, space) {
+  if (!space?.childId) {
     alert('子どもを選択してください')
     return
   }
@@ -32,14 +32,14 @@ export function addPersonalRecordTabAction4(appState) {
 
   const newWebview = createWebview(
     newId,
-    `https://www.hug-ayumu.link/hug/wm/contact_book.php?id=${appState.SELECT_CHILD}`
+    `https://www.hug-ayumu.link/hug/wm/contact_book.php?id=${space?.childId}`
   )
 
   webviewContainer.appendChild(newWebview)
 
   const tabButton = createTabButton(
     newId,
-    `個人記録 : ${appState.SELECT_CHILD_NAME}`,
+    `個人記録 : ${space?.childName}`,
     appState.closeButtonsVisible
   )
 

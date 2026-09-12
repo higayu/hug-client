@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 
 import { useAppState } from "@/AppStateContext";
+import { useSelector } from "react-redux";
+import { selectSpaceChildId } from "@/store/slices/chilledspaceSlice.js";
 
 import ProfessionalPlan from "@/components/common/hug_function/ProfessionalPlan";
 import ProfessionalSupportCheckPanel2 from "@/components/common/hug_function/ProfessionalSupportCheckPanel2";
@@ -10,6 +12,7 @@ import ChildNotesTabs from "../ChildNotesTabs";
 const DBG = "ProfessionalPrompt1";
 
 export default function ProfessionalPrompt1({
+  spaceId,
   sendPrompt,
   aiName = "AI",
   promptKey = "professional1",
@@ -18,6 +21,7 @@ export default function ProfessionalPrompt1({
   showSupportCheck = true,
 }) {
   const appState = useAppState();
+  const selectedChildId = useSelector(selectSpaceChildId(spaceId));
 
   const {
     PROMPTS,
@@ -29,7 +33,7 @@ export default function ProfessionalPrompt1({
 
   const logDbg = (field, msg, extra = {}) => {
     console.log(`[${DBG}:${field}]`, msg, {
-      SELECT_CHILD: appState.SELECT_CHILD,
+      childId: selectedChildId,
       aiName,
       promptKey,
       aiTextLen: aiText.length,
@@ -89,6 +93,7 @@ export default function ProfessionalPrompt1({
           DB保存済みメモ
       ===================================================== */}
       <ChildNotesTabs
+        spaceId={spaceId}
         defaultTab="notes"
         onNotesChange={(notes, noteNo, column) => {
           logDbg(
@@ -105,7 +110,7 @@ export default function ProfessionalPrompt1({
         }}
       >
         <div className="flex flex-row gap-2">
-          <ProfessionalPlan />
+          <ProfessionalPlan spaceId={spaceId} />
         </div>
       </ChildNotesTabs>
 
@@ -184,6 +189,7 @@ export default function ProfessionalPrompt1({
           {showSupportCheck && (
             <div className="w-[30%]">
               <ProfessionalSupportCheckPanel2
+                spaceId={spaceId}
                 logTag="ProfessionalPrompt1"
                 className="w-full"
                 labelClassName="w-full"

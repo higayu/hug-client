@@ -2,6 +2,8 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import { useAppState } from "@/AppStateContext";
+import { useSelector } from "react-redux";
+import { selectSpaceChildId } from "@/store/slices/chilledspaceSlice.js";
 import ChildNotes from "./ChildNotes";
 import PersonSupportPlan from "@/components/common/hug_function/PersonSupportPlan";
 
@@ -23,6 +25,7 @@ const NOTE_TABS = [
 ];
 
 export default function ChildNotesTabs({
+  spaceId,
   className = "",
   emptyText = "メモがありません",
   onNotesChange = null,
@@ -31,8 +34,9 @@ export default function ChildNotesTabs({
 }) {
   const appState = useAppState();
 
+  const selectedChildId = useSelector(selectSpaceChildId(spaceId));
+
   const {
-    SELECT_CHILD,
     childrenData,
     waiting_childrenData,
     Experience_childrenData,
@@ -79,11 +83,11 @@ export default function ChildNotesTabs({
   // 選択中児童取得
   // =============================================================
   const selectedChild = useMemo(() => {
-    if (!SELECT_CHILD) {
+    if (!selectedChildId) {
       return null;
     }
 
-    const selectedId = String(SELECT_CHILD);
+    const selectedId = String(selectedChildId);
 
     const childFromDatabase = databaseChildren.find(
       (child) =>
@@ -110,7 +114,7 @@ export default function ChildNotesTabs({
       null
     );
   }, [
-    SELECT_CHILD,
+    selectedChildId,
     databaseChildren,
     weekChildrenData,
     waitingChildrenData,
@@ -158,7 +162,7 @@ export default function ChildNotesTabs({
   // =============================================================
   useEffect(() => {
     console.log(`[${DBG}]`, {
-      SELECT_CHILD,
+      selectedChildId,
       activeTab,
       found: Boolean(selectedChild),
       childId:
@@ -172,7 +176,7 @@ export default function ChildNotesTabs({
         activeNotes.length,
     });
   }, [
-    SELECT_CHILD,
+    selectedChildId,
     activeTab,
     selectedChild,
     activeNotes,
@@ -189,12 +193,12 @@ export default function ChildNotesTabs({
           DB保存済み内容
 
           <span className="font-bold ml-1">
-            {SELECT_CHILD ?? "未選択"}
+            {selectedChildId ?? "未選択"}
           </span>
         </h4>
 
         <div className="flex items-center gap-2">
-          {activeTab === "notes2" && <PersonSupportPlan />}
+          {activeTab === "notes2" && <PersonSupportPlan spaceId={spaceId} />}
           {children}
         </div>
       </div>

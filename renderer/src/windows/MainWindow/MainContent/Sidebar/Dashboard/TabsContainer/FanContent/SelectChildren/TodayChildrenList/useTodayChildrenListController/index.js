@@ -12,7 +12,8 @@ import { isMorningChild } from "./timeUtils";
 import { useAppState } from '@/AppStateContext';
 
 export function useTodayChildrenListController({
-  SELECT_CHILD,
+  selectedChildId,
+  spaceId,
   SELECT_CHILD_FILTER_MODE,
   childrenData,
   waiting_childrenData,
@@ -20,8 +21,8 @@ export function useTodayChildrenListController({
   attendanceData,
   activeTab,
   setDoneChildIds,
-  setSelectedChild,
-  setSelectedPcName,
+  setSpaceChild,
+  setSpacePcName,
 }) {
   const { STAFF_ID, FACILITY_ID, CURRENT_DAY_OF_WEEK, appState } = useAppState();
 
@@ -248,7 +249,7 @@ export function useTodayChildrenListController({
   // 初期選択
   // 重要:
   // - 通常タブ表示中だけ自動選択する
-  // - 空のキャンセル/体験タブで SELECT_CHILD を空にした直後に、
+  // - 空のキャンセル/体験タブで selectedChildId を空にした直後に、
   //   通常児童を勝手に再選択すると無限ループになるため
   // ==============================
   useEffect(() => {
@@ -257,26 +258,21 @@ export function useTodayChildrenListController({
       return
     }
 
-    if (SELECT_CHILD || normalChildren.length === 0) {
+    if (selectedChildId || normalChildren.length === 0) {
       return
     }
 
     const first = normalChildren[0]
 
-    setSelectedChild(first.children_id, first.children_name)
-    setSelectedPcName(first.pc_name || "")
-
-    if (window.AppState) {
-      window.AppState.SELECT_CHILD = first.children_id
-      window.AppState.SELECT_CHILD_NAME = first.children_name
-      window.AppState.SELECT_PC_NAME = first.pc_name || ""
-    }
+    setSpaceChild(spaceId, first.children_id, first.children_name)
+    setSpacePcName(spaceId, first.pc_name || "")
   }, [
     activeTab,
     normalChildren,
-    SELECT_CHILD,
-    setSelectedChild,
-    setSelectedPcName,
+    selectedChildId,
+    spaceId,
+    setSpaceChild,
+    setSpacePcName,
   ])
 
   // ==============================
@@ -284,11 +280,11 @@ export function useTodayChildrenListController({
   // 欠席・午前・退室済みなどで非表示になった児童の選択を変更
   //
   // 重要:
-  // - 現在タブに表示児童が0件の場合、SELECT_CHILDを解除しない
+  // - 現在タブに表示児童が0件の場合、selectedChildIdを解除しない
   // - 解除すると「通常タブの初期選択」と衝突して無限ループになる
   // ==============================
   useEffect(() => {
-    if (!SELECT_CHILD) {
+    if (!selectedChildId) {
       return
     }
 
@@ -299,7 +295,7 @@ export function useTodayChildrenListController({
     }
 
     const selectedStillVisible = visibleChildren.some(
-      (child) => String(child.children_id) === String(SELECT_CHILD)
+      (child) => String(child.children_id) === String(selectedChildId)
     )
 
     if (selectedStillVisible) {
@@ -308,21 +304,16 @@ export function useTodayChildrenListController({
 
     const first = visibleChildren[0]
 
-    setSelectedChild(first.children_id, first.children_name)
-    setSelectedPcName(first.pc_name || "")
-
-    if (window.AppState) {
-      window.AppState.SELECT_CHILD = first.children_id
-      window.AppState.SELECT_CHILD_NAME = first.children_name
-      window.AppState.SELECT_PC_NAME = first.pc_name || ""
-    }
+    setSpaceChild(spaceId, first.children_id, first.children_name)
+    setSpacePcName(spaceId, first.pc_name || "")
   }, [
-    SELECT_CHILD,
+    selectedChildId,
+    spaceId,
     SELECT_CHILD_FILTER_MODE,
     activeTab,
     getVisibleChildrenForTab,
-    setSelectedChild,
-    setSelectedPcName,
+    setSpaceChild,
+    setSpacePcName,
   ])
 
   // ==============================
@@ -331,20 +322,14 @@ export function useTodayChildrenListController({
   const handleChildSelect = useCallback(
     (childId, childName, pcName = "") => {
 
-      setSelectedChild(childId, childName)
-      setSelectedPcName(pcName || "")
-
-      if (window.AppState) {
-        window.AppState.SELECT_CHILD = childId
-        window.AppState.SELECT_CHILD_NAME = childName
-        window.AppState.SELECT_PC_NAME = pcName || ""
-
-      }
+      setSpaceChild(spaceId, childId, childName)
+      setSpacePcName(spaceId, pcName || "")
     },
     [
-      SELECT_CHILD,
-      setSelectedChild,
-      setSelectedPcName,
+      selectedChildId,
+      spaceId,
+      setSpaceChild,
+      setSpacePcName,
     ]
   )
 

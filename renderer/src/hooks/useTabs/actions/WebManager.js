@@ -9,8 +9,8 @@ import {
 
 import { confirmDialog } from '@/utils/dialog/confirmDialog.js'
 
-function getWebManagerUrl_kadai(iniState, appState) {
-  return `${iniState?.apiSettings?.baseURL}/houday/build-file/yoshijima/childkadai-table?children_id=${appState?.SELECT_CHILD}&record_type_id=1`
+function getWebManagerUrl_kadai(iniState, childId) {
+  return `${iniState?.apiSettings?.baseURL}/houday/build-file/yoshijima/childkadai-table?children_id=${childId}&record_type_id=1`
 }
 
 function getUrl(path) {
@@ -52,7 +52,7 @@ export function addWebManagerAction(
         baseURL:
           iniState?.apiSettings?.baseURL,
         selectChild:
-          appState?.SELECT_CHILD,
+          childId,
         currentYmd:
           appState?.CURRENT_YMD,
       },
@@ -135,8 +135,9 @@ export function addWebManagerAction_OutWindow(
   iniState,
   switch_id,
   path = '',
+  childId = '',
 ) {
-  if (!appState?.SELECT_CHILD) {
+  if (!childId) {
     console.error(
       'WebManager URL の生成に失敗しました: 児童が選択されていません',
     )
@@ -160,7 +161,7 @@ export function addWebManagerAction_OutWindow(
     default:
       url = getWebManagerUrl_kadai(
         iniState,
-        appState,
+        childId,
       )
   }
 
@@ -171,7 +172,7 @@ export function addWebManagerAction_OutWindow(
         baseURL:
           iniState?.apiSettings?.baseURL,
         selectChild:
-          appState?.SELECT_CHILD,
+          childId,
         currentYmd:
           appState?.CURRENT_YMD,
       },

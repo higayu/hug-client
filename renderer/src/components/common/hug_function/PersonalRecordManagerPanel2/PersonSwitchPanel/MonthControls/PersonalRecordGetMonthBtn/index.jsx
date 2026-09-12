@@ -1,5 +1,7 @@
 import { useCallback, useRef, useState } from "react";
 import { useAppState } from "@/AppStateContext";
+import { useSelector } from "react-redux";
+import { selectSpaceChildId } from "@/store/slices/chilledspaceSlice.js";
 import { useToast } from '@/provider/ToastProvider/ToastContext'
 import { fetchPersonalRecord2 } from "./fetchPersonalRecord2";
 import { postServiceRecordsToLocalApi } from "./postServiceRecordsToLocalApi";
@@ -52,18 +54,20 @@ const toMonthStr = (value) => {
  * @param {boolean} disabled 親コンポーネントから渡される使用不可フラグ
  */
 export default function PersonalRecordGetMonthBtn({
+  spaceId,
   monthStr,
   disabled = false,
   onServiceRecordsUpdated,
   onDebugResult,
 }) {
   const {
-    SELECT_CHILD,
     FACILITY_ID,
     STAFF_ID,
     CURRENT_YMD,
     DATABASE_TYPE,
   } = useAppState();
+
+  const selectedChildId = useSelector(selectSpaceChildId(spaceId));
 
   const {
     showSuccessToast,
@@ -82,7 +86,7 @@ export default function PersonalRecordGetMonthBtn({
       return;
     }
 
-    if (!SELECT_CHILD) {
+    if (!selectedChildId) {
       console.warn(`[${LOG_TAG}] 児童が選択されていません`);
       return;
     }
@@ -109,14 +113,14 @@ export default function PersonalRecordGetMonthBtn({
     setPermissionErrorCount(0);
 
     console.log(`[${LOG_TAG}] 取得開始`, {
-      childId: SELECT_CHILD,
+      childId: selectedChildId,
       facilityId,
       yearMonth,
     });
 
     try {
       const result = await fetchPersonalRecord2({
-        childId: SELECT_CHILD,
+        childId: selectedChildId,
         facilityId,
         year_month: yearMonth,
       });
@@ -157,7 +161,7 @@ export default function PersonalRecordGetMonthBtn({
       const postResult = await postServiceRecordsToLocalApi(
         result.records,
         {
-          childrenId: SELECT_CHILD,
+          childrenId: selectedChildId,
           facilityId,
           staffId: STAFF_ID,
           databaseType: DATABASE_TYPE,
@@ -216,7 +220,6 @@ export default function PersonalRecordGetMonthBtn({
     }
   }, [
     disabled,
-    SELECT_CHILD,
     FACILITY_ID,
     STAFF_ID,
     DATABASE_TYPE,
@@ -231,7 +234,7 @@ export default function PersonalRecordGetMonthBtn({
 
   const isDisabled =
     disabled ||
-    !SELECT_CHILD ||
+    !selectedChildId ||
     !(monthStr || CURRENT_YMD) ||
     fetching;
 

@@ -1,7 +1,8 @@
 // PersonalRecordManagerPanel2/index.jsx
 
 import { useCallback, useEffect, useState } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { selectSpaceChildId } from "@/store/slices/chilledspaceSlice.js";
 
 import { useAppState } from "@/AppStateContext";
 import { useServiceRecord } from "@/hooks/useServiceRecord";
@@ -45,12 +46,12 @@ const toDateStr = (value) => {
   return "";
 };
 
-export default function PersonalRecordManagerPanel2() {
+export default function PersonalRecordManagerPanel2({ spaceId }) {
   const {
-    SELECT_CHILD,
     CURRENT_YMD,
     FACILITY_ID,
   } = useAppState();
+  const selectedChildId = useSelector(selectSpaceChildId(spaceId));
 
   const dispatch = useDispatch();
 
@@ -219,9 +220,9 @@ export default function PersonalRecordManagerPanel2() {
 
         {/* 児童情報 */}
         <div className="flex shrink-0 items-center justify-center">
-          {SELECT_CHILD ? (
+          {selectedChildId ? (
             <span className="rounded bg-gray-100 px-2 py-1 text-xs text-gray-500">
-              👤 児童ID: {SELECT_CHILD}
+              👤 児童ID: {selectedChildId}
             </span>
           ) : (
             <p className="m-0 whitespace-nowrap text-sm text-red-500 font-bold">
@@ -293,6 +294,7 @@ export default function PersonalRecordManagerPanel2() {
         {activeTab === PANEL_TABS.LIST && (
           <div>
             <ListBox_Text
+              spaceId={spaceId}
               monthStr={listMonth}
               onMonthChange={setListMonth}
             />
@@ -308,6 +310,7 @@ export default function PersonalRecordManagerPanel2() {
           PANEL_TABS.PERSON_SWITCH && (
           <div className="p-2">
             <PersonSwitchPanel
+              spaceId={spaceId}
               value={personPeriodType}
               onChange={
                 setPersonPeriodType
@@ -323,7 +326,7 @@ export default function PersonalRecordManagerPanel2() {
                 setPersonDate
               }
 
-              disabled={!SELECT_CHILD}
+              disabled={!selectedChildId}
 
               onServiceRecordsUpdated={
                 reloadServiceRecords

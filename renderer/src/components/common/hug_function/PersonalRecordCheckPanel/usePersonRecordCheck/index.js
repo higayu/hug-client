@@ -4,8 +4,11 @@ import { useAppState } from "@/AppStateContext";
 import {
   selectCurrentYmd,
   selectFacilityId,
-  selectSelectedChild,
 } from "@/store/slices/appStateSlice.js";
+import {
+  selectActiveSpaceId,
+  selectSpaceChildId,
+} from "@/store/slices/chilledspaceSlice.js";
 import {
   setPersonalRecordStatus,
   setRecordStatusError,
@@ -17,16 +20,20 @@ import { parseTodayPersonalRecordStatus } from "./parseTodayPersonalRecordStatus
  * 個人記録 本日登録チェック
  * @param {string} [logTag]
  */
-export function usePersonRecordCheck(logTag = "PersonalRecordCheck") {
+export function usePersonRecordCheck(spaceId, logTag = "PersonalRecordCheck") {
   const dispatch = useDispatch();
 
-  const { SELECT_CHILD, FACILITY_ID, CURRENT_YMD } = useAppState();
+  const { FACILITY_ID, CURRENT_YMD } = useAppState();
 
-  const selectedChildIdFromStore = useSelector(selectSelectedChild);
+  const activeSpaceId = useSelector(selectActiveSpaceId);
+  const effectiveSpaceId = spaceId || activeSpaceId;
+  const selectedChildIdFromStore = useSelector(
+    selectSpaceChildId(effectiveSpaceId)
+  );
   const facilityIdFromStore = useSelector(selectFacilityId);
   const currentYmdFromStore = useSelector(selectCurrentYmd);
 
-  const effectiveChildId = selectedChildIdFromStore || SELECT_CHILD;
+  const effectiveChildId = selectedChildIdFromStore;
   const effectiveFacilityId = facilityIdFromStore || FACILITY_ID || "3";
   const effectiveCurrentYmd = currentYmdFromStore || CURRENT_YMD;
 

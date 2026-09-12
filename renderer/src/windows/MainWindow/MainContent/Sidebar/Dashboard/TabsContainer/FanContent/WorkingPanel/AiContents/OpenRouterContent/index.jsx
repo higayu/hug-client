@@ -6,7 +6,7 @@ import AccountInfoPanel from "@/components/ui/AccountInfoPanel";
 import { AI_PROMPT_COMPONENT_MAP } from "./PromptBox"
 import { sendPromptToOpenRouter } from "./send/sendPromptToOpenRouter";
 
-export default function OpenRouterContent({ activePromptKey, onPromptChange, onPromptTabsChange }) {
+export default function OpenRouterContent({ spaceId, activePromptKey, onPromptChange, onPromptTabsChange }) {
   const { appState } = useAppState();
   const { showSuccessToast, showErrorToast, showInfoToast } = useToast();
   const [openRouterResults, setopenRouterResults] = useState({});
@@ -74,6 +74,7 @@ export default function OpenRouterContent({ activePromptKey, onPromptChange, onP
   return (
     <div className="flex flex-col items-center justify-center w-full p-2 space-y-3">
       <PromptBox
+        spaceId={spaceId}
         componentMap={AI_PROMPT_COMPONENT_MAP}
         activeKey={activePromptKey}
         onActiveKeyChange={onPromptChange}

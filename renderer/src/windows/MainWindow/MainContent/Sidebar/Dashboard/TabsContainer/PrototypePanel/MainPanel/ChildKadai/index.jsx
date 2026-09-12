@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 
-import { useAppState } from '@/AppStateContext'
+import { useSelector } from 'react-redux'
+import { selectSpaceChildId } from '@/store/slices/chilledspaceSlice.js'
 
 import ChildKadaiTable from './ChildKadaiTable'
 import CreateKadai from './ChildKadaiTable/TableRow/CreateKadai'
@@ -9,8 +10,8 @@ import ScoreChartPage from './ChildKadaiTable/TableRow/graph/ScoreChartPage'
 import getChildKadaiGraph from './function/GetChildKadaiGraph'
 import deleteChildKadai from './ChildKadaiTable/TableRow/function/DeleteChildKadai'
 
-function ChildKadai() {
-  const { SELECT_CHILD } = useAppState()
+function ChildKadai({ spaceId }) {
+  const selectedChildId = useSelector(selectSpaceChildId(spaceId))
 
   const [records, setRecords] = useState([])
   const [loading, setLoading] = useState(false)
@@ -21,7 +22,7 @@ function ChildKadai() {
   const [recordTypeId, setRecordTypeId] = useState('')
 
   const loadRecords = useCallback(async (selectedRecordTypeId = recordTypeId) => {
-    if (!SELECT_CHILD) {
+    if (!selectedChildId) {
       setRecords([])
       setLoading(false)
       setError('')
@@ -39,7 +40,7 @@ function ChildKadai() {
 
     try {
       setRecords(await getChildKadaiGraph({
-        childrenId: SELECT_CHILD,
+        childrenId: selectedChildId,
         recordTypeId: selectedRecordTypeId,
       }))
     } catch (loadError) {
@@ -49,13 +50,13 @@ function ChildKadai() {
     } finally {
       setLoading(false)
     }
-  }, [SELECT_CHILD, recordTypeId])
+  }, [selectedChildId, recordTypeId])
 
   useEffect(() => {
     setRecords([])
     setRecordTypeId('')
     setError('')
-  }, [SELECT_CHILD])
+  }, [selectedChildId])
 
   const showTable = useCallback(() => {
     setGraphTarget(null)
@@ -80,7 +81,7 @@ function ChildKadai() {
     }
   }, [])
 
-  if (!SELECT_CHILD) {
+  if (!selectedChildId) {
     return (
       <section className="p-4">
         <div className="rounded border border-yellow-300 bg-yellow-50 px-4 py-6 text-center font-medium text-yellow-800">
@@ -97,7 +98,7 @@ function ChildKadai() {
   if (creating) {
     return (
       <CreateKadai
-        initialChildrenId={SELECT_CHILD}
+        initialChildrenId={selectedChildId}
         initialRecordTypeId={recordTypeId}
         onCancel={showTable}
         onSaved={handleSaved}
@@ -111,6 +112,7 @@ function ChildKadai() {
 
   return (
     <ChildKadaiTable
+      spaceId={spaceId}
       childRecords={records}
       recordsLoading={loading}
       recordsError={error}

@@ -2,6 +2,7 @@
 import PersonalRecordGetMonthBtn from "./PersonalRecordGetMonthBtn";
 
 export default function MonthControls({
+  spaceId,
   month,
   onMonthChange,
   disabled = false,
@@ -30,6 +31,7 @@ export default function MonthControls({
       </div>
 
       <PersonalRecordGetMonthBtn
+        spaceId={spaceId}
         monthStr={month}
         disabled={disabled}
         onServiceRecordsUpdated={onServiceRecordsUpdated}

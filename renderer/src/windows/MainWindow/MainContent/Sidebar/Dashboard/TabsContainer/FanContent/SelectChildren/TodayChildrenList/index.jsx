@@ -33,12 +33,11 @@ function ChevronIcon({ open }) {
   )
 }
 
-export default function TodayChildrenList() {
+export default function TodayChildrenList({ spaceId }) {
   const appState = useAppState()
 
   const {
-    SELECT_CHILD,
-    SELECT_CHILD_NAME,
+    chilledSpaces,
     SELECT_CHILD_FILTER_MODE,
     CURRENT_DAY_OF_WEEK,
     STAFF_ID,
@@ -49,9 +48,13 @@ export default function TodayChildrenList() {
     attendanceData,
     databaseState,
     updateAppState,
-    setSelectedChild,
-    setSelectedPcName,
+    setSpaceChild,
+    setSpacePcName,
   } = appState
+
+  const currentSpace = chilledSpaces?.[spaceId] ?? {}
+  const selectedChildId = currentSpace.childId ?? ''
+  const selectedChildName = currentSpace.childName ?? ''
 
   const [activeTab, setActiveTab] = useState(TABS.NORMAL)
   const [doneChildIds, setDoneChildIds] = useState([])
@@ -181,7 +184,8 @@ export default function TodayChildrenList() {
     getChildAbsent,
     getChildExited,
   } = useTodayChildrenListController({
-    SELECT_CHILD,
+    selectedChildId,
+    spaceId,
     SELECT_CHILD_FILTER_MODE,
     childrenData: displayChildrenData,
     waiting_childrenData: displayWaitingChildrenData,
@@ -189,8 +193,8 @@ export default function TodayChildrenList() {
     attendanceData,
     activeTab,
     setDoneChildIds,
-    setSelectedChild,
-    setSelectedPcName,
+    setSpaceChild,
+    setSpacePcName,
   })
 
   const childrenByTab = useMemo(
@@ -228,18 +232,18 @@ export default function TodayChildrenList() {
   const selectedChild = useMemo(
     () =>
       allChildren.find(
-        (child) => String(child?.children_id) === String(SELECT_CHILD),
+        (child) => String(child?.children_id) === String(selectedChildId),
       ) ?? null,
-    [allChildren, SELECT_CHILD],
+    [allChildren, selectedChildId],
   )
 
   const selectedChildTab = useMemo(() => {
     if (!selectedChild) return null
 
-    if (visibleWaitingChildren.some((child) => String(child.children_id) === String(SELECT_CHILD))) {
+    if (visibleWaitingChildren.some((child) => String(child.children_id) === String(selectedChildId))) {
       return TABS.WAITING
     }
-    if (visibleExperienceChildren.some((child) => String(child.children_id) === String(SELECT_CHILD))) {
+    if (visibleExperienceChildren.some((child) => String(child.children_id) === String(selectedChildId))) {
       return TABS.EXPERIENCE
     }
 
@@ -249,15 +253,16 @@ export default function TodayChildrenList() {
     return TABS.NORMAL
   }, [
     selectedChild,
-    SELECT_CHILD,
+    selectedChildId,
+    spaceId,
     visibleWaitingChildren,
     visibleExperienceChildren,
   ])
 
   const hasSelectedChild =
-    SELECT_CHILD !== null &&
-    SELECT_CHILD !== undefined &&
-    String(SELECT_CHILD).trim() !== ''
+    selectedChildId !== null &&
+    selectedChildId !== undefined &&
+    String(selectedChildId).trim() !== ''
 
   const openList = () => {
     if (selectedChildTab) setActiveTab(selectedChildTab)
@@ -361,9 +366,9 @@ export default function TodayChildrenList() {
             選択中の児童
           </div>
 
-          {SELECT_CHILD ? (
+          {selectedChildId ? (
             <div className={`truncate text-xl font-bold ${hasSelectedChild ? 'text-sky-950' : 'text-gray-800'}`}>
-              {SELECT_CHILD}: {SELECT_CHILD_NAME || selectedChild?.children_name || ''}
+              {selectedChildId}: {selectedChildName || selectedChild?.children_name || ''}
               {selectedChild?.pc_name ? ` : ${selectedChild.pc_name}` : ''}
             </div>
           ) : (
@@ -422,7 +427,7 @@ export default function TodayChildrenList() {
             )}
 
             {visibleChildren.map((child) => {
-              const selected = String(SELECT_CHILD) === String(child.children_id)
+              const selected = String(selectedChildId) === String(child.children_id)
               const done = doneChildIds.includes(child.children_id)
               const absent = getChildAbsent(child)
               const exited = getChildExited(child)
@@ -475,7 +480,7 @@ export default function TodayChildrenList() {
 
       {/* 元の SelectChildren と同じ実データ連動のメモ/出欠パネル */}
       <div className="mt-2 min-h-0 flex-1">
-        <ChildAttendancePanel />
+        <ChildAttendancePanel spaceId={spaceId} />
       </div>
     </div>
   )

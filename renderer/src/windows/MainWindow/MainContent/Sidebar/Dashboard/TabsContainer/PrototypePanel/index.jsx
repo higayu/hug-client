@@ -5,7 +5,7 @@ import TodayChildrenList from './TodayChildrenList';
 import ChildAttendancePanel from './ChildAttendancePanel';
 import MainPanel from "./MainPanel";
 
-function ToolContent() {
+function ToolContent({ spaceId }) {
   const [activeTool, setActiveTool] = useState('default');
 
   useEffect(() => {
@@ -17,15 +17,15 @@ function ToolContent() {
       {/* SidebarContent と ChildAttendancePanel を横並びに配置 */}
       <div className="tool-content flex flex-1 min-h-0 overflow-hidden">
         <div className="flex-[5] min-w-0">
-          <TodayChildrenList />
+          <TodayChildrenList spaceId={spaceId} />
         </div>
         <div className="flex-[5] min-w-0">
-          <ChildAttendancePanel />
+          <ChildAttendancePanel spaceId={spaceId} />
         </div>
       </div>
       {/* AI + メモツール */}
       <div className="mt-4 border-t rounded bg-gray-200 border-gray-300 pt-3">
-        <MainPanel />
+        <MainPanel spaceId={spaceId} />
       </div>
     </div>
 
