@@ -1,4 +1,5 @@
 import { useTabs } from '@/hooks/useTabs'
+import { handleProfessionalSupportClick } from './function/handleProfessionalSupportClick'
 
 /**
  * 専門的支援ボタン
@@ -54,11 +55,16 @@ export default function ProfessionalSupportButton({
     return '専門的支援'
   }
 
+  const onClick = () =>
+    handleProfessionalSupportClick({
+      addProfessionalSupportNewTab,
+    })
+
   return (
     <button
       type="button"
       className="btn-purple mt-1 w-full p-2 text-sm disabled:cursor-not-allowed disabled:opacity-50"
-      onClick={addProfessionalSupportNewTab}
+      onClick={onClick}
       disabled={disabled}
       title={getTitle()}
     >

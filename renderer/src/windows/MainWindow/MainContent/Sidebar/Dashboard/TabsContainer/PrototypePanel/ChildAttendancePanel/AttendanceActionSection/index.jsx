@@ -1,13 +1,9 @@
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-} from "react"
+import { useEffect, useMemo } from "react"
 
-import AttendancePostButton from "./AttendancePostButton"
+import EnterButton from "./EnterButton"
+import LeaveButton from "./LeaveButton"
+import AbsenceButton from "./AbsenceButton"
 import ProfessionalSupportButton from "./ProfessionalSupportButton"
-import MailNotificationModal from "./MailNotificationModal"
 
 import {
   canPostEnter,
@@ -64,8 +60,6 @@ export default function AttendanceActionSection({
     [column5Html, childId, childName, dateStr],
   )
 
-  const [showEnterMailModal, setShowEnterMailModal] = useState(false)
-
   const showEnter =
     canPostEnter(column5Html)
 
@@ -94,71 +88,6 @@ export default function AttendanceActionSection({
       loadingAction={loadingAction}
     />
   )
-
-  /**
-   * 入室処理
-   *
-   * AttendancePostButtonから渡された引数を、
-   * そのまま元のonEnterへ渡す。
-   *
-   * onEnterの完了後に後続処理を実行できる。
-   */
-  const executeEnter = useCallback(
-    async (mailFlg = 0) => {
-      if (typeof onEnter !== "function") {
-        console.warn(
-          "[AttendanceActionSection] onEnterが設定されていません",
-        )
-        return undefined
-      }
-
-      try {
-        console.log(
-          "[AttendanceActionSection] 入室処理開始:",
-          { childId, childName, dateStr, enterHasMail, mailFlg },
-        )
-
-        const result = await onEnter({
-          mailFlg,
-          mail_flg: mailFlg,
-          skipMailPrompt: true,
-        })
-
-        console.log(
-          "[AttendanceActionSection] 入室処理完了:",
-          { childId, childName, dateStr, mailFlg, result },
-        )
-        return result
-      } catch (error) {
-        console.error(
-          "[AttendanceActionSection] 入室処理に失敗しました:",
-          { childId, childName, dateStr, error },
-        )
-        return undefined
-      }
-    },
-    [onEnter, childId, childName, dateStr, enterHasMail],
-  )
-
-  const handleEnterClick = useCallback(() => {
-    if (enterHasMail) {
-      setShowEnterMailModal(true)
-      return undefined
-    }
-    return executeEnter(0)
-  }, [enterHasMail, executeEnter])
-
-  const handleMailSelect = useCallback(
-    async (mailFlg) => {
-      setShowEnterMailModal(false)
-      return executeEnter(Number(mailFlg) === 1 ? 1 : 0)
-    },
-    [executeEnter],
-  )
-
-  const handleMailCancel = useCallback(() => {
-    setShowEnterMailModal(false)
-  }, [])
 
   useEffect(() => {
     console.group(
@@ -367,8 +296,7 @@ export default function AttendanceActionSection({
           </div>
         ) : showLeave ? (
           <div className="hug-post-actions mt-1">
-            <AttendancePostButton
-              action="leave"
+            <LeaveButton
               hasMail={
                 hasLeaveMail(
                   column6Html,
@@ -378,10 +306,7 @@ export default function AttendanceActionSection({
                 )
               }
               disabled={disabled}
-              loading={
-                loadingAction ===
-                "leave"
-              }
+              loading={loadingAction === "leave"}
               title={
                 buildLeaveButtonTitle(
                   column6Html,
@@ -389,9 +314,7 @@ export default function AttendanceActionSection({
                   dateStr,
                 )
               }
-              onClick={
-                onLeave
-              }
+              onLeave={onLeave}
             />
           </div>
         ) : (
@@ -417,17 +340,13 @@ export default function AttendanceActionSection({
     <div className="flex flex-col gap-1">
       <div className="hug-post-actions flex justify-evenly gap-4">
         {showEnter ? (
-          <AttendancePostButton
-            action="enter"
+          <EnterButton
+            childId={childId}
+            childName={childName}
+            dateStr={dateStr}
             hasMail={enterHasMail}
-            disabled={
-              disabled ||
-              afternoonBlocked
-            }
-            loading={
-              loadingAction ===
-              "enter"
-            }
+            disabled={disabled || afternoonBlocked}
+            loading={loadingAction === "enter"}
             title={
               buildEnterButtonTitle(
                 column5Html,
@@ -435,9 +354,7 @@ export default function AttendanceActionSection({
                 dateStr,
               )
             }
-            onClick={
-              handleEnterClick
-            }
+            onEnter={onEnter}
           />
         ) : (
           <span className="hug-enter-cell-dash">
@@ -445,22 +362,11 @@ export default function AttendanceActionSection({
           </span>
         )}
 
-        <button
-          type="button"
-          className="hug-btn-absence"
-          disabled={
-            disabled ||
-            !column5Html
-          }
-          onClick={
-            onAbsence
-          }
-          title="欠席モーダルを開く（hugview Cache）"
-        >
-          {loadingAction === "absence"
-            ? "処理中…"
-            : "欠席"}
-        </button>
+        <AbsenceButton
+          disabled={disabled || !column5Html}
+          loading={loadingAction === "absence"}
+          onAbsence={onAbsence}
+        />
       </div>
 
       {afternoonBlocked ? (
@@ -471,13 +377,6 @@ export default function AttendanceActionSection({
 
       {professionalSupportButton}
 
-      <MailNotificationModal
-        open={showEnterMailModal}
-        childName={childName}
-        actionLabel="入室"
-        onSelect={handleMailSelect}
-        onCancel={handleMailCancel}
-      />
     </div>
   )
 }
