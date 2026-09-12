@@ -368,33 +368,6 @@ export default function GetTodayUsersChildren({
           </div>
 
           {/* =============================================
-              日付
-          ============================================= */}
-          <div
-            className="
-              mt-1
-              flex
-              items-center
-              gap-1
-              rounded
-              bg-white
-              px-1.5
-              py-1
-            "
-          >
-            <span
-              className="
-                shrink-0
-                text-[11px]
-                font-semibold
-                text-gray-600
-              "
-            >
-              日付
-            </span>
-          </div>
-
-          {/* =============================================
               フィルター
           ============================================= */}
           {!HideFlg && (
