@@ -1,4 +1,3 @@
-import DateSelect from "@/components/ui/DateSelect";
 import WeekdaySelect from "@/components/ui/WeekdaySelect";
 import FanMenuButton from "./FanMenuButton";
 import GetTodayUsersChildren from "./GetTodayUsersChildren";
@@ -8,79 +7,68 @@ function DashboardHeader() {
     <div
       className="
         sidebar-header
-        relative z-[100]
-        flex items-center
-        max-h-none
-        overflow-visible
+        relative
+        z-[100]
+        flex
         w-full
+        max-h-none
+        items-center
+        overflow-visible
       "
     >
+      {/* =============================================
+          ファンメニュー
+      ============================================= */}
       <div className="shrink-0">
         <FanMenuButton />
       </div>
 
-      <div className="w-[320px] shrink-0 px-2">
-        <GetTodayUsersChildren expandDirection="down" />
-      </div>
+      <div className="flex min-w-0 flex-1">
+        {/* =============================================
+            日付・利用者取得：60%
 
-      <div className="flex flex-1 min-w-0">
-
-        {/* 日付入力：60% */}
+            日付ラベルを含めて
+            GetTodayUsersChildren 側で管理する
+        ============================================= */}
         <div
           className="
-            flex flex-row
-            rounded-lg
-            bg-slate-200
-            p-2
+            flex
+            min-w-0
+            basis-3/5
+            flex-row
             items-center
             gap-2
-            basis-3/5
-            min-w-0
-          "
-        >
-          <label
-            className="
-              items-center
-              flex flex-col
-              font-bold
-              text-sm
-              text-black
-              shrink-0
-            "
-          >
-            <span className="text-sm text-black">
-              日付:
-            </span>
-
-            <span className="text-sm text-black">
-              （個人記録）
-            </span>
-          </label>
-
-          <div className="flex-1 min-w-0">
-            <DateSelect />
-          </div>
-        </div>
-
-        {/* 曜日：40% */}
-        <div
-          className="
-            flex flex-row
             rounded-lg
             bg-slate-200
             p-2
-            items-center
-            basis-2/5
+          "
+        >
+          <GetTodayUsersChildren expandDirection="down" />
+        </div>
+
+        {/* =============================================
+            曜日：40%
+        ============================================= */}
+        <div
+          className="
+            flex
             min-w-0
+            basis-2/5
+            flex-row
+            items-center
+            rounded-lg
+            bg-slate-200
+            p-2
           "
         >
           <label
             className="
-              flex flex-col
-              items-center
-              font-bold
-              text-sm
+              flex
               shrink-0
+              flex-col
+              items-center
+              text-sm
+              font-bold
             "
           >
             <span className="text-sm text-black">
@@ -92,11 +80,10 @@ function DashboardHeader() {
             </span>
           </label>
 
-          <div className="flex-1 min-w-0">
+          <div className="min-w-0 flex-1">
             <WeekdaySelect />
           </div>
         </div>
-
       </div>
     </div>
   );
