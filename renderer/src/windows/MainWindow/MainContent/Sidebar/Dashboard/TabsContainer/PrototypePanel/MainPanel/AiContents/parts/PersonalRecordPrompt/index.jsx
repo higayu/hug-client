@@ -8,6 +8,7 @@ import { useToast } from "@/provider/ToastProvider/ToastContext";
 import { useDispatch, useSelector } from "react-redux";
 import { selectSpaceChildId } from "@/store/slices/chilledspaceSlice.js";
 import {
+  AI_CHAT_TEXT_KEYS,
   selectAiChatText,
   setAiChatText,
 } from "@/store/slices/aiChatSlice.js";
@@ -59,7 +60,11 @@ export default function PersonalRecordPrompt({
   const PROMPT_KEY = "personalRecord";
 
   const aiText = useSelector(
-    selectAiChatText(CURRENT_YMD, selectedChildId)
+    selectAiChatText(
+      CURRENT_YMD,
+      selectedChildId,
+      AI_CHAT_TEXT_KEYS.PERSONAL
+    )
   );
 
   const sending = useSelector(
@@ -388,6 +393,7 @@ export default function PersonalRecordPrompt({
               setAiChatText({
                 date: CURRENT_YMD,
                 childId: selectedChildId,
+                key: AI_CHAT_TEXT_KEYS.PERSONAL,
                 text: next,
               })
             );

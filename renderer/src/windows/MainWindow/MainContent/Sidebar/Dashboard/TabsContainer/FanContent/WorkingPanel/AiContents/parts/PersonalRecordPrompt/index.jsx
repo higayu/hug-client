@@ -15,6 +15,7 @@ import {
 } from "@/store/slices/sendTextSlice";
 
 import {
+  AI_CHAT_TEXT_KEYS,
   setAiChatText,
   selectAiChatText,
 } from "@/store/slices/aiChatSlice.js";
@@ -59,11 +60,14 @@ export default function PersonalRecordPrompt({
   // ここは personalRecord / personalRecord2 の切替とは別物なので固定
   const PROMPT_KEY = "personalRecord";
 
-  // AI入力欄は「日付 + 児童ID」をキーに aiChatSlice で管理する。
+  // AI入力欄は「日付 + 児童ID + 個人」をキーに管理する。
+  const AI_TEXT_KEY = AI_CHAT_TEXT_KEYS.PERSONAL;
+
   const aiText = useSelector(
     selectAiChatText(
       CURRENT_YMD,
-      selectedChildId
+      selectedChildId,
+      AI_TEXT_KEY
     )
   );
 
@@ -394,6 +398,7 @@ export default function PersonalRecordPrompt({
               setAiChatText({
                 date: CURRENT_YMD,
                 childId: selectedChildId,
+                key: AI_TEXT_KEY,
                 text: next,
               })
             );

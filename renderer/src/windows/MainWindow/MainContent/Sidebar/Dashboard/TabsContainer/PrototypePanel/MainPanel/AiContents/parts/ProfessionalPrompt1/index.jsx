@@ -4,6 +4,7 @@ import { useAppState } from "@/AppStateContext";
 import { useDispatch, useSelector } from "react-redux";
 import { selectSpaceChildId } from "@/store/slices/chilledspaceSlice.js";
 import {
+  AI_CHAT_TEXT_KEYS,
   selectAiChatText,
   setAiChatText,
 } from "@/store/slices/aiChatSlice.js";
@@ -37,7 +38,11 @@ export default function ProfessionalPrompt1({
   const dispatch = useDispatch();
 
   const aiText = useSelector(
-    selectAiChatText(CURRENT_YMD, selectedChildId)
+    selectAiChatText(
+      CURRENT_YMD,
+      selectedChildId,
+      AI_CHAT_TEXT_KEYS.PROFESSIONAL_1
+    )
   );
 
   const logDbg = (field, msg, extra = {}) => {
@@ -177,6 +182,7 @@ export default function ProfessionalPrompt1({
               setAiChatText({
                 date: CURRENT_YMD,
                 childId: selectedChildId,
+                key: AI_CHAT_TEXT_KEYS.PROFESSIONAL_1,
                 text: next,
               })
             );

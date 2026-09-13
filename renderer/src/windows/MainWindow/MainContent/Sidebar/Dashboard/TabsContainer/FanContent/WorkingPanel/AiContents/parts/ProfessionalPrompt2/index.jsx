@@ -4,6 +4,7 @@ import { useAppState } from "@/AppStateContext";
 import { useDispatch, useSelector } from "react-redux";
 import { selectSpaceChildId } from "@/store/slices/chilledspaceSlice.js";
 import {
+  AI_CHAT_TEXT_KEYS,
   setAiChatText,
   selectAiChatText,
 } from "@/store/slices/aiChatSlice.js";
@@ -26,11 +27,14 @@ export default function ProfessionalPrompt2({
 
   const [text1, setText1] = useState("");
 
-  // AI入力欄は「日付 + 児童ID」で共有管理する。
+  // AI入力欄は「日付 + 児童ID + 専門的支援2」で管理する。
+  const AI_TEXT_KEY = AI_CHAT_TEXT_KEYS.PROFESSIONAL_2;
+
   const aiText = useSelector(
     selectAiChatText(
       CURRENT_YMD,
-      selectedChildId
+      selectedChildId,
+      AI_TEXT_KEY
     )
   );
 
@@ -134,6 +138,7 @@ export default function ProfessionalPrompt2({
               setAiChatText({
                 date: CURRENT_YMD,
                 childId: selectedChildId,
+                key: AI_TEXT_KEY,
                 text: next,
               })
             );
