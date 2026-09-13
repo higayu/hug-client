@@ -9,6 +9,7 @@ import recordStatusReducer from "./slices/recordStatusSlice.js";
 import modeReducer from './slices/modeSlice.js'
 import chilledspaceReducer from './slices/chilledspaceSlice.js'
 import webAutomationRuleReducer from './slices/webAutomationRuleSlice.js'
+import aiChatReducer from './slices/aiChatSlice.js'
 
 export const store = configureStore({
   reducer: {
@@ -17,6 +18,7 @@ export const store = configureStore({
     appState: appStateReducer,
     chilledspace: chilledspaceReducer,
     webAutomationRules: webAutomationRuleReducer,
+    aiChat: aiChatReducer,
     database: databaseReducer,
     sendText: sendTextReducer,
     webview: webviewReducer,

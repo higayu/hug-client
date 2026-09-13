@@ -9,11 +9,15 @@ import { useDispatch, useSelector } from "react-redux";
 import { selectSpaceChildId } from "@/store/slices/chilledspaceSlice.js";
 
 import {
-  setAiText,
   sendStart,
   sendSuccess,
   sendError,
 } from "@/store/slices/sendTextSlice";
+
+import {
+  setAiChatText,
+  selectAiChatText,
+} from "@/store/slices/aiChatSlice.js";
 
 import MemoInputBox from "@/components/ui/MemoInputBox";
 
@@ -35,7 +39,7 @@ export default function PersonalRecordPrompt({
   showTabButton = null,
 }) {
   const appState = useAppState();
-  const { PROMPTS, } = appState;
+  const { PROMPTS, CURRENT_YMD } = appState;
   const selectedChildId = useSelector(selectSpaceChildId(spaceId));
 
   // =============================================================
@@ -55,9 +59,12 @@ export default function PersonalRecordPrompt({
   // ここは personalRecord / personalRecord2 の切替とは別物なので固定
   const PROMPT_KEY = "personalRecord";
 
+  // AI入力欄は「日付 + 児童ID」をキーに aiChatSlice で管理する。
   const aiText = useSelector(
-    (state) =>
-      state.sendText?.[PROMPT_KEY]?.aiText ?? ""
+    selectAiChatText(
+      CURRENT_YMD,
+      selectedChildId
+    )
   );
 
   const sending = useSelector(
@@ -88,6 +95,7 @@ export default function PersonalRecordPrompt({
   const logDbg = (field, msg, extra = {}) => {
     console.log(`[${DBG}:${field}]`, msg, {
       childId: selectedChildId,
+      date: CURRENT_YMD,
       PROMPT_KEY,
       selectedPromptKey,
       useDbNote,
@@ -383,8 +391,9 @@ export default function PersonalRecordPrompt({
             );
 
             dispatch(
-              setAiText({
-                key: PROMPT_KEY,
+              setAiChatText({
+                date: CURRENT_YMD,
+                childId: selectedChildId,
                 text: next,
               })
             );

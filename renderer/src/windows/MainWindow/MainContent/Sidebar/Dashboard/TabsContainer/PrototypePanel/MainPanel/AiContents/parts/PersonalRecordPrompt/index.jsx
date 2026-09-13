@@ -7,9 +7,12 @@ import { useToast } from "@/provider/ToastProvider/ToastContext";
 
 import { useDispatch, useSelector } from "react-redux";
 import { selectSpaceChildId } from "@/store/slices/chilledspaceSlice.js";
+import {
+  selectAiChatText,
+  setAiChatText,
+} from "@/store/slices/aiChatSlice.js";
 
 import {
-  setAiText,
   sendStart,
   sendSuccess,
   sendError,
@@ -35,7 +38,7 @@ export default function PersonalRecordPrompt({
   showTabButton = null,
 }) {
   const appState = useAppState();
-  const { PROMPTS, } = appState;
+  const { PROMPTS, CURRENT_YMD } = appState;
   const selectedChildId = useSelector(selectSpaceChildId(spaceId));
 
   // =============================================================
@@ -56,8 +59,7 @@ export default function PersonalRecordPrompt({
   const PROMPT_KEY = "personalRecord";
 
   const aiText = useSelector(
-    (state) =>
-      state.sendText?.[PROMPT_KEY]?.aiText ?? ""
+    selectAiChatText(CURRENT_YMD, selectedChildId)
   );
 
   const sending = useSelector(
@@ -383,8 +385,9 @@ export default function PersonalRecordPrompt({
             );
 
             dispatch(
-              setAiText({
-                key: PROMPT_KEY,
+              setAiChatText({
+                date: CURRENT_YMD,
+                childId: selectedChildId,
                 text: next,
               })
             );

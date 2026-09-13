@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from "react";
 
 import { useAppState } from "@/AppStateContext";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { selectSpaceChildId } from "@/store/slices/chilledspaceSlice.js";
+import {
+  selectAiChatText,
+  setAiChatText,
+} from "@/store/slices/aiChatSlice.js";
 
 import ProfessionalPlan from "@/components/common/hug_function/ProfessionalPlan";
 import ProfessionalSupportCheckPanel2 from "@/components/common/hug_function/ProfessionalSupportCheckPanel2";
@@ -25,11 +29,16 @@ export default function ProfessionalPrompt1({
 
   const {
     PROMPTS,
+    CURRENT_YMD,
   } = appState;
 
   const [text1, setText1] = useState("");
-  const [aiText, setAiText] = useState("");
   const [dbNote, setDbNote] = useState("");
+  const dispatch = useDispatch();
+
+  const aiText = useSelector(
+    selectAiChatText(CURRENT_YMD, selectedChildId)
+  );
 
   const logDbg = (field, msg, extra = {}) => {
     console.log(`[${DBG}:${field}]`, msg, {
@@ -164,7 +173,13 @@ export default function ProfessionalPrompt1({
               }
             );
 
-            setAiText(next);
+            dispatch(
+              setAiChatText({
+                date: CURRENT_YMD,
+                childId: selectedChildId,
+                text: next,
+              })
+            );
           }}
         />
       </div>

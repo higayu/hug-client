@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from "react";
 
 import { useAppState } from "@/AppStateContext";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { selectSpaceChildId } from "@/store/slices/chilledspaceSlice.js";
+import {
+  setAiChatText,
+  selectAiChatText,
+} from "@/store/slices/aiChatSlice.js";
 
 import ProfessionalPlan from "@/components/common/hug_function/ProfessionalPlan";
 import ProfessionalSupportCheckPanel2 from "@/components/common/hug_function/ProfessionalSupportCheckPanel2";
@@ -25,15 +29,26 @@ export default function ProfessionalPrompt1({
 
   const {
     PROMPTS,
+    CURRENT_YMD,
   } = appState;
 
   const [text1, setText1] = useState("");
-  const [aiText, setAiText] = useState("");
   const [dbNote, setDbNote] = useState("");
+
+  const dispatch = useDispatch();
+
+  // AI入力欄は「日付 + 児童ID」で共有管理する。
+  const aiText = useSelector(
+    selectAiChatText(
+      CURRENT_YMD,
+      selectedChildId
+    )
+  );
 
   const logDbg = (field, msg, extra = {}) => {
     console.log(`[${DBG}:${field}]`, msg, {
       childId: selectedChildId,
+      date: CURRENT_YMD,
       aiName,
       promptKey,
       aiTextLen: aiText.length,
@@ -164,7 +179,13 @@ export default function ProfessionalPrompt1({
               }
             );
 
-            setAiText(next);
+            dispatch(
+              setAiChatText({
+                date: CURRENT_YMD,
+                childId: selectedChildId,
+                text: next,
+              })
+            );
           }}
         />
       </div>
