@@ -270,69 +270,71 @@ export default function AttendanceActionSection({
   if (hasEntered) {
     return (
       <div className="flex flex-col gap-1">
-        <div className="hug-time-field">
-          <label htmlFor="hug-enter-time">
-            入室
-          </label>
-
-          <input
-            id="hug-enter-time"
-            type="text"
-            readOnly
-            value={
-              column5 ||
-              ""
-            }
-          />
-        </div>
-
-        {hasExited ? (
+        <div className="hug-time-fields-row">
           <div className="hug-time-field">
-            <label htmlFor="hug-leave-time">
-              退室
+            <label htmlFor="hug-enter-time">
+              入室
             </label>
 
             <input
-              id="hug-leave-time"
+              id="hug-enter-time"
               type="text"
               readOnly
               value={
-                column6 ||
+                column5 ||
                 ""
               }
             />
           </div>
-        ) : showLeave ? (
-          <div className="hug-post-actions mt-1">
-            <LeaveButton
-              hasMail={
-                hasLeaveMail(
-                  column6Html,
-                  childId,
-                  childName,
-                  dateStr,
-                )
-              }
-              disabled={disabled}
-              loading={
-                loadingAction ===
-                "leave"
-              }
-              title={
-                buildLeaveButtonTitle(
-                  column6Html,
-                  childId,
-                  dateStr,
-                )
-              }
-              onLeave={onLeave}
-            />
-          </div>
-        ) : (
-          <span className="hug-enter-cell-dash">
-            退室ボタンなし
-          </span>
-        )}
+
+          {hasExited ? (
+            <div className="hug-time-field">
+              <label htmlFor="hug-leave-time">
+                退室
+              </label>
+
+              <input
+                id="hug-leave-time"
+                type="text"
+                readOnly
+                value={
+                  column6 ||
+                  ""
+                }
+              />
+            </div>
+          ) : showLeave ? (
+            <div className="hug-post-actions hug-post-actions-inline">
+              <LeaveButton
+                hasMail={
+                  hasLeaveMail(
+                    column6Html,
+                    childId,
+                    childName,
+                    dateStr,
+                  )
+                }
+                disabled={disabled}
+                loading={
+                  loadingAction ===
+                  "leave"
+                }
+                title={
+                  buildLeaveButtonTitle(
+                    column6Html,
+                    childId,
+                    dateStr,
+                  )
+                }
+                onLeave={onLeave}
+              />
+            </div>
+          ) : (
+            <span className="hug-enter-cell-dash">
+              退室ボタンなし
+            </span>
+          )}
+        </div>
 
         {professionalSupportPanel}
       </div>
@@ -349,7 +351,7 @@ export default function AttendanceActionSection({
    */
   return (
     <div className="flex flex-col gap-1">
-      <div className="hug-post-actions flex justify-evenly gap-4">
+      <div className="hug-post-actions hug-post-actions-inline justify-evenly gap-4">
         {showEnter ? (
           <EnterButton
             childId={childId}

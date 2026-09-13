@@ -158,6 +158,24 @@
   font-size: 12px;
 }
 
+
+/* 入退室時刻を横並びで表示 */
+.child-memo-attendance-form .hug-time-fields-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: nowrap;
+}
+
+/* 入退室系の操作ボタンは横並びを維持 */
+.child-memo-attendance-form .hug-post-actions-inline {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: nowrap;
+}
+
 /* HUG #addtend_dialog_mail 相当: renderer 側の保護者通知確認 */
 .hug-mail-dialog-overlay {
   position: fixed;
