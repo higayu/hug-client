@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { useSelector } from 'react-redux'
 import { useAppState } from '@/AppStateContext'
 import { useTabs } from '@/hooks/useTabs'
+import { useNote } from '@/hooks/useNote'
 import { getHugWebviewForCache } from '@/hooks/useHugCache/getHugCache.js'
 import { selectCurrentYmd } from '@/store/slices/appStateSlice.js'
 import {
@@ -303,6 +304,8 @@ export default function ProfessionalSupportCheckPanel2({
   const [actionKind, setActionKind] = useState('idle')
   const [postModalOpen, setPostModalOpen] = useState(false)
   const [postModalError, setPostModalError] = useState('')
+  const [postModalInitialContents, setPostModalInitialContents] = useState('')
+  const [postModalPreparing, setPostModalPreparing] = useState(false)
 
   const isExpandDown = expandDirection === 'down'
   const triggerRef = useRef(null)
@@ -332,6 +335,7 @@ export default function ProfessionalSupportCheckPanel2({
     facilityId ?? FACILITY_ID ?? appState?.FACILITY_ID ?? ''
 
   const { addProfessionalSupportListTab } = useTabs(effectiveSpaceId)
+  const { loadTemp } = useNote()
 
   const professionalSupportStatus = useSelector((state) =>
     selectProfessionalSupportStatus(state, dateStr, childId),
@@ -526,10 +530,41 @@ export default function ProfessionalSupportCheckPanel2({
     }
   }
 
-  const openLinkedModal = () => {
-    if (linkedDisabled) return
+  const openLinkedModal = async () => {
+    if (linkedDisabled || postModalPreparing) return
+
     setPostModalError('')
-    setPostModalOpen(true)
+    setPostModalPreparing(true)
+    setAction('working', '一時メモ2 読込中')
+
+    try {
+      let loadedNote = { memo1: '', memo2: '' }
+
+      const proxy = {
+        get value() {
+          return loadedNote
+        },
+        set value(nextValue) {
+          loadedNote = nextValue || { memo1: '', memo2: '' }
+        },
+      }
+
+      await loadTemp(childId, proxy)
+
+      setPostModalInitialContents(loadedNote?.memo2 || '')
+      setPostModalOpen(true)
+      setAction('idle', '')
+    } catch (error) {
+      console.error('[ProfessionalSupportCheckPanel2] temp memo2 load error:', error)
+      setPostModalInitialContents('')
+      setPostModalOpen(true)
+      setPostModalError(
+        `一時メモ2の読込に失敗しました: ${error?.message || error}`,
+      )
+      setAction('warning', '一時メモ2 読込失敗')
+    } finally {
+      setPostModalPreparing(false)
+    }
   }
 
   const closeLinkedModal = () => {
@@ -736,7 +771,7 @@ export default function ProfessionalSupportCheckPanel2({
         <button
           type="button"
           onClick={openLinkedModal}
-          disabled={linkedDisabled}
+          disabled={linkedDisabled || postModalPreparing}
           title={getLinkedTitle()}
           className={`shrink-0 px-3 text-xs font-semibold text-white transition ${
             linkedDisabled
@@ -807,6 +842,7 @@ export default function ProfessionalSupportCheckPanel2({
         initialDate={dateStr}
         initialStartTime={currentSpace?.selectedChildColumn5 || ''}
         initialEndTime={currentSpace?.selectedChildColumn6 || ''}
+        initialContents={postModalInitialContents}
         errorMessage={postModalError}
         onCancel={closeLinkedModal}
         onSubmit={runLinked}

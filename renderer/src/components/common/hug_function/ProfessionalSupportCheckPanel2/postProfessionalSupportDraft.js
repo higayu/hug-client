@@ -48,7 +48,7 @@ export async function postProfessionalSupportDraft({
       const toJapaneseDate = (ymd) => {
         const m = String(ymd || '').match(/^(\\d{4})-(\\d{1,2})-(\\d{1,2})$/);
         if (!m) return String(ymd || '');
-        return m[1] + '年' + Number(m[2]) + '月' + Number(m[3]) + '日';
+        return m[1] + '年' + String(m[2]).padStart(2, '0') + '月' + String(m[3]).padStart(2, '0') + '日';
       };
 
       const splitTime = (time) => {
@@ -114,6 +114,7 @@ export async function postProfessionalSupportDraft({
         body.append('mode', 'regist');
         body.append('draft_flg', 'draft');
         body.append('id', 'insert');
+        // 手動下書き保存時の実送信データに合わせる。
         body.append('select_s_id', '');
         body.append('ap_flg', '0');
         body.append('ap_id', '0');
@@ -121,8 +122,9 @@ export async function postProfessionalSupportDraft({
         body.append('csrf_token_from_client', csrf);
 
         body.append('adding_children_id', PROFESSIONAL_SUPPORT_ID);
-        body.append('title', '専門的支援実施加算');
+        body.append('title', '');
 
+        // HUGの手動送信では配列キーに児童IDそのものが使われる。
         const childKey = PAYLOAD.childId;
         body.append('c_id_list[' + childKey + '][id]', PAYLOAD.childId);
         body.append('c_id_list[' + childKey + '][person_absence_note]', '');
@@ -142,11 +144,35 @@ export async function postProfessionalSupportDraft({
         body.append('add_date', '');
         body.append('nursing_support_date', '');
         body.append('interview_staff[]', PAYLOAD.staffId);
-        body.append('support_office_id', '');
+        body.append('ro_list[1][related_organizations]', '');
+        body.append('ro_list[1][related_organizations_manager]', '');
+        body.append('ro_list[2][related_organizations]', '');
+        body.append('ro_list[2][related_organizations_manager]', '');
+        body.append('support_office_id', '0');
         body.append('support_office_manager', '');
 
         body.append('customize[title][]', resolveWaf(PAYLOAD.title));
         body.append('customize[contents][]', resolveWaf(PAYLOAD.contents));
+
+        console.log('[ProfessionalSupport POST] manual-repro payload', {
+          mode: body.get('mode'),
+          draft_flg: body.get('draft_flg'),
+          id: body.get('id'),
+          select_s_id: body.get('select_s_id'),
+          adding_children_id: body.get('adding_children_id'),
+          child_id: body.get('c_id_list[' + PAYLOAD.childId + '][id]'),
+          child_f_id: body.get('c_id_list[' + PAYLOAD.childId + '][f_id]'),
+          child_s_id: body.get('c_id_list[' + PAYLOAD.childId + '][s_id]'),
+          recorder: body.get('recorder'),
+          interview_date: body.get('interview_date'),
+          start_hour: body.get('start_hour'),
+          start_time: body.get('start_time'),
+          end_hour: body.get('end_hour'),
+          end_time: body.get('end_time'),
+          interview_staff: body.getAll('interview_staff[]'),
+          support_office_id: body.get('support_office_id'),
+          customize_title: body.get('customize[title][]'),
+        });
 
         const postResponse = await fetch(POST_URL, {
           method: 'POST',

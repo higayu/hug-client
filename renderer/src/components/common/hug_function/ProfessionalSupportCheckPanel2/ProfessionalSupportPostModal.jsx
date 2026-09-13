@@ -10,6 +10,7 @@ export default function ProfessionalSupportPostModal({
   initialDate = '',
   initialStartTime = '',
   initialEndTime = '',
+  initialContents = '',
   errorMessage = '',
   onCancel,
   onSubmit,
@@ -18,7 +19,7 @@ export default function ProfessionalSupportPostModal({
   const [startTime, setStartTime] = useState(initialStartTime)
   const [endTime, setEndTime] = useState(initialEndTime)
   const [title, setTitle] = useState('記録')
-  const [contents, setContents] = useState('')
+  const [contents, setContents] = useState(initialContents)
 
   useEffect(() => {
     if (!open) return
@@ -26,8 +27,15 @@ export default function ProfessionalSupportPostModal({
     setStartTime(initialStartTime || '')
     setEndTime(initialEndTime || '')
     setTitle('記録')
-    setContents('')
-  }, [open, initialDate, initialStartTime, initialEndTime, childId])
+    setContents(initialContents || '')
+  }, [
+    open,
+    initialDate,
+    initialStartTime,
+    initialEndTime,
+    initialContents,
+    childId,
+  ])
 
   useEffect(() => {
     if (!open) return undefined
