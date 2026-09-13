@@ -8,7 +8,7 @@ import { fetchProfessionalSupportUseDaysInWebview } from "./fetchProfessionalChe
  */
 export async function fetchProfessionalSupportUseDaysViaHugTab({
   childId,
-  facilityId = "3",
+  facilityId,
   interviewDate,
   currentYmd,
 }) {
@@ -16,6 +16,13 @@ export async function fetchProfessionalSupportUseDaysViaHugTab({
 
   const resolvedInterviewDate =
     interviewDate || formatYmdToHugInterviewDate(currentYmd);
+
+  if (!facilityId) {
+    return {
+      ok: false,
+      error: "施設ID（facilityId）が指定されていません",
+    };
+  }
 
   if (!resolvedInterviewDate) {
     return {

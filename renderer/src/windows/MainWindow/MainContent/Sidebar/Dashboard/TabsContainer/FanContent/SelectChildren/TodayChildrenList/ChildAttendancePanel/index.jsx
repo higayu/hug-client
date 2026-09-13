@@ -11,7 +11,6 @@ import AttendanceActionSection from './AttendanceActionSection'
 import { isAttendanceDataLoaded } from './AttendanceActionSection/attendance/helpers/attendanceStatus.js'
 import './index.css'
 import PersonalRecordCheckPanel from '@/components/common/hug_function/PersonalRecordCheckPanel'
-import ProfessionalSupportCheckPanel2 from '@/components/common/hug_function/ProfessionalSupportCheckPanel2'
 
 const pickValue = (...values) => {
   for (const value of values) {
@@ -710,6 +709,7 @@ export default function ChildAttendancePanel({ spaceId }) {
         {hasChildAttendance ? (
           <AttendanceActionSection
             spaceId={spaceId}
+            facilityId={facilityId}
             childId={selectChild}
             childName={childName}
             dateStr={dateStr}
@@ -746,13 +746,6 @@ export default function ChildAttendancePanel({ spaceId }) {
           expandDirection="up"
         />
 
-        <ProfessionalSupportCheckPanel2
-          spaceId={spaceId}
-          logTag="ChildAttendancePanel"
-          className="min-w-0 flex-1 items-stretch px-0"
-          labelClassName="w-full"
-          expandDirection="up"
-        />
       </div>
 
     </div>

@@ -63,7 +63,7 @@ export function useProfessionalSupportCheck2(
   });
 
   const effectiveChildId = selectedChildIdFromStore;
-  const effectiveFacilityId = facilityIdFromStore || FACILITY_ID || "3";
+  const effectiveFacilityId = facilityIdFromStore || FACILITY_ID || null;
   const effectiveCurrentYmd = currentYmdFromStore || CURRENT_YMD;
 
   console.log(`[HUG WM] 有効な取得条件 初期解決（${logTag}）`, {

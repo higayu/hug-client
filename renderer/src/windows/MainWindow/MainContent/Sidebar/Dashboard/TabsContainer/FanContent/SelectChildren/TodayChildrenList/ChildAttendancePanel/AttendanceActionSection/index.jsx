@@ -6,8 +6,7 @@ import {
 import EnterButton from "./EnterButton"
 import LeaveButton from "./LeaveButton"
 import AbsenceButton from "./AbsenceButton"
-import ProfessionalSupportButton from "./ProfessionalSupportButton"
-import TestAddProfessional from "./TestAddProfessional"
+import ProfessionalSupportCheckPanel2 from "@/components/common/hug_function/ProfessionalSupportCheckPanel2"
 
 import {
   canPostEnter,
@@ -24,6 +23,7 @@ import {
  */
 export default function AttendanceActionSection({
   spaceId,
+  facilityId,
   childId,
   childName,
   dateStr,
@@ -76,40 +76,21 @@ export default function AttendanceActionSection({
       column5,
     )
 
-  const professionalSupportDisabled =
-    !isUIEnabled ||
-    isStop ||
-    Boolean(loadingAction) ||
-    isAbsent ||
-    !hasEntered ||
-    !hasExited
-
-  const professionalSupportButton = (
-    <ProfessionalSupportButton
+  // 専門的支援まわりの UI / ステータス / 専門＋ / 登録確認は
+  // ProfessionalSupportCheckPanel2 に一本化する。
+  // ChildAttendancePanel 側では入退室状態だけ渡す。
+  const professionalSupportPanel = (
+    <ProfessionalSupportCheckPanel2
       spaceId={spaceId}
+      facilityId={facilityId}
       isAbsent={isAbsent}
       hasEntered={hasEntered}
       hasExited={hasExited}
       isUIEnabled={isUIEnabled}
       isStop={isStop}
       loadingAction={loadingAction}
+      expandDirection="down"
     />
-  )
-
-  const testAddProfessionalButton = (
-    <TestAddProfessional spaceId={spaceId} />
-  )
-
-  const professionalButtonsRow = (
-    <div className="flex w-full items-stretch gap-2">
-      <div className="min-w-0 flex-1">
-        {professionalSupportButton}
-      </div>
-
-      <div className="shrink-0">
-        {testAddProfessionalButton}
-      </div>
-    </div>
   )
 
   useEffect(() => {
@@ -228,8 +209,13 @@ export default function AttendanceActionSection({
         showProfessionalSupport:
           true,
 
-        professionalSupportEnabled:
-          !professionalSupportDisabled,
+        professionalSupportLinkedEnabled:
+          isUIEnabled &&
+          !isStop &&
+          !Boolean(loadingAction) &&
+          !isAbsent &&
+          hasEntered &&
+          hasExited,
       },
     )
 
@@ -252,7 +238,6 @@ export default function AttendanceActionSection({
     showEnter,
     showLeave,
     afternoonBlocked,
-    professionalSupportDisabled,
   ])
 
   /**
@@ -274,7 +259,7 @@ export default function AttendanceActionSection({
           {column5 || "欠席"}
         </span>
 
-        {professionalButtonsRow}
+        {professionalSupportPanel}
       </div>
     )
   }
@@ -349,7 +334,7 @@ export default function AttendanceActionSection({
           </span>
         )}
 
-        {professionalButtonsRow}
+        {professionalSupportPanel}
       </div>
     )
   }
@@ -412,7 +397,7 @@ export default function AttendanceActionSection({
         </p>
       ) : null}
 
-      {professionalButtonsRow}
+      {professionalSupportPanel}
 
     </div>
   )

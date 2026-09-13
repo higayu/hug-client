@@ -4,6 +4,7 @@ import {
   ChevronUpIcon,
 } from "@heroicons/react/24/outline";
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useSelector } from "react-redux";
 
 import PersonalRecordButton from "@/components/common/PersonalRecordButton";
@@ -97,6 +98,8 @@ export default function PersonalRecordCheckPanel({
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const panelRef = useRef(null);
+  const popupRef = useRef(null);
+  const [popupStyle, setPopupStyle] = useState(null);
 
   const activeSpaceId = useSelector(selectActiveSpaceId);
   const effectiveSpaceId = spaceId || activeSpaceId;
@@ -117,7 +120,10 @@ export default function PersonalRecordCheckPanel({
 
   useEffect(() => {
     const handlePointerDown = (event) => {
-      if (!panelRef.current?.contains(event.target)) {
+      const clickedPanel = panelRef.current?.contains(event.target);
+      const clickedPopup = popupRef.current?.contains(event.target);
+
+      if (!clickedPanel && !clickedPopup) {
         setIsOpen(false);
       }
     };
@@ -125,6 +131,63 @@ export default function PersonalRecordCheckPanel({
     document.addEventListener("mousedown", handlePointerDown);
     return () => document.removeEventListener("mousedown", handlePointerDown);
   }, []);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const updatePopupPosition = () => {
+      const trigger = panelRef.current;
+      if (!trigger) return;
+
+      const rect = trigger.getBoundingClientRect();
+      const gap = 4;
+      const viewportPadding = 6;
+      const popupWidth = popupRef.current?.offsetWidth || rect.width;
+      const width = Math.max(rect.width, popupWidth);
+      const safeWidth = Math.min(
+        width,
+        Math.max(180, window.innerWidth - viewportPadding * 2)
+      );
+      const left = Math.min(
+        Math.max(viewportPadding, rect.left),
+        Math.max(
+          viewportPadding,
+          window.innerWidth - safeWidth - viewportPadding
+        )
+      );
+
+      if (expandUp) {
+        const popupHeight = popupRef.current?.offsetHeight || 40;
+        setPopupStyle({
+          position: "fixed",
+          top: Math.max(viewportPadding, rect.top - popupHeight - gap),
+          left,
+          minWidth: rect.width,
+          zIndex: 10000,
+        });
+      } else {
+        setPopupStyle({
+          position: "fixed",
+          top: rect.bottom + gap,
+          left,
+          minWidth: rect.width,
+          zIndex: 10000,
+        });
+      }
+    };
+
+    updatePopupPosition();
+    const rafId = requestAnimationFrame(updatePopupPosition);
+
+    window.addEventListener("resize", updatePopupPosition);
+    window.addEventListener("scroll", updatePopupPosition, true);
+
+    return () => {
+      cancelAnimationFrame(rafId);
+      window.removeEventListener("resize", updatePopupPosition);
+      window.removeEventListener("scroll", updatePopupPosition, true);
+    };
+  }, [isOpen, expandUp]);
 
   const handleCheck = async () => {
     await runCheck();
@@ -135,43 +198,42 @@ export default function PersonalRecordCheckPanel({
       ref={panelRef}
       className={`relative inline-flex h-9 items-center ${className}`}
     >
-      {/* 展開メニュー */}
-      <div
-        className={[
-          "absolute left-0 z-50 flex min-w-full items-center gap-1 rounded-md",
-          "border border-gray-600 bg-gray-800 p-1 shadow-lg",
-          "transition-all duration-150 origin-center",
-          expandUp ? "bottom-full mb-1" : "top-full mt-1",
-          isOpen
-            ? "pointer-events-auto translate-y-0 opacity-100 scale-100"
-            : [
-                "pointer-events-none opacity-0 scale-95",
-                expandUp ? "translate-y-1" : "-translate-y-1",
-              ].join(" "),
-        ].join(" ")}
-      >
-        <button
-          type="button"
-          onClick={handleCheck}
-          disabled={checking || !selectedChildId}
-          className={[
-            "inline-flex h-8 shrink-0 items-center justify-center rounded px-3",
-            "text-xs font-bold whitespace-nowrap",
-            "border border-green-500/40 bg-green-500/20 text-green-200",
-            "hover:bg-green-500/30",
-            "disabled:cursor-not-allowed disabled:opacity-40",
-          ].join(" ")}
-          title="本日の個人記録登録状態を確認"
-        >
-          {checking ? "確認中…" : "確認"}
-        </button>
+      {/* 展開メニュー: body直下へPortal表示し、他パネルの下に潜らせない */}
+      {isOpen && popupStyle
+        ? createPortal(
+            <div
+              ref={popupRef}
+              style={popupStyle}
+              className={[
+                "flex items-center gap-1 rounded-md",
+                "border border-gray-600 bg-gray-800 p-1 shadow-lg",
+              ].join(" ")}
+            >
+              <button
+                type="button"
+                onClick={handleCheck}
+                disabled={checking || !selectedChildId}
+                className={[
+                  "inline-flex h-8 shrink-0 items-center justify-center rounded px-3",
+                  "text-xs font-bold whitespace-nowrap",
+                  "border border-green-500/40 bg-green-500/20 text-green-200",
+                  "hover:bg-green-500/30",
+                  "disabled:cursor-not-allowed disabled:opacity-40",
+                ].join(" ")}
+                title="本日の個人記録登録状態を確認"
+              >
+                {checking ? "確認中…" : "確認"}
+              </button>
 
-        <PersonalRecordButton
-          disabled={!selectedChildId}
-          label="個人記録"
-          className="flex h-8 shrink-0 items-center justify-center rounded px-3 text-xs font-bold whitespace-nowrap"
-        />
-      </div>
+              <PersonalRecordButton
+                disabled={!selectedChildId}
+                label="個人記録"
+                className="flex h-8 shrink-0 items-center justify-center rounded px-3 text-xs font-bold whitespace-nowrap"
+              />
+            </div>,
+            document.body
+          )
+        : null}
 
       {/* 親ボタン */}
       <div
