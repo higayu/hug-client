@@ -11,6 +11,8 @@ import {
 } from '@/store/slices/chilledspaceSlice.js'
 import { selectProfessionalSupportStatus } from '@/store/slices/recordStatusSlice.js'
 import { useProfessionalSupportCheck2 } from './useProfessionalSupportCheck2'
+import ProfessionalSupportPostModal from './ProfessionalSupportPostModal'
+import { postProfessionalSupportDraft } from './postProfessionalSupportDraft.js'
 
 const PROFESSIONAL_SUPPORT_ID = '55'
 
@@ -299,6 +301,8 @@ export default function ProfessionalSupportCheckPanel2({
   const [plusRegistrationId, setPlusRegistrationId] = useState(null)
   const [actionMessage, setActionMessage] = useState('')
   const [actionKind, setActionKind] = useState('idle')
+  const [postModalOpen, setPostModalOpen] = useState(false)
+  const [postModalError, setPostModalError] = useState('')
 
   const isExpandDown = expandDirection === 'down'
   const triggerRef = useRef(null)
@@ -327,8 +331,7 @@ export default function ProfessionalSupportCheckPanel2({
   const resolvedFacilityId =
     facilityId ?? FACILITY_ID ?? appState?.FACILITY_ID ?? ''
 
-  const { addProfessionalSupportNewTab, addProfessionalSupportListTab } =
-    useTabs(effectiveSpaceId)
+  const { addProfessionalSupportListTab } = useTabs(effectiveSpaceId)
 
   const professionalSupportStatus = useSelector((state) =>
     selectProfessionalSupportStatus(state, dateStr, childId),
@@ -523,33 +526,47 @@ export default function ProfessionalSupportCheckPanel2({
     }
   }
 
-  const runLinked = async () => {
+  const openLinkedModal = () => {
+    if (linkedDisabled) return
+    setPostModalError('')
+    setPostModalOpen(true)
+  }
+
+  const closeLinkedModal = () => {
+    if (linkedLoading) return
+    setPostModalOpen(false)
+    setPostModalError('')
+  }
+
+  const runLinked = async ({
+    dateStr: modalDateStr,
+    startTime,
+    endTime,
+    title,
+    contents,
+  }) => {
     if (linkedDisabled) return
 
     setLinkedLoading(true)
-    setAction('working', '下書き保存待ち')
+    setPostModalError('')
+    setAction('working', '専門的支援 下書きPOST中')
 
     try {
-      if (typeof addProfessionalSupportNewTab !== 'function') {
-        throw new Error('addProfessionalSupportNewTab が設定されていません')
-      }
+      const supportResult = await postProfessionalSupportDraft({
+        childId,
+        facilityId: resolvedFacilityId,
+        dateStr: modalDateStr || dateStr,
+        startTime,
+        endTime,
+        staffId: appState?.STAFF_ID,
+        title,
+        contents,
+      })
 
-      const supportResult = await addProfessionalSupportNewTab()
-
-      if (!supportResult?.ok) {
+      if (!supportResult?.ok || supportResult?.saved !== true) {
         throw new Error(
-          supportResult?.error || '専門的支援の処理に失敗しました',
+          supportResult?.error || '専門的支援の下書き保存に失敗しました',
         )
-      }
-
-      if (supportResult?.saved !== true) {
-        setAction('warning', '下書き保存結果を未確認 / 専門＋未実行')
-        return {
-          ok: false,
-          saved: false,
-          linked: false,
-          supportResult,
-        }
       }
 
       setAction('working', '下書きOK → 専門＋登録中')
@@ -557,10 +574,11 @@ export default function ProfessionalSupportCheckPanel2({
       const plusResult = await addProfessionalSupport({
         childId,
         facilityId: resolvedFacilityId,
-        dateStr,
+        dateStr: modalDateStr || dateStr,
       })
 
       setPlusRegistered(true)
+      setPostModalOpen(false)
       setAction('success', '連動OK')
 
       await runProfessionalPlusRegistrationCheck({ force: true })
@@ -575,8 +593,10 @@ export default function ProfessionalSupportCheckPanel2({
       }
     } catch (error) {
       console.error('[ProfessionalSupportCheckPanel2] linked error:', error)
-      setAction('error', `失敗: ${error?.message || error}`)
-      return { ok: false, linked: false, error: error?.message || String(error) }
+      const message = error?.message || String(error)
+      setPostModalError(message)
+      setAction('error', `失敗: ${message}`)
+      return { ok: false, linked: false, error: message }
     } finally {
       setLinkedLoading(false)
     }
@@ -591,7 +611,7 @@ export default function ProfessionalSupportCheckPanel2({
     if (!childId) return '児童が選択されていません'
     if (!dateStr) return '日付が指定されていません'
     if (!resolvedFacilityId) return '施設が指定されていません'
-    return '下書き保存成功後に専門＋を自動登録します'
+    return '入力モーダルを開き、下書きをPOSTした後に専門＋を自動登録します'
   }
 
   const actionClass = {
@@ -715,7 +735,7 @@ export default function ProfessionalSupportCheckPanel2({
       >
         <button
           type="button"
-          onClick={runLinked}
+          onClick={openLinkedModal}
           disabled={linkedDisabled}
           title={getLinkedTitle()}
           className={`shrink-0 px-3 text-xs font-semibold text-white transition ${
@@ -777,6 +797,20 @@ export default function ProfessionalSupportCheckPanel2({
           </svg>
         </button>
       </div>
+
+      <ProfessionalSupportPostModal
+        open={postModalOpen}
+        submitting={linkedLoading}
+        childName={currentSpace?.childName || ''}
+        childId={childId}
+        facilityId={resolvedFacilityId}
+        initialDate={dateStr}
+        initialStartTime={currentSpace?.selectedChildColumn5 || ''}
+        initialEndTime={currentSpace?.selectedChildColumn6 || ''}
+        errorMessage={postModalError}
+        onCancel={closeLinkedModal}
+        onSubmit={runLinked}
+      />
     </div>
   )
 }
