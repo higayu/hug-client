@@ -123,10 +123,11 @@ export async function postProfessionalSupportDraft({
         body.append('adding_children_id', PROFESSIONAL_SUPPORT_ID);
         body.append('title', '専門的支援実施加算');
 
-        body.append('c_id_list[0][id]', PAYLOAD.childId);
-        body.append('c_id_list[0][person_absence_note]', '');
-        body.append('c_id_list[0][f_id]', PAYLOAD.facilityId);
-        body.append('c_id_list[0][s_id]', '1');
+        const childKey = PAYLOAD.childId;
+        body.append('c_id_list[' + childKey + '][id]', PAYLOAD.childId);
+        body.append('c_id_list[' + childKey + '][person_absence_note]', '');
+        body.append('c_id_list[' + childKey + '][f_id]', PAYLOAD.facilityId);
+        body.append('c_id_list[' + childKey + '][s_id]', '1');
 
         body.append('recorder', PAYLOAD.staffId);
         body.append('interview_date', toJapaneseDate(PAYLOAD.dateStr));
