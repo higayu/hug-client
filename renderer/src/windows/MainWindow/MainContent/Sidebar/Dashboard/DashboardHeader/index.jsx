@@ -1,7 +1,7 @@
 import WeekdaySelect from "@/components/ui/WeekdaySelect";
 import FanMenuButton from "./FanMenuButton";
-import GetTodayUsersChildren from "./GetTodayUsersChildren";
 import AddChilledSpaceBtn from "./AddChilledSpaceBtn";
+import GetTodayUsersChildren from "@/components/common/hug_function/GetTodayUsersChildren";
 
 function DashboardHeader() {
   return (

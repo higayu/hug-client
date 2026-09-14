@@ -3,7 +3,6 @@
 import React, { useMemo } from "react";
 
 import ChildrenTableList from "./ChildrenTableList";
-import GetTodayUsersChildren from "@/components/common/hug_function/GetTodayUsersChildren";
 import { useAppState } from "@/AppStateContext";
 
 /**
@@ -160,13 +159,6 @@ function InsertChildren() {
 
   return (
     <div className="p-4">
-      <div className="flex flex-row">
-        <p className="text-sm text-gray-600 mb-3">
-          子どもデータの一覧・編集を管理します。
-        </p>
-
-        <GetTodayUsersChildren HideFlg={true} />
-      </div>
 
       <ChildrenTableList />
     </div>
