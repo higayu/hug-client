@@ -7,6 +7,7 @@ const updateStaffLogin = require("./admin/updateStaffLogin");
 const managers2 = require("./managers2");
 const children = require("./children");
 const webAutomationRules = require("./webAutomationRules");
+const webAutomationFlows = require("./webAutomationFlows");
 const laravelApiClient = require("../../../../src/laravelApiClient");
 
 /**
@@ -35,6 +36,9 @@ const IPC_CHANNELS = [
   "laravel:web-automation-rules:list",
   "laravel:web-automation-rules:get",
   "laravel:web-automation-rules:update",
+
+  "laravel:web-automation-flows:list",
+  "laravel:web-automation-flows:get",
 
   // ============================================================
   // 一時メモ
@@ -224,6 +228,16 @@ function registerLaravelAuthHandlers(
   ipcMain.handle(
     "laravel:web-automation-rules:update",
     webAutomationRules.updateHandler
+  );
+
+  ipcMain.handle(
+    "laravel:web-automation-flows:list",
+    webAutomationFlows.listHandler
+  );
+
+  ipcMain.handle(
+    "laravel:web-automation-flows:get",
+    webAutomationFlows.getHandler
   );
 
   // ============================================================

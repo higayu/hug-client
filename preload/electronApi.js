@@ -89,10 +89,33 @@ function createElectronApi(ipcRenderer, isDebugMode) {
      *     "attendance_enter"
      *   )
      */
-    laravel_webAutomationRule_get: (ruleKey) =>
+    laravel_webAutomationRule_get: (ruleKey, params = {}) =>
       ipcRenderer.invoke(
         "laravel:web-automation-rules:get",
         ruleKey,
+        params,
+      ),
+
+    laravel_webAutomationRule_update: (ruleKey, data, params = {}) =>
+      ipcRenderer.invoke(
+        "laravel:web-automation-rules:update",
+        ruleKey,
+        data,
+        params,
+      ),
+
+    // ---- Web自動化フロー ----
+    laravel_webAutomationFlows_getAll: (params = {}) =>
+      ipcRenderer.invoke(
+        "laravel:web-automation-flows:list",
+        params,
+      ),
+
+    laravel_webAutomationFlow_get: (flowKey, params = {}) =>
+      ipcRenderer.invoke(
+        "laravel:web-automation-flows:get",
+        flowKey,
+        params,
       ),
 
     // ---- Laravel 認証 ----

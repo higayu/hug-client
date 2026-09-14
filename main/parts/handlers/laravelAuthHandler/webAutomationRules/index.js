@@ -37,6 +37,28 @@ function normalizeCategory(category) {
   return normalized;
 }
 
+
+function normalizeScopeValue(value, fieldName) {
+  const normalized = String(value ?? "").trim();
+
+  if (!normalized) {
+    throw new Error(`${fieldName}が指定されていません。`);
+  }
+
+  if (normalized.length > 100) {
+    throw new Error(`${fieldName}は100文字以内で指定してください。`);
+  }
+
+  return normalized;
+}
+
+function buildScopeParams(payload = {}) {
+  return {
+    app_key: normalizeScopeValue(payload?.app_key, "app_key"),
+    webview_key: normalizeScopeValue(payload?.webview_key, "webview_key"),
+  };
+}
+
 /**
  * rule_key を正規化する。
  *
@@ -80,7 +102,9 @@ async function fetchWebAutomationRules(
       payload?.category
     );
 
-  const params = {};
+  const params = {
+    ...buildScopeParams(payload),
+  };
 
   if (category) {
     params.category = category;
@@ -163,7 +187,8 @@ async function fetchWebAutomationRules(
  * GET /api/web-automation-rules/{ruleKey}
  */
 async function fetchWebAutomationRule(
-  ruleKey
+  ruleKey,
+  payload = {}
 ) {
   const normalizedRuleKey =
     normalizeRuleKey(ruleKey);
@@ -185,7 +210,9 @@ async function fetchWebAutomationRule(
   const result =
     await executeAuthenticatedOperation(
       () =>
-        laravelApiClient.get(path),
+        laravelApiClient.get(path, {
+          params: buildScopeParams(payload),
+        }),
       "Web自動化ルールの取得に失敗しました。"
     );
 
@@ -254,7 +281,8 @@ async function fetchWebAutomationRule(
  */
 async function updateWebAutomationRule(
   ruleKey,
-  payload = {}
+  payload = {},
+  scope = {}
 ) {
   const normalizedRuleKey =
     normalizeRuleKey(ruleKey);
@@ -290,7 +318,8 @@ async function updateWebAutomationRule(
       () =>
         laravelApiClient.patch(
           path,
-          payload
+          payload,
+          { params: buildScopeParams(scope) }
         ),
       "Web自動化ルールの更新に失敗しました。"
     );
@@ -358,12 +387,14 @@ async function updateWebAutomationRule(
 async function updateHandler(
   _event,
   ruleKey,
-  payload = {}
+  payload = {},
+  scope = {}
 ) {
   try {
     return await updateWebAutomationRule(
       ruleKey,
-      payload
+      payload,
+      scope
     );
   } catch (error) {
     console.error(
@@ -409,11 +440,13 @@ async function listHandler(
  */
 async function getHandler(
   _event,
-  ruleKey
+  ruleKey,
+  payload = {}
 ) {
   try {
     return await fetchWebAutomationRule(
-      ruleKey
+      ruleKey,
+      payload
     );
   } catch (error) {
     console.error(
@@ -430,6 +463,8 @@ async function getHandler(
 
 module.exports = {
   normalizeCategory,
+  normalizeScopeValue,
+  buildScopeParams,
   normalizeRuleKey,
   fetchWebAutomationRules,
   fetchWebAutomationRule,

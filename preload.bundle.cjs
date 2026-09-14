@@ -170,9 +170,26 @@ var require_electronApi = __commonJS({
          *     "attendance_enter"
          *   )
          */
-        laravel_webAutomationRule_get: (ruleKey) => ipcRenderer2.invoke(
+        laravel_webAutomationRule_get: (ruleKey, params = {}) => ipcRenderer2.invoke(
           "laravel:web-automation-rules:get",
-          ruleKey
+          ruleKey,
+          params
+        ),
+        laravel_webAutomationRule_update: (ruleKey, data, params = {}) => ipcRenderer2.invoke(
+          "laravel:web-automation-rules:update",
+          ruleKey,
+          data,
+          params
+        ),
+        // ---- Web自動化フロー ----
+        laravel_webAutomationFlows_getAll: (params = {}) => ipcRenderer2.invoke(
+          "laravel:web-automation-flows:list",
+          params
+        ),
+        laravel_webAutomationFlow_get: (flowKey, params = {}) => ipcRenderer2.invoke(
+          "laravel:web-automation-flows:get",
+          flowKey,
+          params
         ),
         // ---- Laravel 認証 ----
         /**

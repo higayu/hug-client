@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
-import { useAppState } from '@/AppStateContext'
 import { useToast } from '@/provider/ToastProvider/ToastContext'
 
-const EMPTY_FORM = {
+const DEFAULT_APP_KEY = 'hug-banso-navi'
+const DEFAULT_WEBVIEW_KEY = '*'
+
+const EMPTY_RULE_FORM = {
   rule_key: '',
   name: '',
   category: '',
@@ -18,25 +20,53 @@ const EMPTY_FORM = {
   version: 1,
 }
 
-function toForm(rule) {
+function normalizeResponseData(result) {
+  if (Array.isArray(result?.data)) {
+    return result.data
+  }
+
+  if (Array.isArray(result?.data?.data)) {
+    return result.data.data
+  }
+
+  if (Array.isArray(result)) {
+    return result
+  }
+
+  return []
+}
+
+function normalizeSingleData(result) {
+  if (result?.data?.data && !Array.isArray(result.data.data)) {
+    return result.data.data
+  }
+
+  return result?.data ?? null
+}
+
+function stringifyJson(value) {
+  try {
+    return JSON.stringify(value ?? {}, null, 2)
+  } catch {
+    return '{}'
+  }
+}
+
+function toRuleForm(rule) {
   if (!rule) {
-    return { ...EMPTY_FORM }
+    return { ...EMPTY_RULE_FORM }
   }
 
   return {
-    rule_key: rule.rule_key ?? '',
-    name: rule.name ?? '',
-    category: rule.category ?? '',
-    action_type: rule.action_type ?? '',
-    target_url_pattern: rule.target_url_pattern ?? '',
-    target_selector: rule.target_selector ?? '',
-    parser_type: rule.parser_type ?? '',
-    function_name: rule.function_name ?? '',
-    config_json: JSON.stringify(
-      rule.config_json ?? {},
-      null,
-      2,
-    ),
+    rule_key: String(rule.rule_key ?? ''),
+    name: String(rule.name ?? ''),
+    category: String(rule.category ?? ''),
+    action_type: String(rule.action_type ?? ''),
+    target_url_pattern: String(rule.target_url_pattern ?? ''),
+    target_selector: String(rule.target_selector ?? ''),
+    parser_type: String(rule.parser_type ?? ''),
+    function_name: String(rule.function_name ?? ''),
+    config_json: stringifyJson(rule.config_json),
     is_active: Boolean(rule.is_active),
     sort_order: Number(rule.sort_order ?? 0),
     version: Number(rule.version ?? 1),
@@ -44,146 +74,288 @@ function toForm(rule) {
 }
 
 function normalizeRule(rule) {
-  if (!rule?.rule_key) {
-    return null
-  }
+  if (!rule?.rule_key) return null
 
   return {
     ...rule,
     rule_key: String(rule.rule_key),
+    app_key: String(rule.app_key ?? ''),
+    webview_key: String(rule.webview_key ?? ''),
+  }
+}
+
+function normalizeFlow(flow) {
+  if (!flow?.flow_key) return null
+
+  return {
+    ...flow,
+    flow_key: String(flow.flow_key),
+    app_key: String(flow.app_key ?? ''),
+    webview_key: String(flow.webview_key ?? ''),
+    steps: Array.isArray(flow.steps) ? flow.steps : [],
   }
 }
 
 export default function AutomationRulesTab() {
   const {
-    webAutomationRules,
-    webAutomationRulesLoading,
-    webAutomationRulesError,
-    loadWebAutomationRules,
-    loadWebAutomationRule,
-  } = useAppState()
-
-  const {
     showSuccessToast,
     showErrorToast,
   } = useToast()
 
+  const [activeTab, setActiveTab] = useState('rules')
+
+  const [appKey, setAppKey] = useState(DEFAULT_APP_KEY)
+  const [webviewKey, setWebviewKey] = useState(DEFAULT_WEBVIEW_KEY)
+
+  const [rules, setRules] = useState([])
+  const [rulesLoading, setRulesLoading] = useState(false)
+  const [rulesError, setRulesError] = useState('')
+
   const [selectedRuleKey, setSelectedRuleKey] = useState('')
-  const [form, setForm] = useState({ ...EMPTY_FORM })
-  const [savedForm, setSavedForm] = useState({ ...EMPTY_FORM })
+  const [form, setForm] = useState({ ...EMPTY_RULE_FORM })
+  const [savedForm, setSavedForm] = useState({ ...EMPTY_RULE_FORM })
   const [isSaving, setIsSaving] = useState(false)
   const [jsonError, setJsonError] = useState('')
 
-  const rules = useMemo(() => {
-    const items = Array.isArray(webAutomationRules)
-      ? webAutomationRules
-      : []
+  const [flows, setFlows] = useState([])
+  const [flowsLoading, setFlowsLoading] = useState(false)
+  const [flowsError, setFlowsError] = useState('')
+  const [selectedFlowKey, setSelectedFlowKey] = useState('')
+  const [triggerType, setTriggerType] = useState('')
 
-    return items
-      .map(normalizeRule)
-      .filter(Boolean)
-      .sort((a, b) => {
-        const orderDiff =
-          Number(a.sort_order ?? 0) -
-          Number(b.sort_order ?? 0)
+  const scope = useMemo(
+    () => ({
+      app_key: appKey.trim() || DEFAULT_APP_KEY,
+      webview_key: webviewKey.trim() || DEFAULT_WEBVIEW_KEY,
+    }),
+    [appKey, webviewKey],
+  )
 
-        if (orderDiff !== 0) {
-          return orderDiff
-        }
+  const sortedRules = useMemo(
+    () =>
+      [...rules]
+        .map(normalizeRule)
+        .filter(Boolean)
+        .sort((a, b) => {
+          const orderDiff =
+            Number(a.sort_order ?? 0) -
+            Number(b.sort_order ?? 0)
 
-        return String(a.rule_key).localeCompare(
-          String(b.rule_key),
-          'ja',
-        )
-      })
-  }, [webAutomationRules])
+          if (orderDiff !== 0) {
+            return orderDiff
+          }
+
+          return a.rule_key.localeCompare(b.rule_key, 'ja')
+        }),
+    [rules],
+  )
+
+  const sortedFlows = useMemo(
+    () =>
+      [...flows]
+        .map(normalizeFlow)
+        .filter(Boolean)
+        .sort((a, b) =>
+          a.flow_key.localeCompare(b.flow_key, 'ja'),
+        ),
+    [flows],
+  )
 
   const selectedRule = useMemo(
     () =>
-      rules.find(
+      sortedRules.find(
         (rule) => rule.rule_key === selectedRuleKey,
       ) ?? null,
-    [rules, selectedRuleKey],
+    [sortedRules, selectedRuleKey],
+  )
+
+  const selectedFlow = useMemo(
+    () =>
+      sortedFlows.find(
+        (flow) => flow.flow_key === selectedFlowKey,
+      ) ?? null,
+    [sortedFlows, selectedFlowKey],
   )
 
   const applyRuleToForm = useCallback((rule) => {
-    const nextForm = toForm(rule)
+    const nextForm = toRuleForm(rule)
     setForm(nextForm)
     setSavedForm(nextForm)
     setJsonError('')
   }, [])
 
-  const reloadRules = useCallback(
+  const loadRules = useCallback(
     async (showToast = false) => {
-      const result = await loadWebAutomationRules()
+      const api =
+        window.electronAPI?.laravel_webAutomationRules_getAll
 
-      if (!result?.success) {
-        showErrorToast(
-          result?.error ??
-            '自動化ルールの取得に失敗しました。',
-        )
+      if (typeof api !== 'function') {
+        const message =
+          'laravel_webAutomationRules_getAll がpreloadに公開されていません。'
+        setRulesError(message)
+        showErrorToast(message)
         return
       }
 
-      const items = Array.isArray(result.data)
-        ? result.data
-        : []
+      setRulesLoading(true)
+      setRulesError('')
 
-      const nextSelectedKey =
-        items.some(
-          (rule) =>
-            String(rule?.rule_key) ===
-            String(selectedRuleKey),
+      try {
+        const result = await api(scope)
+
+        if (!result?.success) {
+          throw new Error(
+            result?.message ??
+              result?.error ??
+              '自動化ルールの取得に失敗しました。',
+          )
+        }
+
+        const items = normalizeResponseData(result)
+          .map(normalizeRule)
+          .filter(Boolean)
+
+        setRules(items)
+
+        const nextKey =
+          items.some(
+            (rule) => rule.rule_key === selectedRuleKey,
+          )
+            ? selectedRuleKey
+            : String(items[0]?.rule_key ?? '')
+
+        setSelectedRuleKey(nextKey)
+
+        const nextRule =
+          items.find(
+            (rule) => rule.rule_key === nextKey,
+          ) ?? null
+
+        applyRuleToForm(nextRule)
+
+        if (showToast) {
+          showSuccessToast(
+            `Ruleを再読み込みしました。(${items.length}件)`,
+          )
+        }
+      } catch (error) {
+        const message =
+          error?.message ??
+          '自動化ルールの取得に失敗しました。'
+
+        console.error(
+          '[AutomationRulesTab] Rule取得エラー:',
+          error,
         )
-          ? selectedRuleKey
-          : String(items[0]?.rule_key ?? '')
 
-      setSelectedRuleKey(nextSelectedKey)
-
-      const nextRule =
-        items.find(
-          (rule) =>
-            String(rule?.rule_key) ===
-            String(nextSelectedKey),
-        ) ?? null
-
-      applyRuleToForm(nextRule)
-
-      if (showToast) {
-        showSuccessToast(
-          '自動化ルールを再読み込みしました。',
-        )
+        setRules([])
+        setRulesError(message)
+        showErrorToast(message)
+      } finally {
+        setRulesLoading(false)
       }
     },
     [
-      applyRuleToForm,
-      loadWebAutomationRules,
+      scope,
       selectedRuleKey,
+      applyRuleToForm,
+      showErrorToast,
+      showSuccessToast,
+    ],
+  )
+
+  const loadFlows = useCallback(
+    async (showToast = false) => {
+      const api =
+        window.electronAPI?.laravel_webAutomationFlows_getAll
+
+      if (typeof api !== 'function') {
+        const message =
+          'laravel_webAutomationFlows_getAll がpreloadに公開されていません。'
+        setFlowsError(message)
+        showErrorToast(message)
+        return
+      }
+
+      setFlowsLoading(true)
+      setFlowsError('')
+
+      try {
+        const params = {
+          ...scope,
+        }
+
+        if (triggerType.trim()) {
+          params.trigger_type = triggerType.trim()
+        }
+
+        const result = await api(params)
+
+        if (!result?.success) {
+          throw new Error(
+            result?.message ??
+              result?.error ??
+              '自動化フローの取得に失敗しました。',
+          )
+        }
+
+        const items = normalizeResponseData(result)
+          .map(normalizeFlow)
+          .filter(Boolean)
+
+        setFlows(items)
+
+        const nextKey =
+          items.some(
+            (flow) => flow.flow_key === selectedFlowKey,
+          )
+            ? selectedFlowKey
+            : String(items[0]?.flow_key ?? '')
+
+        setSelectedFlowKey(nextKey)
+
+        if (showToast) {
+          showSuccessToast(
+            `Flowを再読み込みしました。(${items.length}件)`,
+          )
+        }
+      } catch (error) {
+        const message =
+          error?.message ??
+          '自動化フローの取得に失敗しました。'
+
+        console.error(
+          '[AutomationRulesTab] Flow取得エラー:',
+          error,
+        )
+
+        setFlows([])
+        setFlowsError(message)
+        showErrorToast(message)
+      } finally {
+        setFlowsLoading(false)
+      }
+    },
+    [
+      scope,
+      triggerType,
+      selectedFlowKey,
       showErrorToast,
       showSuccessToast,
     ],
   )
 
   useEffect(() => {
-    reloadRules()
+    loadRules()
+    loadFlows()
   }, [])
 
-  useEffect(() => {
-    if (!selectedRule) {
-      if (!selectedRuleKey && rules[0]) {
-        setSelectedRuleKey(rules[0].rule_key)
-        applyRuleToForm(rules[0])
-      }
-      return
-    }
-
-    applyRuleToForm(selectedRule)
-  }, [
-    selectedRuleKey,
-    selectedRule,
-    rules,
-    applyRuleToForm,
-  ])
+  const handleScopeReload = async () => {
+    await Promise.all([
+      loadRules(true),
+      loadFlows(true),
+    ])
+  }
 
   const updateField = (key, value) => {
     setForm((previous) => ({
@@ -204,20 +376,31 @@ export default function AutomationRulesTab() {
       JSON.parse(value)
       setJsonError('')
     } catch (error) {
-      setJsonError(error?.message ?? 'JSON形式が不正です')
+      setJsonError(
+        error?.message ?? 'JSON形式が不正です',
+      )
     }
   }
 
   const handleFormatJson = () => {
     try {
-      const parsed = JSON.parse(form.config_json || '{}')
-      const formatted = JSON.stringify(parsed, null, 2)
+      const parsed = JSON.parse(
+        form.config_json || '{}',
+      )
 
-      updateField('config_json', formatted)
+      updateField(
+        'config_json',
+        JSON.stringify(parsed, null, 2),
+      )
+
       setJsonError('')
     } catch (error) {
-      setJsonError(error?.message ?? 'JSON形式が不正です')
-      showErrorToast('config_json のJSON形式が不正です。')
+      setJsonError(
+        error?.message ?? 'JSON形式が不正です',
+      )
+      showErrorToast(
+        'config_json のJSON形式が不正です。',
+      )
     }
   }
 
@@ -234,11 +417,17 @@ export default function AutomationRulesTab() {
     let parsedConfig = {}
 
     try {
-      parsedConfig = JSON.parse(form.config_json || '{}')
+      parsedConfig = JSON.parse(
+        form.config_json || '{}',
+      )
       setJsonError('')
     } catch (error) {
-      setJsonError(error?.message ?? 'JSON形式が不正です')
-      showErrorToast('config_json のJSON形式が不正です。')
+      setJsonError(
+        error?.message ?? 'JSON形式が不正です',
+      )
+      showErrorToast(
+        'config_json のJSON形式が不正です。',
+      )
       return
     }
 
@@ -247,7 +436,7 @@ export default function AutomationRulesTab() {
 
     if (typeof updateApi !== 'function') {
       showErrorToast(
-        '更新APIがまだpreloadに公開されていません。laravel_webAutomationRule_update の追加が必要です。',
+        'laravel_webAutomationRule_update がpreloadに公開されていません。',
       )
       return
     }
@@ -267,7 +456,10 @@ export default function AutomationRulesTab() {
       config_json: parsedConfig,
       is_active: Boolean(form.is_active),
       sort_order: Number(form.sort_order) || 0,
-      version: Math.max(1, Number(form.version) || 1),
+      version: Math.max(
+        1,
+        Number(form.version) || 1,
+      ),
     }
 
     setIsSaving(true)
@@ -276,6 +468,7 @@ export default function AutomationRulesTab() {
       const result = await updateApi(
         selectedRuleKey,
         payload,
+        scope,
       )
 
       if (!result?.success) {
@@ -286,21 +479,22 @@ export default function AutomationRulesTab() {
         )
       }
 
-      await loadWebAutomationRule(
-        selectedRuleKey,
-        { force: true },
-      )
+      const returnedRule =
+        normalizeSingleData(result)
 
-      const nextForm = toForm(
-        result?.data ?? {
+      const nextForm = toRuleForm(
+        returnedRule ?? {
           ...selectedRule,
           ...payload,
           rule_key: selectedRuleKey,
+          ...scope,
         },
       )
 
       setForm(nextForm)
       setSavedForm(nextForm)
+
+      await loadRules(false)
 
       showSuccessToast(
         `自動化ルール「${selectedRuleKey}」を保存しました。`,
@@ -321,130 +515,222 @@ export default function AutomationRulesTab() {
   }
 
   const hasChanges =
-    JSON.stringify(form) !== JSON.stringify(savedForm)
+    JSON.stringify(form) !==
+    JSON.stringify(savedForm)
 
   return (
     <div>
-      <div className="mb-5 flex flex-wrap items-start justify-between gap-3 border-b border-gray-200 pb-3">
-        <div>
-          <h3 className="text-lg font-semibold text-gray-700">
-            Web自動化ルール
-          </h3>
+      <div className="mb-5 border-b border-gray-200 pb-4">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h3 className="text-lg font-semibold text-gray-700">
+              Web自動化
+            </h3>
 
-          <p className="mt-1 text-sm text-gray-600">
-            WebViewの自動操作ルールを編集します。変更内容は保存後に利用者側へ反映できます。
-          </p>
+            <p className="mt-1 text-sm text-gray-600">
+              app_key / webview_key 単位で Rule と Flow を確認します。
+              Ruleはこの画面から更新できます。
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleScopeReload}
+            disabled={
+              rulesLoading ||
+              flowsLoading ||
+              isSaving
+            }
+            className="rounded-md bg-gray-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            再読み込み
+          </button>
         </div>
 
-        <button
-          type="button"
-          onClick={() => reloadRules(true)}
-          disabled={webAutomationRulesLoading || isSaving}
-          className="rounded-md bg-gray-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          再読み込み
-        </button>
+        <div className="mt-4 grid gap-3 md:grid-cols-[1fr_1fr_auto]">
+          <Field
+            label="app_key"
+            value={appKey}
+            onChange={setAppKey}
+            placeholder="hug-banso-navi"
+          />
+
+          <Field
+            label="webview_key"
+            value={webviewKey}
+            onChange={setWebviewKey}
+            placeholder="*"
+          />
+
+          <div className="flex items-end">
+            <button
+              type="button"
+              onClick={handleScopeReload}
+              disabled={
+                rulesLoading ||
+                flowsLoading ||
+                isSaving
+              }
+              className="w-full rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+            >
+              このScopeで取得
+            </button>
+          </div>
+        </div>
+
+        <div className="mt-3 rounded-md bg-slate-50 px-3 py-2 font-mono text-xs text-slate-600">
+          {scope.app_key} / {scope.webview_key}
+        </div>
       </div>
 
-      {webAutomationRulesError && (
-        <div className="mb-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          {webAutomationRulesError}
-        </div>
+      <div className="mb-5 flex gap-2 border-b border-gray-200">
+        <TabButton
+          active={activeTab === 'rules'}
+          onClick={() => setActiveTab('rules')}
+        >
+          Rules ({sortedRules.length})
+        </TabButton>
+
+        <TabButton
+          active={activeTab === 'flows'}
+          onClick={() => setActiveTab('flows')}
+        >
+          Flows ({sortedFlows.length})
+        </TabButton>
+      </div>
+
+      {activeTab === 'rules' ? (
+        <RulesPanel
+          rules={sortedRules}
+          loading={rulesLoading}
+          error={rulesError}
+          selectedRuleKey={selectedRuleKey}
+          setSelectedRuleKey={setSelectedRuleKey}
+          applyRuleToForm={applyRuleToForm}
+          form={form}
+          updateField={updateField}
+          handleConfigJsonChange={handleConfigJsonChange}
+          handleFormatJson={handleFormatJson}
+          jsonError={jsonError}
+          handleReset={handleReset}
+          handleSave={handleSave}
+          hasChanges={hasChanges}
+          isSaving={isSaving}
+        />
+      ) : (
+        <FlowsPanel
+          flows={sortedFlows}
+          loading={flowsLoading}
+          error={flowsError}
+          selectedFlowKey={selectedFlowKey}
+          setSelectedFlowKey={setSelectedFlowKey}
+          selectedFlow={selectedFlow}
+          triggerType={triggerType}
+          setTriggerType={setTriggerType}
+          reload={() => loadFlows(true)}
+        />
+      )}
+    </div>
+  )
+}
+
+function RulesPanel({
+  rules,
+  loading,
+  error,
+  selectedRuleKey,
+  setSelectedRuleKey,
+  applyRuleToForm,
+  form,
+  updateField,
+  handleConfigJsonChange,
+  handleFormatJson,
+  jsonError,
+  handleReset,
+  handleSave,
+  hasChanges,
+  isSaving,
+}) {
+  return (
+    <>
+      {error && (
+        <ErrorBox>{error}</ErrorBox>
       )}
 
-      <div className="grid gap-5 lg:grid-cols-[280px_minmax(0,1fr)]">
+      <div className="grid gap-5 lg:grid-cols-[300px_minmax(0,1fr)]">
         <aside className="min-w-0 rounded-lg border border-gray-200 bg-gray-50 p-3">
-          <label
-            htmlFor="automation-rule-select"
-            className="mb-2 block text-sm font-semibold text-gray-700"
-          >
-            編集するルール
-          </label>
-
-          <select
-            id="automation-rule-select"
-            value={selectedRuleKey}
-            onChange={(event) => {
-              const nextKey = event.target.value
-              setSelectedRuleKey(nextKey)
-
-              const rule = rules.find(
-                (item) => item.rule_key === nextKey,
-              )
-
-              applyRuleToForm(rule)
-            }}
-            disabled={webAutomationRulesLoading || rules.length === 0}
-            className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-200 disabled:bg-gray-100"
-          >
-            {rules.length === 0 && (
-              <option value="">ルールがありません</option>
-            )}
-
-            {rules.map((rule) => (
-              <option
-                key={rule.rule_key}
-                value={rule.rule_key}
-              >
-                {rule.name || rule.rule_key}
-              </option>
-            ))}
-          </select>
-
-          <div className="mt-4 space-y-2">
-            {rules.map((rule) => {
-              const isSelected =
-                selectedRuleKey === rule.rule_key
-
-              return (
-                <button
-                  key={rule.rule_key}
-                  type="button"
-                  onClick={() => {
-                    setSelectedRuleKey(rule.rule_key)
-                    applyRuleToForm(rule)
-                  }}
-                  className={`w-full rounded-md border px-3 py-2 text-left transition-colors ${
-                    isSelected
-                      ? 'border-blue-500 bg-blue-50 text-blue-800'
-                      : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-100'
-                  }`}
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="truncate text-sm font-semibold">
-                      {rule.name || rule.rule_key}
-                    </span>
-
-                    <span
-                      className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-bold ${
-                        rule.is_active
-                          ? 'bg-green-100 text-green-700'
-                          : 'bg-gray-200 text-gray-600'
-                      }`}
-                    >
-                      {rule.is_active ? 'ON' : 'OFF'}
-                    </span>
-                  </div>
-
-                  <div className="mt-1 truncate text-xs text-gray-500">
-                    {rule.rule_key}
-                  </div>
-                </button>
-              )
-            })}
+          <div className="mb-2 text-sm font-semibold text-gray-700">
+            Rule一覧
           </div>
+
+          {loading ? (
+            <div className="py-8 text-center text-sm text-gray-500">
+              読み込み中...
+            </div>
+          ) : rules.length === 0 ? (
+            <div className="py-8 text-center text-sm text-gray-500">
+              Ruleがありません。
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {rules.map((rule) => {
+                const selected =
+                  rule.rule_key === selectedRuleKey
+
+                return (
+                  <button
+                    key={`${rule.app_key}:${rule.webview_key}:${rule.rule_key}`}
+                    type="button"
+                    onClick={() => {
+                      setSelectedRuleKey(rule.rule_key)
+                      applyRuleToForm(rule)
+                    }}
+                    className={`w-full rounded-md border px-3 py-2 text-left ${
+                      selected
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-200 bg-white hover:bg-gray-100'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="truncate text-sm font-semibold text-gray-800">
+                        {rule.name || rule.rule_key}
+                      </span>
+
+                      <span
+                        className={`rounded px-1.5 py-0.5 text-[10px] font-bold ${
+                          rule.is_active
+                            ? 'bg-green-100 text-green-700'
+                            : 'bg-gray-200 text-gray-600'
+                        }`}
+                      >
+                        {rule.is_active ? 'ON' : 'OFF'}
+                      </span>
+                    </div>
+
+                    <div className="mt-1 truncate font-mono text-[11px] text-gray-500">
+                      {rule.webview_key} / {rule.rule_key}
+                    </div>
+
+                    <div className="mt-1 text-[11px] text-gray-500">
+                      {rule.action_type || '-'}
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+          )}
         </aside>
 
         <section className="min-w-0">
           {!selectedRuleKey ? (
-            <div className="rounded-lg border border-gray-200 bg-gray-50 px-5 py-10 text-center text-gray-500">
-              編集するルールを選択してください。
-            </div>
+            <EmptyBox>
+              編集するRuleを選択してください。
+            </EmptyBox>
           ) : (
             <div className="space-y-5">
               <div className="grid gap-4 md:grid-cols-2">
                 <Field
-                  label="ルールキー"
+                  label="rule_key"
                   value={form.rule_key}
                   readOnly
                 />
@@ -452,93 +738,75 @@ export default function AutomationRulesTab() {
                 <Field
                   label="名称"
                   value={form.name}
-                  onChange={(value) => updateField('name', value)}
+                  onChange={(value) =>
+                    updateField('name', value)
+                  }
                 />
 
                 <Field
                   label="カテゴリ"
                   value={form.category}
-                  onChange={(value) => updateField('category', value)}
-                  placeholder="attendance"
+                  onChange={(value) =>
+                    updateField('category', value)
+                  }
                 />
 
                 <Field
-                  label="アクション種別"
+                  label="action_type"
                   value={form.action_type}
-                  onChange={(value) => updateField('action_type', value)}
+                  onChange={(value) =>
+                    updateField('action_type', value)
+                  }
                   placeholder="post"
                 />
 
                 <Field
-                  label="パーサー種別"
+                  label="parser_type"
                   value={form.parser_type}
-                  onChange={(value) => updateField('parser_type', value)}
-                  placeholder="function-arguments"
+                  onChange={(value) =>
+                    updateField('parser_type', value)
+                  }
                 />
 
                 <Field
-                  label="関数名"
+                  label="function_name"
                   value={form.function_name}
-                  onChange={(value) => updateField('function_name', value)}
-                  placeholder="sendEnterMail"
+                  onChange={(value) =>
+                    updateField('function_name', value)
+                  }
                 />
               </div>
 
               <Field
-                label="対象URLパターン"
+                label="target_url_pattern"
                 value={form.target_url_pattern}
                 onChange={(value) =>
-                  updateField('target_url_pattern', value)
+                  updateField(
+                    'target_url_pattern',
+                    value,
+                  )
                 }
               />
 
               <Field
-                label="対象セレクタ"
+                label="target_selector"
                 value={form.target_selector}
                 onChange={(value) =>
-                  updateField('target_selector', value)
+                  updateField(
+                    'target_selector',
+                    value,
+                  )
                 }
               />
 
-              <div>
-                <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-                  <label
-                    htmlFor="automation-rule-config-json"
-                    className="text-sm font-semibold text-gray-700"
-                  >
-                    config_json
-                  </label>
-
-                  <button
-                    type="button"
-                    onClick={handleFormatJson}
-                    className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100"
-                  >
-                    JSON整形
-                  </button>
-                </div>
-
-                <textarea
-                  id="automation-rule-config-json"
-                  value={form.config_json}
-                  onChange={(event) =>
-                    handleConfigJsonChange(event.target.value)
-                  }
-                  rows={18}
-                  spellCheck={false}
-                  className={`w-full resize-y rounded-md border px-3 py-2 font-mono text-sm leading-6 text-gray-900 focus:outline-none focus:ring-2 ${
-                    jsonError
-                      ? 'border-red-400 focus:border-red-500 focus:ring-red-100'
-                      : 'border-gray-300 focus:border-blue-600 focus:ring-blue-200'
-                  }`}
-                />
-
-                {jsonError && (
-                  <p className="mt-1 text-xs text-red-600">
-                    {jsonError}
-                  </p>
-                )}
-              </div>
+              <JsonEditor
+                id="automation-rule-config-json"
+                label="config_json"
+                value={form.config_json}
+                onChange={handleConfigJsonChange}
+                onFormat={handleFormatJson}
+                error={jsonError}
+              />
 
               <div className="grid gap-4 sm:grid-cols-3">
                 <label className="flex items-center gap-3 rounded-md border border-gray-200 bg-gray-50 px-4 py-3">
@@ -546,7 +814,10 @@ export default function AutomationRulesTab() {
                     type="checkbox"
                     checked={form.is_active}
                     onChange={(event) =>
-                      updateField('is_active', event.target.checked)
+                      updateField(
+                        'is_active',
+                        event.target.checked,
+                      )
                     }
                     className="h-4 w-4"
                   />
@@ -559,14 +830,18 @@ export default function AutomationRulesTab() {
                 <NumberField
                   label="並び順"
                   value={form.sort_order}
-                  onChange={(value) => updateField('sort_order', value)}
+                  onChange={(value) =>
+                    updateField('sort_order', value)
+                  }
                   min={0}
                 />
 
                 <NumberField
                   label="バージョン"
                   value={form.version}
-                  onChange={(value) => updateField('version', value)}
+                  onChange={(value) =>
+                    updateField('version', value)
+                  }
                   min={1}
                 />
               </div>
@@ -576,7 +851,7 @@ export default function AutomationRulesTab() {
                   type="button"
                   onClick={handleReset}
                   disabled={!hasChanges || isSaving}
-                  className="rounded-md bg-gray-600 px-5 py-2.5 font-medium text-white transition-colors hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="rounded-md bg-gray-600 px-5 py-2.5 font-medium text-white disabled:opacity-50"
                 >
                   変更を戻す
                 </button>
@@ -589,7 +864,7 @@ export default function AutomationRulesTab() {
                     Boolean(jsonError) ||
                     isSaving
                   }
-                  className="rounded-md bg-gradient-to-r from-blue-600 to-blue-700 px-5 py-2.5 font-medium text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="rounded-md bg-blue-600 px-5 py-2.5 font-medium text-white hover:bg-blue-700 disabled:opacity-50"
                 >
                   {isSaving ? '保存中...' : '保存'}
                 </button>
@@ -604,7 +879,258 @@ export default function AutomationRulesTab() {
           )}
         </section>
       </div>
+    </>
+  )
+}
+
+function FlowsPanel({
+  flows,
+  loading,
+  error,
+  selectedFlowKey,
+  setSelectedFlowKey,
+  selectedFlow,
+  triggerType,
+  setTriggerType,
+  reload,
+}) {
+  return (
+    <>
+      <div className="mb-4 flex flex-wrap items-end gap-3">
+        <Field
+          label="trigger_type"
+          value={triggerType}
+          onChange={setTriggerType}
+          placeholder="空欄=すべて / manual / dom-ready"
+        />
+
+        <button
+          type="button"
+          onClick={reload}
+          disabled={loading}
+          className="rounded-md bg-slate-700 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+        >
+          Flow取得
+        </button>
+
+        <div className="text-xs text-gray-500">
+          Flow更新APIは未実装のため、この画面では参照のみです。
+        </div>
+      </div>
+
+      {error && (
+        <ErrorBox>{error}</ErrorBox>
+      )}
+
+      <div className="grid gap-5 lg:grid-cols-[300px_minmax(0,1fr)]">
+        <aside className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+          {loading ? (
+            <div className="py-8 text-center text-sm text-gray-500">
+              読み込み中...
+            </div>
+          ) : flows.length === 0 ? (
+            <div className="py-8 text-center text-sm text-gray-500">
+              Flowがありません。
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {flows.map((flow) => (
+                <button
+                  key={`${flow.app_key}:${flow.webview_key}:${flow.flow_key}`}
+                  type="button"
+                  onClick={() =>
+                    setSelectedFlowKey(flow.flow_key)
+                  }
+                  className={`w-full rounded-md border px-3 py-2 text-left ${
+                    flow.flow_key === selectedFlowKey
+                      ? 'border-blue-500 bg-blue-50'
+                      : 'border-gray-200 bg-white hover:bg-gray-100'
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="truncate text-sm font-semibold">
+                      {flow.name || flow.flow_key}
+                    </span>
+
+                    <span
+                      className={`rounded px-1.5 py-0.5 text-[10px] font-bold ${
+                        flow.is_active
+                          ? 'bg-green-100 text-green-700'
+                          : 'bg-gray-200 text-gray-600'
+                      }`}
+                    >
+                      {flow.is_active ? 'ON' : 'OFF'}
+                    </span>
+                  </div>
+
+                  <div className="mt-1 font-mono text-[11px] text-gray-500">
+                    {flow.flow_key}
+                  </div>
+
+                  <div className="mt-1 text-[11px] text-gray-500">
+                    {flow.trigger_type || '-'} / {flow.steps?.length ?? 0} steps
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </aside>
+
+        <section>
+          {!selectedFlow ? (
+            <EmptyBox>
+              確認するFlowを選択してください。
+            </EmptyBox>
+          ) : (
+            <FlowDetail flow={selectedFlow} />
+          )}
+        </section>
+      </div>
+    </>
+  )
+}
+
+function FlowDetail({ flow }) {
+  const steps = [...(flow.steps ?? [])].sort(
+    (a, b) =>
+      Number(a.step_order ?? 0) -
+      Number(b.step_order ?? 0),
+  )
+
+  return (
+    <div className="space-y-5">
+      <div className="grid gap-4 md:grid-cols-2">
+        <ReadOnlyValue
+          label="flow_key"
+          value={flow.flow_key}
+        />
+        <ReadOnlyValue
+          label="名称"
+          value={flow.name}
+        />
+        <ReadOnlyValue
+          label="app_key"
+          value={flow.app_key}
+        />
+        <ReadOnlyValue
+          label="webview_key"
+          value={flow.webview_key}
+        />
+        <ReadOnlyValue
+          label="trigger_type"
+          value={flow.trigger_type}
+        />
+        <ReadOnlyValue
+          label="version"
+          value={flow.version}
+        />
+      </div>
+
+      <ReadOnlyValue
+        label="target_url_pattern"
+        value={flow.target_url_pattern}
+      />
+
+      <div>
+        <div className="mb-2 text-sm font-semibold text-gray-700">
+          config_json
+        </div>
+        <pre className="max-h-72 overflow-auto rounded-md border border-gray-200 bg-slate-950 p-3 text-xs leading-5 text-slate-100">
+          {stringifyJson(flow.config_json)}
+        </pre>
+      </div>
+
+      <div>
+        <div className="mb-2 flex items-center justify-between">
+          <h4 className="font-semibold text-gray-700">
+            Steps
+          </h4>
+          <span className="text-xs text-gray-500">
+            {steps.length}件
+          </span>
+        </div>
+
+        <div className="space-y-3">
+          {steps.length === 0 ? (
+            <EmptyBox>
+              Stepが登録されていません。
+            </EmptyBox>
+          ) : (
+            steps.map((step) => (
+              <div
+                key={step.id ?? `${step.step_order}:${step.step_key}`}
+                className="rounded-lg border border-gray-200 bg-white p-4"
+              >
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="rounded bg-slate-800 px-2 py-1 font-mono text-xs font-bold text-white">
+                    {step.step_order}
+                  </span>
+
+                  <span className="font-semibold text-gray-800">
+                    {step.name || step.step_key || 'step'}
+                  </span>
+
+                  <span className="rounded bg-blue-50 px-2 py-1 text-xs text-blue-700">
+                    {step.step_type}
+                  </span>
+
+                  {!step.is_active && (
+                    <span className="rounded bg-gray-200 px-2 py-1 text-xs text-gray-600">
+                      OFF
+                    </span>
+                  )}
+                </div>
+
+                {step.rule && (
+                  <div className="mt-3 rounded-md bg-gray-50 p-3 text-sm">
+                    <div>
+                      <strong>Rule:</strong>{' '}
+                      <span className="font-mono">
+                        {step.rule.rule_key}
+                      </span>
+                    </div>
+                    <div className="mt-1 text-xs text-gray-600">
+                      action_type: {step.rule.action_type || '-'}
+                    </div>
+                  </div>
+                )}
+
+                <div className="mt-3 grid gap-3 lg:grid-cols-2">
+                  <JsonPreview
+                    label="input_json"
+                    value={step.input_json}
+                  />
+                  <JsonPreview
+                    label="config_json"
+                    value={step.config_json}
+                  />
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
     </div>
+  )
+}
+
+function TabButton({
+  active,
+  onClick,
+  children,
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`border-b-2 px-4 py-2 text-sm font-semibold ${
+        active
+          ? 'border-blue-600 text-blue-700'
+          : 'border-transparent text-gray-500 hover:text-gray-700'
+      }`}
+    >
+      {children}
+    </button>
   )
 }
 
@@ -624,11 +1150,15 @@ function Field({
       <input
         type="text"
         value={value ?? ''}
-        onChange={(event) => onChange?.(event.target.value)}
+        onChange={(event) =>
+          onChange?.(event.target.value)
+        }
         placeholder={placeholder}
         readOnly={readOnly}
-        className={`w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-200 ${
-          readOnly ? 'bg-gray-100 text-gray-600' : 'bg-white'
+        className={`w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-200 ${
+          readOnly
+            ? 'bg-gray-100 text-gray-600'
+            : 'bg-white text-gray-900'
         }`}
       />
     </label>
@@ -651,9 +1181,110 @@ function NumberField({
         type="number"
         value={value}
         min={min}
-        onChange={(event) => onChange(event.target.value)}
+        onChange={(event) =>
+          onChange(event.target.value)
+        }
         className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-200"
       />
     </label>
+  )
+}
+
+function JsonEditor({
+  id,
+  label,
+  value,
+  onChange,
+  onFormat,
+  error,
+}) {
+  return (
+    <div>
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <label
+          htmlFor={id}
+          className="text-sm font-semibold text-gray-700"
+        >
+          {label}
+        </label>
+
+        <button
+          type="button"
+          onClick={onFormat}
+          className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100"
+        >
+          JSON整形
+        </button>
+      </div>
+
+      <textarea
+        id={id}
+        value={value}
+        onChange={(event) =>
+          onChange(event.target.value)
+        }
+        rows={18}
+        spellCheck={false}
+        className={`w-full resize-y rounded-md border px-3 py-2 font-mono text-sm leading-6 text-gray-900 focus:outline-none focus:ring-2 ${
+          error
+            ? 'border-red-400 focus:ring-red-100'
+            : 'border-gray-300 focus:border-blue-600 focus:ring-blue-200'
+        }`}
+      />
+
+      {error && (
+        <p className="mt-1 text-xs text-red-600">
+          {error}
+        </p>
+      )}
+    </div>
+  )
+}
+
+function ReadOnlyValue({
+  label,
+  value,
+}) {
+  return (
+    <div className="min-w-0">
+      <div className="mb-1 text-sm font-semibold text-gray-700">
+        {label}
+      </div>
+      <div className="min-h-10 break-all rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700">
+        {String(value ?? '') || '-'}
+      </div>
+    </div>
+  )
+}
+
+function JsonPreview({
+  label,
+  value,
+}) {
+  return (
+    <div>
+      <div className="mb-1 text-xs font-semibold text-gray-600">
+        {label}
+      </div>
+      <pre className="max-h-52 overflow-auto rounded-md bg-slate-950 p-3 text-[11px] leading-5 text-slate-100">
+        {stringifyJson(value)}
+      </pre>
+    </div>
+  )
+}
+
+function ErrorBox({ children }) {
+  return (
+    <div className="mb-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+      {children}
+    </div>
+  )
+}
+
+function EmptyBox({ children }) {
+  return (
+    <div className="rounded-lg border border-gray-200 bg-gray-50 px-5 py-10 text-center text-gray-500">
+      {children}
+    </div>
   )
 }
