@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from "react";
 import { useAppState } from "@/AppStateContext";
 import { useToast } from '@/provider/ToastProvider/ToastContext'
-import PromptBox from "@/components/common/PromptBox";
+import PromptPanel from "@/components/common/PromptPanel";
 import AccountInfoPanel from "@/components/ui/AccountInfoPanel";
 import { AI_PROMPT_COMPONENT_MAP } from "./PromptBox"
 import { sendPromptToOpenRouter } from "./send/sendPromptToOpenRouter";
@@ -73,7 +73,7 @@ export default function OpenRouterContent({ spaceId, activePromptKey, onPromptCh
 
   return (
     <div className="flex flex-col items-center justify-center w-full p-2 space-y-3">
-      <PromptBox
+      <PromptPanel
         spaceId={spaceId}
         componentMap={AI_PROMPT_COMPONENT_MAP}
         activeKey={activePromptKey}

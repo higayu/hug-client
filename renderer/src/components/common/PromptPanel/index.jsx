@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 
-export default function PromptBox({
+export default function PromptPanel({
   componentMap,
   activeKey: controlledActiveKey,
   onActiveKeyChange,

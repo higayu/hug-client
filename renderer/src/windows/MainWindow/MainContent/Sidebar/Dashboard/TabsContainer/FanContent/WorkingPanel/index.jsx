@@ -45,6 +45,7 @@ export default function MainPanel({ spaceId }) {
     ollama: 'Ollama',
     deepseek: 'DeepSeek',
     openrouter: 'OpenRouter',
+    LaravelApi: 'Laravel API',
   }
 
   const aiName = aiNameMap[USE_AI] || '未選択'

@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from "react";
 import { useAppState } from "@/AppStateContext";
 import { useToast } from '@/provider/ToastProvider/ToastContext'
-import PromptBox from "@/components/common/PromptBox";
+import PromptPanel from "@/components/common/PromptPanel";
 import { AI_PROMPT_COMPONENT_MAP } from "./PromptBox"
 import { sendPromptToLaravelApi } from "./send/sendPromptToLaravelApi";
 
@@ -11,11 +11,15 @@ export default function LaravelApiContent({ spaceId, activePromptKey, onPromptCh
   const [laravelApiResults, setLaravelApiResults] = useState({});
 
   const sendPrompt = useCallback(
-    async ({ textValue, promptKey = "personal" }) => {
+    async ({ prompt, message, promptKey = "personal" }) => {
 
       showInfoToast("Laravel API に送信中…");
       try {
-        const text = await sendPromptToLaravelApi({ textValue, apiKey, model });
+        const text = await sendPromptToLaravelApi({
+          prompt,
+          message,
+          promptKey,
+        });
         setLaravelApiResults((prev) => ({
           ...prev,
           [promptKey]: text,
@@ -64,7 +68,7 @@ export default function LaravelApiContent({ spaceId, activePromptKey, onPromptCh
 
   return (
     <div className="flex flex-col items-center justify-center w-full p-2 space-y-3">
-      <PromptBox
+      <PromptPanel
         spaceId={spaceId}
         componentMap={AI_PROMPT_COMPONENT_MAP}
         activeKey={activePromptKey}

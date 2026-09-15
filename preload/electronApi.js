@@ -65,6 +65,19 @@ function createElectronApi(ipcRenderer, isDebugMode) {
     checkLaravelConnection: () =>
       ipcRenderer.invoke("laravel:connection:check"),
 
+    // ---- Laravel AI文章校正 ----
+    laravel_aiRecordEditer_correctPersonalRecord: (data = {}) =>
+      ipcRenderer.invoke(
+        "laravel:ai-record-editer:personal-record:correct",
+        data,
+      ),
+
+    laravel_aiRecordEditer_correctProfessionalSupport: (data = {}) =>
+      ipcRenderer.invoke(
+        "laravel:ai-record-editer:professional-support:correct",
+        data,
+      ),
+
     // ---- Web自動化ルール ----
     /**
      * 有効なWeb自動化ルール一覧を取得する。

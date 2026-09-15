@@ -6,6 +6,7 @@ const procedures = require("./procedures");
 const updateStaffLogin = require("./admin/updateStaffLogin");
 const managers2 = require("./managers2");
 const children = require("./children");
+const aiRecordEditer = require("./aiRecordEditer");
 const webAutomationRules = require("./webAutomationRules");
 const webAutomationFlows = require("./webAutomationFlows");
 const laravelApiClient = require("../../../../src/laravelApiClient");
@@ -70,6 +71,12 @@ const IPC_CHANNELS = [
 
   "laravel:managers2:delete",  // 追加
   "laravel:children:update",
+
+  // ============================================================
+  // AI文章校正
+  // ============================================================
+  "laravel:ai-record-editer:personal-record:correct",
+  "laravel:ai-record-editer:professional-support:correct",
 ];
 
 /**
@@ -195,6 +202,20 @@ function registerLaravelAuthHandlers(
   ipcMain.handle(
     "laravel:connection:check",
     async () => laravelApiClient.checkConnection()
+  );
+
+  // ============================================================
+  // AI文章校正
+  // ============================================================
+
+  ipcMain.handle(
+    "laravel:ai-record-editer:personal-record:correct",
+    aiRecordEditer.personalHandler
+  );
+
+  ipcMain.handle(
+    "laravel:ai-record-editer:professional-support:correct",
+    aiRecordEditer.professionalHandler
   );
 
   // ============================================================

@@ -665,7 +665,7 @@ function ApiTab() {
               ChatGPT
             </option>
 
-            <option value="Laravel-Api">
+            <option value="LaravelApi">
               Laravel-Api
             </option>
 

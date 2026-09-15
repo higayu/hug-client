@@ -8,6 +8,7 @@ import GeminiContent from "./GeminiContent";
 import OllamaContent from "./OllamaContent";
 import DeepSeekContent from "./DeepSeekContent";
 import OpenRouterContent from "./OpenRouterContent";
+import LaravelApiContent from "./LaravelApiContent";
 
 const AI_COMPONENT_MAP = {
   gemini: GeminiContent,
@@ -15,6 +16,7 @@ const AI_COMPONENT_MAP = {
   ollama: OllamaContent,
   deepseek:DeepSeekContent,
   openrouter:OpenRouterContent,
+  LaravelApi: LaravelApiContent,
 };
 
 export default function AiContents({ spaceId, activePromptKey, onPromptChange, onPromptTabsChange }) {

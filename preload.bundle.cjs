@@ -148,6 +148,15 @@ var require_electronApi = __commonJS({
         laravel_fetchTableAll: (params = {}) => ipcRenderer2.invoke("laravel-fetch-table-all", params),
         // ---- Laravel 接続確認 ----
         checkLaravelConnection: () => ipcRenderer2.invoke("laravel:connection:check"),
+        // ---- Laravel AI文章校正 ----
+        laravel_aiRecordEditer_correctPersonalRecord: (data = {}) => ipcRenderer2.invoke(
+          "laravel:ai-record-editer:personal-record:correct",
+          data
+        ),
+        laravel_aiRecordEditer_correctProfessionalSupport: (data = {}) => ipcRenderer2.invoke(
+          "laravel:ai-record-editer:professional-support:correct",
+          data
+        ),
         // ---- Web自動化ルール ----
         /**
          * 有効なWeb自動化ルール一覧を取得する。

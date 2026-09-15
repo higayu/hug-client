@@ -8,9 +8,9 @@ export const AI_PROMPT_COMPONENT_MAP = {
     component: (props) => (
       <PersonalRecordPrompt
         {...props}
-        aiName="Gemini"
-        renderResultArea={props.renderGeminiResultArea}
-        resultAreaLabel="Gemini API 返却値（個人）"
+        aiName="Laravel API"
+        renderResultArea={props.renderLaravelApiResultArea}
+        resultAreaLabel="Laravel API 返却値（個人）"
       />
     ),
   },
@@ -19,9 +19,9 @@ export const AI_PROMPT_COMPONENT_MAP = {
     component: (props) => (
       <ProfessionalPrompt1
         {...props}
-        aiName="Gemini"
-        renderResultArea={props.renderGeminiResultArea}
-        resultAreaLabel="Gemini API 返却値（専門1）"
+        aiName="Laravel API"
+        renderResultArea={props.renderLaravelApiResultArea}
+        resultAreaLabel="Laravel API 返却値（専門的支援）"
         showSupportCheck={true}
       />
     ),

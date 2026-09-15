@@ -92,7 +92,11 @@ export default function ProfessionalPrompt1({
   // =============================================================
   // AI送信文字列
   // =============================================================
-  const textValue = `${dbNote}\n\n\n${text1}\n\n\n${aiText}`;
+  const message = dbNote
+    ? `${dbNote}\n\n\n${aiText}`
+    : aiText;
+
+  const textValue = `${text1}\n\n\n${message}`;
 
   const handleSendPrompt = async () => {
     if (!aiText || aiText.trim() === "") {
@@ -100,7 +104,8 @@ export default function ProfessionalPrompt1({
     }
 
     await sendPrompt({
-      textValue,
+      prompt: text1,
+      message,
       promptKey,
     });
   };

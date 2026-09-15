@@ -153,9 +153,11 @@ export default function PersonalRecordPrompt({
     //
     // ProfessionalPrompt1 と同じ3ブロック構成
     // =========================================================
-    const textValue = useDbNote
-      ? `${dbNote}\n\n\n${selectedPrompt}\n\n\n${aiText}`
-      : `${selectedPrompt}\n\n\n${aiText}`;
+    const message = useDbNote
+      ? `${dbNote}\n\n\n${aiText}`
+      : aiText;
+
+    const textValue = `${selectedPrompt}\n\n\n${message}`;
 
     logDbg(
       "send",
@@ -185,7 +187,8 @@ export default function PersonalRecordPrompt({
       // selectedPromptKey にはしない
       const success =
         await sendPrompt({
-          textValue,
+          prompt: selectedPrompt,
+          message,
           promptKey,
         });
 

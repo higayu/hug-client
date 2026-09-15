@@ -1,6 +1,6 @@
 import React, { useEffect } from "react"
 import { useAppState } from "@/AppStateContext";
-import PromptBox from "@/components/common/PromptBox"
+import PromptPanel from "@/components/common/PromptPanel"
 import AccountInfoPanel from "@/components/ui/AccountInfoPanel";
 import { AI_PROMPT_COMPONENT_MAP } from "./PromptBox"
 import { sendPromptToDeepSeek } from "./send/sendPromptToDeepSeek";
@@ -16,7 +16,7 @@ export default function DeepSeekContent({ spaceId, activePromptKey, onPromptChan
 
   return (
     <div className="flex flex-col items-center justify-center w-full p-2 space-y-3">
-      <PromptBox 
+      <PromptPanel 
         spaceId={spaceId}
         sendPrompt={sendPromptToDeepSeek}
         aiName="DeepSeek"

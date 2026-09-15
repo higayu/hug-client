@@ -39,8 +39,8 @@
   "apiSettings": {
     "baseURL": "http://192.168.1.229",
     "laravelURL": "https://dev-hug-banso.we-labo.com",
-    "facilityId": "3",
-    "databaseType": "mariadb",
+    "facilityId": "",
+    "databaseType": "laravel",
     "useAI": "chatGPT",
     "autoAttendanceFetch": "false",
     "autoSynchronization": "true",
