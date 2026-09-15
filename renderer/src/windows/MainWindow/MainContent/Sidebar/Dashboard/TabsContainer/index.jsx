@@ -1,4 +1,3 @@
-import PrototypePanel from './PrototypePanel'
 import InsertChildren from './InsertChildren'
 import UpdateManager from './UpdateManager'
 import { useAppState } from '@/AppStateContext'
@@ -17,12 +16,6 @@ function TabsContainer() {
         {activeTab === 'FanContent' && (
           <div className="h-full flex flex-col">
             <FanContent />
-          </div>
-        )}
-
-        {activeTab === 'tools' && (
-          <div className="h-full flex flex-col">
-            <PrototypePanel spaceId="top" />
           </div>
         )}
 
