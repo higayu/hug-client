@@ -13,8 +13,6 @@ import {
   import { useHugActions } from '@/hooks/useHugActions';
   
   import PortalDropdown from '@/components/ui/PortalDropdown';
-  
-  import Sql_SynchronizationBtn from '@/components/common/Synchronization/Sql_SynchronizationBtn';
   import ServerConnectButton from '@/components/common/Synchronization/ServerConnectButton';
   import DataBaseButton from '@/components/common/Synchronization/DataBaseButton';
   import StaffUpdateButton from '@/components/common/Synchronization/StaffUpdateButton';
@@ -329,12 +327,6 @@ import {
   
             {DEBUG_FLG && (
               <>
-                <li
-                  className="m-0 p-0"
-                  onClick={closeMenu}
-                >
-                  <Sql_SynchronizationBtn />
-                </li>
   
                 <li
                   className="m-0 p-0"

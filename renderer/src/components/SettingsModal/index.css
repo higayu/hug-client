@@ -81,29 +81,6 @@
   border-radius: 6px;
   cursor: pointer;
 }
-
-/* === カスタムボタン（動的生成） === */
-.custom-button-item {
-  background: #f8f9fa;
-  border: 1px solid #e9ecef;
-  border-radius: 8px;
-  padding: 15px;
-  margin-bottom: 15px;
-  position: relative;
-}
-
-.custom-button-item .setting-item {
-  margin-bottom: 8px;
-}
-
-.remove-custom-button {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  padding: 4px 8px;
-  font-size: 12px;
-}
-
 /* === ボタンスタイル（動的生成要素で使用） === */
 .btn-danger {
   background: linear-gradient(135deg, #dc3545, #c82333);

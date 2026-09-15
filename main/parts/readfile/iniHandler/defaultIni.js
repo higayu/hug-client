@@ -35,13 +35,6 @@ const DEFAULT_INI = {
         desktop: true
       }
     },
-    customButtons: [
-      { id: "importSetting", enabled: false },
-      { id: "getUrl", enabled: false },
-      { id: "loadIni", enabled: true },
-      { id: "additionCompare", enabled: false },
-      { id: "customAction1", enabled: false }
-    ],
     userPreferences: {
       lastLoginDate: "",
       rememberWindowState: true,

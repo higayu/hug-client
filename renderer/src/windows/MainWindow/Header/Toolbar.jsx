@@ -12,7 +12,6 @@ import ActiveApiStatus from '@/components/common/Synchronization/ActiveApiStatus
 
 import SupportPlanNavigation from './SupportPlanNavigation';
 import ToolsListNavi from './ToolsListNavi';
-import CustomButtonsPanel from './CustomButtonsPanel';
 import AutoLoginButton from './AutoLoginButton';
 import SettingsEditButton from './SettingsEditButton';
 import ModeNavi from "./ModeNavi";
@@ -101,13 +100,6 @@ export default function Toolbar() {
 
             {/* ツールメニュー */}
             <ToolsListNavi />
-
-            {DEBUG_FLG && (
-              <>
-                {/* カスタムボタン */}
-                <CustomButtonsPanel />
-              </>
-            )}
 
           </div>
         </div>

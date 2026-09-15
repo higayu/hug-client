@@ -1,11 +1,8 @@
 import { useEffect, useRef } from 'react'
 // initTabs は React側の useTabs() フックに移行済み
-import { useHugActions } from '@/hooks/useHugActions.js'
 import { loadAllReload } from '@/utils/config/reloadSettings.js'
 // updateUI は React側の useUpdateUI() フックに移行済み
 import { useUpdateUI } from './useUpdateUI.js'
-
-import { useCustomButtonManager } from '@/hooks/useCustomButtonManager.js'
 // buttonVisibilityManager は削除されました（機能が空のため）
 import { getActiveWebview } from '@/utils/webview/webviewState.js'
 import { useToast } from '@/provider/ToastProvider/ToastContext'
@@ -499,12 +496,8 @@ async function runAutoSynchronizationBeforeConfirm(
 export function useAppInitialization() {
   const { showErrorToast } = useToast()
   const { addUpdateButtons } = useUpdateUI()
-  const { init: initCustomButtons } = useCustomButtonManager()
   const showErrorToastRef = useRef(showErrorToast)
   const initializedRef = useRef(false)
-
-  // hugActionsの機能をReact hooksに移行
-  useHugActions()
 
   // showErrorToastの参照を更新
   useEffect(() => {
@@ -664,10 +657,6 @@ export function useAppInitialization() {
         console.log('🔧 デバッグモード: 追加UIボタンを表示します')
         addUpdateButtons()
       }
-
-      // ===== 9️⃣ カスタムボタンマネージャー初期化 =====
-      console.log('🔧 カスタムボタンマネージャーを初期化中...')
-      await initCustomButtons()
 
       // ===== 🔟 ❌ ボタン表示制御マネージャー初期化（buttonVisibilityManager は削除） =====
       // buttonVisibilityManager は削除されました（機能が空のため）

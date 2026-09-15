@@ -1,6 +1,5 @@
 import { useAppInitialization } from '@/AppStateContext/useAppInitializer/useAppInitialization.js'
 import { AppStateProvider } from '@/AppStateContext'
-import { CustomButtonsProvider } from '@/provider/CustomButtonsContext'
 import Toolbar from './Header/Toolbar'
 import Tabs from './Header/Tabs'
 import MainContent from './MainContent'
@@ -28,9 +27,7 @@ export default function MainWindow() {
   return (
     <AppStateProvider>
       <DataBaseAutoLoader />
-      <CustomButtonsProvider>
         <MainWindowContent />
-      </CustomButtonsProvider>
     </AppStateProvider>
   )
 }

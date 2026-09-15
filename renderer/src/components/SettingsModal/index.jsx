@@ -14,7 +14,6 @@ import {
   ConfigTab,
   UITab,
   WindowTab,
-  CustomTab,
   UpdateTab,
   PromptTab,
   StaffTab,
@@ -83,11 +82,6 @@ const DEBUG_TABS = [
     id: 'url',
     label: 'URL設定',
     component: UrlTab,
-  },
-  {
-    id: 'custom',
-    label: 'カスタムボタン',
-    component: CustomTab,
   },
   {
     id: 'ui',

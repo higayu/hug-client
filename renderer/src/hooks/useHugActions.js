@@ -1,15 +1,12 @@
 // src/hooks/useHugActions.js
 // hugActions.jsの機能をReact hooksに移行
 
-import { useEffect, useCallback, useRef } from 'react'
+import { useCallback } from 'react'
 import { useSelector } from 'react-redux'
 import { selectActiveSpaceId, selectSpace } from '@/store/slices/chilledspaceSlice.js'
 import { useAppState } from '@/AppStateContext'
 import { useToast } from '@/provider/ToastProvider/ToastContext'
 import { getActiveWebview } from '@/utils/webview/webviewState.js'
-import { loadAllReload } from '@/utils/config/reloadSettings.js'
-// ❌ 削除: import { updateButtonVisibility } from '@/utils/app/buttonVisibility.js'
-import { useCustomButtonManager } from './useCustomButtonManager.js'
 
 export function useHugActions(spaceId) {
   const { appState } = useAppState()
@@ -17,8 +14,6 @@ export function useHugActions(spaceId) {
   const effectiveSpaceId = spaceId || activeSpaceId
   const space = useSelector(selectSpace(effectiveSpaceId))
   const { showSuccessToast, showErrorToast } = useToast()
-  const { reloadCustomButtons } = useCustomButtonManager()
-  const initializedRef = useRef(false)
 
   // 自動ログイン
   const handleLogin = useCallback(async () => {
@@ -133,85 +128,10 @@ export function useHugActions(spaceId) {
     }
   }, [showSuccessToast, showErrorToast])
 
-  // ini.jsonの手動読み込み
-  const handleLoadIni = useCallback(async () => {
-    try {
-      const reloadOk = await loadAllReload()
-
-      if (reloadOk) {
-        // ❌ 削除: updateButtonVisibility()
-        // buttonVisibility.js は廃止されました
-        await reloadCustomButtons()
-        showSuccessToast('✅ 設定の再読み込みが完了しました')
-      }
-    } catch (err) {
-      console.error('❌ ini.json読み込みエラー:', err)
-      alert('❌ エラーが発生しました: ' + err.message)
-    }
-  }, [reloadCustomButtons, showSuccessToast])
-
-  // ボタンのイベントリスナーを設定
-  useEffect(() => {
-    if (initializedRef.current) return
-    initializedRef.current = true
-
-    // loginBtn
-    const loginBtn = document.getElementById('loginBtn')
-    if (loginBtn) {
-      console.log('🔗 [HugActions] Attaching click listener: loginBtn')
-      loginBtn.addEventListener('click', handleLogin)
-    }
-
-    // Individual_Support_Button
-    const individualBtn = document.getElementById('Individual_Support_Button')
-    if (individualBtn) {
-      individualBtn.addEventListener('click', handleIndividualSupport)
-    }
-
-    // Specialized-Support-Plan
-    const specializedBtn = document.getElementById('Specialized-Support-Plan')
-    if (specializedBtn) {
-      specializedBtn.addEventListener('click', handleSpecializedSupport)
-    }
-
-    // Get-Url
-    const getUrlBtn = document.getElementById('Get-Url')
-    if (getUrlBtn) {
-      console.log('🔗 [HugActions] Attaching click listener: Get-Url')
-      getUrlBtn.addEventListener('click', handleGetUrl)
-    }
-
-    // ===== クリーンアップ =====
-    return () => {
-      if (loginBtn) {
-        loginBtn.removeEventListener('click', handleLogin)
-      }
-
-      if (individualBtn) {
-        individualBtn.removeEventListener('click', handleIndividualSupport)
-      }
-
-      if (specializedBtn) {
-        specializedBtn.removeEventListener('click', handleSpecializedSupport)
-      }
-
-      if (getUrlBtn) {
-        getUrlBtn.removeEventListener('click', handleGetUrl)
-      }
-
-    }
-  }, [
-    handleLogin,
-    handleIndividualSupport,
-    handleSpecializedSupport,
-    handleGetUrl,
-  ])
-
   return {
     handleLogin,
     handleGetUrl,
     handleIndividualSupport,
     handleSpecializedSupport,
-    handleLoadIni,
   }
 }

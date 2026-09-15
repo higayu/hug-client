@@ -813,7 +813,6 @@ function ApiTab() {
                 ⚠️ デバッグモードが有効です
               </p>
               <ul className="mt-1 text-xs text-yellow-700 list-disc list-inside space-y-0.5">
-                <li>設定画面に「カスタムボタン」タブが表示されます</li>
                 <li>開発者ツール（DevTools）が利用可能になります</li>
                 <li>詳細なデバッグログがコンソールに出力されます</li>
                 <li>アプリケーションの動作確認用の追加機能が表示されます</li>

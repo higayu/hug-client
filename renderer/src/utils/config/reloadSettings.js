@@ -181,10 +181,6 @@ export async function loadAllReload() {
       console.warn('⚠️ [reloadSettings] window.IniState.loadIni が未初期化')
     }
 
-    if (window.CustomButtonsState?.loadCustomButtons) {
-      await window.CustomButtonsState.loadCustomButtons()
-      console.log('✅ [reloadSettings] カスタムボタン設定の再読み込み完了')
-    }
 
     // =============================================================
     // 7) ApiTab / select 表示同期
