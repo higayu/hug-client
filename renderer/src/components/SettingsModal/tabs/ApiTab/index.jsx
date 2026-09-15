@@ -661,12 +661,16 @@ function ApiTab() {
             onChange={handleInputChange}
             className="max-w-[300px] flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm transition-all"
           >
-            <option value="gemini">
-              Gemini
-            </option>
-
             <option value="chatGPT">
               ChatGPT
+            </option>
+
+            <option value="Laravel-Api">
+              Laravel-Api
+            </option>
+
+            <option value="gemini">
+              Gemini
             </option>
 
             <option value="ollama">
