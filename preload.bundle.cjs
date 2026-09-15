@@ -216,7 +216,21 @@ var require_electronApi = __commonJS({
           data
         ),
         laravel_procedure_syncHugStaffs: (data) => ipcRenderer2.invoke("laravel:procedure:sync-hug-staffs", data),
-        laravel_staff_update: (data) => ipcRenderer2.invoke("laravel:procedure:update-staff", data),
+        laravel_staff_update: (data = {}) => {
+          const staff = data?.staff ?? {};
+          const hasUseMyPrompt = Object.prototype.hasOwnProperty.call(
+            staff,
+            "use_my_prompt"
+          );
+          const payload = {
+            ...data,
+            staff: {
+              ...staff,
+              use_my_prompt: !hasUseMyPrompt || staff.use_my_prompt == null ? null : [true, 1, "1"].includes(staff.use_my_prompt) ? 1 : 0
+            }
+          };
+          return ipcRenderer2.invoke("laravel:procedure:update-staff", payload);
+        },
         laravel_admin_update_staff_login: (data) => ipcRenderer2.invoke("laravel:admin:update-staff-login", data),
         laravel_procedure_upsertServiceRecord: (data) => ipcRenderer2.invoke("laravel:procedure:upsert-service-record", data),
         laravel_procedure_getServiceRecordMonthly: (data) => ipcRenderer2.invoke(

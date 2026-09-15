@@ -43,6 +43,7 @@ function unwrapResult(result) {
  *     display_order,
  *     entered_at,
  *     leaving_at,
+ *     use_my_prompt, // 0 | 1 | null
  *   },
  *   facilityIds: number[],
  * }

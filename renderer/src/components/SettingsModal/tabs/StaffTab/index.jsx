@@ -7,7 +7,7 @@ import { useSelector } from 'react-redux'
 
 import { useAppState } from '@/AppStateContext'
 import { useDataBase } from '@/hooks/useDataBase'
-import { useStaff } from '@/hooks/useStaff'
+import { useStaff } from './useStaff'
 import { useToast } from '@/provider/ToastProvider/ToastContext'
 import { selectLaravelAuth } from '@/store/slices/authSlice'
 
@@ -21,6 +21,7 @@ const initialForm = {
   display_order: '',
   entered_at: '',
   leaving_at: '',
+  use_my_prompt: 0,
 }
 
 /**
@@ -204,6 +205,13 @@ export default function StaffTab({
         toInputDate(
           currentStaff.leaving_at,
         ),
+
+      use_my_prompt:
+        Number(
+          currentStaff.use_my_prompt ?? 0,
+        ) === 1
+          ? 1
+          : 0,
     })
 
     /*
@@ -375,6 +383,19 @@ export default function StaffTab({
           toNullable(
             form.leaving_at,
           ),
+
+        /*
+         * DB上の現在値から変更された場合だけ更新する。
+         * 変更なしの場合はnullを渡し、
+         * update_staff側で既存値を維持する。
+         */
+        use_my_prompt:
+          Number(form.use_my_prompt) !==
+          Number(currentStaff.use_my_prompt ?? 0)
+            ? Number(form.use_my_prompt) === 1
+              ? 1
+              : 0
+            : null,
 
         ...(isAdmin
           ? {
@@ -610,6 +631,27 @@ export default function StaffTab({
             }
             className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-200"
           />
+        </div>
+
+        {/* 個人プロンプト */}
+        <div className="flex items-end">
+          <label className="flex items-center gap-2 rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700">
+            <input
+              type="checkbox"
+              name="use_my_prompt"
+              checked={
+                Number(
+                  form.use_my_prompt,
+                ) === 1
+              }
+              onChange={
+                handleChange
+              }
+              className="h-4 w-4"
+            />
+
+            個人プロンプトを使用する
+          </label>
         </div>
       </div>
 
