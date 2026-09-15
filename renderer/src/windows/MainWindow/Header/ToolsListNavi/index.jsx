@@ -17,6 +17,8 @@ import {
   import DataBaseButton from '@/components/common/Synchronization/DataBaseButton';
   import StaffUpdateButton from '@/components/common/Synchronization/StaffUpdateButton';
   import ChildrenUpdateButton from '@/components/common/Synchronization/ChildrenUpdateButton';
+  import AdditionCompare from '@/components/common/hug_function/AdditionCompare';
+  import ProfessionalSupportSearch from '@/components/common/hug_function/ProfessionalSupportSearch';
   
   export default function ToolsListNavi({
     className = '',
@@ -271,6 +273,42 @@ import {
               </button>
             </li>
   
+            <li className="m-0 p-0">
+              <button
+                id="Get-Url"
+                type="button"
+                role="menuitem"
+                onClick={() => {
+                  handleGetUrlClick(
+                    closeMenu,
+                  );
+                }}
+                className="
+                  block
+                  w-full
+                  cursor-pointer
+                  border-none
+                  bg-transparent
+                  px-4
+                  py-2
+                  text-left
+                  text-sm
+                  text-black
+                  transition-colors
+                  hover:bg-[#e3f2fd]
+                  focus:bg-[#e3f2fd]
+                  focus:outline-none
+                "
+              >
+                URLの取得
+              </button>
+            </li>
+            <li className="m-0 p-0">
+              <ProfessionalSupportSearch />
+            </li>
+            <li className="m-0 p-0">
+              <AdditionCompare />
+            </li>
             <li className="m-0 p-0">
               <button
                 id="Get-Url"
