@@ -53,7 +53,7 @@ async function correct(type, payload = {}) {
   });
 
   const result = await executeAuthenticatedOperation(
-    () => laravelApiClient.post(path, normalizedPayload),
+    () => laravelApiClient.post(path, normalizedPayload, { timeout: 120000 }),
     "AI文章校正に失敗しました。"
   );
 

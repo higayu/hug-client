@@ -24,7 +24,7 @@ const DEFAULT_CONFIG = {
     LOG_LEVEL: "info", // 'debug' | 'info' | 'warn' | 'error'
     
     // APIタイムアウト設定
-    API_TIMEOUT: 30000, // 30秒
+    API_TIMEOUT: 120000, // 120秒（2分）
     MAX_RETRIES: 3,
     RETRY_DELAY: 1000, // 1秒
   };
