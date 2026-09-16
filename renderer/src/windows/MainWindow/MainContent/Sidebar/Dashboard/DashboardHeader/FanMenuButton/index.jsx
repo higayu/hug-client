@@ -15,8 +15,8 @@ const baseTabs = [
     label: '👥 担当編集',
   },
   {
-    id: 'tools',
-    label: '旧操作パネル',
+    id: 'simpleBoard',
+    label: '今日の利用者',
   },
 ]
 

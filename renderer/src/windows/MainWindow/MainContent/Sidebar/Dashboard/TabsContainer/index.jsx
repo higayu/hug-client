@@ -3,6 +3,7 @@ import UpdateManager from './UpdateManager'
 import { useAppState } from '@/AppStateContext'
 import SpeechToText from './SpeechToText'
 import FanContent from './FanContent'
+import SimpleBoard from './SimpleBoard'
 
 function TabsContainer() {
   const {
@@ -34,6 +35,12 @@ function TabsContainer() {
         {DEBUG_FLG && activeTab === 'speechToText' && (
           <div className="h-full flex flex-col">
             <SpeechToText />
+          </div>
+        )}
+
+        {activeTab === 'simpleBoard' && (
+          <div className="h-full flex flex-col">
+            <SimpleBoard />
           </div>
         )}
       </div>

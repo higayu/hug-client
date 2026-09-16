@@ -37,6 +37,13 @@ export default function FanMenu({ spaceId }) {
       shortLabel: '個人',
       position: 'translate-x-[145px] -translate-y-[35px]',
     },
+    {
+      id: FAN_CONTENT_PANELS.SIMPLE_BOARD,
+      label: 'シンプルボード',
+      shortLabel: 'シンプル',
+      position: 'translate-x-[120px] translate-y-[50px]',
+    },
+
   ]
 
   const activeMenuItem = menuItems.find(

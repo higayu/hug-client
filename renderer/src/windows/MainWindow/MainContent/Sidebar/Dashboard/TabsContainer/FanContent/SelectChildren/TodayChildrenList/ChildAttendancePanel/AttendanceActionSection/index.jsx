@@ -3,12 +3,12 @@ import {
   useMemo,
 } from "react"
 
-import EnterButton from "./EnterButton"
-import LeaveButton from "./LeaveButton"
 import AbsenceButton from "./AbsenceButton"
 import ProfessionalSupportCheckPanel2 from "@/components/common/hug_function/ProfessionalSupportCheckPanel2"
 
 import {
+  EnterButton,
+  LeaveButton,
   canPostEnter,
   canPostLeave,
   hasEnterMail,
@@ -16,7 +16,7 @@ import {
   buildEnterButtonTitle,
   buildLeaveButtonTitle,
   isAfternoonEnterBlocked,
-} from "./attendance/helpers/attendanceButtonHelpers"
+} from "@/components/common/hug_function/AttendanceAction"
 
 /**
  * 拡張入退室フォーム相当の入室・退室・欠席 UI
@@ -306,6 +306,9 @@ export default function AttendanceActionSection({
           ) : showLeave ? (
             <div className="hug-post-actions hug-post-actions-inline">
               <LeaveButton
+                childId={childId}
+                childName={childName}
+                dateStr={dateStr}
                 hasMail={
                   hasLeaveMail(
                     column6Html,

@@ -5,11 +5,10 @@ import {
   clickEnterButton,
   clickAbsenceButton,
   clickExitButton,
-} from './AttendanceActionSection/attendance/index.js'
+  isAttendanceDataLoaded,
+} from '@/components/common/hug_function/AttendanceAction'
 import { useToast } from '@/provider/ToastProvider/ToastContext'
 import AttendanceActionSection from './AttendanceActionSection'
-import { isAttendanceDataLoaded } from './AttendanceActionSection/attendance/helpers/attendanceStatus.js'
-import './index.css'
 import PersonalRecordCheckPanel from '@/components/common/hug_function/PersonalRecordCheckPanel'
 
 const pickValue = (...values) => {
@@ -562,7 +561,7 @@ export default function ChildAttendancePanel({ spaceId }) {
   // =============================================================
   // 退室
   // =============================================================
-  const runLeave = async () => {
+  const runLeave = async (leaveOptions = {}) => {
     if (targetChildId == null) {
       console.error(
         '[ChildAttendancePanel/runLeave] 選択児童IDが不正です',
@@ -614,6 +613,10 @@ export default function ChildAttendancePanel({ spaceId }) {
         dateStr,
         dispatch,
         updateAppState,
+        // renderer の通知確認モーダルで選択した mail_flg を退室POSTへ渡す。
+        mailFlg: Number(leaveOptions?.mailFlg ?? leaveOptions?.mail_flg ?? 0),
+        mail_flg: Number(leaveOptions?.mail_flg ?? leaveOptions?.mailFlg ?? 0),
+        skipMailPrompt: leaveOptions?.skipMailPrompt === true,
       })
 
       console.log('clickExitButton result:', res)
