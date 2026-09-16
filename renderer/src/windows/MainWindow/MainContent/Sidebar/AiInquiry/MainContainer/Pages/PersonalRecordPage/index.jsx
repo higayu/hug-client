@@ -4,10 +4,10 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch } from "react-redux";
 
 import { useAppState } from "@/AppStateContext";
-import { useChilledSpace } from "@/hooks/useChilledSpace";
 import { useServiceRecord } from "@/hooks/useServiceRecord";
 import { setServiceRecord } from "@/store/slices/databaseSlice.js";
-import SelectionPanel from './SelectionPanel';
+
+import SelectionPanel from "./SelectionPanel";
 
 import PersonSwitchPanel, {
   PERIOD_TYPES,
@@ -15,13 +15,28 @@ import PersonSwitchPanel, {
 
 import ListBox_Text from "./ListBox_Text";
 
-const getFacilityId = (facility) => facility?.facility_id ?? facility?.id ?? null;
-const getChildId = (child) => child?.child_id ?? child?.children_id ?? child?.id ?? null;
-const getRecordChildId = (record) => record?.children_id ?? record?.child_id ?? null;
-const getChildName = (child) => child?.name ?? child?.children_name ?? "";
-const isActiveChild = (child) => Number(child?.is_delete ?? 0) !== 1;
-const sameId = (left, right) => String(left) === String(right);
-const toTable = (value) => (Array.isArray(value) ? value : []);
+// =============================================
+// ID / 配列ユーティリティ
+// =============================================
+const getFacilityId = (facility) =>
+  facility?.facility_id ??
+  facility?.id ??
+  null;
+
+const getChildId = (child) =>
+  child?.child_id ??
+  child?.children_id ??
+  child?.id ??
+  null;
+
+const isActiveChild = (child) =>
+  Number(child?.is_delete ?? 0) !== 1;
+
+const sameId = (left, right) =>
+  String(left) === String(right);
+
+const toTable = (value) =>
+  Array.isArray(value) ? value : [];
 
 // =============================================
 // 表示タブ
@@ -63,71 +78,140 @@ export default function PersonalRecordPage() {
     setFacilityId,
   } = useAppState();
 
-  const { childId, setChild } = useChilledSpace();
-
   const dispatch = useDispatch();
 
-  const facilities = toTable(databaseState?.facilitys);
-  const allChildren = toTable(databaseState?.children);
-  const facilityChildren = toTable(databaseState?.facility_children);
+  const {
+    getServiceRecordMonthly,
+  } = useServiceRecord();
+
+  // =============================================
+  // ページ内で選択中の児童
+  //
+  // ChilledSpace / useChilledSpace には依存しない
+  // =============================================
+  const [childId, setChildId] = useState("");
+
+  // =============================================
+  // マスタデータ
+  // =============================================
+  const facilities = toTable(
+    databaseState?.facilitys
+  );
+
+  const allChildren = toTable(
+    databaseState?.children
+  );
+
+  const facilityChildren = toTable(
+    databaseState?.facility_children
+  );
 
   const facilitiesLoading = false;
   const childrenLoading = false;
+
   const facilityId = Number(FACILITY_ID);
 
+  // =============================================
+  // 選択施設に所属する児童
+  // =============================================
   const children = useMemo(() => {
-    const activeChildren = allChildren.filter(isActiveChild);
+    const activeChildren =
+      allChildren.filter(isActiveChild);
 
-    if (!facilityId || facilityChildren.length === 0) {
+    if (
+      !facilityId ||
+      facilityChildren.length === 0
+    ) {
       return activeChildren;
     }
 
     const childIdsForFacility = new Set(
       facilityChildren
-        .filter((row) => sameId(row?.facility_id, facilityId))
-        .map((row) => String(row?.children_id)),
+        .filter((row) =>
+          sameId(
+            row?.facility_id,
+            facilityId
+          )
+        )
+        .map((row) =>
+          String(row?.children_id)
+        )
     );
 
     return activeChildren.filter((child) =>
-      childIdsForFacility.has(String(getChildId(child))),
+      childIdsForFacility.has(
+        String(getChildId(child))
+      )
     );
-  }, [allChildren, facilityChildren, facilityId]);
+  }, [
+    allChildren,
+    facilityChildren,
+    facilityId,
+  ]);
 
+  // =============================================
+  // 初期施設
+  // =============================================
   useEffect(() => {
-    if ((!facilityId || facilityId <= 0) && facilities.length > 0) {
-      setFacilityId(getFacilityId(facilities[0]));
+    if (
+      (!facilityId || facilityId <= 0) &&
+      facilities.length > 0
+    ) {
+      setFacilityId(
+        getFacilityId(facilities[0])
+      );
     }
-  }, [facilities, facilityId, setFacilityId]);
+  }, [
+    facilities,
+    facilityId,
+    setFacilityId,
+  ]);
 
+  // =============================================
+  // 選択児童の補正
+  //
+  // ・現在の childId が children 内にあれば維持
+  // ・存在しなければ先頭児童へ切替
+  // ・児童が0人なら空文字
+  // =============================================
   useEffect(() => {
-    const selectedChild = children.find((child) =>
-      sameId(getChildId(child), childId),
-    );
+    const selectedChildExists =
+      children.some((child) =>
+        sameId(
+          getChildId(child),
+          childId
+        )
+      );
 
-    if (selectedChild) {
+    if (selectedChildExists) {
       return;
     }
 
     const firstChild = children[0];
-    setChild(
-      firstChild ? getChildId(firstChild) : "",
-      firstChild ? getChildName(firstChild) : "",
-    );
-  }, [childId, children, setChild]);
 
+    setChildId(
+      firstChild
+        ? getChildId(firstChild)
+        : ""
+    );
+  }, [
+    childId,
+    children,
+  ]);
+
+  // =============================================
+  // 施設変更
+  // =============================================
   const handleFacilityChange = (value) => {
     setFacilityId(value);
   };
 
+  // =============================================
+  // 児童変更
+  // =============================================
   const handleChildChange = (value) => {
-    const selectedChild = children.find((child) =>
-      sameId(getChildId(child), value),
-    );
-
-    setChild(value, getChildName(selectedChild));
+    setChildId(value);
   };
-
-  const {getServiceRecordMonthly,} = useServiceRecord();
 
   // =============================================
   // 表示タブ
@@ -192,8 +276,8 @@ export default function PersonalRecordPage() {
   // listMonth / personMonth / personDate を
   // 更新するuseEffectは置かない。
   //
-  // これにより初期値だけCURRENT_YMDを使い、
-  // その後は完全独立する。
+  // 初期値だけCURRENT_YMDを使用し、
+  // その後は各UIで独立して管理する。
   // =============================================
 
   const dayOfWeekId = null;
@@ -201,26 +285,32 @@ export default function PersonalRecordPage() {
   // =============================================
   // サービス記録再取得
   // =============================================
-  const reloadServiceRecords = useCallback(() => {
-    setServiceRecordReloadSeq(
-      (current) => current + 1
-    );
-  }, []);
+  const reloadServiceRecords =
+    useCallback(() => {
+      setServiceRecordReloadSeq(
+        (current) => current + 1
+      );
+    }, []);
 
   // =============================================
   // ListBox_Text 用サービス記録取得
   //
-  // ★ listMonth だけを見る
-  // PersonSwitchPanelの日付は一切参照しない
+  // PersonalRecordManagerPanel2 と同様に
+  // listMonth だけを取得条件の日付として使用する。
+  //
+  // Reduxには月次取得結果全体を保存し、
+  // 表示対象児童は childId で
+  // ListBox_Text 側に渡す。
   // =============================================
   useEffect(() => {
     if (
       !/^\d{4}-\d{2}$/.test(listMonth) ||
       !Number.isInteger(facilityId) ||
-      facilityId <= 0 ||
-      !childId
+      facilityId <= 0
     ) {
-      dispatch(setServiceRecord([]));
+      dispatch(
+        setServiceRecord([])
+      );
       return;
     }
 
@@ -238,13 +328,9 @@ export default function PersonalRecordPage() {
             facility_id: facilityId,
           });
 
-        const selectedChildRows = rows.filter((record) =>
-          sameId(getRecordChildId(record), childId),
-        );
-
         if (!cancelled) {
           dispatch(
-            setServiceRecord(selectedChildRows)
+            setServiceRecord(rows)
           );
         }
       } catch (error) {
@@ -277,7 +363,6 @@ export default function PersonalRecordPage() {
     };
   }, [
     dispatch,
-    childId,
     facilityId,
     getServiceRecordMonthly,
     listMonth,
@@ -286,22 +371,29 @@ export default function PersonalRecordPage() {
 
   return (
     <div className="w-full">
-
       {/* =========================================
           ヘッダー
       ========================================= */}
       <div className="bg-slate-100 flex flex-row items-center gap-3 px-2 py-2">
 
-        {/* 児童情報 */}
+        {/* 施設・児童選択 */}
         <SelectionPanel
           facilities={facilities}
           children={children}
           facilityId={facilityId}
           childId={childId}
-          facilitiesLoading={facilitiesLoading}
-          childrenLoading={childrenLoading}
-          onFacilityChange={handleFacilityChange}
-          onChildChange={handleChildChange}
+          facilitiesLoading={
+            facilitiesLoading
+          }
+          childrenLoading={
+            childrenLoading
+          }
+          onFacilityChange={
+            handleFacilityChange
+          }
+          onChildChange={
+            handleChildChange
+          }
         />
 
         {/* =====================================
@@ -316,13 +408,17 @@ export default function PersonalRecordPage() {
             type="button"
             role="tab"
             aria-selected={
-              activeTab === PANEL_TABS.LIST
+              activeTab ===
+              PANEL_TABS.LIST
             }
             onClick={() =>
-              setActiveTab(PANEL_TABS.LIST)
+              setActiveTab(
+                PANEL_TABS.LIST
+              )
             }
             className={`rounded-md px-4 py-1.5 text-sm font-bold transition-colors ${
-              activeTab === PANEL_TABS.LIST
+              activeTab ===
+              PANEL_TABS.LIST
                 ? "bg-indigo-600 text-white shadow"
                 : "text-gray-600 hover:bg-white"
             }`}
@@ -362,14 +458,17 @@ export default function PersonalRecordPage() {
         {/* =====================================
             記録一覧
 
-            ListBox専用の日付管理
+            ListBox_Text 専用の日付管理
         ===================================== */}
-        {activeTab === PANEL_TABS.LIST && (
+        {activeTab ===
+          PANEL_TABS.LIST && (
           <div>
             <ListBox_Text
               childId={childId}
               monthStr={listMonth}
-              onMonthChange={setListMonth}
+              onMonthChange={
+                setListMonth
+              }
             />
           </div>
         )}
@@ -377,13 +476,17 @@ export default function PersonalRecordPage() {
         {/* =====================================
             保存機能
 
-            PersonSwitchPanel専用の日付管理
+            PersonSwitchPanel 専用の日付管理
         ===================================== */}
         {activeTab ===
           PANEL_TABS.PERSON_SWITCH && (
           <div className="p-2">
             <PersonSwitchPanel
-              value={personPeriodType}
+              childId={childId}
+
+              value={
+                personPeriodType
+              }
               onChange={
                 setPersonPeriodType
               }

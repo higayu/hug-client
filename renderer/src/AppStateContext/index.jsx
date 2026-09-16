@@ -881,6 +881,26 @@ export function AppStateProvider({ children }) {
     [dispatch]
   )
 
+    /**
+     * AI問い合わせ内の画面を変更
+     */
+    const setAiInquiryScreen = useCallback(
+      (screen) => {
+        dispatch(
+          setSelectedItemRedux({
+            mode:
+              APP_MODES.AI_INQUIRY,
+  
+            itemId:
+              screen,
+          })
+        )
+      },
+      [
+        dispatch,
+      ]
+    )
+
   // =============================================================
   // web_automation_rules
   // =============================================================
@@ -1145,6 +1165,7 @@ export function AppStateProvider({ children }) {
       // 表示モード操作も window.AppState に公開する
       setAppMode,
       setModeSelectedItem,
+      setAiInquiryScreen,
       resetAppMode,
       resetAppModeSelection,
       resetAppModeState,
@@ -1260,6 +1281,7 @@ export function AppStateProvider({ children }) {
         // -- モードの追加 --
         setAppMode,
         setModeSelectedItem,
+        setAiInquiryScreen,
         resetAppMode,
         resetAppModeSelection,
         resetAppModeState,
