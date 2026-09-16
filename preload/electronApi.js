@@ -392,12 +392,6 @@ function createElectronApi(ipcRenderer, isDebugMode) {
     openWebManagerPage: (args) =>
       ipcRenderer.send("open-web-manager-page", args),
 
-    open_addition_compare_btn: (facility_id, date_str) =>
-      ipcRenderer.send("open-addition-compare-btn", {
-        facility_id,
-        date_str,
-      }),
-
     handleProfessionalSupportSearch: (
       facility_id,
       targetFacility,

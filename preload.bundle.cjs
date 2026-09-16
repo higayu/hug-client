@@ -356,10 +356,6 @@ var require_electronApi = __commonJS({
         openSpecializedSupportPlan: (childId, facilityId) => ipcRenderer2.send("open-specialized-support-plan", { childId, facilityId }),
         Open_NowDayPage: (args) => ipcRenderer2.send("Open_NowDayPage", args),
         openWebManagerPage: (args) => ipcRenderer2.send("open-web-manager-page", args),
-        open_addition_compare_btn: (facility_id, date_str) => ipcRenderer2.send("open-addition-compare-btn", {
-          facility_id,
-          date_str
-        }),
         handleProfessionalSupportSearch: (facility_id, targetFacility, date_str) => ipcRenderer2.send("handle-professional-support-search", {
           facility_id,
           targetFacility,

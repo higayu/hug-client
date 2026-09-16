@@ -9,7 +9,6 @@ const { handleApiCalls } = require("./parts/handlers");
 const { handleConfigAccess } = require("./parts/readfile/configHandler");
 const { handleIniAccess } = require("./parts/readfile/iniHandler");
 const { registerPlanWindows } = require("./windowHandlers/planWindows");
-const { open_addition_compare_btn } = require("./windowHandlers/computeWindows");
 const { handleProfessionalSupportSearch } = require("./windowHandlers/handleProfessionalSupportSearch");
 
 const { resolvePreloadPath } = require("./windowHandlers/windowManager");
@@ -23,7 +22,6 @@ function registerIpcHandlers(mainWindow, tempNoteHandler) {
     handleConfigAccess(ipcMain);
     handleIniAccess(ipcMain);
     registerPlanWindows(ipcMain);
-    open_addition_compare_btn(ipcMain);
     handleProfessionalSupportSearch(ipcMain);
 
     // =======================================

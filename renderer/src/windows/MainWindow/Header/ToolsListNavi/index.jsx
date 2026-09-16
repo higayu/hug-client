@@ -17,7 +17,6 @@ import {
   import DataBaseButton from '@/components/common/Synchronization/DataBaseButton';
   import StaffUpdateButton from '@/components/common/Synchronization/StaffUpdateButton';
   import ChildrenUpdateButton from '@/components/common/Synchronization/ChildrenUpdateButton';
-  import AdditionCompare from '@/components/common/hug_function/AdditionCompare';
   import ProfessionalSupportSearch from '@/components/common/hug_function/ProfessionalSupportSearch';
   
   export default function ToolsListNavi({
@@ -305,9 +304,6 @@ import {
             </li>
             <li className="m-0 p-0">
               <ProfessionalSupportSearch />
-            </li>
-            <li className="m-0 p-0">
-              <AdditionCompare />
             </li>
             <li className="m-0 p-0">
               <button
