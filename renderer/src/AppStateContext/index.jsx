@@ -65,7 +65,6 @@ export const FAN_CONTENT_PANELS = {
   AI_SUPPORT: 'ai',
   CHILD_KADAI: 'child-kadai',
   PERSONAL_RECORD: 'personal-record',
-  SIMPLE_BOARD: 'simple-board',
 }
 
 const toBooleanFlag = (value, defaultValue = true) => {
