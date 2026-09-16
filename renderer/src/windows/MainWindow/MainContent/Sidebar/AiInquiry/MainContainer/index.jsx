@@ -2,30 +2,38 @@
 
 import { useAppState } from '@/AppStateContext'
 
-import Home from './Home'
-import Search from './Search'
-import Create from './Create'
-import Profile from './Profile'
+import AiRecordEditer from './Pages/AiRecordEditer'
+import ChatPage from './Pages/ChatPage'
+import DashboardPage from './Pages/DashboardPage'
+import HealthAnalysisDashboard from './Pages/HealthAnalysisDashboard'
+import PersonalRecordPage from './Pages/PersonalRecordPage'
 
-export default function MainContainer() {
+export const MainContainer = () => {
   const {
-    CURRENT_SELECTED_ITEM_ID,
+    AI_INQUIRY_SELECTED_ITEM_ID,
   } = useAppState()
 
   const renderContent = () => {
-    switch (CURRENT_SELECTED_ITEM_ID) {
-      case 'search':
-        return <Search />
+    switch (
+      AI_INQUIRY_SELECTED_ITEM_ID
+    ) {
+      case 'dashboard':
+        return <DashboardPage />
 
-      case 'create':
-        return <Create />
+      case 'aiRecordEditer':
+        return <AiRecordEditer />
 
-      case 'profile':
-        return <Profile />
+      case 'personalRecord':
+        return <PersonalRecordPage />
 
-      case 'home':
+      case 'healthAnalysis':
+        return (
+          <HealthAnalysisDashboard />
+        )
+
+      case 'chat':
       default:
-        return <Home />
+        return <ChatPage />
     }
   }
 
@@ -43,3 +51,5 @@ export default function MainContainer() {
     </main>
   )
 }
+
+export default MainContainer

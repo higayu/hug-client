@@ -1,0 +1,190 @@
+import { useCallback, useRef, useState } from "react";
+import { useAppState } from "@/AppStateContext";
+import { useChilledSpace } from "@/hooks/useChilledSpace";
+import { useToast } from '@/provider/ToastProvider/ToastContext'
+import { fetchPersonalRecord } from "@/utils/fetchPersonalRecord";
+import { postServiceRecordsToLocalApi } from "./postServiceRecordsToLocalApi";
+import { useDataBase } from "@/hooks/useDataBase";
+
+const LOG_TAG = "PersonalRecordGet";
+
+function notifyPostResultToasts(postResult, { showSuccessToast, showErrorToast }) {
+  const { posted = 0, failed = 0 } = postResult ?? {};
+
+  if (posted > 0) {
+    showSuccessToast(
+      posted === 1 ? "個人記録を保存しました" : `${posted}件の個人記録を保存しました`
+    );
+  }
+  if (failed > 0) {
+    showErrorToast("個人記録の保存に失敗しました");
+  }
+}
+
+/**
+ * 選択中児童の個人記録（活動内容 note）を hugview 経由で取得し、コンソールに出力する（テスト用）
+ */
+export default function PersonalRecordGetDayBtn({
+  dateStr,
+  disabled = false,
+  onServiceRecordsUpdated,
+}) {
+  const { FACILITY_ID, STAFF_ID, CURRENT_YMD, DATABASE_TYPE } = useAppState();
+  const { childId } = useChilledSpace();
+  const { showSuccessToast, showErrorToast } = useToast();
+  const [fetching, setFetching] = useState(false);
+  const [permissionErrorCount, setPermissionErrorCount] = useState(0);
+  const isFetchingRef = useRef(false);
+  const { loadDataBase } = useDataBase();
+
+  const runFetch = useCallback(async () => {
+    if (disabled) {
+      console.warn(`[${LOG_TAG}] disabled`);
+      return;
+    }
+
+    if (!childId) {
+      console.warn(`[${LOG_TAG}] 児童が選択されていません`);
+      return;
+    }
+
+    if (isFetchingRef.current) {
+      console.log(`[${LOG_TAG}] 取得中のためスキップ`);
+      return;
+    }
+
+    const facilityId = FACILITY_ID || "3";
+    const currentYmd = dateStr || CURRENT_YMD || new Date().toISOString().slice(0, 10);
+
+    isFetchingRef.current = true;
+    setFetching(true);
+    setPermissionErrorCount(0);
+
+    console.log(`[${LOG_TAG}] 取得開始`, {
+      childId: childId,
+      facilityId,
+      currentYmd,
+    });
+
+    try {
+      const result = await fetchPersonalRecord({
+        childId: childId,
+        facilityId,
+        currentYmd,
+      });
+
+      if (!result.ok) {
+        console.error(`[${LOG_TAG}] 取得失敗:`, result.error);
+        showErrorToast("個人記録の取得に失敗しました");
+        return;
+      }
+
+      console.log(`[${LOG_TAG}] 取得完了`, {
+        listUrl: result.listUrl,
+        rowCount: result.rowCount,
+        presentCount: result.presentCount,
+      });
+      console.log(`[${LOG_TAG}] records:`, result.records);
+
+      result.records?.forEach((row) => {
+        console.log(`[${LOG_TAG}] ${row.date} ${row.childName}`, {
+          attendance: row.attendance,
+          note: row.note,
+          noteError: row.noteError,
+          permissionError: row.permissionError === true,
+          editPath: row.editPath,
+        });
+      });
+
+      const fetchedPermissionErrorCount =
+        result.permissionErrors?.length ??
+        result.records?.filter((row) => row?.permissionError === true).length ??
+        0;
+
+      setPermissionErrorCount(fetchedPermissionErrorCount);
+
+      const postResult = await postServiceRecordsToLocalApi(result.records, {
+        childrenId: childId,
+        facilityId,
+        staffId: STAFF_ID,
+        databaseType: DATABASE_TYPE,
+      });
+
+      console.log(`[${LOG_TAG}] ローカルDB保存`, postResult);
+
+      const savedPermissionErrorCount =
+        postResult?.permissionErrors?.length ??
+        postResult?.results?.filter((row) => row?.permissionError === true).length ??
+        0;
+
+      setPermissionErrorCount(savedPermissionErrorCount);
+      notifyPostResultToasts(postResult, {
+        showSuccessToast,
+        showErrorToast,
+      });
+      postResult.results?.forEach((row) => {
+        if (row.ok) {
+          console.log(`[${LOG_TAG}] Upsert成功 ${row.date}`, row.payload);
+        } else if (row.skipped) {
+          console.warn(`[${LOG_TAG}] Upsertスキップ ${row.date}:`, row.error);
+        } else {
+          console.error(`[${LOG_TAG}] Upsert失敗 ${row.date}:`, row.error);
+        }
+      });
+
+      await loadDataBase({
+        reason: "manual/ProfessionalPlan",
+      });
+      onServiceRecordsUpdated?.();
+    } catch (e) {
+      console.error(`[${LOG_TAG}] 例外:`, e);
+      showErrorToast("個人記録の取得・保存でエラーが発生しました");
+    } finally {
+      isFetchingRef.current = false;
+      setFetching(false);
+    }
+  }, [
+    disabled,
+    FACILITY_ID,
+    CURRENT_YMD,
+    dateStr,
+    showSuccessToast,
+    showErrorToast,
+    STAFF_ID,
+    DATABASE_TYPE,
+    loadDataBase,
+    onServiceRecordsUpdated,
+  ]);
+
+  return (
+    <div className="flex items-center gap-2">
+      <button
+        type="button"
+        id="personal-record-get"
+        onClick={runFetch}
+        disabled={disabled || !childId || !(dateStr || CURRENT_YMD) || fetching}
+        className="
+          flex items-center justify-center
+          bg-green-700 text-white
+          px-3 py-2
+          rounded-lg font-bold text-xs
+          cursor-pointer transition-all whitespace-nowrap
+          hover:bg-green-800 hover:scale-105
+          active:bg-green-900 active:scale-[0.97]
+          disabled:grayscale disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100
+        "
+      >
+        {fetching ? "取得中…" : "記録取得"}
+      </button>
+
+      {permissionErrorCount > 0 && (
+        <span
+          className="inline-flex items-center rounded-full border border-red-300 bg-red-50 px-2.5 py-1 text-xs font-bold text-red-700"
+          title="編集権限がないため取得できなかった個人記録があります"
+        >
+          権限不足 {permissionErrorCount}件
+        </span>
+      )}
+    </div>
+  );
+}

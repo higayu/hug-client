@@ -1,181 +1,89 @@
-import {
-  Home,
-  Search,
-  PlusCircle,
-  User,
-  Bell,
-} from 'lucide-react';
+// src/components/Sidebar/AiInquiry/VerticalNav/index.jsx
 
 import {
   useAppState,
 } from '@/AppStateContext';
 
-const defaultItems = [
-  {
-    id: 'home',
-    icon: Home,
-    label: 'ホーム',
-  },
-  {
-    id: 'search',
-    icon: Search,
-    label: '検索',
-  },
-  {
-    id: 'create',
-    icon: PlusCircle,
-    label: '作成',
-  },
-  {
-    id: 'profile',
-    icon: User,
-    label: 'プロフィール',
-  },
-];
+import {
+  NAV_ITEMS,
+} from './constants';
 
-const defaultFooterItems = [
-  {
-    id: 'notifications',
-    icon: Bell,
-    label: '更新情報',
-  },
-];
+import NavHeader from './NavHeader';
+import NavItem from './NavItem';
 
 /**
- * 埋め込み可能な縦型ナビゲーション。
+ * AI問い合わせ用サイドバーナビゲーション。
  *
- * 固定配置や画面サイズには依存せず、
- * 親要素の高さに合わせて表示します。
- *
- * 選択状態はmodeSliceで管理します。
+ * item.idをAppRouterで使用する画面IDとして扱う。
+ * 選択状態の取得・変更はAppStateContext経由で行う。
  */
 export default function VerticalNav({
-  items = defaultItems,
-  footerItems = defaultFooterItems,
-  header,
-  width = 72,
+  items = NAV_ITEMS,
   className = '',
   buttonClassName = '',
-  ariaLabel = 'メインナビゲーション',
+  ariaLabel = 'AI問い合わせナビゲーション',
 }) {
   const {
-    CURRENT_SELECTED_ITEM_ID,
-    setModeSelectedItem,
+    AI_INQUIRY_SELECTED_ITEM_ID,
+    setAiInquiryScreen,
   } = useAppState();
 
   /**
-   * 現在のモード内で選択項目を変更
+   * AI問い合わせ内の表示画面を変更する。
    */
-  const handleItemClick = (itemId) => {
-    setModeSelectedItem(itemId);
-  };
+  const handleItemClick = (screenId) => {
+    if (!screenId) {
+      return;
+    }
 
-  const renderItem = ({
-    id,
-    icon: Icon,
-    label,
-    disabled = false,
-  }) => {
-    const isActive =
-      CURRENT_SELECTED_ITEM_ID === id;
-
-    return (
-      <button
-        key={id}
-        type="button"
-        disabled={disabled}
-        onClick={() => handleItemClick(id)}
-        className={`
-          flex
-          h-12
-          w-12
-          shrink-0
-          items-center
-          justify-center
-          rounded-full
-          text-[#33332e]
-          transition-colors
-          hover:bg-[#f0f0ed]
-          focus-visible:outline-none
-          focus-visible:ring-2
-          focus-visible:ring-[#76766f]
-          disabled:cursor-not-allowed
-          disabled:opacity-40
-          ${
-            isActive
-              ? 'bg-[#f0f0ed] text-[#111111]'
-              : ''
-          }
-          ${buttonClassName}
-        `}
-        aria-label={label}
-        aria-current={
-          isActive
-            ? 'page'
-            : undefined
-        }
-        title={label}
-      >
-        <Icon
-          className="h-6 w-6"
-          aria-hidden="true"
-        />
-      </button>
-    );
+    setAiInquiryScreen(screenId);
   };
 
   return (
-    <nav
+    <aside
       className={`
         flex
         h-full
         shrink-0
         flex-col
-        items-center
-        gap-3
+        overflow-hidden
         border-r
-        border-[#e5e5e0]
-        bg-white
-        px-3
-        py-4
+        border-gray-700
+        bg-gray-800
+        text-white
+        dark:border-gray-700
+        dark:bg-gray-900
         ${className}
       `}
-      style={{ width }}
-      aria-label={ariaLabel}
     >
-      {header && (
-        <div className="shrink-0">
-          {header}
-        </div>
-      )}
+      <NavHeader />
 
-      <div
+      <nav
         className="
           flex
           min-h-0
           flex-1
           flex-col
-          items-center
-          gap-3
           overflow-y-auto
+          py-2
         "
+        aria-label={ariaLabel}
       >
-        {items.map(renderItem)}
-      </div>
-
-      {footerItems.length > 0 && (
-        <div
-          className="
-            flex
-            shrink-0
-            flex-col
-            items-center
-            gap-3
-          "
-        >
-          {footerItems.map(renderItem)}
-        </div>
-      )}
-    </nav>
+        {items.map((item) => (
+          <NavItem
+            key={item.id}
+            item={item}
+            isActive={
+              AI_INQUIRY_SELECTED_ITEM_ID ===
+              item.id
+            }
+            onSelect={handleItemClick}
+            buttonClassName={
+              buttonClassName
+            }
+          />
+        ))}
+      </nav>
+    </aside>
   );
 }
