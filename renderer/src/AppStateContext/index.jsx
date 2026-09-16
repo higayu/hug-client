@@ -92,7 +92,7 @@ export function AppStateProvider({ children }) {
   const authenticatedStaffId = useSelector(selectAuthenticatedStaffId)
 
   const [isInitialized, setIsInitialized] = useState(false)
-  const [activeSidebarTab, setActiveSidebarTab] = useState('FanContent')
+  const [activeSidebarTab, setActiveSidebarTab] = useState('simpleBoard')
 
   const [iniState, setIniState] = useState({
     appSettings: {},
