@@ -17,12 +17,16 @@ export async function postProfessionalSupportDraft({
   staffId,
   title = '記録',
   contents = '',
+  saveMode = 'draft',
 }) {
   if (!childId) throw new Error('児童IDがありません')
   if (!facilityId) throw new Error('施設IDがありません')
   if (!dateStr) throw new Error('実施日がありません')
   if (!staffId) throw new Error('記録者IDがありません')
   if (!String(contents || '').trim()) throw new Error('記録内容を入力してください')
+  if (!['draft', 'created'].includes(saveMode)) {
+    throw new Error(`保存種別が不正です: ${saveMode}`)
+  }
 
   const webview = await getHugWebviewForCache()
   if (!webview) throw new Error('HUG の WebView が見つかりません')
@@ -36,6 +40,7 @@ export async function postProfessionalSupportDraft({
     staffId: String(staffId),
     title: String(title || '記録'),
     contents: String(contents || ''),
+    saveMode: String(saveMode),
   }
 
   const script = `
@@ -112,7 +117,9 @@ export async function postProfessionalSupportDraft({
         const body = new FormData();
 
         body.append('mode', 'regist');
-        body.append('draft_flg', 'draft');
+        // HUG本体の保存ボタンと同じ値を送る。
+        // 下書き: draft / 通常保存: created
+        body.append('draft_flg', PAYLOAD.saveMode);
         body.append('id', 'insert');
         // 手動下書き保存時の実送信データに合わせる。
         body.append('select_s_id', '');
@@ -226,7 +233,8 @@ export async function postProfessionalSupportDraft({
   const result = await webview.executeJavaScript(script)
 
   if (!result?.ok || result?.saved !== true) {
-    throw new Error(result?.error || '専門的支援の下書き保存に失敗しました')
+    const actionLabel = saveMode === 'created' ? '保存' : '下書き保存'
+    throw new Error(result?.error || `専門的支援の${actionLabel}に失敗しました`)
   }
 
   return result

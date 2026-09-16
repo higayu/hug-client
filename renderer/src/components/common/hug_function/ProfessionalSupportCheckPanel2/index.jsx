@@ -573,18 +573,24 @@ export default function ProfessionalSupportCheckPanel2({
     setPostModalError('')
   }
 
-  const runLinked = async ({
-    dateStr: modalDateStr,
-    startTime,
-    endTime,
-    title,
-    contents,
-  }) => {
+  const runLinked = async (
+    {
+      dateStr: modalDateStr,
+      startTime,
+      endTime,
+      title,
+      contents,
+    },
+    saveMode = 'draft',
+  ) => {
     if (linkedDisabled) return
+
+    const isCreated = saveMode === 'created'
+    const saveLabel = isCreated ? '保存' : '下書き保存'
 
     setLinkedLoading(true)
     setPostModalError('')
-    setAction('working', '専門的支援 下書きPOST中')
+    setAction('working', `専門的支援 ${saveLabel}POST中`)
 
     try {
       const supportResult = await postProfessionalSupportDraft({
@@ -596,15 +602,16 @@ export default function ProfessionalSupportCheckPanel2({
         staffId: appState?.STAFF_ID,
         title,
         contents,
+        saveMode,
       })
 
       if (!supportResult?.ok || supportResult?.saved !== true) {
         throw new Error(
-          supportResult?.error || '専門的支援の下書き保存に失敗しました',
+          supportResult?.error || `専門的支援の${saveLabel}に失敗しました`,
         )
       }
 
-      setAction('working', '下書きOK → 専門＋登録中')
+      setAction('working', `${saveLabel}OK → 専門＋登録中`)
 
       const plusResult = await addProfessionalSupport({
         childId,
@@ -646,7 +653,7 @@ export default function ProfessionalSupportCheckPanel2({
     if (!childId) return '児童が選択されていません'
     if (!dateStr) return '日付が指定されていません'
     if (!resolvedFacilityId) return '施設が指定されていません'
-    return '入力モーダルを開き、下書きをPOSTした後に専門＋を自動登録します'
+    return '入力モーダルを開き、下書き保存または保存後に専門＋を自動登録します'
   }
 
   const actionClass = {

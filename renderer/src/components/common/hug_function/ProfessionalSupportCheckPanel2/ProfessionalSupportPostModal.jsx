@@ -50,17 +50,23 @@ export default function ProfessionalSupportPostModal({
 
   if (!open) return null
 
+  const submitWithMode = (saveMode) => {
+    if (submitting || !date || !contents.trim()) return
+
+    onSubmit?.(
+      {
+        dateStr: date,
+        startTime,
+        endTime,
+        title,
+        contents,
+      },
+      saveMode,
+    )
+  }
+
   const handleSubmit = (event) => {
     event.preventDefault()
-    if (submitting) return
-
-    onSubmit?.({
-      dateStr: date,
-      startTime,
-      endTime,
-      title,
-      contents,
-    })
   }
 
   return createPortal(
@@ -71,7 +77,7 @@ export default function ProfessionalSupportPostModal({
       >
         <div className="mb-3 flex items-center justify-between gap-3">
           <div>
-            <h2 className="text-base font-bold">専門的支援 下書き登録</h2>
+            <h2 className="text-base font-bold">専門的支援 登録</h2>
             <p className="mt-0.5 text-xs text-gray-400">
               HUGの編集画面は開かず、入力内容を直接POSTします。
             </p>
@@ -171,11 +177,21 @@ export default function ProfessionalSupportPostModal({
             キャンセル
           </button>
           <button
-            type="submit"
+            type="button"
+            onClick={() => submitWithMode('draft')}
+            disabled={submitting || !date || !contents.trim()}
+            className="rounded bg-slate-600 px-4 py-2 text-sm font-semibold hover:bg-slate-500 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {submitting ? '送信中...' : '下書き保存して専門＋を登録'}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => submitWithMode('created')}
             disabled={submitting || !date || !contents.trim()}
             className="rounded bg-purple-600 px-4 py-2 text-sm font-semibold hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {submitting ? '送信中...' : '下書き保存して専門＋を登録'}
+            {submitting ? '送信中...' : '保存して専門＋を登録'}
           </button>
         </div>
       </form>
