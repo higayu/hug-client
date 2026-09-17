@@ -245,10 +245,23 @@ export const buildAttendanceFetchScript = ({ facilityId, targetDate }) => {
                 ?.textContent
                 ?.trim() ?? '';
 
-            const names = Array.from(
+            const childItems = Array.from(
               titleElement.nextElementSibling
                 ?.querySelectorAll('li') ?? [],
-            )
+            );
+
+            const names = childItems
+              .map((item) =>
+                item.textContent
+                  .replace(/\\s+/g, ' ')
+                  .trim(),
+              )
+              .filter(Boolean);
+
+            // .calendar-pickup が付いている児童は、当日未入室または未来日の予定。
+            // 表示には残し、DB同期用データからだけ除外する。
+            const syncNames = childItems
+              .filter((item) => !item.querySelector('.calendar-pickup'))
               .map((item) =>
                 item.textContent
                   .replace(/\\s+/g, ' ')
@@ -268,6 +281,7 @@ export const buildAttendanceFetchScript = ({ facilityId, targetDate }) => {
             result[type] = {
               count,
               names,
+              syncNames,
             };
 
             return result;
@@ -277,30 +291,37 @@ export const buildAttendanceFetchScript = ({ facilityId, targetDate }) => {
             sections['出席'] ?? {
               count: 0,
               names: [],
+              syncNames: [],
             };
 
           const absence =
             sections['欠席'] ?? {
               count: 0,
               names: [],
+              syncNames: [],
             };
 
           const absenceWithoutAddition =
             sections['欠席（加算なし）'] ?? {
               count: 0,
               names: [],
+              syncNames: [],
             };
 
           return {
             date,
             attendanceCount: attendance.count,
             attendanceNames: attendance.names,
+            attendanceSyncNames: attendance.syncNames,
             absenceCount: absence.count,
             absenceNames: absence.names,
+            absenceSyncNames: absence.syncNames,
             absenceWithoutAdditionCount:
               absenceWithoutAddition.count,
             absenceWithoutAdditionNames:
               absenceWithoutAddition.names,
+            absenceWithoutAdditionSyncNames:
+              absenceWithoutAddition.syncNames,
           };
         })
         .filter(Boolean);

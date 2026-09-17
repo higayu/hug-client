@@ -39,9 +39,14 @@ export const buildAttendanceSyncRows = (attendanceData) => {
   const rows = []
 
   for (const day of attendanceData?.days ?? []) {
-    const withoutAddition = new Set(day.absenceWithoutAdditionNames ?? [])
+    const withoutAddition = new Set(
+      day.absenceWithoutAdditionSyncNames ??
+        day.absenceWithoutAdditionNames ??
+        [],
+    )
 
-    for (const childName of day.attendanceNames ?? []) {
+    for (const childName of
+      day.attendanceSyncNames ?? day.attendanceNames ?? []) {
       rows.push({
         targetDate: day.date,
         childId: null,
@@ -51,7 +56,8 @@ export const buildAttendanceSyncRows = (attendanceData) => {
       })
     }
 
-    for (const childName of day.absenceNames ?? []) {
+    for (const childName of
+      day.absenceSyncNames ?? day.absenceNames ?? []) {
       if (withoutAddition.has(childName)) {
         continue
       }
@@ -65,7 +71,10 @@ export const buildAttendanceSyncRows = (attendanceData) => {
       })
     }
 
-    for (const childName of day.absenceWithoutAdditionNames ?? []) {
+    for (const childName of
+      day.absenceWithoutAdditionSyncNames ??
+      day.absenceWithoutAdditionNames ??
+      []) {
       rows.push({
         targetDate: day.date,
         childId: null,

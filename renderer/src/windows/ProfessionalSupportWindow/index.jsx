@@ -10,6 +10,12 @@ import {
 import { buildAdditionCountFetchScript } from './additionCount'
 import { buildAdditionListFetchScript } from './additionList'
 import { buildProfessionalSupportSyncPayload } from './syncProfessionalSupport'
+import {
+  buildAdditionCountPanelDataFromDb,
+  buildAdditionListPanelDataFromDb,
+  buildAttendancePanelDataFromDb,
+} from './dbProfessionalSupport'
+import ResizableSplitPane from '@/components/ui/ResizableSplitPane'
 
 const getInitialYearMonth = (targetDate) => {
   const matched = String(targetDate ?? '').match(/^(\d{4})-(\d{2})/)
@@ -220,10 +226,13 @@ export default function ProfessionalSupportWindow() {
   const fetchComparisonData = useCallback(async () => {
     if (!selectedFacilityId) {
       setComparisonData([])
+      setAttendanceData(null)
+      setAdditionCountData(null)
+      setAdditionListData(null)
       setComparisonError('施設を選択してください。')
       setIsMonthSynced(false)
       setSyncStatusChecked(true)
-      return { rows: [], isCompleted: false }
+      return { isCompleted: false }
     }
 
     const getApi =
@@ -234,7 +243,7 @@ export default function ProfessionalSupportWindow() {
       setComparisonError('月次比較取得APIがpreloadから公開されていません。')
       setIsMonthSynced(false)
       setSyncStatusChecked(true)
-      return { rows: [], isCompleted: false }
+      return { isCompleted: false }
     }
 
     setComparisonLoading(true)
@@ -254,28 +263,77 @@ export default function ProfessionalSupportWindow() {
         )
       }
 
-      const rows = Array.isArray(result?.data)
-        ? result.data
-        : Array.isArray(result?.data?.data)
-          ? result.data.data
-          : []
+      const responseData = result?.data ?? {}
 
-      const isCompleted = Boolean(
-        result?.meta?.isCompleted ?? result?.data?.meta?.isCompleted,
-      )
+      const comparisonRows = Array.isArray(responseData?.comparison)
+        ? responseData.comparison
+        : []
+      const attendanceRows = Array.isArray(responseData?.attendance)
+        ? responseData.attendance
+        : []
+      const additionCountRows = Array.isArray(responseData?.additionCounts)
+        ? responseData.additionCounts
+        : []
+      const recordRows = Array.isArray(responseData?.records)
+        ? responseData.records
+        : []
 
-      setComparisonData(rows)
+      const completedValue = result?.meta?.isCompleted
+      const hasStoredData =
+        comparisonRows.length > 0 ||
+        attendanceRows.length > 0 ||
+        additionCountRows.length > 0 ||
+        recordRows.length > 0
+
+      const isCompleted =
+        completedValue === true ||
+        completedValue === 1 ||
+        completedValue === '1' ||
+        hasStoredData
+
+      setComparisonData(comparisonRows)
       setIsMonthSynced(isCompleted)
-      setSyncStatusChecked(true)
 
-      // 同期済み月ではHUGへの自動リクエストを行わない。
       if (isCompleted) {
+        setAttendanceData(
+          buildAttendancePanelDataFromDb({
+            rows: attendanceRows,
+            year: selectedYear,
+            month: selectedMonth,
+          }),
+        )
+        setAdditionCountData(
+          buildAdditionCountPanelDataFromDb({
+            rows: additionCountRows,
+            year: selectedYear,
+            month: selectedMonth,
+          }),
+        )
+        setAdditionListData(
+          buildAdditionListPanelDataFromDb({
+            rows: recordRows,
+            year: selectedYear,
+            month: selectedMonth,
+          }),
+        )
+
+        setError('')
+        setAdditionCountError('')
+        setAdditionListError('')
         setLoading(false)
         setAdditionCountLoading(false)
         setAdditionListLoading(false)
       }
 
-      return { rows, isCompleted }
+      setSyncStatusChecked(true)
+
+      return {
+        isCompleted,
+        comparisonRows,
+        attendanceRows,
+        additionCountRows,
+        recordRows,
+      }
     } catch (comparisonFetchError) {
       console.error(
         '[ProfessionalSupportWindow] 月次比較データ取得エラー:',
@@ -287,7 +345,7 @@ export default function ProfessionalSupportWindow() {
       setComparisonError(
         comparisonFetchError?.message ?? '月次比較データの取得に失敗しました。',
       )
-      return { rows: [], isCompleted: false }
+      return { isCompleted: false }
     } finally {
       setComparisonLoading(false)
     }
@@ -296,7 +354,6 @@ export default function ProfessionalSupportWindow() {
     selectedYear,
     selectedMonth,
   ])
-
 
   const syncAllToDatabase = useCallback(async () => {
     if (!selectedFacilityId || !webviewReady || syncing) {
@@ -494,47 +551,57 @@ export default function ProfessionalSupportWindow() {
     setSelectedMonth(nextMonth)
   }, [])
 
-  return (
-    <div className="h-screen bg-gray-50 p-4">
-      <div className="flex h-full w-full overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
-        <div className="flex w-[70%] min-w-0 flex-col border-r border-gray-200">
-          <HeaderComponent
-            facilities={parameters.facilities}
-            selectedFacilityId={selectedFacilityId}
-            onFacilityChange={handleFacilityChange}
-            selectedYear={selectedYear}
-            selectedMonth={selectedMonth}
-            onYearMonthChange={handleYearMonthChange}
-          />
+return (
+  <div className="h-screen bg-gray-50 p-4">
+    <div className="h-full w-full overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
+      <ResizableSplitPane
+        defaultLeftPercent={70}
+        minLeftWidth={500}
+        minRightWidth={350}
+        left={
+          <div className="flex h-full min-h-0 min-w-0 flex-col">
+            <HeaderComponent
+              facilities={parameters.facilities}
+              selectedFacilityId={selectedFacilityId}
+              onFacilityChange={handleFacilityChange}
+              selectedYear={selectedYear}
+              selectedMonth={selectedMonth}
+              onYearMonthChange={handleYearMonthChange}
+            />
 
-          <LeftPanel
-            loading={loading}
-            error={error}
-            attendanceData={attendanceData}
-            additionCountLoading={additionCountLoading}
-            additionCountError={additionCountError}
-            additionCountData={additionCountData}
-            additionListLoading={additionListLoading}
-            additionListError={additionListError}
-            additionListData={additionListData}
-            comparisonLoading={comparisonLoading}
-            comparisonError={comparisonError}
-            comparisonData={comparisonData}
-            targetDate={selectedTargetDate}
-            onReload={reloadAll}
-            onSync={syncAllToDatabase}
-            syncing={syncing}
-            syncMessage={syncMessage}
-            syncError={syncError}
-            webviewReady={webviewReady}
-          />
-        </div>
-
-        <RightPanel
-          webviewRef={sessionWebviewRef}
-          webviewReady={webviewReady}
-        />
-      </div>
+            <LeftPanel
+              loading={loading}
+              error={error}
+              attendanceData={attendanceData}
+              additionCountLoading={additionCountLoading}
+              additionCountError={additionCountError}
+              additionCountData={additionCountData}
+              additionListLoading={additionListLoading}
+              additionListError={additionListError}
+              additionListData={additionListData}
+              comparisonLoading={comparisonLoading}
+              comparisonError={comparisonError}
+              comparisonData={comparisonData}
+              targetDate={selectedTargetDate}
+              onReload={reloadAll}
+              onSync={syncAllToDatabase}
+              syncing={syncing}
+              syncMessage={syncMessage}
+              syncError={syncError}
+              webviewReady={webviewReady}
+            />
+          </div>
+        }
+        right={
+          <div className="h-full min-h-0 min-w-0">
+            <RightPanel
+              webviewRef={sessionWebviewRef}
+              webviewReady={webviewReady}
+            />
+          </div>
+        }
+      />
     </div>
-  )
+  </div>
+)
 }
