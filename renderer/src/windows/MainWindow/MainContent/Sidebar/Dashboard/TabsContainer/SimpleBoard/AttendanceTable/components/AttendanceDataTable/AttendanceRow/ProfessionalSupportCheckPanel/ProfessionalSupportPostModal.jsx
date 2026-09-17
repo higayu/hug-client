@@ -53,7 +53,7 @@ export default function ProfessionalSupportPostModal({
 
   const handleSubmit = (event) => {
     event.preventDefault()
-    if (submitting) return
+    if (submitting || !date || !contents.trim()) return
 
     onSubmit?.({
       dateStr: date,
