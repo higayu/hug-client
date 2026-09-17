@@ -2,6 +2,7 @@ const TABS = [
   { id: 'attendance', label: '出席データ' },
   { id: 'additionCount', label: '加算数データ' },
   { id: 'additionList', label: '加算一覧データ' },
+  { id: 'comparison', label: '月次比較' },
 ]
 
 export default function LeftTabs({

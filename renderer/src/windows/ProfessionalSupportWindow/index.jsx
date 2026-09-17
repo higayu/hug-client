@@ -9,6 +9,7 @@ import {
 } from './attendance'
 import { buildAdditionCountFetchScript } from './additionCount'
 import { buildAdditionListFetchScript } from './additionList'
+import { buildProfessionalSupportSyncPayload } from './syncProfessionalSupport'
 
 const getInitialYearMonth = (targetDate) => {
   const matched = String(targetDate ?? '').match(/^(\d{4})-(\d{2})/)
@@ -61,6 +62,13 @@ export default function ProfessionalSupportWindow() {
   const [additionListError, setAdditionListError] = useState('')
   const [additionListLoading, setAdditionListLoading] = useState(true)
   const [webviewReady, setWebviewReady] = useState(false)
+  const [syncing, setSyncing] = useState(false)
+  const [syncMessage, setSyncMessage] = useState('')
+  const [syncError, setSyncError] = useState('')
+  const [comparisonData, setComparisonData] = useState([])
+  const [comparisonLoading, setComparisonLoading] = useState(false)
+  const [comparisonError, setComparisonError] = useState('')
+
 
   const fetchAttendance = useCallback(async () => {
     const webview = sessionWebviewRef.current
@@ -90,6 +98,7 @@ export default function ProfessionalSupportWindow() {
       )
 
       setAttendanceData(result)
+      return result
     } catch (fetchError) {
       console.error(
         '[ProfessionalSupportWindow] 出席データ取得エラー:',
@@ -137,6 +146,7 @@ export default function ProfessionalSupportWindow() {
       )
 
       setAdditionCountData(result)
+      return result
     } catch (fetchError) {
       console.error(
         '[ProfessionalSupportWindow] 加算数データ取得エラー:',
@@ -184,6 +194,7 @@ export default function ProfessionalSupportWindow() {
       )
 
       setAdditionListData(result)
+      return result
     } catch (fetchError) {
       console.error(
         '[ProfessionalSupportWindow] 加算一覧データ取得エラー:',
@@ -203,11 +214,152 @@ export default function ProfessionalSupportWindow() {
     webviewReady,
   ])
 
+  const fetchComparisonData = useCallback(async () => {
+    if (!selectedFacilityId) {
+      setComparisonData([])
+      setComparisonError('施設を選択してください。')
+      return []
+    }
+
+    const getApi =
+      window.electronAPI?.laravel_procedure_getProfessionalSupportMonth
+
+    if (typeof getApi !== 'function') {
+      setComparisonData([])
+      setComparisonError('月次比較取得APIがpreloadから公開されていません。')
+      return []
+    }
+
+    setComparisonLoading(true)
+    setComparisonError('')
+
+    try {
+      const result = await getApi({
+        facilityId: Number(selectedFacilityId),
+        year: Number(selectedYear),
+        month: Number(selectedMonth),
+      })
+
+      if (!result?.success) {
+        throw new Error(
+          result?.message || result?.error || '月次比較データの取得に失敗しました。',
+        )
+      }
+
+      const rows = Array.isArray(result?.data)
+        ? result.data
+        : Array.isArray(result?.data?.data)
+          ? result.data.data
+          : []
+
+      setComparisonData(rows)
+      return rows
+    } catch (comparisonFetchError) {
+      console.error(
+        '[ProfessionalSupportWindow] 月次比較データ取得エラー:',
+        comparisonFetchError,
+      )
+      setComparisonData([])
+      setComparisonError(
+        comparisonFetchError?.message ?? '月次比較データの取得に失敗しました。',
+      )
+      return []
+    } finally {
+      setComparisonLoading(false)
+    }
+  }, [
+    selectedFacilityId,
+    selectedYear,
+    selectedMonth,
+  ])
+
+  const syncAllToDatabase = useCallback(async () => {
+    if (!selectedFacilityId || !webviewReady || syncing) {
+      return
+    }
+
+    const syncApi =
+      window.electronAPI?.laravel_procedure_syncProfessionalSupportMonth
+
+    if (typeof syncApi !== 'function') {
+      setSyncError('月次同期APIがpreloadから公開されていません。')
+      return
+    }
+
+    setSyncing(true)
+    setSyncMessage('')
+    setSyncError('')
+
+    try {
+      // 3タブを同じ施設・年月で最新取得してから、1回のAPIでまとめて保存する。
+      // 同じWebViewセッションを使うため、HUG側の検索状態が競合しないよう順番に取得する。
+      const nextAttendanceData = await fetchAttendance()
+      const nextAdditionCountData = await fetchAdditionCount()
+      const nextAdditionListData = await fetchAdditionList()
+
+      if (!nextAttendanceData || !nextAdditionCountData || !nextAdditionListData) {
+        throw new Error('3種類のデータをすべて取得できなかったため保存を中止しました。')
+      }
+
+      const payload = buildProfessionalSupportSyncPayload({
+        facilityId: selectedFacilityId,
+        year: selectedYear,
+        month: selectedMonth,
+        attendanceData: nextAttendanceData,
+        additionCountData: nextAdditionCountData,
+        additionListData: nextAdditionListData,
+      })
+
+      const result = await syncApi(payload)
+
+      if (!result?.success) {
+        throw new Error(
+          result?.message || result?.error || '月次データの保存に失敗しました。',
+        )
+      }
+
+      const counts = result?.data ?? {}
+      setSyncMessage(
+        `DB保存完了：出席 ${counts.attendance_count ?? payload.attendanceData.length}件 / ` +
+          `加算 ${counts.addition_count ?? payload.additionData.length}件 / ` +
+          `一覧 ${counts.record_count ?? payload.recordData.length}件`,
+      )
+
+      await fetchComparisonData()
+    } catch (syncFetchError) {
+      console.error(
+        '[ProfessionalSupportWindow] 月次DB同期エラー:',
+        syncFetchError,
+      )
+      setSyncError(
+        syncFetchError?.message ?? '月次データの保存に失敗しました。',
+      )
+    } finally {
+      setSyncing(false)
+    }
+  }, [
+    selectedFacilityId,
+    selectedYear,
+    selectedMonth,
+    webviewReady,
+    syncing,
+    fetchAttendance,
+    fetchAdditionCount,
+    fetchAdditionList,
+    fetchComparisonData,
+  ])
+
   const reloadAll = useCallback(() => {
     fetchAttendance()
     fetchAdditionCount()
     fetchAdditionList()
-  }, [fetchAttendance, fetchAdditionCount, fetchAdditionList])
+    fetchComparisonData()
+  }, [
+    fetchAttendance,
+    fetchAdditionCount,
+    fetchAdditionList,
+    fetchComparisonData,
+  ])
 
   useEffect(() => {
     const webview = sessionWebviewRef.current
@@ -254,6 +406,22 @@ export default function ProfessionalSupportWindow() {
     fetchAdditionList,
   ])
 
+  // DBの月次比較データはWebViewの状態に依存しない。
+  // 施設・年月が変わるたびに保存済みデータを取得する。
+  useEffect(() => {
+    if (!selectedFacilityId) {
+      setComparisonData([])
+      return
+    }
+
+    fetchComparisonData()
+  }, [
+    selectedFacilityId,
+    selectedYear,
+    selectedMonth,
+    fetchComparisonData,
+  ])
+
   const handleFacilityChange = useCallback((facilityId) => {
     setSelectedFacilityId(String(facilityId ?? ''))
   }, [])
@@ -297,8 +465,15 @@ export default function ProfessionalSupportWindow() {
             additionListLoading={additionListLoading}
             additionListError={additionListError}
             additionListData={additionListData}
+            comparisonLoading={comparisonLoading}
+            comparisonError={comparisonError}
+            comparisonData={comparisonData}
             targetDate={selectedTargetDate}
             onReload={reloadAll}
+            onSync={syncAllToDatabase}
+            syncing={syncing}
+            syncMessage={syncMessage}
+            syncError={syncError}
             webviewReady={webviewReady}
           />
         </div>

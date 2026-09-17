@@ -19,6 +19,8 @@ const upsertServiceRecord =
   require("./upsertServiceRecord");
 
 const getServiceRecordMonthly = require("./get_service_record_monthly");
+const syncProfessionalSupportMonth = require("./syncProfessionalSupportMonth");
+const getProfessionalSupportMonth = require("./getProfessionalSupportMonth");
 const getChildKadaiGraph = require("./get_child_kadai_graph");
 const upsertChildKadaiGraph = require("./upsert_child_kadai_graph");
 const deleteChildRecord = require("./delete_child_record");
@@ -68,6 +70,12 @@ module.exports = {
 
   getServiceRecordMonthlyHandler:
     getServiceRecordMonthly.handler,
+
+  syncProfessionalSupportMonthHandler:
+    syncProfessionalSupportMonth.handler,
+
+  getProfessionalSupportMonthHandler:
+    getProfessionalSupportMonth.handler,
 
   getChildKadaiGraphHandler:
     getChildKadaiGraph.handler,
