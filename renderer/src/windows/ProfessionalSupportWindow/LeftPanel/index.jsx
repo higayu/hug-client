@@ -27,7 +27,7 @@ export default function LeftPanel({
   syncError,
   webviewReady,
 }) {
-  const [activeTab, setActiveTab] = useState('attendance')
+  const [activeTab, setActiveTab] = useState('comparison')
 
   return (
     <section className="flex min-h-0 flex-1 flex-col">
@@ -44,7 +44,7 @@ export default function LeftPanel({
             disabled={!webviewReady || loading || syncing}
             className="rounded border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            再取得
+            hugから再取得
           </button>
 
           <button
@@ -104,6 +104,7 @@ export default function LeftPanel({
             loading={comparisonLoading}
             error={comparisonError}
             data={comparisonData}
+            records={additionListData?.records ?? []}
           />
         )}
       </div>

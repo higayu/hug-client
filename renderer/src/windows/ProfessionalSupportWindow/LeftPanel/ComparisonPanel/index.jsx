@@ -2,16 +2,21 @@ import { useMemo, useState } from 'react'
 
 import CalendarView from './CalendarView'
 import ChildView from './ChildView'
+import DateView from './DateView'
 import { buildCalendar, getIssueLabel } from './helpers'
 
 const TABS = [
   {
-    id: 'calendar',
-    label: 'カレンダー表示',
+    id: 'date',
+    label: '日付別表示',
   },
   {
     id: 'child',
     label: '児童別表示',
+  },
+  {
+    id: 'calendar',
+    label: 'カレンダー表示',
   },
 ]
 
@@ -19,8 +24,9 @@ export default function ComparisonPanel({
   loading,
   error,
   data,
+  records,
 }) {
-  const [activeTab, setActiveTab] = useState('calendar')
+  const [activeTab, setActiveTab] = useState('date')
 
   const rows = Array.isArray(data) ? data : []
 
@@ -75,15 +81,6 @@ export default function ComparisonPanel({
             {rows.length}件
           </span>
 
-          <span
-            className={`rounded-full px-3 py-1 font-semibold ${
-              issueCount > 0
-                ? 'bg-red-100 text-red-700'
-                : 'bg-green-100 text-green-700'
-            }`}
-          >
-            不整合 {issueCount}件
-          </span>
         </div>
       </div>
 
@@ -108,8 +105,13 @@ export default function ComparisonPanel({
         })}
       </div>
 
-      {activeTab === 'calendar' && <CalendarView data={rows} />}
-      {activeTab === 'child' && <ChildView data={rows} />}
+      {activeTab === 'calendar' && (
+        <CalendarView data={rows} records={records} />
+      )}
+      {activeTab === 'date' && <DateView data={rows} records={records} />}
+      {activeTab === 'child' && (
+        <ChildView data={rows} records={records} />
+      )}
 
       <div className="flex flex-wrap gap-2 text-[11px] text-gray-500">
         <span className="rounded bg-blue-100 px-2 py-1 text-blue-700">

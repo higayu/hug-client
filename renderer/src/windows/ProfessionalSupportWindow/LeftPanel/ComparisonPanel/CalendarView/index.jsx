@@ -1,101 +1,73 @@
+import { useMemo } from 'react'
+
 import {
   WEEKDAYS,
   buildCalendar,
-  getIssueClass,
-  getIssueLabel,
-  getStatusClass,
-  groupByAttendanceStatus,
   makeDateKey,
-  normalizeNumber,
 } from '../helpers'
+import {
+  buildRecordStatusMap,
+  getRecordStatus,
+  hasProfessionalSupportAddition,
+} from '../DateView/utils'
 
-function ComparisonChildRow({ row }) {
-  const hasAddition = normalizeNumber(row.has_addition) === 1
-  const hasRecord = normalizeNumber(row.has_record) === 1
-  const issueLabel = getIssueLabel(row)
-  const hasIssue = issueLabel !== 'OK'
+function ComparisonChildRow({ row, recordStatusMap }) {
+  const hasAddition = hasProfessionalSupportAddition(row)
+  const recordStatus = getRecordStatus({ row, recordStatusMap })
 
   return (
-    <li
-      className={`border-t border-gray-100 px-2 py-1.5 first:border-t-0 ${
-        hasIssue ? 'bg-red-50/40' : 'bg-white'
-      }`}
-    >
-      <div className="flex items-start justify-between gap-1">
-        <span className="min-w-0 flex-1 break-words font-medium text-gray-800">
-          {row.child_name || '-'}
-        </span>
-
-        <span
-          className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold ${getIssueClass(
-            row,
-          )}`}
-        >
-          {issueLabel}
-        </span>
+    <li className="border-t border-gray-100 bg-white px-2 py-1.5 first:border-t-0">
+      <div className="min-w-0 break-words font-medium text-gray-800">
+        {row.child_name || '-'}
       </div>
 
       <div className="mt-1 flex flex-wrap gap-1 text-[10px]">
         <span
           className={`rounded px-1.5 py-0.5 font-semibold ${
             hasAddition
-              ? 'bg-blue-100 text-blue-700'
+              ? 'bg-green-100 text-green-700'
               : 'bg-gray-100 text-gray-400'
           }`}
         >
-          加算 {hasAddition ? `${row.addition_count ?? 0}件` : 'なし'}
+          加算 {hasAddition ? '✓' : '-'}
         </span>
 
         <span
           className={`rounded px-1.5 py-0.5 font-semibold ${
-            hasRecord
+            recordStatus
               ? 'bg-indigo-100 text-indigo-700'
               : 'bg-gray-100 text-gray-400'
           }`}
         >
-          一覧 {hasRecord ? `${row.record_count ?? 0}件` : 'なし'}
+          一覧 {recordStatus || '-'}
         </span>
       </div>
     </li>
   )
 }
 
-function AttendanceGroup({ label, rows }) {
-  if (!rows.length) {
-    return null
-  }
-
-  return (
-    <section className="overflow-hidden rounded border border-gray-200 bg-white">
-      <div
-        className={`flex items-center justify-between px-2 py-1 text-[11px] font-semibold ${getStatusClass(
-          label,
-        )}`}
-      >
-        <span>{label}</span>
-        <span>{rows.length}人</span>
-      </div>
-
-      <ul>
-        {rows.map((row, index) => (
-          <ComparisonChildRow
-            key={`${row.facility_id}-${row.target_date}-${row.child_name_key || row.child_name}-${index}`}
-            row={row}
-          />
-        ))}
-      </ul>
-    </section>
-  )
-}
-
-export default function CalendarView({ data }) {
+export default function CalendarView({ data, records }) {
   const rows = Array.isArray(data) ? data : []
-  const calendar = buildCalendar(rows)
+
+  const attendedRows = useMemo(
+    () => rows.filter((row) => Number(row?.is_attended) === 1),
+    [rows],
+  )
+
+  const recordStatusMap = useMemo(
+    () => buildRecordStatusMap(records),
+    [records],
+  )
+
+  const calendar = useMemo(
+    () => buildCalendar(attendedRows),
+    [attendedRows],
+  )
 
   if (!calendar) {
     return (
       <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4 text-sm text-yellow-800">
-        月次比較データの日付を解析できませんでした。
+        出席データの日付を解析できませんでした。
       </div>
     )
   }
@@ -139,11 +111,7 @@ export default function CalendarView({ data }) {
             }
 
             const weekday = index % 7
-            const groups = groupByAttendanceStatus(cell.rows)
             const isToday = cell.dateKey === todayKey
-            const dayIssueCount = cell.rows.filter(
-              (row) => getIssueLabel(row) !== 'OK',
-            ).length
 
             return (
               <div
@@ -177,28 +145,43 @@ export default function CalendarView({ data }) {
                     </span>
                   </div>
 
-                  {dayIssueCount > 0 && (
-                    <span className="rounded bg-red-100 px-1.5 py-0.5 text-[10px] font-semibold text-red-700">
-                      不整合 {dayIssueCount}
+                  {cell.rows.length > 0 && (
+                    <span className="text-[10px] font-semibold text-gray-500">
+                      {cell.rows.length}名
                     </span>
                   )}
                 </div>
 
-                <div className="space-y-1.5 p-1.5">
+                <div className="p-1.5">
                   {cell.rows.length === 0 ? (
                     <div className="flex min-h-24 items-center justify-center text-[11px] text-gray-300">
-                      データなし
+                      出席なし
                     </div>
                   ) : (
-                    <>
-                      <AttendanceGroup label="出席" rows={groups.出席} />
-                      <AttendanceGroup label="欠席" rows={groups.欠席} />
-                      <AttendanceGroup
-                        label="欠席（加算なし）"
-                        rows={groups['欠席（加算なし）']}
-                      />
-                      <AttendanceGroup label="その他" rows={groups.その他} />
-                    </>
+                    <section className="overflow-hidden rounded border border-gray-200 bg-white">
+                      <div className="flex items-center justify-between bg-green-100 px-2 py-1 text-[11px] font-semibold text-green-700">
+                        <span>出席</span>
+                        <span>{cell.rows.length}人</span>
+                      </div>
+
+                      <ul>
+                        {cell.rows
+                          .slice()
+                          .sort((a, b) =>
+                            String(a?.child_name || '').localeCompare(
+                              String(b?.child_name || ''),
+                              'ja',
+                            ),
+                          )
+                          .map((row, rowIndex) => (
+                            <ComparisonChildRow
+                              key={`${row.facility_id}-${row.target_date}-${row.child_name_key || row.child_name}-${rowIndex}`}
+                              row={row}
+                              recordStatusMap={recordStatusMap}
+                            />
+                          ))}
+                      </ul>
+                    </section>
                   )}
                 </div>
               </div>
