@@ -40,6 +40,7 @@ async function getProfessionalSupportMonth(payload = {}) {
     message: "専門的支援の月次比較データを取得しました。",
     data: unwrapData(result),
     meta: {
+      ...(result?.meta ?? {}),
       authenticated: true,
       reauthenticated: result?.meta?.reauthenticated ?? false,
     },
