@@ -351,10 +351,23 @@ function registerLaravelAuthHandlers(
    */
   ipcMain.handle(
     "laravel:procedure:upsert-service-record",
-  "laravel:procedure:sync-professional-support-month",
-  "laravel:procedure:get-professional-support-month",
-    procedures
-      .upsertServiceRecordHandler
+    procedures.upsertServiceRecordHandler
+  );
+
+  /**
+   * 専門的支援 月次データ保存。
+   */
+  ipcMain.handle(
+    "laravel:procedure:sync-professional-support-month",
+    procedures.syncProfessionalSupportMonthHandler
+  );
+
+  /**
+   * 専門的支援 月次比較データ取得。
+   */
+  ipcMain.handle(
+    "laravel:procedure:get-professional-support-month",
+    procedures.getProfessionalSupportMonthHandler
   );
 
   /**

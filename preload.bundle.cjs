@@ -242,6 +242,16 @@ var require_electronApi = __commonJS({
         },
         laravel_admin_update_staff_login: (data) => ipcRenderer2.invoke("laravel:admin:update-staff-login", data),
         laravel_procedure_upsertServiceRecord: (data) => ipcRenderer2.invoke("laravel:procedure:upsert-service-record", data),
+        // ---- Professional Support 月次同期 ----
+        laravel_procedure_syncProfessionalSupportMonth: (data) => ipcRenderer2.invoke(
+          "laravel:procedure:sync-professional-support-month",
+          data
+        ),
+        // ---- Professional Support 月次比較取得 ----
+        laravel_procedure_getProfessionalSupportMonth: (data) => ipcRenderer2.invoke(
+          "laravel:procedure:get-professional-support-month",
+          data
+        ),
         laravel_procedure_getServiceRecordMonthly: (data) => ipcRenderer2.invoke(
           "laravel:procedure:get-service-record-monthly",
           data
