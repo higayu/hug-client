@@ -9,12 +9,12 @@ const DEFAULT_API_SETTINGS = {
   baseURL: 'http://192.168.1.229',
   laravelURL: 'https://dev-hug-banso.we-labo.com',
   facilityId: '3',
-  databaseType: 'mariadb',
+  databaseType: 'laravel',
   useAI: 'chatGPT',
 
   // 自動同期 / 自動切替
   autoSynchronization: 'true',
-  autoSwitching: 'true',
+  autoSwitching: 'false',
   professionalSupportSaveMode: 'draft',
 }
 

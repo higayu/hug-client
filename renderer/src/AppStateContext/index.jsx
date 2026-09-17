@@ -513,14 +513,7 @@ export function AppStateProvider({ children }) {
 
     const rawDbType = apiSettings.databaseType
 
-    const dbType =
-      rawDbType === 'mariadb' || rawDbType === 'MariaDB'
-        ? 'mariadb'
-        : rawDbType === 'laravel' || rawDbType === 'Laravel'
-          ? 'laravel'
-        : rawDbType === 'sqlite' || rawDbType === 'SQLite'
-          ? 'sqlite'
-          : null
+    const dbType = 'laravel'
 
     if (dbType && redux.DATABASE_TYPE !== dbType) {
       updates.DATABASE_TYPE = dbType
@@ -557,10 +550,7 @@ export function AppStateProvider({ children }) {
       updates.AUTO_SYNCHRONIZATION = autoSynchronization
     }
 
-    const autoSwitching = toBooleanFlag(
-      apiSettings.autoSwitching,
-      true
-    )
+    const autoSwitching = false
 
     if (redux.AUTO_SWITCHING !== autoSwitching) {
       updates.AUTO_SWITCHING = autoSwitching

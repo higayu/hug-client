@@ -111,7 +111,7 @@ export async function loadAllReload() {
     const apiSettings = iniData.apiSettings || {}
     const uiSettings = iniData.appSettings?.ui || {}
 
-    const databaseType = apiSettings.databaseType || 'sqlite'
+    const databaseType = 'laravel'
     const useAI = apiSettings.useAI || 'gemini'
     const facilityId =
       apiSettings.facilityId != null ? String(apiSettings.facilityId) : ''
@@ -125,10 +125,7 @@ export async function loadAllReload() {
       true
     )
 
-    const autoSwitching = toBooleanFlag(
-      apiSettings.autoSwitching,
-      true
-    )
+    const autoSwitching = false
 
     const closeButtonsVisible = toBooleanFlag(
       uiSettings.showCloseButtons,

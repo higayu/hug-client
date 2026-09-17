@@ -27,14 +27,7 @@ const toBooleanFlag = (value, defaultValue = true) => {
  * DATABASE_TYPE の表記を正規化する
  */
 const normalizeDatabaseType = (value) => {
-  if (value === "mariadb") return "mariadb";
-  if (value === "MariaDB") return "mariadb";
-  if (value === "sqlite") return "sqlite";
-  if (value === "SQLite") return "sqlite";
-  if (value === "laravel") return "laravel";
-  if (value === "Laravel") return "laravel";
-
-  return "sqlite";
+  return "laravel";
 };
 
 /**
@@ -147,10 +140,7 @@ export async function initializeAppState({
       true
     );
 
-    const autoSwitching = toBooleanFlag(
-      apiSettings.autoSwitching,
-      true
-    );
+    const autoSwitching = false;
 
     merged.DATABASE_TYPE = databaseType;
     merged.USE_AI = apiSettings.useAI || "gemini";

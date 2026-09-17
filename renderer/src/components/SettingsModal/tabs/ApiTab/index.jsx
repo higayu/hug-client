@@ -362,9 +362,7 @@ function ApiTab() {
           form.autoSynchronization
         ),
 
-        autoSwitching: String(
-          form.autoSwitching
-        ),
+        autoSwitching: 'false',
 
         professionalSupportSaveMode:
           form.professionalSupportSaveMode,
@@ -425,8 +423,7 @@ function ApiTab() {
         AUTO_SYNCHRONIZATION:
           form.autoSynchronization,
 
-        AUTO_SWITCHING:
-          form.autoSwitching,
+        AUTO_SWITCHING: false,
 
         DEBUG_FLG: form.debugFlg,  // ← 追加
       })
@@ -635,13 +632,13 @@ function ApiTab() {
             onChange={handleInputChange}
             className="max-w-[300px] flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm transition-all"
           >
-            <option value="sqlite">
+            {/* <option value="sqlite">
               SQLite
             </option>
 
             <option value="mariadb">
               MariaDB
-            </option>
+            </option> */}
 
             <option value="laravel">
               Laravel
@@ -760,31 +757,6 @@ function ApiTab() {
         </div>
 
 
-          <div className="mb-3 flex items-center py-2">
-            <span className="min-w-[120px] font-medium text-gray-700">
-              自動切替:
-            </span>
-
-            <label
-              htmlFor="api-auto-switching"
-              className="flex items-center gap-2 text-sm text-gray-700"
-            >
-              <input
-                type="checkbox"
-                id="api-auto-switching"
-                name="autoSwitching"
-                checked={form.autoSwitching}
-                onChange={handleInputChange}
-                className="h-4 w-4"
-              />
-
-              <span>有効にする</span>
-
-              <span>
-                ※吉島サーバに接続できる場合に自動で切り替わります
-              </span>
-            </label>
-          </div>
         </>
         )}
 

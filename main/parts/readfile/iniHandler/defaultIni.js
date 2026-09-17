@@ -44,11 +44,11 @@ const DEFAULT_INI = {
       baseURL: "http://192.168.1.229",
       laravelURL: "https://dev-hug-banso.we-labo.com",
       facilityId: "3",
-      databaseType: "mariadb",
+      databaseType: "laravel",
       useAI: "chatGPT",
       autoAttendanceFetch: "false",
       autoSynchronization: "true",
-      autoSwitching: "true",
+      autoSwitching: "false",
       professionalSupportSaveMode: "draft",
       debugFlg: "false"
     }

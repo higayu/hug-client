@@ -29,17 +29,7 @@ export const isNotDeleted = (value) => {
 }
 
 export const normalizeDatabaseType = (value) => {
-  const normalized = String(value ?? '').toLowerCase()
-
-  if (normalized === 'mariadb') {
-    return 'mariadb'
-  }
-
-  if (normalized === 'laravel') {
-    return 'laravel'
-  }
-
-  return 'sqlite'
+  return 'laravel'
 }
 
 export const createFormState = ({
@@ -62,7 +52,7 @@ export const createFormState = ({
     databaseType: normalizeDatabaseType(
       apiSettings?.databaseType ??
       appState?.DATABASE_TYPE ??
-      'sqlite'
+      'laravel'
     ),
 
     useAI: String(
@@ -82,11 +72,7 @@ export const createFormState = ({
       true
     ),
 
-    autoSwitching: toBoolean(
-      apiSettings?.autoSwitching ??
-      appState?.AUTO_SWITCHING,
-      true
-    ),
+    autoSwitching: false,
 
     professionalSupportSaveMode:
       apiSettings?.professionalSupportSaveMode === 'created'

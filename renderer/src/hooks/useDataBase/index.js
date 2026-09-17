@@ -80,7 +80,7 @@ export function useDataBase({ autoLoad = false } = {}) {
   const dispatch = useDispatch()
 
   const databaseTypeFromRedux = useSelector(selectDatabaseType)
-  const databaseType = databaseTypeFromRedux || "mariadb"
+  const databaseType = "laravel"
 
   // =============================================================
   // 取得制御用 ref
@@ -198,8 +198,7 @@ export function useDataBase({ autoLoad = false } = {}) {
           return false
         }
 
-        let resolvedDatabaseType =
-          forceDatabaseType || databaseType || "mariadb"
+        let resolvedDatabaseType = "laravel"
 
         let apiToUse = resolveApiByDatabaseType(
           resolvedDatabaseType
@@ -236,9 +235,7 @@ export function useDataBase({ autoLoad = false } = {}) {
         // Laravel → MariaDB → SQLite
         // 接続できた時点で確認を終了し、そのDB/APIを使用する。
         // =============================================================
-        const autoSwitchingEnabled = useAutoSwitching
-          ? getAutoSwitchingEnabledForUseDataBase()
-          : false
+        const autoSwitchingEnabled = false
 
         if (autoSwitchingEnabled) {
           console.log(

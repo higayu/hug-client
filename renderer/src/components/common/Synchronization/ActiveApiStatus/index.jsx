@@ -160,7 +160,7 @@ const ActiveApiStatus = ({ className = '' }) => {
         : 'DATABASE_TYPE がまだ確定していません',
     `現在: ${label}`,
     `Redux DATABASE_TYPE: ${databaseType}`,
-    `操作: ${nextLabel}`,
+    '現在は Laravel API のみ使用します',
     lastMessage ? `結果: ${lastMessage}` : null,
   ]
     .filter(Boolean)
@@ -169,8 +169,7 @@ const ActiveApiStatus = ({ className = '' }) => {
   return (
     <button
       type="button"
-      onClick={handleToggleDatabaseType}
-      disabled={switching}
+      disabled
       className={[
         'inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs leading-none transition',
         'disabled:cursor-not-allowed disabled:opacity-70',
