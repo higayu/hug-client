@@ -68,6 +68,9 @@ export default function ProfessionalSupportWindow() {
   const [comparisonData, setComparisonData] = useState([])
   const [comparisonLoading, setComparisonLoading] = useState(false)
   const [comparisonError, setComparisonError] = useState('')
+  const [syncStatusChecked, setSyncStatusChecked] = useState(false)
+  const [isMonthSynced, setIsMonthSynced] = useState(false)
+  const autoSyncAttemptedKeyRef = useRef('')
 
 
   const fetchAttendance = useCallback(async () => {
@@ -218,7 +221,9 @@ export default function ProfessionalSupportWindow() {
     if (!selectedFacilityId) {
       setComparisonData([])
       setComparisonError('施設を選択してください。')
-      return []
+      setIsMonthSynced(false)
+      setSyncStatusChecked(true)
+      return { rows: [], isCompleted: false }
     }
 
     const getApi =
@@ -227,11 +232,14 @@ export default function ProfessionalSupportWindow() {
     if (typeof getApi !== 'function') {
       setComparisonData([])
       setComparisonError('月次比較取得APIがpreloadから公開されていません。')
-      return []
+      setIsMonthSynced(false)
+      setSyncStatusChecked(true)
+      return { rows: [], isCompleted: false }
     }
 
     setComparisonLoading(true)
     setComparisonError('')
+    setSyncStatusChecked(false)
 
     try {
       const result = await getApi({
@@ -252,18 +260,34 @@ export default function ProfessionalSupportWindow() {
           ? result.data.data
           : []
 
+      const isCompleted = Boolean(
+        result?.meta?.isCompleted ?? result?.data?.meta?.isCompleted,
+      )
+
       setComparisonData(rows)
-      return rows
+      setIsMonthSynced(isCompleted)
+      setSyncStatusChecked(true)
+
+      // 同期済み月ではHUGへの自動リクエストを行わない。
+      if (isCompleted) {
+        setLoading(false)
+        setAdditionCountLoading(false)
+        setAdditionListLoading(false)
+      }
+
+      return { rows, isCompleted }
     } catch (comparisonFetchError) {
       console.error(
         '[ProfessionalSupportWindow] 月次比較データ取得エラー:',
         comparisonFetchError,
       )
       setComparisonData([])
+      setIsMonthSynced(false)
+      setSyncStatusChecked(true)
       setComparisonError(
         comparisonFetchError?.message ?? '月次比較データの取得に失敗しました。',
       )
-      return []
+      return { rows: [], isCompleted: false }
     } finally {
       setComparisonLoading(false)
     }
@@ -272,6 +296,7 @@ export default function ProfessionalSupportWindow() {
     selectedYear,
     selectedMonth,
   ])
+
 
   const syncAllToDatabase = useCallback(async () => {
     if (!selectedFacilityId || !webviewReady || syncing) {
@@ -385,32 +410,23 @@ export default function ProfessionalSupportWindow() {
     }
   }, [])
 
-  // 初回は MainWindow から渡された施設IDで取得。
-  // Headerの施設・年月を変更すると共通条件が変わるため3タブすべて再取得される。
+  // 施設・年月が変わったら、HUGより先にDB同期状態を確認する。
   useEffect(() => {
-    if (!webviewReady || !selectedFacilityId) {
-      return
-    }
-
+    autoSyncAttemptedKeyRef.current = ''
     setAttendanceData(null)
     setAdditionCountData(null)
     setAdditionListData(null)
-    fetchAttendance()
-    fetchAdditionCount()
-    fetchAdditionList()
-  }, [
-    webviewReady,
-    selectedFacilityId,
-    fetchAttendance,
-    fetchAdditionCount,
-    fetchAdditionList,
-  ])
+    setError('')
+    setAdditionCountError('')
+    setAdditionListError('')
+    setSyncMessage('')
+    setSyncError('')
+    setSyncStatusChecked(false)
+    setIsMonthSynced(false)
 
-  // DBの月次比較データはWebViewの状態に依存しない。
-  // 施設・年月が変わるたびに保存済みデータを取得する。
-  useEffect(() => {
     if (!selectedFacilityId) {
       setComparisonData([])
+      setSyncStatusChecked(true)
       return
     }
 
@@ -420,6 +436,42 @@ export default function ProfessionalSupportWindow() {
     selectedYear,
     selectedMonth,
     fetchComparisonData,
+  ])
+
+  // professional_support_syncs に同期済みレコードが無い月だけ、
+  // WebViewから3種類を取得して1回だけ自動保存する。
+  useEffect(() => {
+    if (
+      !selectedFacilityId ||
+      !webviewReady ||
+      !syncStatusChecked ||
+      isMonthSynced ||
+      Boolean(comparisonError) ||
+      syncing ||
+      comparisonLoading
+    ) {
+      return
+    }
+
+    const syncKey = `${selectedFacilityId}-${selectedYear}-${selectedMonth}`
+
+    if (autoSyncAttemptedKeyRef.current === syncKey) {
+      return
+    }
+
+    autoSyncAttemptedKeyRef.current = syncKey
+    syncAllToDatabase()
+  }, [
+    selectedFacilityId,
+    selectedYear,
+    selectedMonth,
+    webviewReady,
+    syncStatusChecked,
+    isMonthSynced,
+    comparisonError,
+    syncing,
+    comparisonLoading,
+    syncAllToDatabase,
   ])
 
   const handleFacilityChange = useCallback((facilityId) => {
