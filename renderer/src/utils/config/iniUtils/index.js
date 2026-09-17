@@ -15,6 +15,7 @@ const DEFAULT_API_SETTINGS = {
   // 自動同期 / 自動切替
   autoSynchronization: 'true',
   autoSwitching: 'true',
+  professionalSupportSaveMode: 'draft',
 }
 
 // 必須キーが欠けている場合にデフォルトで補完

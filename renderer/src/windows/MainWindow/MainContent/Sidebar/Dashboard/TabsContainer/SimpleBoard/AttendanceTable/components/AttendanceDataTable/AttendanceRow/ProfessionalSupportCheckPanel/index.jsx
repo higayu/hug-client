@@ -318,7 +318,11 @@ export default function ProfessionalSupportCheckPanel({
       ? 'rotate-0'
       : 'rotate-180'
 
-  const { appState, FACILITY_ID } = useAppState()
+  const { appState, FACILITY_ID, iniState } = useAppState()
+  const professionalSupportSaveMode =
+    iniState?.apiSettings?.professionalSupportSaveMode === 'created'
+      ? 'created'
+      : 'draft'
 
   const childId = selectedChildId ? String(selectedChildId) : ''
   const dateStr = currentYmd || ''
@@ -571,9 +575,13 @@ export default function ProfessionalSupportCheckPanel({
   }) => {
     if (linkedDisabled) return
 
+    const saveLabel = professionalSupportSaveMode === 'created'
+      ? '保存'
+      : '下書き保存'
+
     setLinkedLoading(true)
     setPostModalError('')
-    setAction('working', '専門的支援 下書きPOST中')
+    setAction('working', `専門的支援 ${saveLabel}POST中`)
 
     try {
       const supportResult = await postProfessionalSupportDraft({
@@ -585,15 +593,16 @@ export default function ProfessionalSupportCheckPanel({
         staffId: appState?.STAFF_ID,
         title,
         contents,
+        saveMode: professionalSupportSaveMode,
       })
 
       if (!supportResult?.ok || supportResult?.saved !== true) {
         throw new Error(
-          supportResult?.error || '専門的支援の下書き保存に失敗しました',
+          supportResult?.error || `専門的支援の${saveLabel}に失敗しました`,
         )
       }
 
-      setAction('working', '下書きOK → 専門＋登録中')
+      setAction('working', `${saveLabel}OK → 専門＋登録中`)
 
       const plusResult = await addProfessionalSupport({
         childId,
@@ -635,7 +644,10 @@ export default function ProfessionalSupportCheckPanel({
     if (!childId) return '児童が選択されていません'
     if (!dateStr) return '日付が指定されていません'
     if (!resolvedFacilityId) return '施設が指定されていません'
-    return '入力モーダルを開き、下書きをPOSTした後に専門＋を自動登録します'
+    const saveLabel = professionalSupportSaveMode === 'created'
+      ? '保存'
+      : '下書き保存'
+    return `入力モーダルを開き、${saveLabel}後に専門＋を自動登録します`
   }
 
   const actionClass = {
@@ -829,6 +841,7 @@ export default function ProfessionalSupportCheckPanel({
         initialEndTime={leaveTime || ''}
         initialContents={postModalInitialContents}
         errorMessage={postModalError}
+        saveMode={professionalSupportSaveMode}
         onCancel={closeLinkedModal}
         onSubmit={runLinked}
       />

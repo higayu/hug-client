@@ -49,6 +49,7 @@ const DEFAULT_INI = {
       autoAttendanceFetch: "false",
       autoSynchronization: "true",
       autoSwitching: "true",
+      professionalSupportSaveMode: "draft",
       debugFlg: "false"
     }
   };

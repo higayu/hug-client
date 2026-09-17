@@ -325,8 +325,12 @@ export default function ProfessionalSupportCheckPanel2({
   const currentYmdFromStore = useSelector(selectCurrentYmd)
   const childIdFromStore = useSelector(selectSpaceChildId(effectiveSpaceId))
 
-  const { appState, chilledSpaces, CURRENT_YMD, FACILITY_ID } = useAppState()
+  const { appState, chilledSpaces, CURRENT_YMD, FACILITY_ID, iniState } = useAppState()
   const currentSpace = chilledSpaces?.[effectiveSpaceId] ?? {}
+  const professionalSupportSaveMode =
+    iniState?.apiSettings?.professionalSupportSaveMode === 'created'
+      ? 'created'
+      : 'draft'
 
   const childId = childIdFromStore ?? currentSpace.childId ?? ''
   const dateStr =
@@ -653,7 +657,10 @@ export default function ProfessionalSupportCheckPanel2({
     if (!childId) return '児童が選択されていません'
     if (!dateStr) return '日付が指定されていません'
     if (!resolvedFacilityId) return '施設が指定されていません'
-    return '入力モーダルを開き、下書き保存または保存後に専門＋を自動登録します'
+    const saveLabel = professionalSupportSaveMode === 'created'
+      ? '保存'
+      : '下書き保存'
+    return `入力モーダルを開き、${saveLabel}後に専門＋を自動登録します`
   }
 
   const actionClass = {
@@ -851,6 +858,7 @@ export default function ProfessionalSupportCheckPanel2({
         initialEndTime={currentSpace?.selectedChildColumn6 || ''}
         initialContents={postModalInitialContents}
         errorMessage={postModalError}
+        saveMode={professionalSupportSaveMode}
         onCancel={closeLinkedModal}
         onSubmit={runLinked}
       />

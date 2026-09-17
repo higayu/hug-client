@@ -366,6 +366,9 @@ function ApiTab() {
           form.autoSwitching
         ),
 
+        professionalSupportSaveMode:
+          form.professionalSupportSaveMode,
+
         debugFlg: String(form.debugFlg),  // ← 追加
       }
 
@@ -706,6 +709,26 @@ function ApiTab() {
             />
             <span>有効にする</span>
           </label>
+        </div>
+
+        <div className="mb-3 flex items-center py-2">
+          <label
+            htmlFor="api-professional-support-save-mode"
+            className="min-w-[120px] font-medium text-gray-700"
+          >
+            専門的支援登録:
+          </label>
+
+          <select
+            id="api-professional-support-save-mode"
+            name="professionalSupportSaveMode"
+            value={form.professionalSupportSaveMode}
+            onChange={handleInputChange}
+            className="max-w-[300px] flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm transition-all"
+          >
+            <option value="draft">下書き保存</option>
+            <option value="created">保存</option>
+          </select>
         </div>
 
         {form.debugFlg && (

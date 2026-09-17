@@ -12,6 +12,7 @@ export default function ProfessionalSupportPostModal({
   initialEndTime = '',
   initialContents = '',
   errorMessage = '',
+  saveMode = 'draft',
   onCancel,
   onSubmit,
 }) {
@@ -71,7 +72,7 @@ export default function ProfessionalSupportPostModal({
       >
         <div className="mb-3 flex items-center justify-between gap-3">
           <div>
-            <h2 className="text-base font-bold">専門的支援 下書き登録</h2>
+            <h2 className="text-base font-bold">専門的支援 登録</h2>
             <p className="mt-0.5 text-xs text-gray-400">
               HUGの編集画面は開かず、入力内容を直接POSTします。
             </p>
@@ -175,7 +176,9 @@ export default function ProfessionalSupportPostModal({
             disabled={submitting || !date || !contents.trim()}
             className="rounded bg-purple-600 px-4 py-2 text-sm font-semibold hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {submitting ? '送信中...' : '下書き保存して専門＋を登録'}
+            {submitting
+              ? '送信中...'
+              : `${saveMode === 'created' ? '保存' : '下書き保存'}して専門＋を登録`}
           </button>
         </div>
       </form>

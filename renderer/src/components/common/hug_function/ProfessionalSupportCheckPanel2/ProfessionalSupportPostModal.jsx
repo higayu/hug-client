@@ -12,6 +12,7 @@ export default function ProfessionalSupportPostModal({
   initialEndTime = '',
   initialContents = '',
   errorMessage = '',
+  saveMode = 'draft',
   onCancel,
   onSubmit,
 }) {
@@ -50,7 +51,9 @@ export default function ProfessionalSupportPostModal({
 
   if (!open) return null
 
-  const submitWithMode = (saveMode) => {
+  const saveLabel = saveMode === 'created' ? '保存' : '下書き保存'
+
+  const submitWithMode = () => {
     if (submitting || !date || !contents.trim()) return
 
     onSubmit?.(
@@ -178,20 +181,11 @@ export default function ProfessionalSupportPostModal({
           </button>
           <button
             type="button"
-            onClick={() => submitWithMode('draft')}
-            disabled={submitting || !date || !contents.trim()}
-            className="rounded bg-slate-600 px-4 py-2 text-sm font-semibold hover:bg-slate-500 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {submitting ? '送信中...' : '下書き保存して専門＋を登録'}
-          </button>
-
-          <button
-            type="button"
-            onClick={() => submitWithMode('created')}
+            onClick={submitWithMode}
             disabled={submitting || !date || !contents.trim()}
             className="rounded bg-purple-600 px-4 py-2 text-sm font-semibold hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {submitting ? '送信中...' : '保存して専門＋を登録'}
+            {submitting ? '送信中...' : `${saveLabel}して専門＋を登録`}
           </button>
         </div>
       </form>

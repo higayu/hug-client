@@ -88,6 +88,11 @@ export const createFormState = ({
       true
     ),
 
+    professionalSupportSaveMode:
+      apiSettings?.professionalSupportSaveMode === 'created'
+        ? 'created'
+        : 'draft',
+
     // 🔥 debugFlg を追加（これが抜けていた）
     debugFlg: toBoolean(
       apiSettings?.debugFlg ??
