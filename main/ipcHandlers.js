@@ -10,6 +10,7 @@ const { handleConfigAccess } = require("./parts/readfile/configHandler");
 const { handleIniAccess } = require("./parts/readfile/iniHandler");
 const { registerPlanWindows } = require("./windowHandlers/planWindows");
 const { handleProfessionalSupportSearch } = require("./windowHandlers/handleProfessionalSupportSearch");
+const { registerInformationWindow } = require("./windowHandlers/informationWindow");
 
 const { resolvePreloadPath } = require("./windowHandlers/windowManager");
 
@@ -23,6 +24,7 @@ function registerIpcHandlers(mainWindow, tempNoteHandler) {
     handleIniAccess(ipcMain);
     registerPlanWindows(ipcMain);
     handleProfessionalSupportSearch(ipcMain);
+    registerInformationWindow(ipcMain);
 
     // =======================================
     // 📋 Clipboard 書き込み IPC ハンドラ

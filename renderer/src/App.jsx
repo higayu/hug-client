@@ -7,6 +7,7 @@ import { isHugLoggedIn } from '@/hooks/useHugCache/isHugLoggedIn.js'
 const ProfessionalSupportWindow = lazy(
   () => import('@/windows/ProfessionalSupportWindow')
 )
+const InformationWindow = lazy(() => import('@/windows/InformationWindow'))
 
 function resolveWindowType() {
   const params = new URLSearchParams(window.location.search)
@@ -16,6 +17,8 @@ function resolveWindowType() {
 const WINDOW_COMPONENTS = {
   main: MainWindow,
   professionalSupport: ProfessionalSupportWindow,
+  information: InformationWindow,
+  informationWindow: InformationWindow,
 }
 
 let didRunStartupAutoLogin = false

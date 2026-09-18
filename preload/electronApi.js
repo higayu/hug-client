@@ -131,6 +131,26 @@ function createElectronApi(ipcRenderer, isDebugMode) {
         params,
       ),
 
+    // ---- Q&A・障害対応ナレッジ ----
+    laravel_troubleshootingKnowledge_getAll: (params = {}) =>
+      ipcRenderer.invoke(
+        "laravel:troubleshooting-knowledge:list",
+        params,
+      ),
+
+    laravel_troubleshootingKnowledge_get: (id) =>
+      ipcRenderer.invoke(
+        "laravel:troubleshooting-knowledge:get",
+        id,
+      ),
+
+    laravel_troubleshootingKnowledge_update: (id, data = {}) =>
+      ipcRenderer.invoke(
+        "laravel:troubleshooting-knowledge:update",
+        id,
+        data,
+      ),
+
     // ---- Laravel 認証 ----
     /**
      * config.jsonの
@@ -386,6 +406,9 @@ function createElectronApi(ipcRenderer, isDebugMode) {
       }),
 
     // ---- UI / Window ----
+    openInformationWindow: () =>
+      ipcRenderer.invoke("open-information-window"),
+
     clearWebviewCache: (wcId) =>
       ipcRenderer.invoke("clear-webview-cache", wcId),
 

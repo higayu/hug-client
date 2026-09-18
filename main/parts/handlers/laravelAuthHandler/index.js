@@ -9,6 +9,7 @@ const children = require("./children");
 const aiRecordEditer = require("./aiRecordEditer");
 const webAutomationRules = require("./webAutomationRules");
 const webAutomationFlows = require("./webAutomationFlows");
+const troubleshootingKnowledge = require("./troubleshootingKnowledge");
 const laravelApiClient = require("../../../../src/laravelApiClient");
 
 /**
@@ -40,6 +41,14 @@ const IPC_CHANNELS = [
 
   "laravel:web-automation-flows:list",
   "laravel:web-automation-flows:get",
+
+  // ============================================================
+  // Q&A・障害対応ナレッジ
+  // ============================================================
+
+  "laravel:troubleshooting-knowledge:list",
+  "laravel:troubleshooting-knowledge:get",
+  "laravel:troubleshooting-knowledge:update",
 
   // ============================================================
   // 一時メモ
@@ -261,6 +270,25 @@ function registerLaravelAuthHandlers(
   ipcMain.handle(
     "laravel:web-automation-flows:get",
     webAutomationFlows.getHandler
+  );
+
+  // ============================================================
+  // Q&A・障害対応ナレッジ
+  // ============================================================
+
+  ipcMain.handle(
+    "laravel:troubleshooting-knowledge:list",
+    troubleshootingKnowledge.listHandler
+  );
+
+  ipcMain.handle(
+    "laravel:troubleshooting-knowledge:get",
+    troubleshootingKnowledge.getHandler
+  );
+
+  ipcMain.handle(
+    "laravel:troubleshooting-knowledge:update",
+    troubleshootingKnowledge.updateHandler
   );
 
   // ============================================================

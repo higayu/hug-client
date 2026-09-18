@@ -200,6 +200,20 @@ var require_electronApi = __commonJS({
           flowKey,
           params
         ),
+        // ---- Q&A・障害対応ナレッジ ----
+        laravel_troubleshootingKnowledge_getAll: (params = {}) => ipcRenderer2.invoke(
+          "laravel:troubleshooting-knowledge:list",
+          params
+        ),
+        laravel_troubleshootingKnowledge_get: (id) => ipcRenderer2.invoke(
+          "laravel:troubleshooting-knowledge:get",
+          id
+        ),
+        laravel_troubleshootingKnowledge_update: (id, data = {}) => ipcRenderer2.invoke(
+          "laravel:troubleshooting-knowledge:update",
+          id,
+          data
+        ),
         // ---- Laravel 認証 ----
         /**
          * config.jsonの
@@ -358,6 +372,7 @@ var require_electronApi = __commonJS({
           day_of_week_id
         }),
         // ---- UI / Window ----
+        openInformationWindow: () => ipcRenderer2.invoke("open-information-window"),
         clearWebviewCache: (wcId) => ipcRenderer2.invoke("clear-webview-cache", wcId),
         // ✅ 対策: window.confirm() の代わりに使う非ブロッキングな確認ダイアログ
         //          (renderer側JSスレッドを止めず、常にmainWindowの前面に表示される)

@@ -15,6 +15,7 @@ import ToolsListNavi from './ToolsListNavi';
 import AutoLoginButton from './AutoLoginButton';
 import SettingsEditButton from './SettingsEditButton';
 import ModeNavi from "./ModeNavi";
+import InformationButton from './InformationButton';
 
 import { useAppState } from '@/AppStateContext';
 
@@ -95,6 +96,9 @@ export default function Toolbar() {
 
           {/* 右側グループ */}
           <div className="flex flex-row items-center gap-2">
+            {/* Q&A・障害対応 */}
+            <InformationButton />
+
             {/* 専門的支援計画 */}
             <SupportPlanNavigation />
 
