@@ -223,6 +223,9 @@ function createElectronApi(ipcRenderer, isDebugMode) {
     laravel_procedure_upsertServiceRecord: (data) =>
       ipcRenderer.invoke("laravel:procedure:upsert-service-record", data),
 
+    laravel_procedure_upsertServiceRecordsBulk: (data) =>
+      ipcRenderer.invoke("laravel:procedure:upsert-service-records-bulk", data),
+
     // ---- Professional Support 月次同期 ----
     laravel_procedure_syncProfessionalSupportMonth: (data) =>
       ipcRenderer.invoke(
@@ -507,6 +510,9 @@ function createElectronApi(ipcRenderer, isDebugMode) {
 
     laravel_service_record_upsert: (data) =>
       ipcRenderer.invoke("laravel:procedure:upsert-service-record", data),
+
+    laravel_service_record_bulk_upsert: (data) =>
+      ipcRenderer.invoke("laravel:procedure:upsert-service-records-bulk", data),
 
     laravel_service_record_monthly: (data) =>
       ipcRenderer.invoke(

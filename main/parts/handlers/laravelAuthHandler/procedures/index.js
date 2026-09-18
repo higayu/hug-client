@@ -18,6 +18,9 @@ const updateStaff =
 const upsertServiceRecord =
   require("./upsertServiceRecord");
 
+const upsertServiceRecordsBulk =
+  require("./upsertServiceRecordsBulk");
+
 const getServiceRecordMonthly = require("./get_service_record_monthly");
 const syncProfessionalSupportMonth = require("./syncProfessionalSupportMonth");
 const getProfessionalSupportMonth = require("./getProfessionalSupportMonth");
@@ -67,6 +70,9 @@ module.exports = {
 
   upsertServiceRecordHandler:
     upsertServiceRecord.handler,
+
+  upsertServiceRecordsBulkHandler:
+    upsertServiceRecordsBulk.handler,
 
   getServiceRecordMonthlyHandler:
     getServiceRecordMonthly.handler,
