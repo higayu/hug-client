@@ -69,6 +69,7 @@ function ProfessionalSupportWindowContent() {
   const [comparisonError, setComparisonError] = useState('')
   const [syncStatusChecked, setSyncStatusChecked] = useState(false)
   const [isMonthSynced, setIsMonthSynced] = useState(false)
+  const [lastSyncedAt, setLastSyncedAt] = useState(null)
 
 
   const fetchComparisonData = useCallback(async () => {
@@ -79,6 +80,7 @@ function ProfessionalSupportWindowContent() {
       setAdditionListData(null)
       setComparisonError('施設を選択してください。')
       setIsMonthSynced(false)
+      setLastSyncedAt(null)
       setSyncStatusChecked(true)
       return { isCompleted: false }
     }
@@ -90,6 +92,7 @@ function ProfessionalSupportWindowContent() {
       setComparisonData([])
       setComparisonError('月次比較取得APIがpreloadから公開されていません。')
       setIsMonthSynced(false)
+      setLastSyncedAt(null)
       setSyncStatusChecked(true)
       return { isCompleted: false }
     }
@@ -105,13 +108,27 @@ function ProfessionalSupportWindowContent() {
         month: Number(selectedMonth),
       })
 
-      if (!result?.success) {
+      // Electron 側で Laravel のレスポンスがそのまま返る場合と、
+      // data 配下に1段ラップされて返る場合の両方に対応する。
+      const apiResult =
+        result?.data &&
+        typeof result.data === 'object' &&
+        Object.prototype.hasOwnProperty.call(result.data, 'success')
+          ? result.data
+          : result
+
+      if (!apiResult?.success) {
         throw new Error(
-          result?.message || result?.error || '月次比較データの取得に失敗しました。',
+          apiResult?.message ||
+            apiResult?.error ||
+            result?.message ||
+            result?.error ||
+            '月次比較データの取得に失敗しました。',
         )
       }
 
-      const responseData = result?.data ?? {}
+      const responseData = apiResult?.data ?? {}
+      const responseMeta = apiResult?.meta ?? responseData?.meta ?? {}
 
       const comparisonRows = Array.isArray(responseData?.comparison)
         ? responseData.comparison
@@ -126,7 +143,17 @@ function ProfessionalSupportWindowContent() {
         ? responseData.records
         : []
 
-      const completedValue = result?.meta?.isCompleted
+      const completedValue =
+        responseMeta?.isCompleted ?? responseMeta?.is_completed
+
+      const syncedAt =
+        responseMeta?.syncedAt ??
+        responseMeta?.synced_at ??
+        responseData?.sync?.syncedAt ??
+        responseData?.sync?.synced_at ??
+        responseData?.syncedAt ??
+        responseData?.synced_at ??
+        null
       const hasStoredData =
         comparisonRows.length > 0 ||
         attendanceRows.length > 0 ||
@@ -141,6 +168,7 @@ function ProfessionalSupportWindowContent() {
 
       setComparisonData(comparisonRows)
       setIsMonthSynced(isCompleted)
+      setLastSyncedAt(syncedAt)
 
       if (isCompleted) {
         setAttendanceData(
@@ -181,6 +209,7 @@ function ProfessionalSupportWindowContent() {
         attendanceRows,
         additionCountRows,
         recordRows,
+        syncedAt,
       }
     } catch (comparisonFetchError) {
       console.error(
@@ -189,6 +218,7 @@ function ProfessionalSupportWindowContent() {
       )
       setComparisonData([])
       setIsMonthSynced(false)
+      setLastSyncedAt(null)
       setSyncStatusChecked(true)
       setComparisonError(
         comparisonFetchError?.message ?? '月次比較データの取得に失敗しました。',
@@ -237,6 +267,7 @@ function ProfessionalSupportWindowContent() {
     setAdditionListError('')
     setSyncStatusChecked(false)
     setIsMonthSynced(false)
+    setLastSyncedAt(null)
 
     if (!selectedFacilityId) {
       setComparisonData([])
@@ -336,6 +367,7 @@ const leftContent = (
         month={selectedMonth}
         syncStatusChecked={syncStatusChecked}
         isMonthSynced={isMonthSynced}
+        lastSyncedAt={lastSyncedAt}
         onSyncFetchStart={handleSyncFetchStart}
         onSyncFetched={handleSyncFetched}
         onSyncFetchFailed={handleSyncFetchFailed}

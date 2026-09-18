@@ -32,6 +32,7 @@ export default function LeftPanel({
   month,
   syncStatusChecked,
   isMonthSynced,
+  lastSyncedAt,
   onSyncFetchStart,
   onSyncFetched,
   onSyncFetchFailed,
@@ -91,6 +92,7 @@ export default function LeftPanel({
           progressText={progressText}
           syncMessage={syncMessage}
           syncError={syncError}
+          lastSyncedAt={lastSyncedAt}
         />
       </div>
 

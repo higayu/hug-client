@@ -1,3 +1,30 @@
+function formatSyncedAt(value) {
+  if (!value) {
+    return '未実行'
+  }
+
+  // MariaDB の `YYYY-MM-DD HH:mm:ss` 形式も Date で扱える形に寄せる。
+  const normalizedValue =
+    typeof value === 'string' && /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/.test(value)
+      ? value.replace(' ', 'T')
+      : value
+
+  const date = new Date(normalizedValue)
+
+  if (Number.isNaN(date.getTime())) {
+    return String(value)
+  }
+
+  return new Intl.DateTimeFormat('ja-JP', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).format(date)
+}
+
 export default function ProfessionalSupportSyncButton({
   onClick,
   disabled,
@@ -5,10 +32,11 @@ export default function ProfessionalSupportSyncButton({
   progressText,
   syncMessage,
   syncError,
+  lastSyncedAt,
 }) {
   return (
     <div>
-      <div className="flex items-center justify-start gap-2">
+      <div className="flex items-center justify-start gap-3">
         <button
           type="button"
           onClick={onClick}
@@ -19,16 +47,23 @@ export default function ProfessionalSupportSyncButton({
             ? progressText || 'HUGから取得・DB保存中...'
             : 'HUGから再取得してDBへ保存'}
         </button>
+
+        <div className="whitespace-nowrap text-xs text-gray-500">
+          最終実行：
+          <span className="ml-1 font-medium text-gray-700">
+            {formatSyncedAt(lastSyncedAt)}
+          </span>
+        </div>
       </div>
 
       {syncMessage && (
-        <p className="mt-2 text-right text-xs text-green-700">
+        <p className="mt-2 text-left text-xs text-green-700">
           {syncMessage}
         </p>
       )}
 
       {syncError && (
-        <p className="mt-2 text-right text-xs text-red-600">
+        <p className="mt-2 text-left text-xs text-red-600">
           {syncError}
         </p>
       )}
