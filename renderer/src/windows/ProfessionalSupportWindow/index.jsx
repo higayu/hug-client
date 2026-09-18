@@ -16,6 +16,7 @@ import {
   buildAttendancePanelDataFromDb,
 } from './dbProfessionalSupport'
 import ResizableSplitPane from '@/components/ui/ResizableSplitPane'
+import { AppStateProvider } from '@/AppStateContext'
 
 const getInitialYearMonth = (targetDate) => {
   const matched = String(targetDate ?? '').match(/^(\d{4})-(\d{2})/)
@@ -35,7 +36,7 @@ const getInitialYearMonth = (targetDate) => {
   }
 }
 
-export default function ProfessionalSupportWindow() {
+function ProfessionalSupportWindowContent() {
   const sessionWebviewRef = useRef(null)
   const parameters = useMemo(getWindowParameters, [])
 
@@ -604,4 +605,12 @@ return (
     </div>
   </div>
 )
+}
+
+export default function ProfessionalSupportWindow() {
+  return (
+    <AppStateProvider>
+      <ProfessionalSupportWindowContent />
+    </AppStateProvider>
+  )
 }

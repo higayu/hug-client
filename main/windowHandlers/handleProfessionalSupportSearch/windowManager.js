@@ -54,6 +54,15 @@ function createDoubleWebviewWindow(
     win.loadFile(rendererPath, { query });
   }
 
+  // MainWindow と同じく、明示的なデバッグ起動時だけ DevTools を開く
+  const isDebugMode =
+    process.argv.includes("--dev") ||
+    process.argv.includes("--debug");
+
+  if (isDebugMode) {
+    win.webContents.openDevTools();
+  }
+
   win.webContents.once("did-finish-load", () => {
     console.log(`${label} window loaded`);
     console.log("targetFacility:", targetFacility);

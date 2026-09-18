@@ -1,5 +1,7 @@
 import { useMemo } from 'react'
 
+import { useAppState } from '@/AppStateContext'
+
 import DateGroup from './DateGroup'
 import MonthlySummary from './MonthlySummary'
 
@@ -11,6 +13,8 @@ import {
 } from './utils'
 
 export default function DateView({ data, records }) {
+  const { DEBUG_FLG } = useAppState()
+
   const rows = Array.isArray(data) ? data : []
   const recordRows = Array.isArray(records) ? records : []
 
@@ -121,14 +125,15 @@ export default function DateView({ data, records }) {
     <div className="space-y-5">
       <MonthlySummary items={monthlySummary} />
 
-      {groups.map(({ date, children }) => (
-        <DateGroup
-          key={date}
-          date={date}
-          children={children}
-          recordStatusMap={recordStatusMap}
-        />
-      ))}
+      {DEBUG_FLG &&
+        groups.map(({ date, children }) => (
+          <DateGroup
+            key={date}
+            date={date}
+            children={children}
+            recordStatusMap={recordStatusMap}
+          />
+        ))}
     </div>
   )
 }
