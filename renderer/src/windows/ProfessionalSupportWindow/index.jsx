@@ -3,13 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import HeaderComponent from './HeaderComponent'
 import LeftPanel from './LeftPanel'
 import RightPanel from './RightPanel'
-import {
-  buildAttendanceFetchScript,
-  getWindowParameters,
-} from './attendance'
-import { buildAdditionCountFetchScript } from './additionCount'
-import { buildAdditionListFetchScript } from './additionList'
-import { buildProfessionalSupportSyncPayload } from './syncProfessionalSupport'
+import { getWindowParameters } from './attendance'
 import {
   buildAdditionCountPanelDataFromDb,
   buildAdditionListPanelDataFromDb,
@@ -70,160 +64,12 @@ function ProfessionalSupportWindowContent() {
   const [additionListError, setAdditionListError] = useState('')
   const [additionListLoading, setAdditionListLoading] = useState(true)
   const [webviewReady, setWebviewReady] = useState(false)
-  const [syncing, setSyncing] = useState(false)
-  const [syncMessage, setSyncMessage] = useState('')
-  const [syncError, setSyncError] = useState('')
   const [comparisonData, setComparisonData] = useState([])
   const [comparisonLoading, setComparisonLoading] = useState(false)
   const [comparisonError, setComparisonError] = useState('')
   const [syncStatusChecked, setSyncStatusChecked] = useState(false)
   const [isMonthSynced, setIsMonthSynced] = useState(false)
-  const autoSyncAttemptedKeyRef = useRef('')
 
-
-  const fetchAttendance = useCallback(async () => {
-    const webview = sessionWebviewRef.current
-
-    if (!selectedFacilityId) {
-      setError('施設を選択してください。')
-      setLoading(false)
-      return
-    }
-
-    if (!webview || !webviewReady) {
-      setError('HUGセッション確認用WebViewの準備が完了していません。')
-      setLoading(false)
-      return
-    }
-
-    setLoading(true)
-    setError('')
-
-    try {
-      const result = await webview.executeJavaScript(
-        buildAttendanceFetchScript({
-          facilityId: selectedFacilityId,
-          targetDate: selectedTargetDate,
-        }),
-        true,
-      )
-
-      setAttendanceData(result)
-      return result
-    } catch (fetchError) {
-      console.error(
-        '[ProfessionalSupportWindow] 出席データ取得エラー:',
-        fetchError,
-      )
-
-      setError(
-        fetchError?.message ??
-          '出席データの取得に失敗しました。',
-      )
-    } finally {
-      setLoading(false)
-    }
-  }, [
-    selectedTargetDate,
-    selectedFacilityId,
-    webviewReady,
-  ])
-
-  const fetchAdditionCount = useCallback(async () => {
-    const webview = sessionWebviewRef.current
-
-    if (!selectedFacilityId) {
-      setAdditionCountError('施設を選択してください。')
-      setAdditionCountLoading(false)
-      return
-    }
-
-    if (!webview || !webviewReady) {
-      setAdditionCountError('HUGセッション確認用WebViewの準備が完了していません。')
-      setAdditionCountLoading(false)
-      return
-    }
-
-    setAdditionCountLoading(true)
-    setAdditionCountError('')
-
-    try {
-      const result = await webview.executeJavaScript(
-        buildAdditionCountFetchScript({
-          facilityId: selectedFacilityId,
-          targetDate: selectedTargetDate,
-        }),
-        true,
-      )
-
-      setAdditionCountData(result)
-      return result
-    } catch (fetchError) {
-      console.error(
-        '[ProfessionalSupportWindow] 加算数データ取得エラー:',
-        fetchError,
-      )
-
-      setAdditionCountError(
-        fetchError?.message ??
-          '加算数データの取得に失敗しました。',
-      )
-    } finally {
-      setAdditionCountLoading(false)
-    }
-  }, [
-    selectedTargetDate,
-    selectedFacilityId,
-    webviewReady,
-  ])
-
-  const fetchAdditionList = useCallback(async () => {
-    const webview = sessionWebviewRef.current
-
-    if (!selectedFacilityId) {
-      setAdditionListError('施設を選択してください。')
-      setAdditionListLoading(false)
-      return
-    }
-
-    if (!webview || !webviewReady) {
-      setAdditionListError('HUGセッション確認用WebViewの準備が完了していません。')
-      setAdditionListLoading(false)
-      return
-    }
-
-    setAdditionListLoading(true)
-    setAdditionListError('')
-
-    try {
-      const result = await webview.executeJavaScript(
-        buildAdditionListFetchScript({
-          facilityId: selectedFacilityId,
-          targetDate: selectedTargetDate,
-        }),
-        true,
-      )
-
-      setAdditionListData(result)
-      return result
-    } catch (fetchError) {
-      console.error(
-        '[ProfessionalSupportWindow] 加算一覧データ取得エラー:',
-        fetchError,
-      )
-
-      setAdditionListError(
-        fetchError?.message ??
-          '加算一覧データの取得に失敗しました。',
-      )
-    } finally {
-      setAdditionListLoading(false)
-    }
-  }, [
-    selectedTargetDate,
-    selectedFacilityId,
-    webviewReady,
-  ])
 
   const fetchComparisonData = useCallback(async () => {
     if (!selectedFacilityId) {
@@ -357,94 +203,6 @@ function ProfessionalSupportWindowContent() {
     selectedMonth,
   ])
 
-  const syncAllToDatabase = useCallback(async () => {
-    if (!selectedFacilityId || !webviewReady || syncing) {
-      return
-    }
-
-    const syncApi =
-      window.electronAPI?.laravel_procedure_syncProfessionalSupportMonth
-
-    if (typeof syncApi !== 'function') {
-      setSyncError('月次同期APIがpreloadから公開されていません。')
-      return
-    }
-
-    setSyncing(true)
-    setSyncMessage('')
-    setSyncError('')
-
-    try {
-      // 3タブを同じ施設・年月で最新取得してから、1回のAPIでまとめて保存する。
-      // 同じWebViewセッションを使うため、HUG側の検索状態が競合しないよう順番に取得する。
-      const nextAttendanceData = await fetchAttendance()
-      const nextAdditionCountData = await fetchAdditionCount()
-      const nextAdditionListData = await fetchAdditionList()
-
-      if (!nextAttendanceData || !nextAdditionCountData || !nextAdditionListData) {
-        throw new Error('3種類のデータをすべて取得できなかったため保存を中止しました。')
-      }
-
-      const payload = buildProfessionalSupportSyncPayload({
-        facilityId: selectedFacilityId,
-        year: selectedYear,
-        month: selectedMonth,
-        attendanceData: nextAttendanceData,
-        additionCountData: nextAdditionCountData,
-        additionListData: nextAdditionListData,
-      })
-
-      const result = await syncApi(payload)
-
-      if (!result?.success) {
-        throw new Error(
-          result?.message || result?.error || '月次データの保存に失敗しました。',
-        )
-      }
-
-      const counts = result?.data ?? {}
-      setSyncMessage(
-        `DB保存完了：出席 ${counts.attendance_count ?? payload.attendanceData.length}件 / ` +
-          `加算 ${counts.addition_count ?? payload.additionData.length}件 / ` +
-          `一覧 ${counts.record_count ?? payload.recordData.length}件`,
-      )
-
-      await fetchComparisonData()
-    } catch (syncFetchError) {
-      console.error(
-        '[ProfessionalSupportWindow] 月次DB同期エラー:',
-        syncFetchError,
-      )
-      setSyncError(
-        syncFetchError?.message ?? '月次データの保存に失敗しました。',
-      )
-    } finally {
-      setSyncing(false)
-    }
-  }, [
-    selectedFacilityId,
-    selectedYear,
-    selectedMonth,
-    webviewReady,
-    syncing,
-    fetchAttendance,
-    fetchAdditionCount,
-    fetchAdditionList,
-    fetchComparisonData,
-  ])
-
-  const reloadAll = useCallback(() => {
-    fetchAttendance()
-    fetchAdditionCount()
-    fetchAdditionList()
-    fetchComparisonData()
-  }, [
-    fetchAttendance,
-    fetchAdditionCount,
-    fetchAdditionList,
-    fetchComparisonData,
-  ])
-
   useEffect(() => {
     const webview = sessionWebviewRef.current
 
@@ -471,15 +229,12 @@ function ProfessionalSupportWindowContent() {
 
   // 施設・年月が変わったら、HUGより先にDB同期状態を確認する。
   useEffect(() => {
-    autoSyncAttemptedKeyRef.current = ''
     setAttendanceData(null)
     setAdditionCountData(null)
     setAdditionListData(null)
     setError('')
     setAdditionCountError('')
     setAdditionListError('')
-    setSyncMessage('')
-    setSyncError('')
     setSyncStatusChecked(false)
     setIsMonthSynced(false)
 
@@ -497,41 +252,37 @@ function ProfessionalSupportWindowContent() {
     fetchComparisonData,
   ])
 
-  // professional_support_syncs に同期済みレコードが無い月だけ、
-  // WebViewから3種類を取得して1回だけ自動保存する。
-  useEffect(() => {
-    if (
-      !selectedFacilityId ||
-      !webviewReady ||
-      !syncStatusChecked ||
-      isMonthSynced ||
-      Boolean(comparisonError) ||
-      syncing ||
-      comparisonLoading
-    ) {
-      return
-    }
+  const handleSyncFetchStart = useCallback(() => {
+    setLoading(true)
+    setAdditionCountLoading(true)
+    setAdditionListLoading(true)
+    setError('')
+    setAdditionCountError('')
+    setAdditionListError('')
+  }, [])
 
-    const syncKey = `${selectedFacilityId}-${selectedYear}-${selectedMonth}`
+  const handleSyncFetched = useCallback(({
+    attendanceData: nextAttendanceData,
+    additionCountData: nextAdditionCountData,
+    additionListData: nextAdditionListData,
+  }) => {
+    setAttendanceData(nextAttendanceData)
+    setAdditionCountData(nextAdditionCountData)
+    setAdditionListData(nextAdditionListData)
+    setLoading(false)
+    setAdditionCountLoading(false)
+    setAdditionListLoading(false)
+  }, [])
 
-    if (autoSyncAttemptedKeyRef.current === syncKey) {
-      return
-    }
+  const handleSyncFetchFailed = useCallback((message) => {
+    setLoading(false)
+    setAdditionCountLoading(false)
+    setAdditionListLoading(false)
 
-    autoSyncAttemptedKeyRef.current = syncKey
-    syncAllToDatabase()
-  }, [
-    selectedFacilityId,
-    selectedYear,
-    selectedMonth,
-    webviewReady,
-    syncStatusChecked,
-    isMonthSynced,
-    comparisonError,
-    syncing,
-    comparisonLoading,
-    syncAllToDatabase,
-  ])
+    setError(message)
+    setAdditionCountError(message)
+    setAdditionListError(message)
+  }, [])
 
   const handleFacilityChange = useCallback((facilityId) => {
     setSelectedFacilityId(String(facilityId ?? ''))
@@ -578,12 +329,17 @@ const leftContent = (
         comparisonError={comparisonError}
         comparisonData={comparisonData}
         targetDate={selectedTargetDate}
-        onReload={reloadAll}
-        onSync={syncAllToDatabase}
-        syncing={syncing}
-        syncMessage={syncMessage}
-        syncError={syncError}
+        webviewRef={sessionWebviewRef}
         webviewReady={webviewReady}
+        facilityId={selectedFacilityId}
+        year={selectedYear}
+        month={selectedMonth}
+        syncStatusChecked={syncStatusChecked}
+        isMonthSynced={isMonthSynced}
+        onSyncFetchStart={handleSyncFetchStart}
+        onSyncFetched={handleSyncFetched}
+        onSyncFetchFailed={handleSyncFetchFailed}
+        onSyncCompleted={fetchComparisonData}
       />
     </div>
   )
