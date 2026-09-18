@@ -16,7 +16,7 @@ import {
   buildAttendancePanelDataFromDb,
 } from './dbProfessionalSupport'
 import ResizableSplitPane from '@/components/ui/ResizableSplitPane'
-import { AppStateProvider } from '@/AppStateContext'
+import { AppStateProvider, useAppState } from '@/AppStateContext'
 
 const getInitialYearMonth = (targetDate) => {
   const matched = String(targetDate ?? '').match(/^(\d{4})-(\d{2})/)
@@ -37,6 +37,7 @@ const getInitialYearMonth = (targetDate) => {
 }
 
 function ProfessionalSupportWindowContent() {
+  const { DEBUG_FLG } = useAppState()
   const sessionWebviewRef = useRef(null)
   const parameters = useMemo(getWindowParameters, [])
 
@@ -552,59 +553,88 @@ function ProfessionalSupportWindowContent() {
     setSelectedMonth(nextMonth)
   }, [])
 
-return (
-  <div className="h-screen bg-gray-50 p-4">
-    <div className="h-full w-full overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
-      <ResizableSplitPane
-        defaultLeftPercent={70}
-        minLeftWidth={500}
-        minRightWidth={350}
-        left={
-          <div className="flex h-full min-h-0 min-w-0 flex-col">
-            <HeaderComponent
-              facilities={parameters.facilities}
-              selectedFacilityId={selectedFacilityId}
-              onFacilityChange={handleFacilityChange}
-              selectedYear={selectedYear}
-              selectedMonth={selectedMonth}
-              onYearMonthChange={handleYearMonthChange}
-            />
+const leftContent = (
+    <div className="flex h-full min-h-0 min-w-0 flex-col">
+      <HeaderComponent
+        facilities={parameters.facilities}
+        selectedFacilityId={selectedFacilityId}
+        onFacilityChange={handleFacilityChange}
+        selectedYear={selectedYear}
+        selectedMonth={selectedMonth}
+        onYearMonthChange={handleYearMonthChange}
+      />
 
-            <LeftPanel
-              loading={loading}
-              error={error}
-              attendanceData={attendanceData}
-              additionCountLoading={additionCountLoading}
-              additionCountError={additionCountError}
-              additionCountData={additionCountData}
-              additionListLoading={additionListLoading}
-              additionListError={additionListError}
-              additionListData={additionListData}
-              comparisonLoading={comparisonLoading}
-              comparisonError={comparisonError}
-              comparisonData={comparisonData}
-              targetDate={selectedTargetDate}
-              onReload={reloadAll}
-              onSync={syncAllToDatabase}
-              syncing={syncing}
-              syncMessage={syncMessage}
-              syncError={syncError}
-              webviewReady={webviewReady}
-            />
-          </div>
-        }
-        right={
-          <div className="h-full min-h-0 min-w-0">
-            <RightPanel
-              webviewRef={sessionWebviewRef}
-              webviewReady={webviewReady}
-            />
-          </div>
-        }
+      <LeftPanel
+        loading={loading}
+        error={error}
+        attendanceData={attendanceData}
+        additionCountLoading={additionCountLoading}
+        additionCountError={additionCountError}
+        additionCountData={additionCountData}
+        additionListLoading={additionListLoading}
+        additionListError={additionListError}
+        additionListData={additionListData}
+        comparisonLoading={comparisonLoading}
+        comparisonError={comparisonError}
+        comparisonData={comparisonData}
+        targetDate={selectedTargetDate}
+        onReload={reloadAll}
+        onSync={syncAllToDatabase}
+        syncing={syncing}
+        syncMessage={syncMessage}
+        syncError={syncError}
+        webviewReady={webviewReady}
       />
     </div>
-  </div>
-)
+  )
+
+  const webviewContent = (
+    <RightPanel
+      webviewRef={sessionWebviewRef}
+      webviewReady={webviewReady}
+    />
+  )
+
+  return (
+    <div className="h-screen bg-gray-50 p-4">
+      <div className="h-full w-full overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
+        {DEBUG_FLG ? (
+          <ResizableSplitPane
+            defaultLeftPercent={70}
+            minLeftWidth={500}
+            minRightWidth={350}
+            left={leftContent}
+            right={
+              <div className="h-full min-h-0 min-w-0">
+                {webviewContent}
+              </div>
+            }
+          />
+        ) : (
+          <>
+            {leftContent}
+
+            {/*
+              HUGへのPOST送信用WebView。
+              通常モードでもDOMから外さず、画面外に配置してセッションを維持する。
+            */}
+            <div
+              className="pointer-events-none fixed opacity-0"
+              style={{
+                left: '-10000px',
+                top: 0,
+                width: '1024px',
+                height: '768px',
+              }}
+              aria-hidden="true"
+            >
+              {webviewContent}
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  )
 }
 
 export default function ProfessionalSupportWindow() {

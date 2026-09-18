@@ -1,5 +1,7 @@
 import { useState } from 'react'
 
+import { useAppState } from '@/AppStateContext'
+
 import LeftTabs from './LeftTabs'
 import AttendancePanel from './AttendancePanel'
 import AdditionCountPanel from './AdditionCountPanel'
@@ -27,14 +29,18 @@ export default function LeftPanel({
   syncError,
   webviewReady,
 }) {
+  const { DEBUG_FLG } = useAppState()
+
   const [activeTab, setActiveTab] = useState('comparison')
 
   return (
     <section className="flex min-h-0 flex-1 flex-col">
-      <LeftTabs
-        activeTab={activeTab}
-        onChange={setActiveTab}
-      />
+      {DEBUG_FLG && (
+        <LeftTabs
+          activeTab={activeTab}
+          onChange={setActiveTab}
+        />
+      )}
 
       <div className="border-b border-gray-100 px-4 py-2">
         <div className="flex items-center justify-end gap-2">
@@ -71,7 +77,16 @@ export default function LeftPanel({
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto p-4">
-        {activeTab === 'attendance' && (
+        {!DEBUG_FLG && (
+          <ComparisonPanel
+            loading={comparisonLoading}
+            error={comparisonError}
+            data={comparisonData}
+            records={additionListData?.records ?? []}
+          />
+        )}
+
+        {DEBUG_FLG && activeTab === 'attendance' && (
           <AttendancePanel
             loading={loading}
             error={error}
@@ -80,7 +95,7 @@ export default function LeftPanel({
           />
         )}
 
-        {activeTab === 'additionCount' && (
+        {DEBUG_FLG && activeTab === 'additionCount' && (
           <AdditionCountPanel
             loading={additionCountLoading}
             error={additionCountError}
@@ -89,7 +104,7 @@ export default function LeftPanel({
           />
         )}
 
-        {activeTab === 'additionList' && (
+        {DEBUG_FLG && activeTab === 'additionList' && (
           <AdditionListPanel
             loading={additionListLoading}
             error={additionListError}
@@ -98,8 +113,7 @@ export default function LeftPanel({
           />
         )}
 
-
-        {activeTab === 'comparison' && (
+        {DEBUG_FLG && activeTab === 'comparison' && (
           <ComparisonPanel
             loading={comparisonLoading}
             error={comparisonError}
