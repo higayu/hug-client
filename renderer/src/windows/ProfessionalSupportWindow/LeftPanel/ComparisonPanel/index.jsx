@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react'
 
+import { useAppState } from '@/AppStateContext'
+
 import CalendarView from './CalendarView'
 import ChildView from './ChildView'
 import DateView from './DateView'
@@ -26,7 +28,8 @@ export default function ComparisonPanel({
   data,
   records,
 }) {
-  const [activeTab, setActiveTab] = useState('date')
+  const { DEBUG_FLG } = useAppState()
+  const [activeTab, setActiveTab] = useState('child')
 
   const rows = Array.isArray(data) ? data : []
 
@@ -72,7 +75,7 @@ export default function ComparisonPanel({
           </h2>
 
           <p className="mt-1 text-xs text-gray-500">
-            日付単位のカレンダー表示と、児童単位の月内履歴を切り替えて確認できます。
+            児童ごとの月間集計を確認し、行をクリックすると日別詳細を展開できます。
           </p>
         </div>
 
@@ -81,35 +84,48 @@ export default function ComparisonPanel({
             {rows.length}件
           </span>
 
+          {DEBUG_FLG && issueCount > 0 && (
+            <span className="rounded-full bg-amber-100 px-3 py-1 font-semibold text-amber-800">
+              要確認 {issueCount}件
+            </span>
+          )}
         </div>
       </div>
 
-      <div className="flex gap-1 border-b border-gray-200">
-        {TABS.map((tab) => {
-          const active = activeTab === tab.id
+      {DEBUG_FLG && (
+        <div className="flex gap-1 border-b border-gray-200">
+          {TABS.map((tab) => {
+            const active = activeTab === tab.id
 
-          return (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setActiveTab(tab.id)}
-              className={`border-b-2 px-4 py-2 text-sm font-semibold transition ${
-                active
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              {tab.label}
-            </button>
-          )
-        })}
-      </div>
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveTab(tab.id)}
+                className={`border-b-2 px-4 py-2 text-sm font-semibold transition ${
+                  active
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                {tab.label}
+              </button>
+            )
+          })}
+        </div>
+      )}
 
-      {activeTab === 'calendar' && (
+      {!DEBUG_FLG && <ChildView data={rows} records={records} />}
+
+      {DEBUG_FLG && activeTab === 'calendar' && (
         <CalendarView data={rows} records={records} />
       )}
-      {activeTab === 'date' && <DateView data={rows} records={records} />}
-      {activeTab === 'child' && (
+
+      {DEBUG_FLG && activeTab === 'date' && (
+        <DateView data={rows} records={records} />
+      )}
+
+      {DEBUG_FLG && activeTab === 'child' && (
         <ChildView data={rows} records={records} />
       )}
 

@@ -5,6 +5,9 @@ export default function MonthlySummary({
   items,
   year,
   month,
+  expandedChildKey,
+  onToggleChild,
+  recordStatusMap,
 }) {
   return (
     <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
@@ -15,9 +18,7 @@ export default function MonthlySummary({
           </h3>
 
           <p className="mt-0.5 text-xs text-gray-500">
-            月内に出席があった児童を基準に、出席数、
-            専門的支援実施加算（ID=55）の登録数と
-            各種加算・議事録管理から専門的支援実施加算の数を集計しています。
+            児童の行をクリックすると、月内の日別詳細を展開して確認できます。
           </p>
         </div>
 
@@ -55,6 +56,9 @@ export default function MonthlySummary({
               <MonthlySummaryRow
                 key={item.childKey}
                 item={item}
+                expanded={expandedChildKey === item.childKey}
+                onToggle={() => onToggleChild(item.childKey)}
+                recordStatusMap={recordStatusMap}
               />
             ))}
           </tbody>
