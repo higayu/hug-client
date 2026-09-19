@@ -8,6 +8,40 @@ import ResultPanel from './ResultPanel'
 
 const PERSONAL_RECORD_ITEM_ID = 1
 
+
+const toPersonalRecordStatus = (record) => {
+  const statusText = String(record?.status ?? '')
+    .replace(/\s+/g, '')
+    .trim()
+
+  const statusClass = String(record?.statusClass ?? '')
+    .toLowerCase()
+    .trim()
+
+  if (statusText === '1') {
+    return 1
+  }
+
+  if (statusText === '2') {
+    return 2
+  }
+
+  if (statusText === '公開中' || statusText === '公開') {
+    return 1
+  }
+
+  if (statusText === '下書き') {
+    return 2
+  }
+
+  if (statusClass.split(/\s+/).includes('open')) {
+    return 1
+  }
+
+  return null
+}
+
+
 const normalizeConditionText = (value) =>
   String(value ?? '')
     .replace(/\s+/g, '')
@@ -67,6 +101,7 @@ const toBulkRecord = (record, facilityId) => {
     served_date: servedDate,
     facility_id: normalizedFacilityId,
     note: String(record.note),
+    status: toPersonalRecordStatus(record),
     is_copy: 0,
     is_deleted: 0,
     recorded_staff_id:

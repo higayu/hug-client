@@ -144,7 +144,20 @@ export const buildPersonalRecordFetchScript = ({ facilityId, year, month }) => {
 
             const activity = normalizeText(cells[3]?.textContent);
             const attendance = normalizeText(cells[4]?.textContent);
-            const status = normalizeText(cells[5]?.textContent);
+
+            // 状態列（6列目）は <span class="label open">公開中</span> のような
+            // ラベルで返されるため、span.label を優先して取得する。
+            const statusCell = cells[5];
+            const statusLabel = statusCell?.querySelector('span.label');
+            const status = normalizeText(
+              statusLabel?.textContent ?? statusCell?.textContent
+            );
+            const statusClass = statusLabel
+              ? Array.from(statusLabel.classList)
+                  .filter((className) => className !== 'label')
+                  .join(' ')
+              : '';
+
             const recorder = normalizeText(cells[9]?.textContent);
             const updatedAt = normalizeText(cells[10]?.textContent);
 
@@ -158,6 +171,7 @@ export const buildPersonalRecordFetchScript = ({ facilityId, year, month }) => {
               activity,
               attendance,
               status,
+              statusClass,
               recorder,
               updatedAt,
               editSource,
