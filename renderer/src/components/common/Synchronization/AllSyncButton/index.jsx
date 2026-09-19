@@ -111,7 +111,7 @@ export default function AllSyncButton({
   const storeFacilityId = useSelector(selectFacilityId)
   const facilityId = facilityIdProp ?? storeFacilityId
 
-  const { STAFF_ID, CURRENT_DAY_OF_WEEK } = useAppState()
+  const { STAFF_ID } = useAppState()
   const { showInfoToast, showSuccessToast, showErrorToast } = useToast()
 
   const resolveWebview = () => {
@@ -165,12 +165,15 @@ export default function AllSyncButton({
   const syncChildren = async (activeWebview) => {
     setLabel('児童取得中...')
 
+    const now = new Date()
+    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+
     const result = await fetchChildrenData(
       (page, maxPage) => {
         setLabel(`児童取得 ${page}/${maxPage}`)
       },
       facilityId,
-      CURRENT_DAY_OF_WEEK,
+      today,
       activeWebview,
     )
 

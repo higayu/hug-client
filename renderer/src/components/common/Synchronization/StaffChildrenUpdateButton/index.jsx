@@ -3,7 +3,6 @@ import { useSelector } from 'react-redux';
 import { ArrowPathIcon } from '@heroicons/react/24/outline';
 
 import { useToast } from '@/provider/ToastProvider/ToastContext.jsx';
-import { useAppState } from '@/AppStateContext';
 import { selectFacilityId } from '@/store/slices/appStateSlice';
 import { getActiveWebview } from '@/utils/webview/webviewState.js';
 
@@ -20,7 +19,6 @@ export default function StaffChildrenUpdateButton({
   const [label, setLabel] = useState('職員・児童更新');
 
   const { showInfoToast, showResultToast } = useToast();
-  const { CURRENT_DAY_OF_WEEK } = useAppState();
 
   const storeFacilityId = useSelector(selectFacilityId);
   const facilityId = facilityIdProp ?? storeFacilityId;
@@ -100,12 +98,15 @@ export default function StaffChildrenUpdateButton({
   const syncChildren = async (activeWebview) => {
     setLabel('児童取得中...');
 
+    const now = new Date();
+    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+
     const result = await fetchChildrenData(
       (page, maxPage) => {
         setLabel(`児童取得 ${page}/${maxPage}`);
       },
       facilityId,
-      CURRENT_DAY_OF_WEEK,
+      today,
       activeWebview,
     );
 

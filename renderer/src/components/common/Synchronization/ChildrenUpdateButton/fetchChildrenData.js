@@ -74,7 +74,7 @@ function buildChildPostParams(facilityId, targetDate) {
   params.set("furigana", "0");
   params.set("parent_flg", "false");
 
-  // ターゲット日付（CURRENT_DAY_OF_WEEK から取得）
+  // ターゲット日付（児童同期は本日固定）
   params.set("target_date", targetDate);
 
   console.log(`[fetchChildrenData] POSTパラメータ:`, Object.fromEntries(params));
@@ -351,55 +351,20 @@ async function fetchInHugWebview(webview, { url, method = "GET", body, headers =
   return response.text;
 }
 
-export async function fetchChildrenData(onProgress, facilityId, currentDayOfWeek, webviewOverride = null) {
+export async function fetchChildrenData(onProgress, facilityId, _targetDate, webviewOverride = null) {
   console.log(`[fetchChildrenData] 開始 - facilityId: ${facilityId} (${typeof facilityId})`);
-  console.log(`[fetchChildrenData] currentDayOfWeek:`, currentDayOfWeek);
 
   const webview = webviewOverride ?? await getHugWebviewForCache();
 
-  // currentDayOfWeek から日付文字列を生成（YYYY-MM-DD 形式）
-  let targetDate;
-  if (currentDayOfWeek) {
-    // currentDayOfWeek が Date オブジェクトの場合
-    if (currentDayOfWeek instanceof Date) {
-      const year = currentDayOfWeek.getFullYear();
-      const month = String(currentDayOfWeek.getMonth() + 1).padStart(2, '0');
-      const day = String(currentDayOfWeek.getDate()).padStart(2, '0');
-      targetDate = `${year}-${month}-${day}`;
-    } 
-    // 文字列の場合（YYYY-MM-DD 形式と想定）
-    else if (typeof currentDayOfWeek === 'string') {
-      targetDate = currentDayOfWeek;
-    }
-    // その他の場合（数値など）
-    else {
-      const date = new Date(currentDayOfWeek);
-      if (!isNaN(date.getTime())) {
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        targetDate = `${year}-${month}-${day}`;
-      } else {
-        // フォールバック：本日
-        const today = new Date();
-        const year = today.getFullYear();
-        const month = String(today.getMonth() + 1).padStart(2, '0');
-        const day = String(today.getDate()).padStart(2, '0');
-        targetDate = `${year}-${month}-${day}`;
-        console.warn(`[fetchChildrenData] 無効な日付のため本日を使用: ${targetDate}`);
-      }
-    }
-  } else {
-    // フォールバック：本日
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const day = String(today.getDate()).padStart(2, '0');
-    targetDate = `${year}-${month}-${day}`;
-    console.warn(`[fetchChildrenData] currentDayOfWeek が未定義のため本日を使用: ${targetDate}`);
-  }
+  // 児童同期は常に実行時点の最新データを取得するため、本日固定。
+  // 呼び出し元から日付が渡されても、過去日付では取得しない。
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  const targetDate = `${year}-${month}-${day}`;
 
-  console.log(`[fetchChildrenData] targetDate: ${targetDate}`);
+  console.log(`[fetchChildrenData] 本日を対象日として使用: ${targetDate}`);
 
   // 施設IDに基づいてPOSTパラメータを動的に生成
   const body = buildChildPostParams(facilityId, targetDate);

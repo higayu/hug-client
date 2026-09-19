@@ -4,7 +4,6 @@ import { useSelector } from "react-redux"
 import { ArrowPathIcon } from "@heroicons/react/24/outline"
 
 import { useToast } from "@/provider/ToastProvider/ToastContext.jsx"
-import { useAppState } from "@/AppStateContext"
 import { selectFacilityId } from "@/store/slices/appStateSlice"
 
 import { fetchChildrenData } from "./fetchChildrenData.js"
@@ -21,7 +20,6 @@ export default function ChildrenUpdateButton({
   const { showInfoToast, showResultToast } = useToast()
   const storeFacilityId = useSelector(selectFacilityId)
   const facilityId = facilityIdProp ?? storeFacilityId
-  const { CURRENT_DAY_OF_WEEK } = useAppState()
 
   const handleClick = async () => {
     if (isLoading || disabled) return
@@ -35,12 +33,15 @@ export default function ChildrenUpdateButton({
     )
 
     try {
+      const now = new Date()
+      const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+
       const result = await fetchChildrenData(
         (page, maxPage) => {
           setLabel(`児童取得 ${page}/${maxPage}`)
         },
         facilityId,
-        CURRENT_DAY_OF_WEEK,
+        today,
         webview,
       )
 
