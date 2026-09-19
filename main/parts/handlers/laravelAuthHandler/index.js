@@ -380,8 +380,12 @@ function registerLaravelAuthHandlers(
    */
   ipcMain.handle(
     "laravel:procedure:upsert-service-record",
-  "laravel:procedure:upsert-service-records-bulk",
     procedures.upsertServiceRecordHandler
+  );
+
+  ipcMain.handle(
+    "laravel:procedure:upsert-service-records-bulk",
+    procedures.upsertServiceRecordsBulkHandler
   );
 
   /**

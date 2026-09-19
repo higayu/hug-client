@@ -6,7 +6,6 @@ import { ArrowPathIcon } from "@heroicons/react/24/outline"
 import { useToast } from "@/provider/ToastProvider/ToastContext.jsx"
 import { useAppState } from "@/AppStateContext"
 import { selectFacilityId } from "@/store/slices/appStateSlice"
-import { confirmDialog } from "@/utils/dialog/confirmDialog.js"
 
 import { fetchChildrenData } from "./fetchChildrenData.js"
 
@@ -27,13 +26,6 @@ export default function ChildrenUpdateButton({
   const handleClick = async () => {
     if (isLoading || disabled) return
 
-    const shouldFetch = await confirmDialog(
-      "本当に実行しますか？",
-    )
-
-    if (!shouldFetch) {
-      return
-    }
 
     setIsLoading(true)
     setLabel("児童取得中...")
@@ -61,13 +53,6 @@ export default function ChildrenUpdateButton({
         result.children?.slice(0, 3),
       )
 
-      const shouldSync = await confirmDialog(
-        `HUG児童データ ${result.fetched_count}件をDBへ保存・更新します。実行しますか？`,
-      )
-
-      if (!shouldSync) {
-        return
-      }
 
       if (!window.electronAPI?.syncHugChildrens) {
         throw new Error(

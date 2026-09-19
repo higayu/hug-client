@@ -12,9 +12,6 @@ import {
   selectFacilityId,
 } from '@/store/slices/appStateSlice';
 
-import {
-  confirmDialog,
-} from '@/utils/dialog/confirmDialog.js';
 
 import {
   getActiveWebview,
@@ -77,14 +74,6 @@ export default function StaffUpdateButton({
       return;
     }
 
-    const shouldFetch =
-      await confirmDialog(
-        '本当に実行しますか？',
-      );
-
-    if (!shouldFetch) {
-      return;
-    }
 
     setIsLoading(true);
     setLabel('職員取得中...');
@@ -134,14 +123,6 @@ export default function StaffUpdateButton({
       console.table(result.staff ?? []);
       console.groupEnd();
 
-      const shouldSync =
-        await confirmDialog(
-          `HUG職員データ ${result.fetched_count}件をDBへ保存・更新します。実行しますか？`,
-        );
-
-      if (!shouldSync) {
-        return;
-      }
 
       if (
         !window.electronAPI

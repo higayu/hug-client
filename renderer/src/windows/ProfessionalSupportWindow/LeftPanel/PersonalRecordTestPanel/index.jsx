@@ -1,13 +1,9 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 
 import { useAppState } from '@/AppStateContext'
-import { useToast } from '@/provider/ToastProvider/ToastContext'
 
-import StaffUpdateButton from '@/components/common/Synchronization/StaffUpdateButton'
-import ChildrenUpdateButton from '@/components/common/Synchronization/ChildrenUpdateButton'
+import AllSyncButton from '@/components/common/Synchronization/AllSyncButton'
 
-import HugGetPersonRecordButton from './HugGetPersonRecordButton'
-import SavePersonRecordButton from './SavePersonRecordButton'
 import ResultPanel from './ResultPanel'
 
 const PERSONAL_RECORD_ITEM_ID = 1
@@ -34,18 +30,6 @@ const getPersonalRecordSkipReason = (record) => {
   return ''
 }
 
-const unwrapBulkResult = (result) => {
-  if (
-    result?.data &&
-    typeof result.data === 'object' &&
-    Object.prototype.hasOwnProperty.call(result.data, 'success')
-  ) {
-    return result.data
-  }
-
-  return result
-}
-
 const toBulkRecord = (record, facilityId) => {
   if (getPersonalRecordSkipReason(record)) {
     return null
@@ -67,9 +51,11 @@ const toBulkRecord = (record, facilityId) => {
     return null
   }
 
-  // 詳細画面まで取得できたレコードだけ保存する。
-  // 空文字の記録は有効な本文として扱うため、null/undefined のみ除外する。
-  if (record?.note === null || record?.note === undefined || record?.noteError) {
+  if (
+    record?.note === null ||
+    record?.note === undefined ||
+    record?.noteError
+  ) {
     return null
   }
 
@@ -98,7 +84,6 @@ export default function PersonalRecordTestPanel({
   month,
 }) {
   const { STAFF_ID } = useAppState()
-  const { showSuccessToast, showErrorToast } = useToast()
 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -109,13 +94,15 @@ export default function PersonalRecordTestPanel({
   const [sendResult, setSendResult] = useState(null)
 
   const currentWebview = webviewRef?.current ?? null
+
   const isWebviewAvailable =
     webviewReady &&
     currentWebview &&
     typeof currentWebview.executeJavaScript === 'function'
 
-
-  const records = Array.isArray(data?.records) ? data.records : []
+  const records = Array.isArray(data?.records)
+    ? data.records
+    : []
 
   const bulkRecords = useMemo(
     () =>
@@ -129,95 +116,10 @@ export default function PersonalRecordTestPanel({
     Boolean(getPersonalRecordSkipReason(record)),
   ).length
 
-  const skippedSendCount = Math.max(records.length - bulkRecords.length, 0)
-
-  const handleSend = useCallback(async () => {
-    if (bulkRecords.length === 0) {
-      setSendError('送信できる個人記録がありません。本文取得結果を確認してください。')
-      return
-    }
-
-    const sendApi =
-      window.electronAPI?.laravel_procedure_upsertServiceRecordsBulk ??
-      window.electronAPI?.laravel_service_record_bulk_upsert
-
-    if (typeof sendApi !== 'function') {
-      setSendError(
-        '一括保存APIがpreloadから公開されていません。main / preload の導線を確認してください。',
-      )
-      return
-    }
-
-    const staffId = Number(STAFF_ID)
-    const payload = {
-      records: bulkRecords,
-    }
-
-    if (Number.isInteger(staffId) && staffId > 0) {
-      payload.recorded_staff_id = staffId
-      payload.updated_staff_id = staffId
-    }
-
-    setSending(true)
-    setSendError('')
-    setSendResult(null)
-
-    try {
-      console.log('[ProfessionalSupportWindow] 個人記録一括送信:', payload)
-
-      const rawResult = await sendApi(payload)
-      const result = unwrapBulkResult(rawResult)
-
-      if (!result?.success) {
-        throw new Error(
-          result?.message ||
-            result?.error ||
-            rawResult?.message ||
-            rawResult?.error ||
-            '個人記録の一括保存に失敗しました。',
-        )
-      }
-
-      const processedCount =
-        result?.data?.processed_count ??
-        rawResult?.data?.processed_count ??
-        rawResult?.data?.data?.processed_count ??
-        bulkRecords.length
-
-      const savedCount = Number(processedCount) || bulkRecords.length
-
-      setSendResult({
-        success: true,
-        processedCount: savedCount,
-        requestedCount: bulkRecords.length,
-        skippedCount: skippedSendCount,
-        raw: rawResult,
-      })
-
-      showSuccessToast(
-        `個人記録をLaravelへ保存しました（${savedCount}件）`,
-        4000,
-      )
-    } catch (sendException) {
-      console.error(
-        '[ProfessionalSupportWindow] 個人記録一括送信エラー:',
-        sendException,
-      )
-      const errorMessage =
-        sendException?.message ?? '個人記録の一括保存に失敗しました。'
-
-      setSendError(errorMessage)
-      showErrorToast(`個人記録の保存に失敗しました: ${errorMessage}`)
-    } finally {
-      setSending(false)
-    }
-  }, [
-    STAFF_ID,
-    bulkRecords,
-    skippedSendCount,
-    showSuccessToast,
-    showErrorToast,
-  ])
+  const skippedSendCount = Math.max(
+    records.length - bulkRecords.length,
+    0,
+  )
 
   return (
     <section className="border-b border-amber-200 bg-amber-50 px-4 py-3">
@@ -226,15 +128,28 @@ export default function PersonalRecordTestPanel({
           <h3 className="text-sm font-semibold text-amber-900">
             個人記録取得テスト
           </h3>
+
           <p className="mt-1 text-xs text-amber-700">
-            一覧取得後、各編集画面までfetchして個人記録本文を取得します。
+            職員・児童同期後、個人記録を取得してLaravelへ保存します。
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <StaffUpdateButton
-            facilityId={facilityId}
+          <AllSyncButton
+            webviewRef={webviewRef}
+            webviewReady={webviewReady}
             webview={currentWebview}
+            facilityId={facilityId}
+            year={year}
+            month={month}
+            loading={loading}
+            sending={sending}
+            setLoading={setLoading}
+            setSending={setSending}
+            setError={setError}
+            setData={setData}
+            setSendError={setSendError}
+            setSendResult={setSendResult}
             disabled={
               loading ||
               sending ||
@@ -242,40 +157,6 @@ export default function PersonalRecordTestPanel({
               !isWebviewAvailable
             }
             className="flex items-center justify-center gap-2 rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-gray-300"
-          />
-
-          <ChildrenUpdateButton
-            facilityId={facilityId}
-            webview={currentWebview}
-            disabled={
-              loading ||
-              sending ||
-              !facilityId ||
-              !isWebviewAvailable
-            }
-            className="flex items-center justify-center gap-2 rounded-md bg-sky-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-sky-700 disabled:cursor-not-allowed disabled:bg-gray-300"
-          />
-
-          <HugGetPersonRecordButton
-            webviewRef={webviewRef}
-            webviewReady={webviewReady}
-            facilityId={facilityId}
-            year={year}
-            month={month}
-            loading={loading}
-            sending={sending}
-            setLoading={setLoading}
-            setError={setError}
-            setData={setData}
-            setSendError={setSendError}
-            setSendResult={setSendResult}
-          />
-
-          <SavePersonRecordButton
-            onClick={handleSend}
-            sending={sending}
-            count={bulkRecords.length}
-            disabled={loading || bulkRecords.length === 0}
           />
         </div>
       </div>
