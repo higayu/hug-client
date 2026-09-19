@@ -3,23 +3,29 @@ import { useState } from "react"
 import { useSelector } from "react-redux"
 import { ArrowPathIcon } from "@heroicons/react/24/outline"
 
-import { useToast } from '@/provider/ToastProvider/ToastContext'
+import { useToast } from "@/provider/ToastProvider/ToastContext.jsx"
 import { useAppState } from "@/AppStateContext"
 import { selectFacilityId } from "@/store/slices/appStateSlice"
 import { confirmDialog } from "@/utils/dialog/confirmDialog.js"
 
 import { fetchChildrenData } from "./fetchChildrenData.js"
 
-export default function ChildrenUpdateButton() {
+export default function ChildrenUpdateButton({
+  facilityId: facilityIdProp,
+  disabled = false,
+  className = "flex items-center justify-center gap-2 px-4 py-2 text-center bg-yellow-500 text-sm text-white transition-colors hover:bg-yellow-600 disabled:cursor-wait disabled:opacity-60",
+  webview = null,
+}) {
   const [isLoading, setIsLoading] = useState(false)
   const [label, setLabel] = useState("児童更新")
 
   const { showInfoToast, showResultToast } = useToast()
-  const facilityId = useSelector(selectFacilityId)
+  const storeFacilityId = useSelector(selectFacilityId)
+  const facilityId = facilityIdProp ?? storeFacilityId
   const { CURRENT_DAY_OF_WEEK } = useAppState()
 
   const handleClick = async () => {
-    if (isLoading) return
+    if (isLoading || disabled) return
 
     const shouldFetch = await confirmDialog(
       "本当に実行しますか？",
@@ -43,6 +49,7 @@ export default function ChildrenUpdateButton() {
         },
         facilityId,
         CURRENT_DAY_OF_WEEK,
+        webview,
       )
 
       console.log(
@@ -186,20 +193,22 @@ export default function ChildrenUpdateButton() {
     }
   }
 
-  return (
-    <button
-      type="button"
-      onClick={handleClick}
-      disabled={isLoading}
-      className="flex items-center justify-center gap-2 w-full px-4 py-2 text-center bg-yellow-500 text-sm text-white transition-colors hover:bg-yellow-600 disabled:cursor-wait disabled:opacity-60"
-      title="HUGの児童データを取得してDBへ同期"
-    >
+return (
+  <button
+    type="button"
+    onClick={handleClick}
+    disabled={isLoading || disabled}
+    className={className}
+    title="HUGの児童データを取得してDBへ同期"
+  >
+    <span className="inline-flex items-center gap-2 whitespace-nowrap">
       <ArrowPathIcon
-        className={`h-5 w-5 ${
+        className={`h-5 w-5 shrink-0 ${
           isLoading ? "animate-spin" : ""
         }`}
       />
       <span>{label}</span>
-    </button>
-  )
+    </span>
+  </button>
+)
 }

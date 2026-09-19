@@ -9,6 +9,7 @@ import AdditionListPanel from './AdditionListPanel'
 import ComparisonPanel from './ComparisonPanel'
 import ProfessionalSupportAutoSync from './ProfessionalSupportAutoSync'
 import ProfessionalSupportSyncButton from './ProfessionalSupportSyncButton'
+import PersonalRecordTestPanel from './PersonalRecordTestPanel'
 import useProfessionalSupportSync from './ProfessionalSupportSync'
 
 export default function LeftPanel({
@@ -76,6 +77,16 @@ export default function LeftPanel({
         runSync={runSync}
         clearSyncStatus={clearSyncStatus}
       />
+
+      {DEBUG_FLG && (
+        <PersonalRecordTestPanel
+          webviewRef={webviewRef}
+          webviewReady={webviewReady}
+          facilityId={facilityId}
+          year={year}
+          month={month}
+        />
+      )}
 
       {DEBUG_FLG && (
         <LeftTabs

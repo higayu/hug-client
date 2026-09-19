@@ -351,11 +351,11 @@ async function fetchInHugWebview(webview, { url, method = "GET", body, headers =
   return response.text;
 }
 
-export async function fetchChildrenData(onProgress, facilityId, currentDayOfWeek) {
+export async function fetchChildrenData(onProgress, facilityId, currentDayOfWeek, webviewOverride = null) {
   console.log(`[fetchChildrenData] 開始 - facilityId: ${facilityId} (${typeof facilityId})`);
   console.log(`[fetchChildrenData] currentDayOfWeek:`, currentDayOfWeek);
 
-  const webview = await getHugWebviewForCache();
+  const webview = webviewOverride ?? await getHugWebviewForCache();
 
   // currentDayOfWeek から日付文字列を生成（YYYY-MM-DD 形式）
   let targetDate;

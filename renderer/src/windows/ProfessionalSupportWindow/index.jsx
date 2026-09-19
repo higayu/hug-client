@@ -33,10 +33,16 @@ const getInitialYearMonth = (targetDate) => {
 function ProfessionalSupportWindowContent() {
   const { DEBUG_FLG } = useAppState()
   const sessionWebviewRef = useRef(null)
+  const [sessionWebviewElement, setSessionWebviewElement] = useState(null)
+
+  const handleSessionWebviewRef = useCallback((node) => {
+    sessionWebviewRef.current = node
+    setSessionWebviewElement((current) => (current === node ? current : node))
+  }, [])
   const parameters = useMemo(getWindowParameters, [])
 
   // MainWindow から渡された現在選択中の施設IDを初期値にする。
-  const [selectedFacilityId, setSelectedFacilityId] = useState(
+  const [selectedFacilityId] = useState(
     parameters.facilityId,
   )
 
@@ -234,9 +240,10 @@ function ProfessionalSupportWindowContent() {
   ])
 
   useEffect(() => {
-    const webview = sessionWebviewRef.current
+    const webview = sessionWebviewElement
 
     if (!webview) {
+      setWebviewReady(false)
       return undefined
     }
 
@@ -251,11 +258,24 @@ function ProfessionalSupportWindowContent() {
     webview.addEventListener('dom-ready', handleDomReady)
     webview.addEventListener('did-start-loading', handleDidStartLoading)
 
+    // ResizableSplitPane 配下で effect 登録前に dom-ready 済みでも、
+    // 現在ページが存在すれば利用可能として扱う。
+    try {
+      if (typeof webview.getURL === 'function' && webview.getURL()) {
+        setWebviewReady(true)
+      }
+    } catch (readyCheckError) {
+      console.debug(
+        '[ProfessionalSupportWindow] WebView ready確認待ち:',
+        readyCheckError,
+      )
+    }
+
     return () => {
       webview.removeEventListener('dom-ready', handleDomReady)
       webview.removeEventListener('did-start-loading', handleDidStartLoading)
     }
-  }, [])
+  }, [sessionWebviewElement])
 
   // 施設・年月が変わったら、HUGより先にDB同期状態を確認する。
   useEffect(() => {
@@ -315,9 +335,6 @@ function ProfessionalSupportWindowContent() {
     setAdditionListError(message)
   }, [])
 
-  const handleFacilityChange = useCallback((facilityId) => {
-    setSelectedFacilityId(String(facilityId ?? ''))
-  }, [])
 
   const handleYearMonthChange = useCallback(({ year, month }) => {
     const nextYear = Number(year)
@@ -340,7 +357,6 @@ const leftContent = (
       <HeaderComponent
         facilities={parameters.facilities}
         selectedFacilityId={selectedFacilityId}
-        onFacilityChange={handleFacilityChange}
         selectedYear={selectedYear}
         selectedMonth={selectedMonth}
         onYearMonthChange={handleYearMonthChange}
@@ -378,7 +394,7 @@ const leftContent = (
 
   const webviewContent = (
     <RightPanel
-      webviewRef={sessionWebviewRef}
+      webviewRef={handleSessionWebviewRef}
       webviewReady={webviewReady}
     />
   )

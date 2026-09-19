@@ -256,6 +256,7 @@ var require_electronApi = __commonJS({
         },
         laravel_admin_update_staff_login: (data) => ipcRenderer2.invoke("laravel:admin:update-staff-login", data),
         laravel_procedure_upsertServiceRecord: (data) => ipcRenderer2.invoke("laravel:procedure:upsert-service-record", data),
+        laravel_procedure_upsertServiceRecordsBulk: (data) => ipcRenderer2.invoke("laravel:procedure:upsert-service-records-bulk", data),
         // ---- Professional Support 月次同期 ----
         laravel_procedure_syncProfessionalSupportMonth: (data) => ipcRenderer2.invoke(
           "laravel:procedure:sync-professional-support-month",
@@ -420,6 +421,7 @@ var require_electronApi = __commonJS({
         // Laravel側は登録・更新ともupsertプロシージャを使用する。
         laravel_service_record_insert: (data) => ipcRenderer2.invoke("laravel:procedure:upsert-service-record", data),
         laravel_service_record_upsert: (data) => ipcRenderer2.invoke("laravel:procedure:upsert-service-record", data),
+        laravel_service_record_bulk_upsert: (data) => ipcRenderer2.invoke("laravel:procedure:upsert-service-records-bulk", data),
         laravel_service_record_monthly: (data) => ipcRenderer2.invoke(
           "laravel:procedure:get-service-record-monthly",
           data

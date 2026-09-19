@@ -1,5 +1,7 @@
 import { useMemo } from 'react'
 
+import { useAppState } from '@/AppStateContext'
+
 import DateGroup from './DateGroup'
 
 import {
@@ -8,6 +10,8 @@ import {
 } from './utils'
 
 export default function DateView({ data, records }) {
+  const { DEBUG_FLG } = useAppState()
+
   const rows = Array.isArray(data) ? data : []
 
   const attendedRows = useMemo(
@@ -58,14 +62,15 @@ export default function DateView({ data, records }) {
 
   return (
     <div className="space-y-5">
-      {groups.map(({ date, children }) => (
-        <DateGroup
-          key={date}
-          date={date}
-          children={children}
-          recordStatusMap={recordStatusMap}
-        />
-      ))}
+      {DEBUG_FLG &&
+        groups.map(({ date, children }) => (
+          <DateGroup
+            key={date}
+            date={date}
+            children={children}
+            recordStatusMap={recordStatusMap}
+          />
+        ))}
     </div>
   )
 }

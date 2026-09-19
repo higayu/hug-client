@@ -99,6 +99,16 @@ function toNumberOrNull(value) {
   return Number.isNaN(number) ? null : number;
 }
 
+function normalizeNullableDate(value) {
+  const text = cleanText(value).replace(/\//g, "-");
+
+  if (!text || text === "0000-00-00") {
+    return null;
+  }
+
+  return text;
+}
+
 function parseStaffId(row) {
   const onclick =
     row.querySelector("button[onclick]")?.getAttribute("onclick") || "";
@@ -193,8 +203,8 @@ function parseStaffRows(ibox) {
         belongings: parseBelongings(belongingText),
         belonging_text: belongingText,
         display_order: toNumberOrNull(cells[4]?.textContent),
-        enter_date: cleanText(cells[5]?.textContent),
-        termination_date: cleanText(cells[6]?.textContent),
+        enter_date: normalizeNullableDate(cells[5]?.textContent),
+        termination_date: normalizeNullableDate(cells[6]?.textContent),
         ...parseLastUpdated(cells[7]?.textContent),
       };
     })
@@ -265,8 +275,8 @@ async function fetchInHugWebview(webview, { url, method = "GET", body }) {
   return response.text;
 }
 
-export async function fetchStaffData(onProgress, facilityId) {
-  const webview = await getHugWebviewForCache();
+export async function fetchStaffData(onProgress, facilityId, webviewOverride = null) {
+  const webview = webviewOverride ?? await getHugWebviewForCache();
   
   // 施設IDに基づいてPOSTパラメータを動的に生成
   const postParams = buildPostParams(facilityId);

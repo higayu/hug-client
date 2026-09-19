@@ -23,7 +23,8 @@ import {
     className = '',
   }) {
     const { showInfoToast } = useToast();
-    const { DEBUG_FLG } = useAppState();
+    const { DEBUG_FLG, FACILITY_ID } = useAppState();
+    const facilityId = FACILITY_ID;
     const { clearActiveWebviewCache } =
       useTabs();
   
@@ -309,16 +310,24 @@ import {
               className="m-0 p-0"
               onClick={closeMenu}
             >
-              <StaffUpdateButton />
+              <StaffUpdateButton
+                facilityId={facilityId}
+                disabled={!facilityId}
+                className="w-full"
+              />
             </li>
-  
+
             <li
               className="m-0 p-0"
               onClick={closeMenu}
             >
-              <ChildrenUpdateButton />
+              <ChildrenUpdateButton
+                facilityId={facilityId}
+                disabled={!facilityId}
+                className="w-full"
+              />
             </li>
-  
+
             <li
               className="m-0 p-0"
               onClick={closeMenu}
