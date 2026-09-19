@@ -20,6 +20,75 @@ const normalizeConditionText = (value) =>
     .replace(/\s+/g, '')
     .trim()
 
+
+const toPersonalRecordStatus = (record) => {
+  const statusText = String(record?.status ?? '')
+    .replace(/\s+/g, '')
+    .trim()
+
+  const statusClass = String(record?.statusClass ?? '')
+    .toLowerCase()
+    .trim()
+
+  if (statusText === '1') return 1
+  if (statusText === '2') return 2
+
+  if (statusText === '公開中' || statusText === '公開') {
+    return 1
+  }
+
+  if (statusText === '下書き') {
+    return 2
+  }
+
+  if (statusClass.split(/\s+/).includes('open')) {
+    return 1
+  }
+
+  return null
+}
+
+const getLaravelErrorMessage = (rawResult, result) => {
+  const candidates = [
+    result?.message,
+    rawResult?.message,
+    typeof result?.error === 'string' ? result.error : null,
+    typeof rawResult?.error === 'string' ? rawResult.error : null,
+    result?.error?.message,
+    rawResult?.error?.message,
+    result?.error?.details?.message,
+    rawResult?.error?.details?.message,
+  ]
+
+  for (const candidate of candidates) {
+    if (typeof candidate === 'string' && candidate.trim()) {
+      return candidate.trim()
+    }
+  }
+
+  const validationErrors =
+    result?.error?.validationErrors ??
+    rawResult?.error?.validationErrors ??
+    result?.errors ??
+    rawResult?.errors ??
+    null
+
+  if (validationErrors && typeof validationErrors === 'object') {
+    const messages = Object.entries(validationErrors).flatMap(
+      ([key, values]) =>
+        (Array.isArray(values) ? values : [values])
+          .filter((value) => value !== null && value !== undefined)
+          .map((value) => `${key}: ${String(value)}`),
+    )
+
+    if (messages.length > 0) {
+      return messages.join('\n')
+    }
+  }
+
+  return '個人記録の一括保存に失敗しました。'
+}
+
 const getPersonalRecordSkipReason = (record) => {
   const attendance = normalizeConditionText(record?.attendance)
   const status = normalizeConditionText(record?.status)
@@ -68,6 +137,7 @@ const toBulkRecord = (record, facilityId) => {
     served_date: servedDate,
     facility_id: normalizedFacilityId,
     note: String(record.note),
+    status: toPersonalRecordStatus(record),
     is_copy: 0,
     is_deleted: 0,
     recorded_staff_id:
@@ -341,12 +411,17 @@ export default function AllSyncButton({
     const result = unwrapBulkResult(rawResult)
 
     if (!result?.success) {
+      console.error(
+        '[全データ一括更新] 個人記録Laravel保存失敗:',
+        {
+          rawResult,
+          result,
+          payload,
+        },
+      )
+
       throw new Error(
-        result?.message ||
-          result?.error ||
-          rawResult?.message ||
-          rawResult?.error ||
-          '個人記録の一括保存に失敗しました。',
+        getLaravelErrorMessage(rawResult, result),
       )
     }
 
