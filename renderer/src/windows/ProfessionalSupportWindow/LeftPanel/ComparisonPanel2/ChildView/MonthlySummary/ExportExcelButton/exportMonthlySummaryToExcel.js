@@ -11,11 +11,13 @@ const TEXT_COLOR = '111827'
 const ATTENDANCE_COLOR = '374151'
 const ADDITION_COLOR = '1D4ED8'
 const RECORD_COLOR = '4338CA'
+const PERSONAL_RECORD_COLOR = '047857'
 
 function getWarningState(item) {
   const attendanceCount = Number(item.attendanceCount) || 0
   const additionCount = Number(item.additionCount) || 0
   const recordCount = Number(item.recordCount) || 0
+  const personalRecordCount = Number(item.personalRecordCount) || 0
 
   const isAdditionWarning =
     (attendanceCount >= 2 && additionCount < 2) ||
@@ -29,6 +31,7 @@ function getWarningState(item) {
     attendanceCount,
     additionCount,
     recordCount,
+    personalRecordCount,
     isAdditionWarning,
     isRecordWarning,
     hasWarning: isAdditionWarning || isRecordWarning,
@@ -67,12 +70,16 @@ export async function exportMonthlySummaryToExcel({
       key: 'recordCount',
       width: 20,
     },
+    {
+      key: 'personalRecordCount',
+      width: 16,
+    },
   ]
 
   // -----------------------------
   // タイトル
   // -----------------------------
-  worksheet.mergeCells('A1:D1')
+  worksheet.mergeCells('A1:E1')
 
   const titleCell = worksheet.getCell('A1')
 
@@ -99,12 +106,12 @@ export async function exportMonthlySummaryToExcel({
   // -----------------------------
   // 説明
   // -----------------------------
-  worksheet.mergeCells('A2:D2')
+  worksheet.mergeCells('A2:E2')
 
   const descriptionCell = worksheet.getCell('A2')
 
   descriptionCell.value =
-    '月内に出席があった児童を基準に、出席数、専門的支援実施加算（ID=55）の登録数と専門的支援一覧数を集計しています。'
+    '月内に出席があった児童を基準に、出席数、専門的支援実施加算（ID=55）の登録数、専門的支援一覧数、Laravel保存済み個人記録数を集計しています。'
 
   descriptionCell.font = {
     size: 10,
@@ -131,6 +138,7 @@ export async function exportMonthlySummaryToExcel({
     '出席数',
     '加算登録数',
     '専門的支援一覧数',
+    '個人記録数',
   ])
 
   headerRow.height = 24
@@ -189,6 +197,7 @@ export async function exportMonthlySummaryToExcel({
       attendanceCount,
       additionCount,
       recordCount,
+      personalRecordCount,
       isAdditionWarning,
       isRecordWarning,
       hasWarning,
@@ -199,6 +208,7 @@ export async function exportMonthlySummaryToExcel({
       attendanceCount,
       additionCount,
       recordCount,
+      personalRecordCount,
     ])
 
     row.height = 24
@@ -295,6 +305,14 @@ export async function exportMonthlySummaryToExcel({
             argb: RECORD_COLOR,
           },
         }
+
+    // 個人記録数
+    row.getCell(5).font = {
+      bold: true,
+      color: {
+        argb: PERSONAL_RECORD_COLOR,
+      },
+    }
   })
 
   // -----------------------------

@@ -1,19 +1,19 @@
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 
 import { useAppState } from '@/AppStateContext'
-
 
 import ChildView from './ChildView'
 import { buildCalendar, getIssueLabel } from './helpers'
 
-export default function ComparisonPanel({
+export default function ComparisonPanel2({
   loading,
   error,
   data,
-  records,
+  records = [],
+  facilityId,
+  targetMonth,
 }) {
   const { DEBUG_FLG } = useAppState()
-  const [activeTab, setActiveTab] = useState('child')
 
   const rows = Array.isArray(data) ? data : []
 
@@ -76,7 +76,12 @@ export default function ComparisonPanel({
         </div>
       </div>
 
-      <ChildView data={rows} records={records} />
+      <ChildView
+        data={rows}
+        records={records}
+        facilityId={facilityId}
+        targetMonth={targetMonth}
+      />
 
       <div className="flex flex-wrap gap-2 text-[11px] text-gray-500">
         <span className="rounded bg-blue-100 px-2 py-1 text-blue-700">
@@ -84,6 +89,9 @@ export default function ComparisonPanel({
         </span>
         <span className="rounded bg-indigo-100 px-2 py-1 text-indigo-700">
           一覧 = 加算一覧データ
+        </span>
+        <span className="rounded bg-emerald-100 px-2 py-1 text-emerald-700">
+          個人記録 = Laravel保存済みデータ
         </span>
         <span className="rounded bg-red-100 px-2 py-1 text-red-700">
           加算なし

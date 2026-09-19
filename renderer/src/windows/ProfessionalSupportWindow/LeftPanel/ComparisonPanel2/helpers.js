@@ -161,8 +161,19 @@ export const groupByChild = (rows) => {
     const key = row.child_name_key || row.child_name || 'unknown'
 
     if (!map.has(key)) {
+      const childId = Number(
+        row?.children_id ??
+          row?.child_id ??
+          row?.childrenId ??
+          row?.childId,
+      )
+
       map.set(key, {
         key,
+        childId:
+          Number.isInteger(childId) && childId > 0
+            ? childId
+            : null,
         childName: row.child_name || '-',
         rows: [],
       })

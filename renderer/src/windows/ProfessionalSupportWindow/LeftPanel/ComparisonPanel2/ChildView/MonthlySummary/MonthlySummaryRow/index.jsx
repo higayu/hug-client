@@ -2,7 +2,7 @@ import {
   formatMonthDay,
   getRecordStatus,
   hasProfessionalSupportAddition,
-} from '../../../DateView/utils'
+} from './utils'
 
 export default function MonthlySummaryRow({
   item,
@@ -13,6 +13,7 @@ export default function MonthlySummaryRow({
   const attendanceCount = Number(item.attendanceCount) || 0
   const additionCount = Number(item.additionCount) || 0
   const recordCount = Number(item.recordCount) || 0
+  const personalRecordCount = Number(item.personalRecordCount) || 0
 
   const isAdditionWarning =
     (attendanceCount >= 2 && additionCount < 2) ||
@@ -72,11 +73,17 @@ export default function MonthlySummaryRow({
             {recordCount}
           </span>
         </td>
+
+        <td className="px-4 py-2.5 text-center">
+          <span className="font-semibold tabular-nums text-emerald-700">
+            {personalRecordCount}
+          </span>
+        </td>
       </tr>
 
       {expanded && (
         <tr>
-          <td colSpan={4} className="bg-gray-50 p-0">
+          <td colSpan={5} className="bg-gray-50 p-0">
             <div className="border-t border-gray-200 px-6 py-3">
               <div className="overflow-x-auto rounded border border-gray-200 bg-white">
                 <table className="min-w-full divide-y divide-gray-200 text-xs">

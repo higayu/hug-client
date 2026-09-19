@@ -22,31 +22,29 @@ export default function MonthlySummary({
           </p>
         </div>
 
-        <ExportExcelButton
-          items={items}
-          year={year}
-          month={month}
-        />
+        <ExportExcelButton items={items} year={year} month={month} />
       </div>
 
       <div className="overflow-x-auto">
         <table className="min-w-full text-sm">
           <thead className="border-b border-gray-200 bg-white text-left text-xs text-gray-500">
             <tr>
-              <th className="w-[40%] px-4 py-2 font-medium">
-                氏名
-              </th>
+              <th className="w-[32%] px-4 py-2 font-medium">氏名</th>
 
-              <th className="w-[20%] px-4 py-2 text-center font-medium">
+              <th className="w-[17%] px-4 py-2 text-center font-medium">
                 出席数
               </th>
 
-              <th className="w-[20%] px-4 py-2 text-center font-medium">
+              <th className="w-[17%] px-4 py-2 text-center font-medium">
                 加算登録数
               </th>
 
-              <th className="w-[20%] px-4 py-2 text-center font-medium">
+              <th className="w-[17%] px-4 py-2 text-center font-medium">
                 専門的支援一覧数
+              </th>
+
+              <th className="w-[17%] px-4 py-2 text-center font-medium">
+                個人記録数
               </th>
             </tr>
           </thead>

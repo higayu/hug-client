@@ -7,6 +7,7 @@ import AttendancePanel from './AttendancePanel'
 import AdditionCountPanel from './AdditionCountPanel'
 import AdditionListPanel from './AdditionListPanel'
 import ComparisonPanel from './ComparisonPanel'
+import ComparisonPanel2 from './ComparisonPanel2'
 import ProfessionalSupportAutoSync from './ProfessionalSupportAutoSync'
 import ProfessionalSupportSyncButton from './ProfessionalSupportSyncButton'
 import PersonalRecordTestPanel from './PersonalRecordTestPanel'
@@ -61,6 +62,8 @@ export default function LeftPanel({
     onFetchFailed: onSyncFetchFailed,
     onCompleted: onSyncCompleted,
   })
+
+  const targetMonth = `${year}-${String(month).padStart(2, '0')}`
 
   return (
     <section className="flex min-h-0 flex-1 flex-col">
@@ -145,11 +148,13 @@ export default function LeftPanel({
         )}
 
         {DEBUG_FLG && activeTab === 'comparison' && (
-          <ComparisonPanel
+          <ComparisonPanel2
             loading={comparisonLoading}
             error={comparisonError}
             data={comparisonData}
             records={additionListData?.records ?? []}
+            facilityId={facilityId}
+            targetMonth={targetMonth}
           />
         )}
       </div>
