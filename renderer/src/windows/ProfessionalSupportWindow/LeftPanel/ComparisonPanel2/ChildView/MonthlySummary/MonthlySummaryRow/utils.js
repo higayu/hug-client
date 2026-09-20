@@ -88,3 +88,79 @@ export const getRecordStatus = ({ row, recordStatusMap }) => {
 
   return recordStatusMap.get(`${date}::${name}`) || ''
 }
+
+export const formatPersonalRecordStatus = (status) => {
+  const value = String(status ?? '').trim()
+
+  if (value === '1') return '公開中'
+  if (value === '2') return '下書き'
+
+  return value
+}
+
+const personalRecordStatusPriority = (status) => {
+  const value = String(status ?? '').trim()
+
+  if (value === '1' || value === '公開中' || value === '公開') return 3
+  if (value === '2' || value === '下書き') return 2
+  if (value) return 1
+
+  return 0
+}
+
+export const buildPersonalRecordStatusMap = (records) => {
+  const map = new Map()
+  const rows = Array.isArray(records) ? records : []
+
+  rows.forEach((record) => {
+    const date = normalizeDate(
+      record?.served_date ?? record?.target_date ?? record?.targetDate,
+    )
+    const childId = String(
+      record?.children_id ?? record?.child_id ?? record?.childrenId ?? '',
+    ).trim()
+    const childName = normalizeName(
+      record?.children_name ?? record?.child_name ?? record?.childName,
+    )
+    const status = record?.status
+
+    if (!date || (!childId && !childName)) return
+
+    const keys = [
+      childId ? `${date}::id:${childId}` : '',
+      childName ? `${date}::name:${childName}` : '',
+    ].filter(Boolean)
+
+    keys.forEach((key) => {
+      const current = map.get(key)
+
+      if (
+        current === undefined ||
+        personalRecordStatusPriority(status) >
+          personalRecordStatusPriority(current)
+      ) {
+        map.set(key, status)
+      }
+    })
+  })
+
+  return map
+}
+
+export const getPersonalRecordStatus = ({ row, personalRecordStatusMap }) => {
+  const date = normalizeDate(row?.target_date)
+  const childId = String(
+    row?.children_id ?? row?.child_id ?? row?.childrenId ?? '',
+  ).trim()
+  const childName = normalizeName(row?.child_name)
+
+  if (!date) return ''
+
+  const status =
+    (childId && personalRecordStatusMap?.get(`${date}::id:${childId}`)) ||
+    (childName &&
+      personalRecordStatusMap?.get(`${date}::name:${childName}`)) ||
+    ''
+
+  return formatPersonalRecordStatus(status)
+}

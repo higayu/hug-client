@@ -1,5 +1,6 @@
 import {
   formatMonthDay,
+  getPersonalRecordStatus,
   getRecordStatus,
   hasProfessionalSupportAddition,
 } from './utils'
@@ -9,6 +10,7 @@ export default function MonthlySummaryRow({
   expanded,
   onToggle,
   recordStatusMap,
+  personalRecordStatusMap,
 }) {
   const attendanceCount = Number(item.attendanceCount) || 0
   const additionCount = Number(item.additionCount) || 0
@@ -98,6 +100,9 @@ export default function MonthlySummaryRow({
                       <th className="whitespace-nowrap px-3 py-2 font-medium">
                         専門的支援一覧
                       </th>
+                      <th className="whitespace-nowrap px-3 py-2 font-medium">
+                        個人記録
+                      </th>
                     </tr>
                   </thead>
 
@@ -107,6 +112,10 @@ export default function MonthlySummaryRow({
                       const recordStatus = getRecordStatus({
                         row,
                         recordStatusMap,
+                      })
+                      const personalRecordStatus = getPersonalRecordStatus({
+                        row,
+                        personalRecordStatusMap,
                       })
 
                       return (
@@ -132,6 +141,16 @@ export default function MonthlySummaryRow({
                             {recordStatus ? (
                               <span className="font-medium text-gray-700">
                                 {recordStatus}
+                              </span>
+                            ) : (
+                              <span className="text-gray-300">-</span>
+                            )}
+                          </td>
+
+                          <td className="px-3 py-2">
+                            {personalRecordStatus ? (
+                              <span className="font-medium text-emerald-700">
+                                {personalRecordStatus}
                               </span>
                             ) : (
                               <span className="text-gray-300">-</span>

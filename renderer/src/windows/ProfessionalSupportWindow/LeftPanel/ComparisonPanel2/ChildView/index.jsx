@@ -12,6 +12,7 @@ import {
 } from '../../ComparisonPanel/DateView/utils'
 
 import MonthlySummary from './MonthlySummary'
+import { buildPersonalRecordStatusMap } from './MonthlySummary/MonthlySummaryRow/utils'
 
 export default function ChildView({
   data,
@@ -159,6 +160,11 @@ export default function ChildView({
     return map
   }, [personalRecords, targetMonth])
 
+  const personalRecordStatusMap = useMemo(
+    () => buildPersonalRecordStatusMap(personalRecords),
+    [personalRecords],
+  )
+
   const monthlySummary = useMemo(() => {
     const professionalRecordCountMap = new Map()
 
@@ -229,6 +235,7 @@ export default function ChildView({
         expandedChildKey={expandedChildKey}
         onToggleChild={handleToggleChild}
         recordStatusMap={recordStatusMap}
+        personalRecordStatusMap={personalRecordStatusMap}
       />
     </div>
   )

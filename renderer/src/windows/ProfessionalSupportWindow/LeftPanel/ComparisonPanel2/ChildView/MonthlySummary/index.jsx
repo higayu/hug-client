@@ -8,6 +8,7 @@ export default function MonthlySummary({
   expandedChildKey,
   onToggleChild,
   recordStatusMap,
+  personalRecordStatusMap,
 }) {
   return (
     <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
@@ -57,6 +58,7 @@ export default function MonthlySummary({
                 expanded={expandedChildKey === item.childKey}
                 onToggle={() => onToggleChild(item.childKey)}
                 recordStatusMap={recordStatusMap}
+                personalRecordStatusMap={personalRecordStatusMap}
               />
             ))}
           </tbody>
