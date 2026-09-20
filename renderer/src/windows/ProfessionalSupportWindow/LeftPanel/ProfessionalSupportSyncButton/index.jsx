@@ -42,10 +42,11 @@ export default function ProfessionalSupportSyncButton({
           onClick={onClick}
           disabled={disabled || syncing}
           className="rounded bg-blue-600 px-3 py-3 text-xs font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+          title="HUGから再取得してDBへ保存"
         >
           {syncing
             ? progressText || 'HUGから取得・DB保存中...'
-            : 'HUGから再取得してDBへ保存'}
+            : '支援加算の再取得'}
         </button>
 
         <div className="whitespace-nowrap text-xs text-gray-500">

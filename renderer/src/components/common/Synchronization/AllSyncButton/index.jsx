@@ -180,7 +180,7 @@ export default function AllSyncButton({
   setSendResult,
 }) {
   const [isRunning, setIsRunning] = useState(false)
-  const [label, setLabel] = useState('全データ一括更新')
+  const [label, setLabel] = useState('個人記録の更新')
 
   const storeFacilityId = useSelector(selectFacilityId)
   const facilityId = facilityIdProp ?? storeFacilityId
@@ -215,7 +215,7 @@ export default function AllSyncButton({
     )
 
     console.groupCollapsed(
-      `[全データ一括更新] 職員取得データ (${result.fetched_count ?? 0}件)`,
+      `[個人記録の更新] 職員取得データ (${result.fetched_count ?? 0}件)`,
     )
     console.log('取得データ:', result)
     console.table(result.staff ?? [])
@@ -256,7 +256,7 @@ export default function AllSyncButton({
     )
 
     console.groupCollapsed(
-      `[全データ一括更新] 児童取得データ (${result.children?.length ?? 0}件)`,
+      `[個人記録の更新] 児童取得データ (${result.children?.length ?? 0}件)`,
     )
     console.log('取得データ:', result)
     console.table(result.children ?? [])
@@ -293,7 +293,7 @@ export default function AllSyncButton({
     }
 
     console.groupCollapsed(
-      `[全データ一括更新] Laravel児童送信データ (${childrenJson.length}件)`,
+      `[個人記録の更新] Laravel児童送信データ (${childrenJson.length}件)`,
     )
     console.log('送信データ:', payload)
     console.table(childrenJson)
@@ -425,7 +425,7 @@ export default function AllSyncButton({
     }
 
     console.groupCollapsed(
-      `[全データ一括更新] 個人記録Laravel送信データ (${bulkRecords.length}件)`,
+      `[個人記録の更新] 個人記録Laravel送信データ (${bulkRecords.length}件)`,
     )
     console.log('送信データ:', payload)
     console.table(bulkRecords)
@@ -436,7 +436,7 @@ export default function AllSyncButton({
 
     if (!result?.success) {
       console.error(
-        '[全データ一括更新] 個人記録Laravel保存失敗:',
+        '[個人記録の更新] 個人記録Laravel保存失敗:',
         {
           rawResult,
           result,
@@ -537,7 +537,7 @@ export default function AllSyncButton({
 
       showSuccessToast?.(
         [
-          '全データ一括更新が完了しました',
+          '個人記録の更新が完了しました',
           `職員: ${staffResult.fetchedCount}件`,
           `児童: ${childrenResult.targetCount}件`,
           `個人記録保存: ${personalRecordResult.savedCount}件`,
@@ -545,7 +545,7 @@ export default function AllSyncButton({
         6000,
       )
     } catch (error) {
-      console.error(`[全データ一括更新] ${phase}でエラー:`, error)
+      console.error(`[個人記録の更新] ${phase}でエラー:`, error)
 
       const message = error?.message || String(error)
 
@@ -560,7 +560,7 @@ export default function AllSyncButton({
       }
 
       showErrorToast?.(
-        `全データ一括更新は「${phase}」で停止しました: ${message}`,
+        `個人記録の更新は「${phase}」で停止しました: ${message}`,
       )
     } finally {
       setLoading?.(false)

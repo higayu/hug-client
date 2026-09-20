@@ -9,7 +9,7 @@ import {
   buildRecordStatusMap,
   hasProfessionalSupportAddition,
   normalizeName,
-} from '../../ComparisonPanel/DateView/utils'
+} from '../utils'
 
 import MonthlySummary from './MonthlySummary'
 import { buildPersonalRecordStatusMap } from './MonthlySummary/MonthlySummaryRow/utils'

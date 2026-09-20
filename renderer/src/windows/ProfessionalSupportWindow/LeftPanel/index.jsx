@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 
 import { useAppState } from '@/AppStateContext'
 
@@ -6,11 +6,12 @@ import LeftTabs from './LeftTabs'
 import AttendancePanel from './AttendancePanel'
 import AdditionCountPanel from './AdditionCountPanel'
 import AdditionListPanel from './AdditionListPanel'
-import ComparisonPanel from './ComparisonPanel'
 import ComparisonPanel2 from './ComparisonPanel2'
 import ProfessionalSupportAutoSync from './ProfessionalSupportAutoSync'
 import ProfessionalSupportSyncButton from './ProfessionalSupportSyncButton'
-import PersonalRecordTestPanel from './PersonalRecordTestPanel'
+import PersonalRecordSyncButton, {
+  PersonalRecordSyncResultPanel,
+} from './PersonalRecordSyncButton'
 import useProfessionalSupportSync from './ProfessionalSupportSync'
 
 export default function LeftPanel({
@@ -42,6 +43,11 @@ export default function LeftPanel({
 }) {
   const { DEBUG_FLG } = useAppState()
   const [activeTab, setActiveTab] = useState('comparison')
+  const [personalRecordResult, setPersonalRecordResult] = useState(null)
+
+  const handlePersonalRecordResultChange = useCallback((snapshot) => {
+    setPersonalRecordResult(snapshot)
+  }, [])
 
   const {
     runSync,
@@ -67,29 +73,44 @@ export default function LeftPanel({
 
   return (
     <section className="flex min-h-0 flex-1 flex-col">
-      <ProfessionalSupportAutoSync
-        facilityId={facilityId}
-        year={year}
-        month={month}
-        webviewReady={webviewReady}
-        syncStatusChecked={syncStatusChecked}
-        isMonthSynced={isMonthSynced}
-        comparisonLoading={comparisonLoading}
-        comparisonError={comparisonError}
-        syncing={syncing}
-        runSync={runSync}
-        clearSyncStatus={clearSyncStatus}
-      />
+      <div className="border-b border-gray-100 px-4 py-2">
+        <div className="flex flex-wrap items-start gap-2">
+          <ProfessionalSupportAutoSync
+            facilityId={facilityId}
+            year={year}
+            month={month}
+            webviewReady={webviewReady}
+            syncStatusChecked={syncStatusChecked}
+            isMonthSynced={isMonthSynced}
+            comparisonLoading={comparisonLoading}
+            comparisonError={comparisonError}
+            syncing={syncing}
+            runSync={runSync}
+            clearSyncStatus={clearSyncStatus}
+          />
 
-      {DEBUG_FLG && (
-        <PersonalRecordTestPanel
-          webviewRef={webviewRef}
-          webviewReady={webviewReady}
-          facilityId={facilityId}
-          year={year}
-          month={month}
-        />
-      )}
+          <ProfessionalSupportSyncButton
+            onClick={runSync}
+            disabled={!facilityId || !webviewReady}
+            syncing={syncing}
+            progressText={progressText}
+            syncMessage={syncMessage}
+            syncError={syncError}
+            lastSyncedAt={lastSyncedAt}
+          />
+
+          <PersonalRecordSyncButton
+            webviewRef={webviewRef}
+            webviewReady={webviewReady}
+            facilityId={facilityId}
+            year={year}
+            month={month}
+            className="min-w-0 flex-1"
+            showInlineResult={false}
+            onResultChange={handlePersonalRecordResultChange}
+          />
+        </div>
+      </div>
 
       {DEBUG_FLG && (
         <LeftTabs
@@ -98,34 +119,19 @@ export default function LeftPanel({
         />
       )}
 
-      <div className="border-b border-gray-100 px-4 py-2">
-        <ProfessionalSupportSyncButton
-          onClick={runSync}
-          disabled={!facilityId || !webviewReady}
-          syncing={syncing}
-          progressText={progressText}
-          syncMessage={syncMessage}
-          syncError={syncError}
-          lastSyncedAt={lastSyncedAt}
-        />
-      </div>
-
       <div className="min-h-0 flex-1 overflow-y-auto p-4">
-        {!DEBUG_FLG && (
-          <ComparisonPanel
-            loading={comparisonLoading}
-            error={comparisonError}
-            data={comparisonData}
-            records={additionListData?.records ?? []}
-          />
-        )}
-
         {DEBUG_FLG && activeTab === 'attendance' && (
           <AttendancePanel
             loading={loading}
             error={error}
             attendanceData={attendanceData}
             targetDate={targetDate}
+          />
+        )}
+
+        {DEBUG_FLG && activeTab === 'personalRecord' && (
+          <PersonalRecordSyncResultPanel
+            snapshot={personalRecordResult}
           />
         )}
 
@@ -147,7 +153,7 @@ export default function LeftPanel({
           />
         )}
 
-        {DEBUG_FLG && activeTab === 'comparison' && (
+        {(!DEBUG_FLG || activeTab === 'comparison') && (
           <ComparisonPanel2
             loading={comparisonLoading}
             error={comparisonError}

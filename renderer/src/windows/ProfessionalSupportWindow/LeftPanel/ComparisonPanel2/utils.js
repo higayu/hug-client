@@ -14,7 +14,6 @@ export const normalizeName = (value) =>
 
 export const normalizeDate = (value) => {
   const text = String(value || '').trim()
-
   const iso = text.match(/^(\d{4})-(\d{2})-(\d{2})$/)
 
   if (iso) {
@@ -35,9 +34,7 @@ export const normalizeDate = (value) => {
 }
 
 export const formatMonthDay = (value) => {
-  const match = String(value || '').match(
-    /^\d{4}-(\d{2})-(\d{2})$/,
-  )
+  const match = String(value || '').match(/^\d{4}-(\d{2})-(\d{2})$/)
 
   if (!match) {
     return value || '-'

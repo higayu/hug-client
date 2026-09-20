@@ -1,5 +1,6 @@
 const TABS = [
   { id: 'comparison', label: '月次比較' },
+  { id: 'personalRecord', label: '個人記録' },
   { id: 'attendance', label: '出席データ' },
   { id: 'additionCount', label: '加算登録数データ' },
   { id: 'additionList', label: '加算一覧データ' },
