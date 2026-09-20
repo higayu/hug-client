@@ -5,21 +5,20 @@ export const SERVICE_RECORD_ITEM_ID = 1;
 
 const HUG_WM_ORIGIN = "https://www.hug-ayumu.link/hug/wm/";
 
-/** HUGの表示状態をservice_record.statusへ変換（1:公開 / 2:下書き） */
 export function toPersonalRecordStatus(record) {
-  const statusText = String(record?.status ?? "")
-    .replace(/\s+/g, "")
-    .trim();
+  const status = String(record?.status ?? "").trim();
   const statusClass = String(record?.statusClass ?? "")
-    .toLowerCase()
-    .trim();
+    .trim()
+    .toLowerCase();
 
-  if (statusText === "1" || statusText === "公開" || statusText === "公開中") {
+  if (status === "1" || status === "公開" || status === "公開中") {
     return 1;
   }
-  if (statusText === "2" || statusText === "下書き") {
+
+  if (status === "2" || status === "下書き") {
     return 2;
   }
+
   if (statusClass.split(/\s+/).includes("open")) {
     return 1;
   }

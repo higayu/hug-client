@@ -192,7 +192,7 @@ export async function fetchPersonalRecordList(webview, opts) {
               ""
             ).trim();
             const statusClass = statusLabel
-              ? Array.from(statusLabel.classList).join(" ")
+              ? [...statusLabel.classList].join(" ")
               : "";
 
             if (ONLY_PRESENT && attendanceText !== "出席") {
