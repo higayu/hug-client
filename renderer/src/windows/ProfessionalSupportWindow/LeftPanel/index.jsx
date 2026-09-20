@@ -9,6 +9,7 @@ import AdditionListPanel from './AdditionListPanel'
 import ComparisonPanel2 from './ComparisonPanel2'
 import ProfessionalSupportAutoSync from './ProfessionalSupportAutoSync'
 import ProfessionalSupportSyncButton from './ProfessionalSupportSyncButton'
+import ProfessionalSupportAndPersonalRecordSyncButton from './ProfessionalSupportAndPersonalRecordSyncButton'
 import PersonalRecordSyncButton, {
   PersonalRecordSyncResultPanel,
 } from './PersonalRecordSyncButton'
@@ -44,7 +45,6 @@ export default function LeftPanel({
   const { DEBUG_FLG } = useAppState()
   const [activeTab, setActiveTab] = useState('comparison')
   const [personalRecordResult, setPersonalRecordResult] = useState(null)
-
   const handlePersonalRecordResultChange = useCallback((snapshot) => {
     setPersonalRecordResult(snapshot)
   }, [])
@@ -89,26 +89,45 @@ export default function LeftPanel({
             clearSyncStatus={clearSyncStatus}
           />
 
-          <ProfessionalSupportSyncButton
-            onClick={runSync}
-            disabled={!facilityId || !webviewReady}
-            syncing={syncing}
-            progressText={progressText}
-            syncMessage={syncMessage}
-            syncError={syncError}
-            lastSyncedAt={lastSyncedAt}
-          />
-
-          <PersonalRecordSyncButton
+          <ProfessionalSupportAndPersonalRecordSyncButton
             webviewRef={webviewRef}
             webviewReady={webviewReady}
             facilityId={facilityId}
             year={year}
             month={month}
-            className="min-w-0 flex-1"
-            showInlineResult={false}
-            onResultChange={handlePersonalRecordResultChange}
+            targetDate={targetDate}
+            onFetchStart={onSyncFetchStart}
+            onFetched={onSyncFetched}
+            onFetchFailed={onSyncFetchFailed}
+            onCompleted={onSyncCompleted}
+            onPersonalRecordResultChange={handlePersonalRecordResultChange}
           />
+
+          {DEBUG_FLG && (
+            <ProfessionalSupportSyncButton
+              onClick={runSync}
+              disabled={!facilityId || !webviewReady}
+              syncing={syncing}
+              progressText={progressText}
+              syncMessage={syncMessage}
+              syncError={syncError}
+              lastSyncedAt={lastSyncedAt}
+            />
+          )}
+
+          {DEBUG_FLG && (
+            <div className="min-w-0 flex-1">
+              <PersonalRecordSyncButton
+                webviewRef={webviewRef}
+                webviewReady={webviewReady}
+                facilityId={facilityId}
+                year={year}
+                month={month}
+                showInlineResult={false}
+                onResultChange={handlePersonalRecordResultChange}
+              />
+            </div>
+          )}
         </div>
       </div>
 
