@@ -14,6 +14,10 @@ import { buildPersonalRecordFetchScript } from './personalRecord'
 import { fetchPersonalRecordDetails } from './fetchPersonalRecordDetails'
 
 const PERSONAL_RECORD_ITEM_ID = 1
+const TOTAL_STEPS = 4
+
+const formatStepLabel = (step, text) =>
+  `${step}/${TOTAL_STEPS} ${text}`
 
 const normalizeConditionText = (value) =>
   String(value ?? '')
@@ -198,11 +202,13 @@ export default function AllSyncButton({
   }
 
   const syncStaffs = async (activeWebview) => {
-    setLabel('職員取得中...')
+    setLabel(formatStepLabel(1, '職員更新中...'))
 
     const result = await fetchStaffData(
       (page, maxPage) => {
-        setLabel(`職員取得 ${page}/${maxPage}`)
+        setLabel(
+          formatStepLabel(1, `職員取得 ${page}/${maxPage}`),
+        )
       },
       facilityId,
       activeWebview,
@@ -221,7 +227,7 @@ export default function AllSyncButton({
       )
     }
 
-    setLabel('職員DB更新中...')
+    setLabel(formatStepLabel(1, '職員DB更新中...'))
 
     const syncResult = await window.electronAPI.syncHugStaffs(result)
 
@@ -233,14 +239,16 @@ export default function AllSyncButton({
   }
 
   const syncChildren = async (activeWebview) => {
-    setLabel('児童取得中...')
+    setLabel(formatStepLabel(2, '児童更新中...'))
 
     const now = new Date()
     const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
 
     const result = await fetchChildrenData(
       (page, maxPage) => {
-        setLabel(`児童取得 ${page}/${maxPage}`)
+        setLabel(
+          formatStepLabel(2, `児童取得 ${page}/${maxPage}`),
+        )
       },
       facilityId,
       today,
@@ -260,7 +268,7 @@ export default function AllSyncButton({
       )
     }
 
-    setLabel('児童DB更新中...')
+    setLabel(formatStepLabel(2, '児童DB更新中...'))
 
     const facilityIdNum = Number(facilityId) || 3
 
@@ -308,8 +316,8 @@ export default function AllSyncButton({
     }
   }
 
-  const syncPersonalRecords = async (activeWebview) => {
-    setLabel('個人記録取得中...')
+  const fetchPersonalRecords = async (activeWebview) => {
+    setLabel(formatStepLabel(3, '個人記録取得中...'))
     setLoading?.(true)
     setSending?.(false)
     setError?.('')
@@ -376,6 +384,26 @@ export default function AllSyncButton({
       )
     }
 
+    return {
+      bulkRecords,
+      fetchedCount: fetchedRecords.length,
+      skippedCount,
+      detailErrorCount: detailResult.errorCount ?? 0,
+    }
+  }
+
+  const savePersonalRecords = async (personalRecordData) => {
+    setLabel(formatStepLabel(4, '個人記録をLaravelへ保存中...'))
+    setLoading?.(false)
+    setSending?.(true)
+
+    const {
+      bulkRecords,
+      fetchedCount,
+      skippedCount,
+      detailErrorCount,
+    } = personalRecordData
+
     const sendApi =
       window.electronAPI?.laravel_procedure_upsertServiceRecordsBulk ??
       window.electronAPI?.laravel_service_record_bulk_upsert
@@ -385,10 +413,6 @@ export default function AllSyncButton({
         '一括保存APIがpreloadから公開されていません。main / preload の導線を確認してください。',
       )
     }
-
-    setLabel('個人記録保存中...')
-    setLoading?.(false)
-    setSending?.(true)
 
     const staffId = Number(STAFF_ID)
     const payload = {
@@ -442,10 +466,10 @@ export default function AllSyncButton({
     })
 
     return {
-      fetchedCount: fetchedRecords.length,
+      fetchedCount,
       savedCount,
       skippedCount,
-      detailErrorCount: detailResult.errorCount ?? 0,
+      detailErrorCount,
     }
   }
 
@@ -473,28 +497,43 @@ export default function AllSyncButton({
     }
 
     setIsRunning(true)
-    setLabel('全データ一括更新開始...')
+    setLabel(formatStepLabel(1, '職員更新を開始...'))
     setError?.('')
     setSendError?.('')
     setSendResult?.(null)
 
-    showInfoToast?.('職員・児童・個人記録を順番に更新しています', 2500)
+    showInfoToast?.(
+      '職員→児童→個人記録取得→Laravel保存の順で実行します',
+      3000,
+    )
 
-    let phase = '職員同期'
+    let currentStep = 1
+    let phase = '職員更新'
+    let completed = false
 
     try {
-      // 1. 職員同期
+      // 1/4 職員更新
       const staffResult = await syncStaffs(activeWebview)
 
-      // 2. 児童同期
-      phase = '児童同期'
+      // 2/4 児童更新
+      currentStep = 2
+      phase = '児童更新'
       const childrenResult = await syncChildren(activeWebview)
 
-      // 3. 個人記録取得 + Laravel保存
-      phase = '個人記録取得・保存'
-      const personalRecordResult = await syncPersonalRecords(activeWebview)
+      // 3/4 個人記録の取得
+      currentStep = 3
+      phase = '個人記録の取得'
+      const personalRecordData = await fetchPersonalRecords(activeWebview)
 
-      setLabel('全データ一括更新完了')
+      // 4/4 個人記録のLaravel保存
+      currentStep = 4
+      phase = '個人記録のLaravel保存'
+      const personalRecordResult = await savePersonalRecords(
+        personalRecordData,
+      )
+
+      completed = true
+      setLabel(formatStepLabel(4, 'すべて完了'))
 
       showSuccessToast?.(
         [
@@ -510,7 +549,11 @@ export default function AllSyncButton({
 
       const message = error?.message || String(error)
 
-      if (phase === '個人記録取得・保存') {
+      setLabel(
+        formatStepLabel(currentStep, `${phase}で停止`),
+      )
+
+      if (currentStep >= 3) {
         setSendError?.(message)
       } else {
         setError?.(message)
@@ -523,7 +566,11 @@ export default function AllSyncButton({
       setLoading?.(false)
       setSending?.(false)
       setIsRunning(false)
-      setLabel('全データ一括更新')
+
+      if (!completed) {
+        // エラー時は停止した工程をボタンに残す。
+        return
+      }
     }
   }
 
@@ -554,7 +601,7 @@ export default function AllSyncButton({
         disabled:bg-gray-300
         ${className}
       `}
-      title="職員同期 → 児童同期 → 個人記録取得 → Laravel保存を順番に実行"
+      title="職員更新 → 児童更新 → 個人記録取得 → Laravel保存を順番に実行"
     >
       <ArrowPathIcon
         className={`h-5 w-5 shrink-0 ${isRunning ? 'animate-spin' : ''}`}
