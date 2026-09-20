@@ -4,7 +4,7 @@ import {
 } from "react"
 
 import AbsenceButton from "./AbsenceButton"
-import ProfessionalSupportCheckPanel2 from "@/components/common/hug_function/ProfessionalSupportCheckPanel2"
+import { ProfessionalSupportCheckPanel2 } from '@/components/common/hug_function/ProfessionalSupport';
 
 import {
   EnterButton,

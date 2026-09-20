@@ -17,9 +17,11 @@ import {
   import DataBaseButton from '@/components/common/Synchronization/DataBaseButton';
   import StaffUpdateButton from '@/components/common/Synchronization/StaffUpdateButton';
   import ChildrenUpdateButton from '@/components/common/Synchronization/ChildrenUpdateButton';
-  import ProfessionalSupportSearch from '@/components/common/hug_function/ProfessionalSupportSearch';
-  
-  export default function ToolsListNavi({
+  import {
+    ProfessionalSupportSearch,
+  } from '@/components/common/hug_function/ProfessionalSupport';
+
+export default function ToolsListNavi({
     className = '',
   }) {
     const { showInfoToast } = useToast();

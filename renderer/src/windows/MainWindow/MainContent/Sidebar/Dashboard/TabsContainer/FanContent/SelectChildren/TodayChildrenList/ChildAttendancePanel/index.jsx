@@ -9,7 +9,7 @@ import {
 } from '@/components/common/hug_function/AttendanceAction'
 import { useToast } from '@/provider/ToastProvider/ToastContext'
 import AttendanceActionSection from './AttendanceActionSection'
-import PersonalRecordCheckPanel from '@/components/common/hug_function/PersonalRecordCheckPanel'
+import {PersonalRecordCheckPanel} from '@/components/common/hug_function/PersonalRecord'
 
 const pickValue = (...values) => {
   for (const value of values) {

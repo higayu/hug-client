@@ -10,7 +10,7 @@ import {
 } from "@/store/slices/aiChatSlice.js";
 
 import ProfessionalPlan from "@/components/common/hug_function/ProfessionalPlan";
-import ProfessionalSupportCheckPanel2 from "@/components/common/hug_function/ProfessionalSupportCheckPanel2";
+import {ProfessionalSupportCheckPanel2} from "@/components/common/hug_function/ProfessionalSupport";
 
 import ChildNotesTabs from "../ChildNotesTabs";
 
