@@ -31,6 +31,9 @@ function buildUpsertServiceRecordParams(data = {}) {
     String(data.served_date),
     Number(data.facility_id),
     data.note ?? null,
+    data.status === undefined || data.status === null || data.status === ""
+      ? null
+      : Number(data.status),
     Number(data.is_copy ?? 0),
     Number(data.is_deleted ?? 0),
     Number(data.recorded_staff_id ?? -1),
@@ -51,6 +54,7 @@ function buildUpsertServiceRecordParams(data = {}) {
  * @param {string} data.served_date  YYYY-MM-DD
  * @param {number} data.facility_id
  * @param {string|null} [data.note]
+ * @param {number|null} [data.status] 1:公開 / 2:下書き
  * @param {number} [data.is_copy=0]
  * @param {number} [data.is_deleted=0]
  * @param {number} [data.recorded_staff_id=-1]

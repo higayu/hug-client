@@ -1,4 +1,4 @@
-// @/common/hug_function/PersonalRecordManagerPanel2/SwitchPanel/index.jsx
+// @/common/hug_function/PersonalRecord/PersonalRecordManagerPanel2/SwitchPanel/index.jsx
 import { useState } from "react";
 import MonthControls from "./MonthControls";
 import DayControls from "./DayControls";

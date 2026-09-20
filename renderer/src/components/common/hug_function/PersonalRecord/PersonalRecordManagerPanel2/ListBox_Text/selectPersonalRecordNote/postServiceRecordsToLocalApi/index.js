@@ -5,6 +5,28 @@ export const SERVICE_RECORD_ITEM_ID = 1;
 
 const HUG_WM_ORIGIN = "https://www.hug-ayumu.link/hug/wm/";
 
+/** HUGの表示状態をservice_record.statusへ変換（1:公開 / 2:下書き） */
+export function toPersonalRecordStatus(record) {
+  const statusText = String(record?.status ?? "")
+    .replace(/\s+/g, "")
+    .trim();
+  const statusClass = String(record?.statusClass ?? "")
+    .toLowerCase()
+    .trim();
+
+  if (statusText === "1" || statusText === "公開" || statusText === "公開中") {
+    return 1;
+  }
+  if (statusText === "2" || statusText === "下書き") {
+    return 2;
+  }
+  if (statusClass.split(/\s+/).includes("open")) {
+    return 1;
+  }
+
+  return null;
+}
+
 /**
  * 編集ページ URL から cal_date（YYYY-MM-DD）を取得
  * @param {string} editPath
@@ -84,6 +106,7 @@ export function buildServiceRecordPayload(record, { childrenId, facilityId, staf
     served_date: dateStr,
     day_of_week_id: dayOfWeekId,
     note,
+    status: toPersonalRecordStatus(record),
     is_copy: 0,
     is_deleted: 0,
     recorded_staff_id: recordedStaffId,

@@ -149,6 +149,16 @@ export async function fetchPersonalRecordList(webview, opts) {
               .trim()
               .replace(/\\s+/g, " ");
             const attendanceText = (cells[4]?.textContent || "").trim();
+            const statusCell = cells[5];
+            const statusLabel = statusCell?.querySelector("span.label");
+            const status = (
+              statusLabel?.textContent ||
+              statusCell?.textContent ||
+              ""
+            ).trim();
+            const statusClass = statusLabel
+              ? Array.from(statusLabel.classList).join(" ")
+              : "";
 
             if (ONLY_PRESENT && attendanceText !== "出席") {
               return null;
@@ -166,6 +176,8 @@ export async function fetchPersonalRecordList(webview, opts) {
               date: dateText,
               childName,
               attendance: attendanceText,
+              status,
+              statusClass,
               editPath
             };
           })
@@ -186,6 +198,8 @@ export async function fetchPersonalRecordList(webview, opts) {
               date: item.date,
               childName: item.childName,
               attendance: item.attendance,
+              status: item.status,
+              statusClass: item.statusClass,
               editPath: item.editPath,
               note
             });
@@ -203,6 +217,8 @@ export async function fetchPersonalRecordList(webview, opts) {
               date: item.date,
               childName: item.childName,
               attendance: item.attendance,
+              status: item.status,
+              statusClass: item.statusClass,
               editPath: item.editPath,
               note: null,
               noteError
