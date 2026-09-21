@@ -31,6 +31,7 @@ export default function PersonalRecordSyncButton({
   className = '',
   showInlineResult = true,
   onResultChange,
+  onSyncCompleted,
 }) {
   const { STAFF_ID } = useAppState()
 
@@ -44,6 +45,7 @@ export default function PersonalRecordSyncButton({
   const [syncHistoryLoading, setSyncHistoryLoading] = useState(false)
   const [syncHistoryError, setSyncHistoryError] = useState('')
   const syncHistoryRequestIdRef = useRef(0)
+  const completedSendResultRef = useRef(null)
 
   const fetchSyncHistory = useCallback(async () => {
     const requestId = syncHistoryRequestIdRef.current + 1
@@ -179,6 +181,24 @@ export default function PersonalRecordSyncButton({
   useEffect(() => {
     fetchSyncHistory()
   }, [fetchSyncHistory, sendResult])
+
+  useEffect(() => {
+    if (
+      !sendResult?.success ||
+      completedSendResultRef.current === sendResult
+    ) {
+      return
+    }
+
+    completedSendResultRef.current = sendResult
+
+    Promise.resolve(onSyncCompleted?.()).catch((refreshError) => {
+      console.error(
+        '[PersonalRecordSyncButton] 月間集計の再取得に失敗しました:',
+        refreshError,
+      )
+    })
+  }, [onSyncCompleted, sendResult])
 
   return (
     <div className={className}>

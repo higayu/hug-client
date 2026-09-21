@@ -44,8 +44,12 @@ export default function LeftPanel({
   const { DEBUG_FLG } = useAppState()
   const [activeTab, setActiveTab] = useState('comparison')
   const [personalRecordResult, setPersonalRecordResult] = useState(null)
+  const [personalRecordRefreshKey, setPersonalRecordRefreshKey] = useState(0)
   const handlePersonalRecordResultChange = useCallback((snapshot) => {
     setPersonalRecordResult(snapshot)
+  }, [])
+  const handlePersonalRecordSyncCompleted = useCallback(() => {
+    setPersonalRecordRefreshKey((current) => current + 1)
   }, [])
 
   const {
@@ -107,6 +111,7 @@ export default function LeftPanel({
             month={month}
             showInlineResult={false}
             onResultChange={handlePersonalRecordResultChange}
+            onSyncCompleted={handlePersonalRecordSyncCompleted}
           />
         </div>
       </div>
@@ -160,6 +165,7 @@ export default function LeftPanel({
             records={additionListData?.records ?? []}
             facilityId={facilityId}
             targetMonth={targetMonth}
+            personalRecordRefreshKey={personalRecordRefreshKey}
           />
         )}
       </div>

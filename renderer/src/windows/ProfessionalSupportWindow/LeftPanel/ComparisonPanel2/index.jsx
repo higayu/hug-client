@@ -12,6 +12,7 @@ export default function ComparisonPanel2({
   records = [],
   facilityId,
   targetMonth,
+  personalRecordRefreshKey = 0,
 }) {
   const { DEBUG_FLG } = useAppState()
 
@@ -81,6 +82,7 @@ export default function ComparisonPanel2({
         records={records}
         facilityId={facilityId}
         targetMonth={targetMonth}
+        personalRecordRefreshKey={personalRecordRefreshKey}
       />
 
       <div className="flex flex-wrap gap-2 text-[11px] text-gray-500">

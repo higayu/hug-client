@@ -19,6 +19,7 @@ export default function ChildView({
   records = [],
   facilityId,
   targetMonth,
+  personalRecordRefreshKey = 0,
 }) {
   const dispatch = useDispatch()
   const { getServiceRecordMonthly } = useServiceRecord()
@@ -94,7 +95,13 @@ export default function ChildView({
     return () => {
       cancelled = true
     }
-  }, [dispatch, facilityId, getServiceRecordMonthly, targetMonth])
+  }, [
+    dispatch,
+    facilityId,
+    getServiceRecordMonthly,
+    personalRecordRefreshKey,
+    targetMonth,
+  ])
 
   const normalizedRecordRows = useMemo(
     () =>
