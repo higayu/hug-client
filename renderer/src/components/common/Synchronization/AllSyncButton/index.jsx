@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useSelector } from 'react-redux'
 import { ArrowPathIcon } from '@heroicons/react/24/outline'
 
@@ -15,6 +15,8 @@ import { fetchPersonalRecordDetails } from './fetchPersonalRecordDetails'
 
 const PERSONAL_RECORD_ITEM_ID = 1
 const TOTAL_STEPS = 4
+const DEFAULT_LABEL = '個人記録の更新'
+const COMPLETED_LABEL_DISPLAY_MS = 2000
 
 const formatStepLabel = (step, text) =>
   `${step}/${TOTAL_STEPS} ${text}`
@@ -180,13 +182,28 @@ export default function AllSyncButton({
   setSendResult,
 }) {
   const [isRunning, setIsRunning] = useState(false)
-  const [label, setLabel] = useState('個人記録の更新')
+  const [label, setLabel] = useState(DEFAULT_LABEL)
+  const labelResetTimerRef = useRef(null)
 
   const storeFacilityId = useSelector(selectFacilityId)
   const facilityId = facilityIdProp ?? storeFacilityId
 
   const { STAFF_ID } = useAppState()
   const { showInfoToast, showSuccessToast, showErrorToast } = useToast()
+
+  const clearLabelResetTimer = useCallback(() => {
+    if (labelResetTimerRef.current !== null) {
+      window.clearTimeout(labelResetTimerRef.current)
+      labelResetTimerRef.current = null
+    }
+  }, [])
+
+  useEffect(
+    () => () => {
+      clearLabelResetTimer()
+    },
+    [clearLabelResetTimer],
+  )
 
   const resolveWebview = () => {
     if (webviewRef?.current) {
@@ -490,6 +507,8 @@ export default function AllSyncButton({
   const handleClick = async () => {
     if (disabled || isRunning) return
 
+    clearLabelResetTimer()
+
     if (!facilityId) {
       setError?.('施設を選択してください。')
       showErrorToast?.('施設を選択してください。')
@@ -548,6 +567,11 @@ export default function AllSyncButton({
 
       completed = true
       setLabel(formatStepLabel(4, 'すべて完了'))
+
+      labelResetTimerRef.current = window.setTimeout(() => {
+        setLabel(DEFAULT_LABEL)
+        labelResetTimerRef.current = null
+      }, COMPLETED_LABEL_DISPLAY_MS)
 
       showSuccessToast?.(
         [
