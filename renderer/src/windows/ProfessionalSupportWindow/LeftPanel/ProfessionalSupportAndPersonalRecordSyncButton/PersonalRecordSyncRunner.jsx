@@ -178,6 +178,7 @@ const AllSyncButton = forwardRef(function AllSyncButton({
   setData,
   setSendError,
   setSendResult,
+  onProgress,
 }, ref) {
   const [isRunning, setIsRunning] = useState(false)
   const [label, setLabel] = useState('個人記録の更新')
@@ -187,6 +188,11 @@ const AllSyncButton = forwardRef(function AllSyncButton({
 
   const { STAFF_ID } = useAppState()
   const { showInfoToast, showSuccessToast, showErrorToast } = useToast()
+
+  const updateProgress = (step, text) => {
+    setLabel(formatStepLabel(step, text))
+    onProgress?.(step, text)
+  }
 
   const resolveWebview = () => {
     if (webviewRef?.current) {
@@ -202,13 +208,11 @@ const AllSyncButton = forwardRef(function AllSyncButton({
   }
 
   const syncStaffs = async (activeWebview) => {
-    setLabel(formatStepLabel(1, '職員更新中...'))
+    updateProgress(1, '職員更新中...')
 
     const result = await fetchStaffData(
       (page, maxPage) => {
-        setLabel(
-          formatStepLabel(1, `職員取得 ${page}/${maxPage}`),
-        )
+        updateProgress(1, `職員取得 ${page}/${maxPage}`)
       },
       facilityId,
       activeWebview,
@@ -227,7 +231,7 @@ const AllSyncButton = forwardRef(function AllSyncButton({
       )
     }
 
-    setLabel(formatStepLabel(1, '職員DB更新中...'))
+    updateProgress(1, '職員DB更新中...')
 
     const syncResult = await window.electronAPI.syncHugStaffs(result)
 
@@ -239,16 +243,14 @@ const AllSyncButton = forwardRef(function AllSyncButton({
   }
 
   const syncChildren = async (activeWebview) => {
-    setLabel(formatStepLabel(2, '児童更新中...'))
+    updateProgress(2, '児童更新中...')
 
     const now = new Date()
     const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
 
     const result = await fetchChildrenData(
       (page, maxPage) => {
-        setLabel(
-          formatStepLabel(2, `児童取得 ${page}/${maxPage}`),
-        )
+        updateProgress(2, `児童取得 ${page}/${maxPage}`)
       },
       facilityId,
       today,
@@ -268,7 +270,7 @@ const AllSyncButton = forwardRef(function AllSyncButton({
       )
     }
 
-    setLabel(formatStepLabel(2, '児童DB更新中...'))
+    updateProgress(2, '児童DB更新中...')
 
     const facilityIdNum = Number(facilityId) || 3
 
@@ -317,7 +319,7 @@ const AllSyncButton = forwardRef(function AllSyncButton({
   }
 
   const fetchPersonalRecords = async (activeWebview) => {
-    setLabel(formatStepLabel(3, '個人記録取得中...'))
+    updateProgress(3, '個人記録取得中...')
     setLoading?.(true)
     setSending?.(false)
     setError?.('')
@@ -393,7 +395,7 @@ const AllSyncButton = forwardRef(function AllSyncButton({
   }
 
   const savePersonalRecords = async (personalRecordData) => {
-    setLabel(formatStepLabel(4, '個人記録をLaravelへ保存中...'))
+    updateProgress(4, '個人記録をLaravelへ保存中...')
     setLoading?.(false)
     setSending?.(true)
 
@@ -497,7 +499,7 @@ const AllSyncButton = forwardRef(function AllSyncButton({
     }
 
     setIsRunning(true)
-    setLabel(formatStepLabel(1, '職員更新を開始...'))
+    updateProgress(1, '職員更新を開始...')
     setError?.('')
     setSendError?.('')
     setSendResult?.(null)
@@ -530,7 +532,7 @@ const AllSyncButton = forwardRef(function AllSyncButton({
         personalRecordData,
       )
 
-      setLabel(formatStepLabel(4, 'すべて完了'))
+      updateProgress(4, 'すべて完了')
 
       showSuccessToast?.(
         [
@@ -547,9 +549,7 @@ const AllSyncButton = forwardRef(function AllSyncButton({
 
       const message = error?.message || String(error)
 
-      setLabel(
-        formatStepLabel(currentStep, `${phase}で停止`),
-      )
+      updateProgress(currentStep, `${phase}で停止`)
 
       if (currentStep >= 3) {
         setSendError?.(message)

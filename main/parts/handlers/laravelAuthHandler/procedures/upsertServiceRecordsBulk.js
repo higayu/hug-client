@@ -22,20 +22,47 @@ const { formatError, unwrapData } = require("../auth/utils");
  *   ],
  *   recorded_staff_id: number,
  *   updated_staff_id: number,
+ *   save_sync_history?: boolean | 0 | 1,
+ *   sync_facility_id?: number | null,
+ *   target_year?: number | null,
+ *   target_month?: number | null,
  * }
  */
 async function upsertServiceRecordsBulk(payload = {}) {
+  const saveSyncHistory = [true, 1, "1"].includes(
+    payload?.save_sync_history,
+  );
+
+  const requestPayload = {
+    ...payload,
+    records: Array.isArray(payload?.records) ? payload.records : [],
+    save_sync_history: saveSyncHistory ? 1 : 0,
+    sync_facility_id: saveSyncHistory
+      ? Number(payload?.sync_facility_id) || null
+      : null,
+    target_year: saveSyncHistory
+      ? Number(payload?.target_year) || null
+      : null,
+    target_month: saveSyncHistory
+      ? Number(payload?.target_month) || null
+      : null,
+  };
+
   console.log("📤 [Laravel Procedure] upsertServiceRecordsBulk:", {
-    recordCount: Array.isArray(payload?.records) ? payload.records.length : 0,
-    recorded_staff_id: payload?.recorded_staff_id,
-    updated_staff_id: payload?.updated_staff_id,
+    recordCount: requestPayload.records.length,
+    recorded_staff_id: requestPayload.recorded_staff_id,
+    updated_staff_id: requestPayload.updated_staff_id,
+    save_sync_history: requestPayload.save_sync_history,
+    sync_facility_id: requestPayload.sync_facility_id,
+    target_year: requestPayload.target_year,
+    target_month: requestPayload.target_month,
   });
 
   const result = await executeAuthenticatedOperation(
     () =>
       laravelApiClient.post(
         "/__procedure/upsert-service-records-bulk",
-        payload,
+        requestPayload,
       ),
     "サービス記録の一括保存に失敗しました。",
   );

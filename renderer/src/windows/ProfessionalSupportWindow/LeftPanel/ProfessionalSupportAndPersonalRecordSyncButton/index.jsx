@@ -110,6 +110,10 @@ export default function ProfessionalSupportAndPersonalRecordSyncButton({
     onPersonalRecordResultChange?.(resultSnapshot)
   }, [onPersonalRecordResultChange, resultSnapshot])
 
+  const handlePersonalRecordProgress = (step, text) => {
+    setLabel(`${step + 1}/5 ${text}`)
+  }
+
   const handleClick = async () => {
     if (
       !facilityId ||
@@ -123,7 +127,7 @@ export default function ProfessionalSupportAndPersonalRecordSyncButton({
     setIsRunning(true)
 
     try {
-      setLabel('1/2 支援加算を再取得中...')
+      setLabel('1/5 加算取得中...')
       showInfoToast?.(
         '支援加算の再取得後に、個人記録を更新します',
         3000,
@@ -143,14 +147,13 @@ export default function ProfessionalSupportAndPersonalRecordSyncButton({
         throw new Error('個人記録の更新処理を開始できません。')
       }
 
-      setLabel('2/2 個人記録を更新中...')
       const personalRecordSucceeded = await runPersonalRecord()
 
       if (!personalRecordSucceeded) {
         throw new Error('個人記録の更新に失敗しました。')
       }
 
-      setLabel('2/2 更新完了')
+      setLabel('5/5 更新完了')
       showSuccessToast?.(
         '支援加算と個人記録の更新が完了しました。',
         5000,
@@ -200,6 +203,7 @@ export default function ProfessionalSupportAndPersonalRecordSyncButton({
           setData={setData}
           setSendError={setSendError}
           setSendResult={setSendResult}
+          onProgress={handlePersonalRecordProgress}
           disabled={loading || sending}
         />
       </div>
