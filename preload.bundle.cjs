@@ -214,6 +214,21 @@ var require_electronApi = __commonJS({
           id,
           data
         ),
+        // ---- 個人記録一括同期履歴 ----
+        laravel_personalRecordSync_getMonth: (params = {}) => ipcRenderer2.invoke(
+          "laravel:personal-record-syncs:get-month",
+          params
+        ),
+        // snake_caseを使用しているrendererとの互換用。
+        laravel_personal_record_syncs_getMonth: (params = {}) => ipcRenderer2.invoke(
+          "laravel:personal-record-syncs:get-month",
+          params
+        ),
+        // 既存の取得名との互換用。年月・施設IDをparamsで渡す。
+        laravel_personal_record_syncs_getAll: (params = {}) => ipcRenderer2.invoke(
+          "laravel:personal-record-syncs:get-month",
+          params
+        ),
         // ---- Laravel 認証 ----
         /**
          * config.jsonの
@@ -256,7 +271,15 @@ var require_electronApi = __commonJS({
         },
         laravel_admin_update_staff_login: (data) => ipcRenderer2.invoke("laravel:admin:update-staff-login", data),
         laravel_procedure_upsertServiceRecord: (data) => ipcRenderer2.invoke("laravel:procedure:upsert-service-record", data),
-        laravel_procedure_upsertServiceRecordsBulk: (data) => ipcRenderer2.invoke("laravel:procedure:upsert-service-records-bulk", data),
+        laravel_procedure_upsertServiceRecordsBulk: (data = {}) => ipcRenderer2.invoke(
+          "laravel:procedure:upsert-service-records-bulk",
+          {
+            ...data,
+            save_sync_history: [true, 1, "1"].includes(
+              data?.save_sync_history
+            ) ? 1 : 0
+          }
+        ),
         // ---- Professional Support 月次同期 ----
         laravel_procedure_syncProfessionalSupportMonth: (data) => ipcRenderer2.invoke(
           "laravel:procedure:sync-professional-support-month",
@@ -421,7 +444,15 @@ var require_electronApi = __commonJS({
         // Laravel側は登録・更新ともupsertプロシージャを使用する。
         laravel_service_record_insert: (data) => ipcRenderer2.invoke("laravel:procedure:upsert-service-record", data),
         laravel_service_record_upsert: (data) => ipcRenderer2.invoke("laravel:procedure:upsert-service-record", data),
-        laravel_service_record_bulk_upsert: (data) => ipcRenderer2.invoke("laravel:procedure:upsert-service-records-bulk", data),
+        laravel_service_record_bulk_upsert: (data = {}) => ipcRenderer2.invoke(
+          "laravel:procedure:upsert-service-records-bulk",
+          {
+            ...data,
+            save_sync_history: [true, 1, "1"].includes(
+              data?.save_sync_history
+            ) ? 1 : 0
+          }
+        ),
         laravel_service_record_monthly: (data) => ipcRenderer2.invoke(
           "laravel:procedure:get-service-record-monthly",
           data

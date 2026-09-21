@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { useAppState } from '@/AppStateContext'
 import AllSyncButton from '@/components/common/Synchronization/AllSyncButton'
 
 import ResultPanel from './ResultPanel'
+import formatSyncedAt from '../utils/formatSyncedAt'
 import {
   getPersonalRecordSkipReason,
   toBulkRecord,
@@ -39,6 +40,80 @@ export default function PersonalRecordSyncButton({
   const [sending, setSending] = useState(false)
   const [sendError, setSendError] = useState('')
   const [sendResult, setSendResult] = useState(null)
+  const [lastSyncedAt, setLastSyncedAt] = useState(null)
+  const [syncHistoryLoading, setSyncHistoryLoading] = useState(false)
+  const [syncHistoryError, setSyncHistoryError] = useState('')
+  const syncHistoryRequestIdRef = useRef(0)
+
+  const fetchSyncHistory = useCallback(async () => {
+    const requestId = syncHistoryRequestIdRef.current + 1
+    syncHistoryRequestIdRef.current = requestId
+
+    if (!facilityId || !year || !month) {
+      setLastSyncedAt(null)
+      setSyncHistoryError('')
+      setSyncHistoryLoading(false)
+      return
+    }
+
+    const getMonth =
+      window.electronAPI?.laravel_personalRecordSync_getMonth ??
+      window.electronAPI?.laravel_personal_record_syncs_getMonth ??
+      window.electronAPI?.laravel_personal_record_syncs_getAll
+
+    if (typeof getMonth !== 'function') {
+      setLastSyncedAt(null)
+      setSyncHistoryError(
+        '個人記録同期履歴APIがpreloadから公開されていません。',
+      )
+      setSyncHistoryLoading(false)
+      return
+    }
+
+    setSyncHistoryLoading(true)
+    setSyncHistoryError('')
+
+    try {
+      const result = await getMonth({
+        facilityId: Number(facilityId),
+        year: Number(year),
+        month: Number(month),
+        itemId: 1,
+      })
+
+      if (requestId !== syncHistoryRequestIdRef.current) {
+        return
+      }
+
+      if (!result?.success) {
+        throw new Error(result?.message || '個人記録の最終取得日時を取得できませんでした。')
+      }
+
+      const row = result?.data?.data ?? result?.data ?? null
+      setLastSyncedAt(
+        row?.synced_at ??
+          row?.syncedAt ??
+          result?.meta?.synced_at ??
+          result?.meta?.syncedAt ??
+          null,
+      )
+    } catch (fetchError) {
+      if (requestId !== syncHistoryRequestIdRef.current) {
+        return
+      }
+
+      setLastSyncedAt(null)
+      setSyncHistoryError(
+        fetchError instanceof Error
+          ? fetchError.message
+          : '個人記録の最終取得日時を取得できませんでした。',
+      )
+    } finally {
+      if (requestId === syncHistoryRequestIdRef.current) {
+        setSyncHistoryLoading(false)
+      }
+    }
+  }, [facilityId, month, year])
 
   const currentWebview = webviewRef?.current ?? null
   const records = useMemo(
@@ -101,6 +176,10 @@ export default function PersonalRecordSyncButton({
     onResultChange?.(resultSnapshot)
   }, [onResultChange, resultSnapshot])
 
+  useEffect(() => {
+    fetchSyncHistory()
+  }, [fetchSyncHistory, sendResult])
+
   return (
     <div className={className}>
       <div className="flex flex-wrap items-center gap-2">
@@ -125,6 +204,24 @@ export default function PersonalRecordSyncButton({
           }
           className="flex items-center justify-center gap-2 rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-gray-300"
         />
+
+        <div
+          className="whitespace-nowrap text-xs text-gray-500"
+          title={syncHistoryError || undefined}
+        >
+          最終取得：
+          <span
+            className={`ml-1 font-medium ${
+              syncHistoryError ? 'text-red-600' : 'text-gray-700'
+            }`}
+          >
+            {syncHistoryLoading
+              ? '確認中...'
+              : syncHistoryError
+                ? '取得失敗'
+                : formatSyncedAt(lastSyncedAt)}
+          </span>
+        </div>
       </div>
 
       {showInlineResult && (

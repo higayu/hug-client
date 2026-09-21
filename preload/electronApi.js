@@ -151,6 +151,27 @@ function createElectronApi(ipcRenderer, isDebugMode) {
         data,
       ),
 
+    // ---- 個人記録一括同期履歴 ----
+    laravel_personalRecordSync_getMonth: (params = {}) =>
+      ipcRenderer.invoke(
+        "laravel:personal-record-syncs:get-month",
+        params,
+      ),
+
+    // snake_caseを使用しているrendererとの互換用。
+    laravel_personal_record_syncs_getMonth: (params = {}) =>
+      ipcRenderer.invoke(
+        "laravel:personal-record-syncs:get-month",
+        params,
+      ),
+
+    // 既存の取得名との互換用。年月・施設IDをparamsで渡す。
+    laravel_personal_record_syncs_getAll: (params = {}) =>
+      ipcRenderer.invoke(
+        "laravel:personal-record-syncs:get-month",
+        params,
+      ),
+
     // ---- Laravel 認証 ----
     /**
      * config.jsonの

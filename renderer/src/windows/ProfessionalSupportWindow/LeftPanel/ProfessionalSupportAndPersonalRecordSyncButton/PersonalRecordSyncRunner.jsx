@@ -380,12 +380,6 @@ const AllSyncButton = forwardRef(function AllSyncButton({
       0,
     )
 
-    if (bulkRecords.length === 0) {
-      throw new Error(
-        'Laravelへ保存できる個人記録がありません。本文取得結果を確認してください。',
-      )
-    }
-
     return {
       bulkRecords,
       fetchedCount: fetchedRecords.length,
@@ -417,8 +411,28 @@ const AllSyncButton = forwardRef(function AllSyncButton({
     }
 
     const staffId = Number(STAFF_ID)
+    const syncFacilityId = Number(facilityId)
+    const targetYear = Number(year)
+    const targetMonth = Number(month)
+
+    if (!Number.isInteger(syncFacilityId) || syncFacilityId <= 0) {
+      throw new Error('同期履歴に保存する施設IDが不正です。')
+    }
+
+    if (!Number.isInteger(targetYear) || targetYear < 2000 || targetYear > 2100) {
+      throw new Error('同期履歴に保存する対象年が不正です。')
+    }
+
+    if (!Number.isInteger(targetMonth) || targetMonth < 1 || targetMonth > 12) {
+      throw new Error('同期履歴に保存する対象月が不正です。')
+    }
+
     const payload = {
       records: bulkRecords,
+      save_sync_history: 1,
+      sync_facility_id: syncFacilityId,
+      target_year: targetYear,
+      target_month: targetMonth,
     }
 
     if (Number.isInteger(staffId) && staffId > 0) {

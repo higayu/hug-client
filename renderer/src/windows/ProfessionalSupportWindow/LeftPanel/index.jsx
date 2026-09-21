@@ -9,7 +9,6 @@ import AdditionListPanel from './AdditionListPanel'
 import ComparisonPanel2 from './ComparisonPanel2'
 import ProfessionalSupportAutoSync from './ProfessionalSupportAutoSync'
 import ProfessionalSupportSyncButton from './ProfessionalSupportSyncButton'
-import ProfessionalSupportAndPersonalRecordSyncButton from './ProfessionalSupportAndPersonalRecordSyncButton'
 import PersonalRecordSyncButton, {
   PersonalRecordSyncResultPanel,
 } from './PersonalRecordSyncButton'
@@ -89,45 +88,26 @@ export default function LeftPanel({
             clearSyncStatus={clearSyncStatus}
           />
 
-          <ProfessionalSupportAndPersonalRecordSyncButton
+          <ProfessionalSupportSyncButton
+            onClick={runSync}
+            disabled={!facilityId || !webviewReady}
+            syncing={syncing}
+            progressText={progressText}
+            syncMessage={syncMessage}
+            syncError={syncError}
+            lastSyncedAt={lastSyncedAt}
+          />
+
+          <PersonalRecordSyncButton
+            className="min-w-0 flex-1"
             webviewRef={webviewRef}
             webviewReady={webviewReady}
             facilityId={facilityId}
             year={year}
             month={month}
-            targetDate={targetDate}
-            onFetchStart={onSyncFetchStart}
-            onFetched={onSyncFetched}
-            onFetchFailed={onSyncFetchFailed}
-            onCompleted={onSyncCompleted}
-            onPersonalRecordResultChange={handlePersonalRecordResultChange}
+            showInlineResult={false}
+            onResultChange={handlePersonalRecordResultChange}
           />
-
-          {DEBUG_FLG && (
-            <ProfessionalSupportSyncButton
-              onClick={runSync}
-              disabled={!facilityId || !webviewReady}
-              syncing={syncing}
-              progressText={progressText}
-              syncMessage={syncMessage}
-              syncError={syncError}
-              lastSyncedAt={lastSyncedAt}
-            />
-          )}
-
-          {DEBUG_FLG && (
-            <div className="min-w-0 flex-1">
-              <PersonalRecordSyncButton
-                webviewRef={webviewRef}
-                webviewReady={webviewReady}
-                facilityId={facilityId}
-                year={year}
-                month={month}
-                showInlineResult={false}
-                onResultChange={handlePersonalRecordResultChange}
-              />
-            </div>
-          )}
         </div>
       </div>
 

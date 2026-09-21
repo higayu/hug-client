@@ -10,6 +10,7 @@ const aiRecordEditer = require("./aiRecordEditer");
 const webAutomationRules = require("./webAutomationRules");
 const webAutomationFlows = require("./webAutomationFlows");
 const troubleshootingKnowledge = require("./troubleshootingKnowledge");
+const personalRecordSyncs = require("./personalRecordSyncs");
 const laravelApiClient = require("../../../../src/laravelApiClient");
 
 /**
@@ -49,6 +50,12 @@ const IPC_CHANNELS = [
   "laravel:troubleshooting-knowledge:list",
   "laravel:troubleshooting-knowledge:get",
   "laravel:troubleshooting-knowledge:update",
+
+  // ============================================================
+  // 個人記録一括同期履歴
+  // ============================================================
+
+  "laravel:personal-record-syncs:get-month",
 
   // ============================================================
   // 一時メモ
@@ -290,6 +297,15 @@ function registerLaravelAuthHandlers(
   ipcMain.handle(
     "laravel:troubleshooting-knowledge:update",
     troubleshootingKnowledge.updateHandler
+  );
+
+  // ============================================================
+  // 個人記録一括同期履歴
+  // ============================================================
+
+  ipcMain.handle(
+    "laravel:personal-record-syncs:get-month",
+    personalRecordSyncs.getMonthHandler
   );
 
   // ============================================================
