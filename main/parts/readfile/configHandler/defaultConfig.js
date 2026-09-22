@@ -17,6 +17,9 @@ const DEFAULT_CONFIG = {
     // 認証情報
     HUG_USERNAME: "",
     HUG_PASSWORD: "",
+    PHP_MY_ADMIN: "https",
+    PHP_MY_ADMIN_USER: "",
+    PHP_MY_ADMIN_PASSWORD: "",
     
     // その他
     USE_AI: "ollama", // 'ollama' | 'gemini' | 'openrouter' | 'deepseek' | 'openai'

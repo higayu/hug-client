@@ -443,6 +443,21 @@ function createElectronApi(ipcRenderer, isDebugMode) {
     openInformationWindow: () =>
       ipcRenderer.invoke("open-information-window"),
 
+    openPhpMyAdminWindow: () =>
+      ipcRenderer.invoke("open-php-my-admin-window"),
+
+    respondToPhpMyAdminAuth: (response) =>
+      ipcRenderer.invoke("respond-php-my-admin-auth", response),
+
+    onPhpMyAdminAuthRequest: (callback) => {
+      const listener = (_event, details) => callback(details);
+      ipcRenderer.on("php-my-admin-auth-request", listener);
+
+      return () => {
+        ipcRenderer.removeListener("php-my-admin-auth-request", listener);
+      };
+    },
+
     clearWebviewCache: (wcId) =>
       ipcRenderer.invoke("clear-webview-cache", wcId),
 

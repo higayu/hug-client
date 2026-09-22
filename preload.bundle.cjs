@@ -397,6 +397,15 @@ var require_electronApi = __commonJS({
         }),
         // ---- UI / Window ----
         openInformationWindow: () => ipcRenderer2.invoke("open-information-window"),
+        openPhpMyAdminWindow: () => ipcRenderer2.invoke("open-php-my-admin-window"),
+        respondToPhpMyAdminAuth: (response) => ipcRenderer2.invoke("respond-php-my-admin-auth", response),
+        onPhpMyAdminAuthRequest: (callback) => {
+          const listener = (_event, details) => callback(details);
+          ipcRenderer2.on("php-my-admin-auth-request", listener);
+          return () => {
+            ipcRenderer2.removeListener("php-my-admin-auth-request", listener);
+          };
+        },
         clearWebviewCache: (wcId) => ipcRenderer2.invoke("clear-webview-cache", wcId),
         // ✅ 対策: window.confirm() の代わりに使う非ブロッキングな確認ダイアログ
         //          (renderer側JSスレッドを止めず、常にmainWindowの前面に表示される)

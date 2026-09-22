@@ -11,6 +11,7 @@ const { handleIniAccess } = require("./parts/readfile/iniHandler");
 const { registerPlanWindows } = require("./windowHandlers/planWindows");
 const { handleProfessionalSupportSearch } = require("./windowHandlers/handleProfessionalSupportSearch");
 const { registerInformationWindow } = require("./windowHandlers/informationWindow");
+const { registerPhpMyAdminWindow } = require("./windowHandlers/phpMyAdminWindow");
 
 const { resolvePreloadPath } = require("./windowHandlers/windowManager");
 
@@ -25,6 +26,7 @@ function registerIpcHandlers(mainWindow, tempNoteHandler) {
     registerPlanWindows(ipcMain);
     handleProfessionalSupportSearch(ipcMain);
     registerInformationWindow(ipcMain);
+    registerPhpMyAdminWindow(ipcMain);
 
     // =======================================
     // 📋 Clipboard 書き込み IPC ハンドラ

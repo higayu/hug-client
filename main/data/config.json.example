@@ -10,5 +10,8 @@
   "OPENAI_MAIL": "",
   "OPENAI_PASSWORD": "",
   "OLLAMA_URL": "http://192.168.1.222:11434/api/generate",
-  "OLLAMA_MODEL": "gemma4:latest"
+  "OLLAMA_MODEL": "gemma4:latest",
+  "PHP_MY_ADMIN": "https",
+  "PHP_MY_ADMIN_USER": "",
+  "PHP_MY_ADMIN_PASSWORD": ""
 }

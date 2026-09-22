@@ -8,6 +8,7 @@ const ProfessionalSupportWindow = lazy(
   () => import('@/windows/ProfessionalSupportWindow')
 )
 const InformationWindow = lazy(() => import('@/windows/InformationWindow'))
+const PhpMyAdminWindow = lazy(() => import('@/windows/PhpMyAdminWindow'))
 
 function resolveWindowType() {
   const params = new URLSearchParams(window.location.search)
@@ -19,6 +20,7 @@ const WINDOW_COMPONENTS = {
   professionalSupport: ProfessionalSupportWindow,
   information: InformationWindow,
   informationWindow: InformationWindow,
+  phpMyAdmin: PhpMyAdminWindow,
 }
 
 let didRunStartupAutoLogin = false
