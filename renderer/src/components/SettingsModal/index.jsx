@@ -3,6 +3,9 @@ import {
   useState,
 } from 'react'
 import { useSelector } from 'react-redux'
+import {
+  LockClosedIcon,
+} from '@heroicons/react/24/outline'
 
 import './index.css'
 
@@ -54,13 +57,13 @@ const BASE_TABS = [
     label: 'アップデート',
     component: UpdateTab,
   },
-
 ]
 
 const ADMIN_TABS = [
   {
     id: 'admin',
     label: '管理者設定',
+    icon: LockClosedIcon,
     component: AdminTab,
   },
 ]
@@ -94,6 +97,7 @@ export default function SettingsModal({
   onClose,
 }) {
   const [activeTab, setActiveTab] = useState(DEFAULT_TAB_ID)
+
   const auth = useSelector(selectLaravelAuth)
   const isAdmin = Number(auth.user?.role_id) === 1
 
@@ -104,8 +108,6 @@ export default function SettingsModal({
   const { isLoading } = useSettingsModal(isOpen)
 
   const {
-    activeSidebarTab: activeTabFromState,
-    setActiveSidebarTab: setActiveTabFromState,
     DEBUG_FLG,
   } = useAppState();
 
@@ -113,10 +115,14 @@ export default function SettingsModal({
   const visibleDebugTabs = isAdmin
     ? DEBUG_TABS
     : DEBUG_TABS.filter((tab) => tab.id !== 'debug')
+
   const baseTabs = isAdmin
     ? [...BASE_TABS, ...ADMIN_TABS]
     : BASE_TABS
-  const tabs = DEBUG_FLG ? [...baseTabs, ...visibleDebugTabs] : baseTabs;
+
+  const tabs = DEBUG_FLG
+    ? [...baseTabs, ...visibleDebugTabs]
+    : baseTabs
 
   /*
    * モーダルを開くたびにAPI設定タブへ戻す。
@@ -163,12 +169,23 @@ export default function SettingsModal({
     onClose()
   }
 
-  // 現在アクティブなタブが存在しない場合は最初のタブに設定
+  /*
+   * 現在アクティブなタブが存在しない場合は、
+   * 最初のタブに切り替える。
+   */
   useEffect(() => {
-    if (tabs.length > 0 && !tabs.find(tab => tab.id === activeTab)) {
-      setActiveTab(tabs[0].id);
+    if (tabs.length <= 0) {
+      return
     }
-  }, [tabs, activeTab]);
+
+    const existsActiveTab = tabs.some((tab) => tab.id === activeTab)
+
+    if (existsActiveTab) {
+      return
+    }
+
+    setActiveTab(tabs[0].id)
+  }, [tabs, activeTab])
 
   if (!isOpen) {
     return null
@@ -193,7 +210,7 @@ export default function SettingsModal({
             <h2 className="m-0 text-2xl font-semibold">
               ⚙️ 設定編集
               {DEBUG_FLG && (
-                <span className="ml-2 text-sm font-normal bg-yellow-400 text-black px-2 py-0.5 rounded">
+                <span className="ml-2 rounded bg-yellow-400 px-2 py-0.5 text-sm font-normal text-black">
                   DEBUG
                 </span>
               )}
@@ -225,6 +242,7 @@ export default function SettingsModal({
             >
               {tabs.map((tab) => {
                 const isActive = activeTab === tab.id
+                const TabIcon = tab.icon
 
                 return (
                   <button
@@ -245,7 +263,19 @@ export default function SettingsModal({
                       setActiveTab(tab.id)
                     }}
                   >
-                    {tab.label}
+                    <span className="inline-flex items-center gap-1.5 align-middle">
+                      {TabIcon && (
+                        <TabIcon
+                          className="h-4 w-4"
+                          aria-hidden="true"
+                        />
+                      )}
+
+                      <span>
+                        {tab.label}
+                      </span>
+                    </span>
+
                     {DEBUG_FLG && DEBUG_TABS.some((debugTab) => debugTab.id === tab.id) && (
                       <span className="ml-1.5 rounded bg-purple-500 px-1.5 py-0.5 text-[10px] text-white">
                         DEV
