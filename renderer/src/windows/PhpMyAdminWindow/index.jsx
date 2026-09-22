@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 
+import HorizonPanel from '@/components/ui/ResizableSplitPane/HorizonPanel'
+
 import AuthDialog from './AuthDialog'
 import SideBar from './SideBar'
 
@@ -118,31 +120,37 @@ export default function PhpMyAdminWindow() {
         <div className="bg-red-100 px-4 py-2 text-sm text-red-800">{error}</div>
       )}
 
-      <div className="flex min-h-0 flex-1">
-        <SideBar config={config} />
-
-        <div className="relative min-w-0 flex-1">
-          {loading && !authRequest && (
-            <div className="absolute inset-0 z-10 flex items-center justify-center bg-white text-sm text-slate-500">
-              読み込んでいます...
+      <div className="min-h-0 flex-1">
+        <HorizonPanel
+          defaultLeftPercent={25}
+          minLeftWidth={0}
+          minRightWidth={480}
+          left={<SideBar config={config} />}
+          right={(
+            <div className="relative h-full min-w-0">
+              {loading && !authRequest && (
+                <div className="absolute inset-0 z-10 flex items-center justify-center bg-white text-sm text-slate-500">
+                  読み込んでいます...
+                </div>
+              )}
+              {validUrl && (
+                <webview
+                  ref={webviewRef}
+                  src={url}
+                  className="h-full w-full"
+                  partition="persist:php-my-admin"
+                />
+              )}
+              {authRequest && (
+                <AuthDialog
+                  host={authRequest.host || url}
+                  onCancel={handleCancelLogin}
+                  onLogin={handleLogin}
+                />
+              )}
             </div>
           )}
-          {validUrl && (
-            <webview
-              ref={webviewRef}
-              src={url}
-              className="h-full w-full"
-              partition="persist:php-my-admin"
-            />
-          )}
-          {authRequest && (
-            <AuthDialog
-              host={authRequest.host || url}
-              onCancel={handleCancelLogin}
-              onLogin={handleLogin}
-            />
-          )}
-        </div>
+        />
       </div>
     </div>
   )
