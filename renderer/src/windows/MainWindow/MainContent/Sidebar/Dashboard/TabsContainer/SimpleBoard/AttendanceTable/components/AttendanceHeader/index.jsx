@@ -1,4 +1,6 @@
-const FILTER_OPTIONS = [
+import GetTodayUsersChildren from '@/components/common/hug_function/GetTodayUsersChildren';
+
+const SIMPLE_BOARD_FILTER_OPTIONS = [
   { value: 0, label: '全件' },
   { value: 1, label: '退室済み以外' },
   { value: 2, label: '退室済みと欠席以外' },
@@ -15,28 +17,14 @@ export default function AttendanceHeader({
 }) {
   return (
     <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-      <div className="flex items-center gap-2">
-        <label
-          htmlFor="simple-board-attendance-filter"
-          className="text-sm font-semibold text-slate-700"
-        >
-          表示フィルター
-        </label>
-
-        <select
-          id="simple-board-attendance-filter"
-          className="rounded border border-gray-300 bg-white px-2 py-1.5 text-sm text-black"
-          value={String(filterMode)}
-          onChange={(event) => {
-            onFilterModeChange?.(Number(event.target.value));
-          }}
-        >
-          {FILTER_OPTIONS.map((option) => (
-            <option key={option.value} value={String(option.value)}>
-              {option.label}
-            </option>
-          ))}
-        </select>
+      <div className="min-w-[320px] flex-1">
+        <GetTodayUsersChildren
+          expandDirection="down"
+          filterOptions={SIMPLE_BOARD_FILTER_OPTIONS}
+          filterMode={filterMode}
+          onFilterModeChange={onFilterModeChange}
+          variant="simpleBoard"
+        />
       </div>
 
       <div

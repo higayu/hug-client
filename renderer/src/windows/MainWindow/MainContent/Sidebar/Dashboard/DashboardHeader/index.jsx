@@ -2,8 +2,15 @@ import WeekdaySelect from "@/components/ui/WeekdaySelect";
 import FanMenuButton from "./FanMenuButton";
 import AddChilledSpaceBtn from "./AddChilledSpaceBtn";
 import GetTodayUsersChildren from "@/components/common/hug_function/GetTodayUsersChildren";
+import { useAppState } from "@/AppStateContext";
 
 function DashboardHeader() {
+  const {
+    activeSidebarTab,
+  } = useAppState();
+
+  const isSimpleBoardActive = activeSidebarTab === "simpleBoard";
+
   return (
     <div
       className="
@@ -23,33 +30,37 @@ function DashboardHeader() {
       </div>
 
       <div className="flex min-w-0 flex-1 items-center gap-2">
-        {/* 日付・利用者取得 */}
-        <div
-          className="
-            flex
-            min-w-0
-            basis-3/5
-            items-center
-            rounded-lg
-            bg-slate-200
-            p-2
-          "
-        >
-          <GetTodayUsersChildren expandDirection="down" />
-        </div>
+        {/* 日付・利用者取得
+            SimpleBoard表示中はAttendanceHeader側の共通GetTodayUsersChildrenを使う。
+            それ以外のタブではDashboardHeader側で表示する。 */}
+        {!isSimpleBoardActive && (
+          <div
+            className="
+              flex
+              min-w-0
+              basis-3/5
+              items-center
+              rounded-lg
+              bg-slate-200
+              p-2
+            "
+          >
+            <GetTodayUsersChildren expandDirection="down" />
+          </div>
+        )}
 
         {/* 曜日 */}
         <div
-          className="
+          className={`
             flex
             min-w-0
-            basis-2/5
+            ${isSimpleBoardActive ? "basis-full" : "basis-2/5"}
             items-center
             gap-2
             rounded-lg
             bg-slate-200
             p-2
-          "
+          `}
         >
           <label
             className="

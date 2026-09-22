@@ -57,18 +57,55 @@ function formatLastFetchedAt(extractedAt) {
 }
 
 /**
- * 児童フィルター表示名
+ * デフォルトの児童フィルター。
+ *
+ * SimpleBoard など、画面ごとにフィルター意味が異なる場合は
+ * filterOptions prop で差し替える。
  */
-const FILTER_LABELS = {
-  0: "全件",
-  1: "選択施設",
-  2: "欠席除外",
-  3: "欠席・午前除外",
-  4: "退室済みも除外",
-};
+const DEFAULT_FILTER_OPTIONS = [
+  {
+    value: 0,
+    label: "全件",
+  },
+  {
+    value: 1,
+    label: "選択施設",
+  },
+  {
+    value: 2,
+    label: "欠席除外",
+  },
+  {
+    value: 3,
+    label: "欠席・午前除外",
+  },
+  {
+    value: 4,
+    label: "退室済みも除外",
+  },
+];
+
+function resolveFilterLabel(
+  filterOptions,
+  filterMode,
+) {
+  const options = Array.isArray(filterOptions)
+    ? filterOptions
+    : DEFAULT_FILTER_OPTIONS;
+
+  const found = options.find(
+    (option) =>
+      Number(option?.value) === Number(filterMode),
+  );
+
+  return found?.label ?? options[0]?.label ?? "全件";
+}
 
 /**
  * 利用者データ取得 UI
+ *
+ * variant="simpleBoard" を指定すると、
+ * SimpleBoard差し替え時にフィルター状態を常時表示します。
  *
  * DashboardHeader 共通機能。
  *
@@ -88,14 +125,21 @@ const FILTER_LABELS = {
 export default function GetTodayUsersChildren({
   HideFlg = false,
   expandDirection = "up",
+  filterOptions = DEFAULT_FILTER_OPTIONS,
+  variant = "default",
+  filterMode: controlledFilterMode,
+  onFilterModeChange,
 }) {
   const [isOpen, setIsOpen] = useState(false);
 
   const menuRef = useRef(null);
 
+  const isSimpleBoardVariant = variant === "simpleBoard";
+
   const {
     attendanceData,
     SELECT_CHILD_FILTER_MODE,
+    setSelectChildFilterMode,
   } = useAppState();
 
   const {
@@ -119,12 +163,24 @@ export default function GetTodayUsersChildren({
   // フィルター
   // =============================================
   const filterMode = Number(
-    SELECT_CHILD_FILTER_MODE ?? 1
+    controlledFilterMode ?? SELECT_CHILD_FILTER_MODE ?? 0
   );
 
-  const filterLabel =
-    FILTER_LABELS[filterMode] ??
-    "選択施設";
+  const handleFilterModeChange = (nextMode) => {
+    const numericMode = Number(nextMode ?? 0);
+
+    if (typeof onFilterModeChange === "function") {
+      onFilterModeChange(numericMode);
+      return;
+    }
+
+    setSelectChildFilterMode?.(numericMode);
+  };
+
+  const filterLabel = resolveFilterLabel(
+    filterOptions,
+    filterMode,
+  );
 
   // =============================================
   // 展開方向
@@ -395,7 +451,11 @@ export default function GetTodayUsersChildren({
               </span>
 
               <div className="min-w-0 flex-1">
-                <SelectChildFilter />
+                <SelectChildFilter
+                  options={filterOptions}
+                  value={filterMode}
+                  onChange={handleFilterModeChange}
+                />
               </div>
             </div>
           )}
@@ -572,14 +632,18 @@ export default function GetTodayUsersChildren({
               {/* フィルター状態 */}
               {!HideFlg && (
                 <span
-                  className="
-                    hidden
+                  className={`
                     max-w-[90px]
                     truncate
                     text-[10px]
                     text-gray-300
-                    xl:inline
-                  "
+
+                    ${
+                      isSimpleBoardVariant
+                        ? "inline"
+                        : "hidden xl:inline"
+                    }
+                  `}
                 >
                   {filterLabel}
                 </span>

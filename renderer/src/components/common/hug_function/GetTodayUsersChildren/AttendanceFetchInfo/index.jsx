@@ -41,7 +41,9 @@ function formatLastFetchedAt(extractedAt) {
  * - 最終取得時間
  * - 児童表示フィルター
  */
-export default function AttendanceFetchInfo() {
+export default function AttendanceFetchInfo({
+  filterOptions,
+} = {}) {
   const { attendanceData } = useAppState()
 
   const lastFetchedAt = attendanceData?.extractedAt ?? null
@@ -63,7 +65,7 @@ export default function AttendanceFetchInfo() {
         </span>
       </div>
 
-      <SelectChildFilter />
+      <SelectChildFilter options={filterOptions} />
     </div>
   )
 }
