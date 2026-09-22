@@ -17,10 +17,23 @@ export default function AdminTab() {
   const auth = useSelector(selectLaravelAuth)
   const isAdmin = Number(auth.user?.role_id) === 1
   const authenticatedStaffId = auth.user?.staff_id
-  const { databaseState } = useAppState()
+  const {
+    databaseState,
+    DEBUG_FLG,
+  } = useAppState()
   const [activeAdminSection, setActiveAdminSection] = useState(
     ADMIN_SECTION_IDS.STAFF_MANAGEMENT,
   )
+
+  const visibleAdminSections = DEBUG_FLG
+    ? ADMIN_SECTIONS
+    : ADMIN_SECTIONS.filter(
+        (section) => section.id !== ADMIN_SECTION_IDS.WEB_AUTOMATION,
+      )
+
+  const visibleActiveSection = DEBUG_FLG
+    ? activeAdminSection
+    : ADMIN_SECTION_IDS.STAFF_MANAGEMENT
 
   if (!isAdmin) {
     return null
@@ -31,17 +44,20 @@ export default function AdminTab() {
       <AdminHeader />
 
       <AdminSectionCards
-        sections={ADMIN_SECTIONS}
-        activeSectionId={activeAdminSection}
+        sections={visibleAdminSections}
+        activeSectionId={visibleActiveSection}
         onChangeSection={setActiveAdminSection}
       />
 
-      {activeAdminSection === ADMIN_SECTION_IDS.STAFF_MANAGEMENT ? (
+      {visibleActiveSection === ADMIN_SECTION_IDS.STAFF_MANAGEMENT && (
         <StaffManagement
           staffs={databaseState?.staffs}
           authenticatedStaffId={authenticatedStaffId}
         />
-      ) : (
+      )}
+
+      {DEBUG_FLG &&
+        visibleActiveSection === ADMIN_SECTION_IDS.WEB_AUTOMATION && (
         <WebAutomation />
       )}
     </div>
