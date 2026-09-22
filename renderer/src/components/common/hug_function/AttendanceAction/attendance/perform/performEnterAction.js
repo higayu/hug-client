@@ -19,6 +19,7 @@ import {
   MailDialogCancelledError,
 } from "../helpers/mailDialog.js";
 import { nyushituInWebview } from "../post/postAttendanceInWebview.js";
+import { executeAttendancePostFlow } from "../flow/attendancePostFlow.js";
 import { NATIVE_STATUS_ENTER } from "../update/nativeDelegateInWebview.js";
 
 /**
@@ -71,16 +72,45 @@ export async function performEnterAction(item, ctx = {}) {
     throw new Error("入室 POST 用の HUG webview を取得できませんでした");
   }
 
-  const postResult = await nyushituInWebview(webview, item.enterOnclick, {
-    mail_flg,
-  });
+  let postResult = null;
+
+  if (ctx.useWebAutomationFlow !== false) {
+    postResult = await executeAttendancePostFlow(webview, {
+      flowKey: ctx.flowKey || "attendance_enter",
+      action: "enter",
+      item,
+      mailFlg: mail_flg,
+      variables: {
+        childId: item.childId || item.children_id || item.c_id,
+        facilityId: ctx.facilityId || item.facilityId || item.f_id,
+        date: ctx.dateStr || item.detailPageDate || item.date,
+        dateStr: ctx.dateStr || item.detailPageDate || item.date,
+        isMail: mail_flg,
+      },
+    });
+
+    if (!postResult?.success) {
+      console.warn(
+        "[performEnterAction] web_automation_flows 実行失敗。互換POSTへフォールバックします。",
+        postResult
+      );
+    }
+  }
+
+  if (!postResult?.success) {
+    postResult = await nyushituInWebview(webview, item.enterOnclick, {
+      mail_flg,
+    });
+  }
 
   if (!postResult?.success) {
     throw new Error(postResult?.error || "入室 POST に失敗しました");
   }
 
   return {
-    mode: needsMailConfirmation ? "renderer-mail" : "extension",
+    mode: postResult.mode || (needsMailConfirmation ? "renderer-mail" : "extension"),
+    flowKey: postResult.flow?.flow_key || null,
+    ruleKey: postResult.rule?.rule_key || null,
     mail_flg,
     success: true,
     dataList: postResult.dataList,

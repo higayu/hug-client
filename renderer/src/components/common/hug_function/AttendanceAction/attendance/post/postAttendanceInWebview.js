@@ -5,7 +5,7 @@
 import { dataListFromEnterButton } from "./enterPost.js";
 import { leaveDataListFromOnclick } from "./leavePost.js";
 
-async function postAttendanceDataListInWebview(webview, dataList) {
+export async function postAttendanceDataListInWebview(webview, dataList) {
   const script = `
     (async () => {
       const dataList = ${JSON.stringify(dataList)};

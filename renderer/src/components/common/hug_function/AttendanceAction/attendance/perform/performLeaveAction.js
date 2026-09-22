@@ -15,6 +15,7 @@ import {
   MailDialogCancelledError,
 } from "../helpers/mailDialog.js";
 import { taishitsuFromOnclickInWebview } from "../post/postAttendanceInWebview.js";
+import { executeAttendancePostFlow } from "../flow/attendancePostFlow.js";
 import { NATIVE_STATUS_LEAVE } from "../update/nativeDelegateInWebview.js";
 
 /**
@@ -52,18 +53,48 @@ export async function performLeaveAction(item, ctx = {}) {
   }
 
   const patch = buildLeavePatchFromRow(item, { mail_flg });
-  const postResult = await taishitsuFromOnclickInWebview(
-    webview,
-    item.leaveOnclick,
-    patch
-  );
+  let postResult = null;
+
+  if (ctx.useWebAutomationFlow !== false) {
+    postResult = await executeAttendancePostFlow(webview, {
+      flowKey: ctx.flowKey || "attendance_leave",
+      action: "leave",
+      item,
+      mailFlg: mail_flg,
+      patch,
+      variables: {
+        childId: item.childId || item.children_id || item.c_id,
+        facilityId: ctx.facilityId || item.facilityId || item.f_id,
+        date: ctx.dateStr || item.detailPageDate || item.date,
+        dateStr: ctx.dateStr || item.detailPageDate || item.date,
+        isMail: mail_flg,
+      },
+    });
+
+    if (!postResult?.success) {
+      console.warn(
+        "[performLeaveAction] web_automation_flows 実行失敗。互換POSTへフォールバックします。",
+        postResult
+      );
+    }
+  }
+
+  if (!postResult?.success) {
+    postResult = await taishitsuFromOnclickInWebview(
+      webview,
+      item.leaveOnclick,
+      patch
+    );
+  }
 
   if (!postResult?.success) {
     throw new Error(postResult?.error || "退室 POST に失敗しました");
   }
 
   return {
-    mode: needsMailConfirmation ? "renderer-mail" : "extension",
+    mode: postResult.mode || (needsMailConfirmation ? "renderer-mail" : "extension"),
+    flowKey: postResult.flow?.flow_key || null,
+    ruleKey: postResult.rule?.rule_key || null,
     mail_flg,
     success: true,
     dataList: postResult.dataList,
