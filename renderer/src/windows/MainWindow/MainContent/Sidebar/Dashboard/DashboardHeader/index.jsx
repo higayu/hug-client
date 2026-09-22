@@ -10,6 +10,7 @@ function DashboardHeader() {
   } = useAppState();
 
   const isSimpleBoardActive = activeSidebarTab === "simpleBoard";
+  const isFanContentActive = activeSidebarTab === "FanContent";
 
   return (
     <div
@@ -35,57 +36,60 @@ function DashboardHeader() {
             それ以外のタブではDashboardHeader側で表示する。 */}
         {!isSimpleBoardActive && (
           <div
-            className="
+            className={`
               flex
               min-w-0
-              basis-3/5
+              ${isFanContentActive ? "basis-3/5" : "basis-full"}
               items-center
               rounded-lg
               bg-slate-200
               p-2
-            "
+            `}
           >
             <GetTodayUsersChildren expandDirection="down" />
           </div>
         )}
 
-        {/* 曜日 */}
-        <div
-          className={`
-            flex
-            min-w-0
-            ${isSimpleBoardActive ? "basis-full" : "basis-2/5"}
-            items-center
-            gap-2
-            rounded-lg
-            bg-slate-200
-            p-2
-          `}
-        >
-          <label
+        {/* 曜日
+            FanContent表示中だけ、曜日別（対応児童）を表示する。 */}
+        {isFanContentActive && (
+          <div
             className="
               flex
-              shrink-0
-              flex-col
+              min-w-0
+              basis-2/5
               items-center
-              justify-center
-              text-sm
-              font-bold
-              text-black
+              gap-2
+              rounded-lg
+              bg-slate-200
+              p-2
             "
           >
-            <span>曜日別：</span>
-            <span>（対応児童）</span>
-          </label>
+            <label
+              className="
+                flex
+                shrink-0
+                flex-col
+                items-center
+                justify-center
+                text-sm
+                font-bold
+                text-black
+              "
+            >
+              <span>曜日別：</span>
+              <span>（対応児童）</span>
+            </label>
 
-          <div className="min-w-0 flex-1">
-            <WeekdaySelect />
-          </div>
+            <div className="min-w-0 flex-1">
+              <WeekdaySelect />
+            </div>
 
-          <div className="flex shrink-0 items-center justify-center">
-            <AddChilledSpaceBtn />
+            <div className="flex shrink-0 items-center justify-center">
+              <AddChilledSpaceBtn />
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
