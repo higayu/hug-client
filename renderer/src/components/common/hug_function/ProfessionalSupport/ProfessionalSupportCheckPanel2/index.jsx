@@ -4,7 +4,6 @@ import { useSelector } from 'react-redux'
 import { useAppState } from '@/AppStateContext'
 import { useTabs } from '@/hooks/useTabs'
 import { useNote } from '@/hooks/useNote'
-import { getHugWebviewForCache } from '@/hooks/useHugCache/getHugCache.js'
 import { selectCurrentYmd } from '@/store/slices/appStateSlice.js'
 import {
   selectActiveSpaceId,
@@ -14,8 +13,10 @@ import { selectProfessionalSupportStatus } from '@/store/slices/recordStatusSlic
 import { useProfessionalSupportCheck2 } from './useProfessionalSupportCheck2'
 import ProfessionalSupportPostModal from './ProfessionalSupportPostModal'
 import { postProfessionalSupportDraft } from './postProfessionalSupportDraft.js'
-
-const PROFESSIONAL_SUPPORT_ID = '55'
+import {
+  executeProfessionalSupportPlusRegister,
+  executeProfessionalSupportPlusRegistrationCheck,
+} from './professionalSupportWebAutomation.js'
 
 const normalizeInterviewDateToYmd = (dateText) => {
   if (!dateText) return null
@@ -55,111 +56,11 @@ const getRegisteredLabel = (
 }
 
 async function addProfessionalSupport({ childId, facilityId, dateStr }) {
-  if (!childId) throw new Error('児童が選択されていません')
-  if (!dateStr) throw new Error('日付が指定されていません')
-  if (!facilityId) throw new Error('施設が指定されていません')
-
-  const webview = await getHugWebviewForCache()
-  if (!webview) throw new Error('HUG の WebView が見つかりません')
-
-  const script = `
-    (async () => {
-      const CHILD_ID = ${JSON.stringify(String(childId))};
-      const DATE_STR = ${JSON.stringify(String(dateStr))};
-      const FACILITY_ID = ${JSON.stringify(String(facilityId))};
-      const PROFESSIONAL_SUPPORT_ID = ${JSON.stringify(PROFESSIONAL_SUPPORT_ID)};
-
-      const detailUrl = new URL('https://www.hug-ayumu.link/hug/wm/attendance.php');
-      detailUrl.searchParams.set('mode', 'detail');
-      detailUrl.searchParams.set('f_id', FACILITY_ID);
-      detailUrl.searchParams.set('date', DATE_STR);
-
-      const postUrl = new URL(
-        'https://www.hug-ayumu.link/hug/wm/ajax/ajax_adding_contents_2024.php'
-      );
-
-      try {
-        const detailResponse = await fetch(detailUrl.href, {
-          method: 'GET',
-          credentials: 'include'
-        });
-
-        if (!detailResponse.ok) {
-          throw new Error('加算一覧取得失敗 (' + detailResponse.status + ')');
-        }
-
-        const html = await detailResponse.text();
-        const doc = new DOMParser().parseFromString(html, 'text/html');
-        const tbodies = Array.from(doc.querySelectorAll("tbody[id^='js_adding_list']"));
-
-        const targetTbody = tbodies.find((tbody) => {
-          const cId = tbody.querySelector('[name="c_id"]')?.value;
-          return String(cId || '') === CHILD_ID;
-        });
-
-        if (!targetTbody) {
-          throw new Error('加算一覧に対象児童が見つかりません: childId=' + CHILD_ID);
-        }
-
-        const rowFacilityId = targetTbody.querySelector('[name="f_id"]')?.value || '';
-        const resolvedFacilityId = FACILITY_ID || rowFacilityId;
-        const hoikuFlg = targetTbody.querySelector('[name="hoiku_flg"]')?.value || '';
-
-        if (!resolvedFacilityId) {
-          throw new Error('対象児童の f_id を取得できません');
-        }
-
-        const body = new URLSearchParams();
-        body.append('adding[selected_content]', PROFESSIONAL_SUPPORT_ID);
-        body.append('c_id', CHILD_ID);
-        body.append('f_id', resolvedFacilityId);
-        body.append('hoiku_flg', hoikuFlg);
-        body.append('date', DATE_STR);
-        body.append('mode', 'regist');
-
-        const postResponse = await fetch(postUrl.href, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-            'X-Requested-With': 'XMLHttpRequest'
-          },
-          body: body.toString(),
-          credentials: 'include'
-        });
-
-        const responseText = await postResponse.text();
-
-        if (!postResponse.ok) {
-          throw new Error(
-            '専門的支援加算POST失敗 (' + postResponse.status + '): ' +
-            responseText.slice(0, 300)
-          );
-        }
-
-        return {
-          ok: true,
-          childId: CHILD_ID,
-          facilityId: resolvedFacilityId,
-          date: DATE_STR,
-          selectedContent: PROFESSIONAL_SUPPORT_ID,
-          responseText: responseText.slice(0, 500)
-        };
-      } catch (error) {
-        return {
-          ok: false,
-          error: error?.message ? String(error.message) : String(error)
-        };
-      }
-    })()
-  `
-
-  const result = await webview.executeJavaScript(script)
-
-  if (!result?.ok) {
-    throw new Error(result?.error || '専門的支援加算の登録に失敗しました')
-  }
-
-  return result
+  return executeProfessionalSupportPlusRegister({
+    childId,
+    facilityId,
+    dateStr,
+  })
 }
 
 async function checkProfessionalSupportRegistration({
@@ -167,102 +68,11 @@ async function checkProfessionalSupportRegistration({
   facilityId,
   dateStr,
 }) {
-  if (!childId) throw new Error('児童が選択されていません')
-  if (!dateStr) throw new Error('日付が指定されていません')
-  if (!facilityId) throw new Error('施設が指定されていません')
-
-  const webview = await getHugWebviewForCache()
-  if (!webview) throw new Error('HUG の WebView が見つかりません')
-
-  const script = `
-    (async () => {
-      const CHILD_ID = ${JSON.stringify(String(childId))};
-      const DATE_STR = ${JSON.stringify(String(dateStr))};
-      const FACILITY_ID = ${JSON.stringify(String(facilityId))};
-      const PROFESSIONAL_SUPPORT_ID = ${JSON.stringify(PROFESSIONAL_SUPPORT_ID)};
-
-      const detailUrl = new URL('https://www.hug-ayumu.link/hug/wm/attendance.php');
-      detailUrl.searchParams.set('mode', 'detail');
-      detailUrl.searchParams.set('f_id', FACILITY_ID);
-      detailUrl.searchParams.set('date', DATE_STR);
-
-      try {
-        const response = await fetch(detailUrl.href, {
-          method: 'GET',
-          credentials: 'include'
-        });
-
-        if (!response.ok) {
-          throw new Error('出席表取得失敗 (' + response.status + ')');
-        }
-
-        const html = await response.text();
-        const doc = new DOMParser().parseFromString(html, 'text/html');
-        const tbodies = Array.from(doc.querySelectorAll("tbody[id^='js_adding_list']"));
-
-        const targetTbody = tbodies.find((tbody) => {
-          const cId = tbody.querySelector('[name="c_id"]')?.value;
-          return String(cId || '') === CHILD_ID;
-        });
-
-        if (!targetTbody) {
-          return {
-            ok: true,
-            registered: false,
-            childFound: false,
-            childId: CHILD_ID,
-            date: DATE_STR,
-            facilityId: FACILITY_ID,
-            url: detailUrl.href
-          };
-        }
-
-        const registrationInput = Array.from(
-          targetTbody.querySelectorAll('input[type="hidden"][name]')
-        ).find((input) => {
-          return input.getAttribute('name') ===
-            'adding[][' + PROFESSIONAL_SUPPORT_ID + '][id]';
-        });
-
-        const registeredByHiddenId = Boolean(
-          registrationInput && String(registrationInput.value || '').trim()
-        );
-
-        const registeredByLabel = Array.from(
-          targetTbody.querySelectorAll('.js_adding_td b.green, .js_adding_td b')
-        ).some((element) =>
-          String(element.textContent || '')
-            .replace(/\\s+/g, '')
-            .includes('専門的支援実施加算')
-        );
-
-        return {
-          ok: true,
-          registered: registeredByHiddenId || registeredByLabel,
-          childFound: true,
-          childId: CHILD_ID,
-          date: DATE_STR,
-          facilityId: FACILITY_ID,
-          registrationId: registrationInput?.value || null,
-          url: detailUrl.href
-        };
-      } catch (error) {
-        return {
-          ok: false,
-          registered: false,
-          error: error?.message ? String(error.message) : String(error)
-        };
-      }
-    })()
-  `
-
-  const result = await webview.executeJavaScript(script)
-
-  if (!result?.ok) {
-    throw new Error(result?.error || '専門＋の登録状態確認に失敗しました')
-  }
-
-  return result
+  return executeProfessionalSupportPlusRegistrationCheck({
+    childId,
+    facilityId,
+    dateStr,
+  })
 }
 
 /**
