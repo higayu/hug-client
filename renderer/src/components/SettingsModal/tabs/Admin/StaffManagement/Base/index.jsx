@@ -1,4 +1,4 @@
-import StaffTab from '../../StaffTab'
+import StaffTab from '../../../StaffTab'
 
 export default function Base({ staffId }) {
   return (
