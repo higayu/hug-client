@@ -19,7 +19,6 @@ import {
   StaffTab,
   AdminTab,
   DebugTab,
-  AutomationRulesTab,
 } from "./tabs";
 
 import { useAppState } from '@/AppStateContext';
@@ -60,13 +59,8 @@ const BASE_TABS = [
 
 const ADMIN_TABS = [
   {
-    id: 'automation-rules',
-    label: '自動化ルール',
-    component: AutomationRulesTab,
-  },
-  {
     id: 'admin',
-    label: '職員管理',
+    label: '管理者設定',
     component: AdminTab,
   },
 ]
