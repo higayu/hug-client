@@ -8,7 +8,9 @@
 export async function fetchPersonalRecordDetails(
   webview,
   records,
+  options = {},
 ) {
+  const { config = {}, onProgress } = options
   if (!webview) {
     return {
       ok: false,
@@ -59,6 +61,24 @@ export async function fetchPersonalRecordDetails(
     return ''
   }
 
+  const skipConditions = Array.isArray(config?.skipConditions)
+    ? config.skipConditions
+    : []
+
+  const getConfiguredSkipReason = (record) => {
+    for (const condition of skipConditions) {
+      const fieldValue = normalizeConditionText(record?.[condition?.field])
+      const expected = normalizeConditionText(condition?.value)
+      if (condition?.operator === 'startsWith' && fieldValue.startsWith(expected)) {
+        return `DB設定: ${condition.field} startsWith ${condition.value}`
+      }
+      if (condition?.operator === 'equals' && fieldValue === expected) {
+        return `DB設定: ${condition.field} = ${condition.value}`
+      }
+    }
+    return getSkipReason(record)
+  }
+
   const targets = records.map(
     (record, index) => ({
       index,
@@ -73,15 +93,16 @@ export async function fetchPersonalRecordDetails(
         record?.editUrl ??
         '',
 
-      skipReason: getSkipReason(record),
+      skipReason: getConfiguredSkipReason(record),
     }),
   )
 
   const script = `
     (async () => {
       const TARGETS = ${JSON.stringify(targets)};
+      const CONFIG = ${JSON.stringify(config)};
       const HUG_WM_BASE_URL =
-        "https://www.hug-ayumu.link/hug/wm/";
+        CONFIG.baseUrl || "https://www.hug-ayumu.link/hug/wm/";
 
       const parseEditPath = (onclick) => {
         const source = String(
@@ -274,7 +295,7 @@ export async function fetchPersonalRecordDetails(
           // -------------------------
           const textarea =
             editDoc.querySelector(
-              'textarea[name="note"][data-field-key="note"]'
+              CONFIG.noteSelector || 'textarea[name="note"][data-field-key="note"]'
             );
 
           if (!textarea) {
@@ -292,7 +313,7 @@ export async function fetchPersonalRecordDetails(
           // -------------------------
           const recordStaffSelect =
             editDoc.querySelector(
-              'select[name="record_staff"]'
+              CONFIG.recordStaffSelector || 'select[name="record_staff"]'
             );
 
           let recordStaffId = null;
@@ -548,6 +569,8 @@ export async function fetchPersonalRecordDetails(
         script,
         true,
       )
+
+    onProgress?.(records.length, records.length)
 
     if (!detailResult?.ok) {
       return {

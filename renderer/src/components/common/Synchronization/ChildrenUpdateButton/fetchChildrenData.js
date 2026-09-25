@@ -351,7 +351,8 @@ async function fetchInHugWebview(webview, { url, method = "GET", body, headers =
   return response.text;
 }
 
-export async function fetchChildrenData(onProgress, facilityId, _targetDate, webviewOverride = null) {
+export async function fetchChildrenData(onProgress, facilityId, _targetDate, webviewOverride = null, options = {}) {
+  const { config = {} } = options;
   console.log(`[fetchChildrenData] 開始 - facilityId: ${facilityId} (${typeof facilityId})`);
 
   const webview = webviewOverride ?? await getHugWebviewForCache();
@@ -369,10 +370,19 @@ export async function fetchChildrenData(onProgress, facilityId, _targetDate, web
   // 施設IDに基づいてPOSTパラメータを動的に生成
   const body = buildChildPostParams(facilityId, targetDate);
 
+  const configuredPostFields = config?.postFields || {};
+  for (const [key, value] of Object.entries(configuredPostFields)) {
+    body.set(key, String(value ?? "").replace("{{targetDate}}", targetDate));
+  }
+
+  const requestUrl =
+    config?.request?.url ||
+    HUG_WM_CHILD_AGREEMENT_FILTER_URL;
+
   try {
     // 児童データを取得（ajax_child_agreement_filter）
     const responseText = await fetchInHugWebview(webview, {
-      url: HUG_WM_CHILD_AGREEMENT_FILTER_URL,
+      url: requestUrl,
       method: "POST",
       body: body.toString(),
       headers: {

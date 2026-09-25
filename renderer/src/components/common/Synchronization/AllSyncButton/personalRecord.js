@@ -14,7 +14,6 @@ export const buildPersonalRecordChildrenFetchScript = ({ facilityId }) => {
   return `
     (async () => {
       const request = ${JSON.stringify(request)};
-
       const normalizeText = (value) =>
         String(value ?? '').replace(/\\s+/g, ' ').trim();
 
@@ -77,17 +76,19 @@ export const buildPersonalRecordChildrenFetchScript = ({ facilityId }) => {
  *
  * 検証用のため、HUG側の検索結果を保存せずそのまま返す。
  */
-export const buildPersonalRecordFetchScript = ({ facilityId, year, month }) => {
+export const buildPersonalRecordFetchScript = ({ facilityId, year, month, config = {} }) => {
   const request = {
-    url: URL_TARGET4,
+    url: config?.url || URL_TARGET4,
     facilityId: String(facilityId ?? ''),
     year: String(year ?? ''),
     month: String(month ?? ''),
+    config,
   }
 
   return `
     (async () => {
       const request = ${JSON.stringify(request)};
+      const CONFIG = request.config || {};
 
       const normalizeText = (value) =>
         String(value ?? '').replace(/\\s+/g, ' ').trim();
@@ -107,16 +108,14 @@ export const buildPersonalRecordFetchScript = ({ facilityId, year, month }) => {
       };
 
       const parseRows = (doc) => {
-        const table = Array.from(doc.querySelectorAll('table.table')).find((candidate) => {
+        const table = Array.from(doc.querySelectorAll(CONFIG.tableSelector || 'table.table')).find((candidate) => {
           const headings = Array.from(candidate.querySelectorAll('thead th'))
             .map((th) => normalizeText(th.textContent));
 
-          return headings.includes('日付') &&
-            headings.includes('児童名') &&
-            headings.includes('施設名') &&
-            headings.includes('活動内容') &&
-            headings.includes('記録者') &&
-            headings.includes('最終更新');
+          const requiredHeadings = Array.isArray(CONFIG.requiredHeadings)
+            ? CONFIG.requiredHeadings
+            : ['日付', '児童名', '施設名', '活動内容', '記録者', '最終更新'];
+          return requiredHeadings.every((heading) => headings.includes(heading));
         });
 
         if (!table) return [];
@@ -126,7 +125,9 @@ export const buildPersonalRecordFetchScript = ({ facilityId, year, month }) => {
             const cells = Array.from(row.querySelectorAll(':scope > td'));
             if (cells.length < 4) return null;
 
-            const editButton = cells[7]?.querySelector('button[onclick], a[href]');
+            const columns = CONFIG.columns || {};
+            const editIndex = Number.isInteger(columns.edit) ? columns.edit : 7;
+            const editButton = cells[editIndex]?.querySelector(CONFIG.editSelector || 'button[onclick], a[href]');
             const editSource =
               editButton?.getAttribute('onclick') ??
               editButton?.getAttribute('href') ??
@@ -136,16 +137,26 @@ export const buildPersonalRecordFetchScript = ({ facilityId, year, month }) => {
             const childIdMatch = editSource.match(/[?&]c_id=(\\d+)/);
             const dateMatch = editSource.match(/[?&]cal_date=([0-9-]+)/);
             const recordKey =
-              row.querySelector('.editing-status-badge')?.getAttribute('data-record-id') ?? '';
+              row.querySelector(CONFIG.recordKeySelector || '.editing-status-badge')
+                ?.getAttribute(CONFIG.recordKeyAttribute || 'data-record-id') ?? '';
 
-            const childName = normalizeText(cells[1]?.textContent)
+            const childNameIndex = Number.isInteger(columns.childName) ? columns.childName : 1;
+            const facilityNameIndex = Number.isInteger(columns.facilityName) ? columns.facilityName : 2;
+            const activityIndex = Number.isInteger(columns.activity) ? columns.activity : 3;
+            const attendanceIndex = Number.isInteger(columns.attendance) ? columns.attendance : 4;
+            const statusIndex = Number.isInteger(columns.status) ? columns.status : 5;
+            const recorderIndex = Number.isInteger(columns.recorder) ? columns.recorder : 9;
+            const updatedAtIndex = Number.isInteger(columns.updatedAt) ? columns.updatedAt : 10;
+            const dateIndex = Number.isInteger(columns.date) ? columns.date : 0;
+
+            const childName = normalizeText(cells[childNameIndex]?.textContent)
               .replace(/さん$/, '')
               .trim();
 
-            const activity = normalizeText(cells[3]?.textContent);
-            const attendance = normalizeText(cells[4]?.textContent);
+            const activity = normalizeText(cells[activityIndex]?.textContent);
+            const attendance = normalizeText(cells[attendanceIndex]?.textContent);
 
-            const statusCell = cells[5];
+            const statusCell = cells[statusIndex];
             const statusLabel = statusCell?.querySelector('span.label');
             const status = normalizeText(
               statusLabel?.textContent ?? statusCell?.textContent
@@ -156,16 +167,16 @@ export const buildPersonalRecordFetchScript = ({ facilityId, year, month }) => {
                   .join(' ')
               : '';
 
-            const recorder = normalizeText(cells[9]?.textContent);
-            const updatedAt = normalizeText(cells[10]?.textContent);
+            const recorder = normalizeText(cells[recorderIndex]?.textContent);
+            const updatedAt = normalizeText(cells[updatedAtIndex]?.textContent);
 
             return {
               recordId: idMatch?.[1] ?? '',
               childrenId: childIdMatch?.[1] ?? '',
               recordKey,
-              date: normalizeDate(dateMatch?.[1] ?? cells[0]?.textContent),
+              date: normalizeDate(dateMatch?.[1] ?? cells[dateIndex]?.textContent),
               childName,
-              facilityName: normalizeText(cells[2]?.textContent),
+              facilityName: normalizeText(cells[facilityNameIndex]?.textContent),
               activity,
               attendance,
               status,
@@ -178,10 +189,11 @@ export const buildPersonalRecordFetchScript = ({ facilityId, year, month }) => {
           .filter((record) => record && (record.recordId || record.childrenId || record.childName));
       };
 
+      const initialRequest = CONFIG.initialRequest || {};
       const initialResponse = await fetch(request.url, {
-        method: 'GET',
-        credentials: 'include',
-        cache: 'no-store',
+        method: initialRequest.method || 'GET',
+        credentials: initialRequest.credentials || 'include',
+        cache: initialRequest.cache || 'no-store',
       });
 
       if (!initialResponse.ok) {
@@ -195,7 +207,7 @@ export const buildPersonalRecordFetchScript = ({ facilityId, year, month }) => {
       const initialHtml = await initialResponse.text();
       const initialDoc = new DOMParser().parseFromString(initialHtml, 'text/html');
       const initialChildren = Array.from(
-        initialDoc.querySelectorAll('#name_list option')
+        initialDoc.querySelectorAll(CONFIG.childrenSelector || '#name_list option')
       )
         .map((option) => {
           const id = Number(String(option.value ?? '').trim());
@@ -215,14 +227,14 @@ export const buildPersonalRecordFetchScript = ({ facilityId, year, month }) => {
 
       if (!request.facilityId) {
         const checkedFacility = initialDoc.querySelector(
-          'input[name^="facility["]:checked, input[name^="facility["]'
+          CONFIG.facilitySelector || 'input[name^="facility["]:checked, input[name^="facility["]'
         );
         request.facilityId = String(checkedFacility?.value ?? '').trim();
       }
 
       if (!request.year || !request.month) {
         const startDate = String(
-          initialDoc.querySelector('input[name="date"]')?.value ?? ''
+          initialDoc.querySelector(CONFIG.defaultDateSelector || 'input[name="date"]')?.value ?? ''
         );
         const match = startDate.match(/(\\d{4})[\\/-](\\d{1,2})/);
 
@@ -245,22 +257,29 @@ export const buildPersonalRecordFetchScript = ({ facilityId, year, month }) => {
       const endDate = toSlashDate(request.year, request.month, lastDay);
 
       const body = new URLSearchParams();
-      body.set('mode', 'search');
-      body.set('search', '');
-      body.set('facility[' + request.facilityId + ']', request.facilityId);
-      body.set('children', '0');
-      body.set('date', startDate);
-      body.set('date_end', endDate);
-      body.set('s_ary[1]', '放課後等デイサービス');
-      body.set('s_ary[2]', '児童発達支援');
-      body.set('state', '');
+      const postFields = CONFIG.postFields || {};
+      const fieldNames = CONFIG.postFieldNames || {};
 
+      body.set('mode', postFields.mode ?? 'search');
+      body.set('search', postFields.search ?? '');
+      body.set(
+        String(fieldNames.facility || 'facility[{{facilityId}}]').replace('{{facilityId}}', request.facilityId),
+        request.facilityId
+      );
+      body.set('children', postFields.children ?? '0');
+      body.set(fieldNames.startDate || 'date', startDate);
+      body.set(fieldNames.endDate || 'date_end', endDate);
+      body.set(fieldNames.service1 || 's_ary[1]', postFields.service1 ?? '放課後等デイサービス');
+      body.set(fieldNames.service2 || 's_ary[2]', postFields.service2 ?? '児童発達支援');
+      body.set('state', postFields.state ?? '');
+
+      const searchRequest = CONFIG.searchRequest || {};
       const response = await fetch(request.url, {
-        method: 'POST',
-        credentials: 'include',
-        cache: 'no-store',
+        method: searchRequest.method || 'POST',
+        credentials: searchRequest.credentials || 'include',
+        cache: searchRequest.cache || 'no-store',
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+          'Content-Type': searchRequest.contentType || 'application/x-www-form-urlencoded;charset=UTF-8',
         },
         body: body.toString(),
       });
@@ -276,7 +295,11 @@ export const buildPersonalRecordFetchScript = ({ facilityId, year, month }) => {
       const firstPageRows = parseRows(doc);
 
       const totalText = normalizeText(
-        Array.from(doc.querySelectorAll('.ibox-title.sm h5, .ibox-title h5'))
+        Array.from(doc.querySelectorAll(
+          Array.isArray(CONFIG.totalSelectors) && CONFIG.totalSelectors.length > 0
+            ? CONFIG.totalSelectors.join(', ')
+            : '.ibox-title.sm h5, .ibox-title h5'
+        ))
           .map((node) => node.textContent)
           .find((text) => /全部で\\d+件/.test(text)) ?? ''
       );
@@ -284,7 +307,7 @@ export const buildPersonalRecordFetchScript = ({ facilityId, year, month }) => {
       const total = totalMatch ? Number(totalMatch[1]) : firstPageRows.length;
 
       const pageSize = firstPageRows.length;
-      const pageNumbers = Array.from(doc.querySelectorAll('.pagination a'))
+      const pageNumbers = Array.from(doc.querySelectorAll(CONFIG.paginationSelector || '.pagination a'))
         .map((a) => {
           const href = a.getAttribute('href') ?? '';
           const match = href.match(/[?&]page=(\\d+)/);
@@ -299,7 +322,10 @@ export const buildPersonalRecordFetchScript = ({ facilityId, year, month }) => {
 
       // POSTした検索条件はHUG側セッションに保持されるため、2ページ目以降はGETで取得する。
       for (let page = 2; page <= pageCount; page += 1) {
-        const pageResponse = await fetch(request.url + '?page=' + page, {
+        const paginationParameter = CONFIG.paginationParameter || 'page';
+        const pageUrl = new URL(request.url);
+        pageUrl.searchParams.set(paginationParameter, String(page));
+        const pageResponse = await fetch(pageUrl.toString(), {
           method: 'GET',
           credentials: 'include',
           cache: 'no-store',

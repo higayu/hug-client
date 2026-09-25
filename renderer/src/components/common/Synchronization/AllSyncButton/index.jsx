@@ -12,9 +12,10 @@ import { fetchChildrenData } from '../ChildrenUpdateButton/fetchChildrenData.js'
 
 import { buildPersonalRecordFetchScript } from './personalRecord'
 import { fetchPersonalRecordDetails } from './fetchPersonalRecordDetails'
+import { loadAllSyncAutomation } from './allSyncWebAutomation'
 
 const PERSONAL_RECORD_ITEM_ID = 1
-const TOTAL_STEPS = 4
+const TOTAL_STEPS = 5
 const DEFAULT_LABEL = '個人記録の更新'
 const COMPLETED_LABEL_DISPLAY_MS = 2000
 
@@ -218,7 +219,7 @@ export default function AllSyncButton({
     return targetWebview ?? getActiveWebview()
   }
 
-  const syncStaffs = async (activeWebview) => {
+  const syncStaffs = async (activeWebview, automationRule) => {
     setLabel(formatStepLabel(1, '職員更新中...'))
 
     const result = await fetchStaffData(
@@ -229,6 +230,7 @@ export default function AllSyncButton({
       },
       facilityId,
       activeWebview,
+      { config: automationRule?.config ?? {} },
     )
 
     console.groupCollapsed(
@@ -255,7 +257,7 @@ export default function AllSyncButton({
     }
   }
 
-  const syncChildren = async (activeWebview) => {
+  const syncChildren = async (activeWebview, automationRule) => {
     setLabel(formatStepLabel(2, '児童更新中...'))
 
     const now = new Date()
@@ -270,6 +272,7 @@ export default function AllSyncButton({
       facilityId,
       today,
       activeWebview,
+      { config: automationRule?.config ?? {} },
     )
 
     console.groupCollapsed(
@@ -333,21 +336,31 @@ export default function AllSyncButton({
     }
   }
 
-  const fetchPersonalRecords = async (activeWebview) => {
-    setLabel(formatStepLabel(3, '個人記録取得中...'))
+  const fetchPersonalRecords = async (activeWebview, automation) => {
     setLoading?.(true)
     setSending?.(false)
     setError?.('')
     setSendError?.('')
     setSendResult?.(null)
 
+    const listAutomation =
+      automation.rules.personal_record_list_fetch
+    const detailAutomation =
+      automation.rules.personal_record_detail_fetch
+
+    setLabel(formatStepLabel(3, '個人記録一覧取得中...'))
+
     const script = buildPersonalRecordFetchScript({
       facilityId,
       year,
       month,
+      config: listAutomation?.config ?? {},
     })
 
-    const listResult = await activeWebview.executeJavaScript(script, true)
+    const listResult = await activeWebview.executeJavaScript(
+      script,
+      true,
+    )
 
     if (listResult?.ok === false) {
       throw new Error(
@@ -359,9 +372,27 @@ export default function AllSyncButton({
       ? listResult.records
       : []
 
+    setLabel(
+      formatStepLabel(
+        4,
+        `個人記録詳細取得中... 0/${listRecords.length}`,
+      ),
+    )
+
     const detailResult = await fetchPersonalRecordDetails(
       activeWebview,
       listRecords,
+      {
+        config: detailAutomation?.config ?? {},
+        onProgress: (current, total) => {
+          setLabel(
+            formatStepLabel(
+              4,
+              `個人記録詳細取得 ${current}/${total}`,
+            ),
+          )
+        },
+      },
     )
 
     const fetchedRecords = Array.isArray(detailResult?.records)
@@ -376,6 +407,13 @@ export default function AllSyncButton({
       permissionErrorCount: detailResult.permissionErrorCount ?? 0,
       detailFetchOk: detailResult.ok,
       detailFetchError: detailResult.ok ? '' : detailResult.error,
+      webAutomation: {
+        flowKey: automation.flow?.flow_key ?? 'all_sync',
+        staffRuleVersion: automation.rules.staff_fetch?.rule?.version,
+        childrenRuleVersion: automation.rules.children_fetch?.rule?.version,
+        listRuleVersion: listAutomation?.rule?.version,
+        detailRuleVersion: detailAutomation?.rule?.version,
+      },
     }
 
     setData?.(mergedData)
@@ -404,7 +442,7 @@ export default function AllSyncButton({
   }
 
   const savePersonalRecords = async (personalRecordData) => {
-    setLabel(formatStepLabel(4, '個人記録をLaravelへ保存中...'))
+    setLabel(formatStepLabel(5, '個人記録をLaravelへ保存中...'))
     setLoading?.(false)
     setSending?.(true)
 
@@ -536,7 +574,7 @@ export default function AllSyncButton({
     setSendResult?.(null)
 
     showInfoToast?.(
-      '職員→児童→個人記録取得→Laravel保存の順で実行します',
+      '職員→児童→個人記録一覧→個人記録詳細→Laravel保存の順で実行します',
       3000,
     )
 
@@ -545,28 +583,46 @@ export default function AllSyncButton({
     let completed = false
 
     try {
-      // 1/4 職員更新
-      const staffResult = await syncStaffs(activeWebview)
+      phase = 'Web自動化設定取得'
+      const automation = await loadAllSyncAutomation()
 
-      // 2/4 児童更新
+      console.groupCollapsed('[個人記録の更新] all_sync Web自動化設定')
+      console.log('Flow:', automation.flow)
+      console.log('Rules:', automation.rules)
+      console.groupEnd()
+
+      // 1/5 職員取得・DB更新
+      phase = '職員更新'
+      const staffResult = await syncStaffs(
+        activeWebview,
+        automation.rules.staff_fetch,
+      )
+
+      // 2/5 児童取得・DB更新
       currentStep = 2
       phase = '児童更新'
-      const childrenResult = await syncChildren(activeWebview)
+      const childrenResult = await syncChildren(
+        activeWebview,
+        automation.rules.children_fetch,
+      )
 
-      // 3/4 個人記録の取得
+      // 3/5 + 4/5 個人記録一覧・詳細取得
       currentStep = 3
-      phase = '個人記録の取得'
-      const personalRecordData = await fetchPersonalRecords(activeWebview)
+      phase = '個人記録一覧取得'
+      const personalRecordData = await fetchPersonalRecords(
+        activeWebview,
+        automation,
+      )
 
-      // 4/4 個人記録のLaravel保存
-      currentStep = 4
+      // 詳細取得まで完了しているため、保存工程へ進む。
+      currentStep = 5
       phase = '個人記録のLaravel保存'
       const personalRecordResult = await savePersonalRecords(
         personalRecordData,
       )
 
       completed = true
-      setLabel(formatStepLabel(4, 'すべて完了'))
+      setLabel(formatStepLabel(5, 'すべて完了'))
 
       labelResetTimerRef.current = window.setTimeout(() => {
         setLabel(DEFAULT_LABEL)
@@ -639,7 +695,7 @@ export default function AllSyncButton({
         disabled:bg-gray-300
         ${className}
       `}
-      title="職員更新 → 児童更新 → 個人記録取得 → Laravel保存を順番に実行"
+      title="職員更新 → 児童更新 → 個人記録一覧取得 → 個人記録詳細取得 → Laravel保存を順番に実行"
     >
       <ArrowPathIcon
         className={`h-5 w-5 shrink-0 ${isRunning ? 'animate-spin' : ''}`}

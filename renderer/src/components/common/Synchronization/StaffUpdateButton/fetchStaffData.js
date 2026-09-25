@@ -170,9 +170,9 @@ function parseBelongings(value) {
     });
 }
 
-function parseIbox(html) {
+function parseIbox(html, config = {}) {
   const doc = new DOMParser().parseFromString(html, "text/html");
-  const ibox = doc.querySelector(IBOX_SELECTOR);
+  const ibox = doc.querySelector(config?.containerSelector || IBOX_SELECTOR);
 
   if (!ibox) {
     const isLoginPage =
@@ -275,21 +275,47 @@ async function fetchInHugWebview(webview, { url, method = "GET", body }) {
   return response.text;
 }
 
-export async function fetchStaffData(onProgress, facilityId, webviewOverride = null) {
+export async function fetchStaffData(onProgress, facilityId, webviewOverride = null, options = {}) {
+  const { config = {} } = options;
   const webview = webviewOverride ?? await getHugWebviewForCache();
   
-  // 施設IDに基づいてPOSTパラメータを動的に生成
-  const postParams = buildPostParams(facilityId);
+  // DB設定がある場合は config_json のPOST項目を優先する。
+  const configuredPostFields = config?.postFields || {};
+  const configuredJobFields = config?.jobFields || {};
+  const configuredFacilityMap = config?.facilityMap || {};
+
+  let postParams;
+  if (Object.keys(configuredPostFields).length || Object.keys(configuredJobFields).length) {
+    postParams = [
+      ...Object.entries(configuredPostFields),
+      ...Object.entries(configuredJobFields),
+    ].map(([key, value]) => [key, value ?? ""]);
+
+    const facilityName =
+      configuredFacilityMap[String(facilityId)] ??
+      configuredFacilityMap[Number(facilityId)] ??
+      FACILITY_MAP[Number(facilityId)];
+
+    if (facilityId && facilityName) {
+      const fieldPattern = config?.facilityFieldPattern || "f_ary[{{facilityId}}]";
+      const fieldName = fieldPattern.replace("{{facilityId}}", String(facilityId));
+      postParams.push([fieldName, facilityName]);
+    }
+  } else {
+    postParams = buildPostParams(facilityId);
+  }
+
   const body = new URLSearchParams(postParams).toString();
+  const requestUrl = config?.request?.url || HUG_WM_POST_URL;
   
   console.log(`[fetchStaffData] 施設ID: ${facilityId}, パラメータ:`, postParams);
   
   const firstHtml = await fetchInHugWebview(webview, {
-    url: HUG_WM_POST_URL,
+    url: requestUrl,
     method: "POST",
     body,
   });
-  const firstIbox = parseIbox(firstHtml);
+  const firstIbox = parseIbox(firstHtml, config);
   const totalCount = parseTotalCount(firstIbox);
   const maxPage = parseMaxPage(firstIbox);
   let staff = parseStaffRows(firstIbox);
@@ -297,12 +323,12 @@ export async function fetchStaffData(onProgress, facilityId, webviewOverride = n
   onProgress?.(1, maxPage);
 
   for (let page = 2; page <= maxPage; page += 1) {
-    const url = new URL(HUG_WM_POST_URL);
+    const url = new URL(requestUrl);
     url.searchParams.set("page", String(page));
     const html = await fetchInHugWebview(webview, {
       url: url.toString(),
     });
-    staff = staff.concat(parseStaffRows(parseIbox(html)));
+    staff = staff.concat(parseStaffRows(parseIbox(html, config)));
     onProgress?.(page, maxPage);
   }
 
