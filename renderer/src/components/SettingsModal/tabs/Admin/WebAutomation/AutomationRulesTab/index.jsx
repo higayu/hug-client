@@ -73,6 +73,47 @@ function toRuleForm(rule) {
   }
 }
 
+function normalizeMemo(memo, index = 0) {
+  if (!memo) return null
+
+  const id = memo.id == null ? null : Number(memo.id)
+
+  return {
+    ...memo,
+    id,
+    _client_id:
+      memo._client_id ??
+      (id == null ? `new-${index}` : `memo-${id}`),
+    rule_id:
+      memo.rule_id == null
+        ? null
+        : Number(memo.rule_id),
+    memo: String(memo.memo ?? ''),
+    sort_order: Number(memo.sort_order ?? 0),
+    is_active: Boolean(memo.is_active),
+  }
+}
+
+function normalizeMemos(memos) {
+  if (!Array.isArray(memos)) {
+    return []
+  }
+
+  return memos
+    .map((memo, index) => normalizeMemo(memo, index))
+    .filter(Boolean)
+    .sort((a, b) => {
+      const orderDiff = a.sort_order - b.sort_order
+
+      if (orderDiff !== 0) {
+        return orderDiff
+      }
+
+      return Number(a.id ?? Number.MAX_SAFE_INTEGER) -
+        Number(b.id ?? Number.MAX_SAFE_INTEGER)
+    })
+}
+
 function normalizeRule(rule) {
   if (!rule?.rule_key) return null
 
@@ -81,6 +122,7 @@ function normalizeRule(rule) {
     rule_key: String(rule.rule_key),
     app_key: String(rule.app_key ?? ''),
     webview_key: String(rule.webview_key ?? ''),
+    memos: normalizeMemos(rule.memos),
   }
 }
 
@@ -116,6 +158,9 @@ export default function AutomationRulesTab() {
   const [savedForm, setSavedForm] = useState({ ...EMPTY_RULE_FORM })
   const [isSaving, setIsSaving] = useState(false)
   const [jsonError, setJsonError] = useState('')
+  const [memos, setMemos] = useState([])
+  const [savedMemos, setSavedMemos] = useState([])
+  const [deletedMemoIds, setDeletedMemoIds] = useState([])
 
   const [flows, setFlows] = useState([])
   const [flowsLoading, setFlowsLoading] = useState(false)
@@ -179,10 +224,47 @@ export default function AutomationRulesTab() {
 
   const applyRuleToForm = useCallback((rule) => {
     const nextForm = toRuleForm(rule)
+    const nextMemos = normalizeMemos(rule?.memos)
+
     setForm(nextForm)
     setSavedForm(nextForm)
+    setMemos(nextMemos)
+    setSavedMemos(nextMemos)
+    setDeletedMemoIds([])
     setJsonError('')
   }, [])
+
+  const loadRuleDetail = useCallback(
+    async (ruleKey) => {
+      const key = String(ruleKey ?? '').trim()
+      if (!key) return null
+
+      const api =
+        window.electronAPI?.laravel_webAutomationRule_get
+
+      if (typeof api !== 'function') {
+        throw new Error(
+          'laravel_webAutomationRule_get がpreloadに公開されていません。',
+        )
+      }
+
+      const result = await api(key, {
+        ...scope,
+        include_inactive_memos: true,
+      })
+
+      if (!result?.success) {
+        throw new Error(
+          result?.message ??
+            result?.error ??
+            '自動化ルール詳細の取得に失敗しました。',
+        )
+      }
+
+      return normalizeRule(normalizeSingleData(result))
+    },
+    [scope],
+  )
 
   const loadRules = useCallback(
     async (showToast = false) => {
@@ -226,10 +308,22 @@ export default function AutomationRulesTab() {
 
         setSelectedRuleKey(nextKey)
 
-        const nextRule =
+        let nextRule =
           items.find(
             (rule) => rule.rule_key === nextKey,
           ) ?? null
+
+        if (nextKey) {
+          try {
+            nextRule =
+              (await loadRuleDetail(nextKey)) ?? nextRule
+          } catch (detailError) {
+            console.warn(
+              '[AutomationRulesTab] Rule詳細取得エラー:',
+              detailError,
+            )
+          }
+        }
 
         applyRuleToForm(nextRule)
 
@@ -259,6 +353,7 @@ export default function AutomationRulesTab() {
       scope,
       selectedRuleKey,
       applyRuleToForm,
+      loadRuleDetail,
       showErrorToast,
       showSuccessToast,
     ],
@@ -406,7 +501,67 @@ export default function AutomationRulesTab() {
 
   const handleReset = () => {
     setForm({ ...savedForm })
+    setMemos(normalizeMemos(savedMemos))
+    setDeletedMemoIds([])
     setJsonError('')
+  }
+
+  const handleSelectRule = async (rule) => {
+    const ruleKey = String(rule?.rule_key ?? '')
+    setSelectedRuleKey(ruleKey)
+
+    try {
+      const detailRule = await loadRuleDetail(ruleKey)
+      applyRuleToForm(detailRule ?? rule)
+    } catch (error) {
+      console.error(
+        '[AutomationRulesTab] Rule詳細取得エラー:',
+        error,
+      )
+      applyRuleToForm(rule)
+      showErrorToast(
+        error?.message ??
+          'Rule詳細の取得に失敗しました。',
+      )
+    }
+  }
+
+  const handleAddMemo = () => {
+    setMemos((previous) => [
+      ...previous,
+      normalizeMemo({
+        _client_id: `new-${Date.now()}-${previous.length}`,
+        memo: '',
+        sort_order: previous.length,
+        is_active: true,
+      }),
+    ])
+  }
+
+  const handleMemoChange = (clientId, key, value) => {
+    setMemos((previous) =>
+      previous.map((memo) =>
+        memo._client_id === clientId
+          ? { ...memo, [key]: value }
+          : memo,
+      ),
+    )
+  }
+
+  const handleDeleteMemo = (memo) => {
+    if (memo?.id != null) {
+      setDeletedMemoIds((previous) =>
+        previous.includes(Number(memo.id))
+          ? previous
+          : [...previous, Number(memo.id)],
+      )
+    }
+
+    setMemos((previous) =>
+      previous.filter(
+        (item) => item._client_id !== memo._client_id,
+      ),
+    )
   }
 
   const handleSave = async () => {
@@ -460,6 +615,20 @@ export default function AutomationRulesTab() {
         1,
         Number(form.version) || 1,
       ),
+      memos: memos.map((memo) => {
+        const item = {
+          memo: String(memo.memo ?? ''),
+          sort_order: Number(memo.sort_order) || 0,
+          is_active: Boolean(memo.is_active),
+        }
+
+        if (memo.id != null) {
+          item.id = Number(memo.id)
+        }
+
+        return item
+      }),
+      deleted_memo_ids: deletedMemoIds,
     }
 
     setIsSaving(true)
@@ -482,17 +651,24 @@ export default function AutomationRulesTab() {
       const returnedRule =
         normalizeSingleData(result)
 
-      const nextForm = toRuleForm(
-        returnedRule ?? {
-          ...selectedRule,
-          ...payload,
-          rule_key: selectedRuleKey,
-          ...scope,
-        },
+      const fallbackRule = {
+        ...selectedRule,
+        ...payload,
+        rule_key: selectedRuleKey,
+        ...scope,
+        memos,
+      }
+      const savedRule = normalizeRule(
+        returnedRule ?? fallbackRule,
       )
+      const nextForm = toRuleForm(savedRule)
+      const nextMemos = normalizeMemos(savedRule?.memos)
 
       setForm(nextForm)
       setSavedForm(nextForm)
+      setMemos(nextMemos)
+      setSavedMemos(nextMemos)
+      setDeletedMemoIds([])
 
       await loadRules(false)
 
@@ -515,8 +691,9 @@ export default function AutomationRulesTab() {
   }
 
   const hasChanges =
-    JSON.stringify(form) !==
-    JSON.stringify(savedForm)
+    JSON.stringify(form) !== JSON.stringify(savedForm) ||
+    JSON.stringify(memos) !== JSON.stringify(savedMemos) ||
+    deletedMemoIds.length > 0
 
   return (
     <div>
@@ -605,8 +782,8 @@ export default function AutomationRulesTab() {
           loading={rulesLoading}
           error={rulesError}
           selectedRuleKey={selectedRuleKey}
-          setSelectedRuleKey={setSelectedRuleKey}
-          applyRuleToForm={applyRuleToForm}
+          handleSelectRule={handleSelectRule}
+          selectedRule={selectedRule}
           form={form}
           updateField={updateField}
           handleConfigJsonChange={handleConfigJsonChange}
@@ -616,6 +793,10 @@ export default function AutomationRulesTab() {
           handleSave={handleSave}
           hasChanges={hasChanges}
           isSaving={isSaving}
+          memos={memos}
+          handleAddMemo={handleAddMemo}
+          handleMemoChange={handleMemoChange}
+          handleDeleteMemo={handleDeleteMemo}
         />
       ) : (
         <FlowsPanel
@@ -639,8 +820,8 @@ function RulesPanel({
   loading,
   error,
   selectedRuleKey,
-  setSelectedRuleKey,
-  applyRuleToForm,
+  handleSelectRule,
+  selectedRule,
   form,
   updateField,
   handleConfigJsonChange,
@@ -650,6 +831,10 @@ function RulesPanel({
   handleSave,
   hasChanges,
   isSaving,
+  memos,
+  handleAddMemo,
+  handleMemoChange,
+  handleDeleteMemo,
 }) {
   return (
     <>
@@ -681,10 +866,7 @@ function RulesPanel({
                   <button
                     key={`${rule.app_key}:${rule.webview_key}:${rule.rule_key}`}
                     type="button"
-                    onClick={() => {
-                      setSelectedRuleKey(rule.rule_key)
-                      applyRuleToForm(rule)
-                    }}
+                    onClick={() => handleSelectRule(rule)}
                     className={`w-full rounded-md border px-3 py-2 text-left ${
                       selected
                         ? 'border-blue-500 bg-blue-50'
@@ -711,8 +893,12 @@ function RulesPanel({
                       {rule.webview_key} / {rule.rule_key}
                     </div>
 
-                    <div className="mt-1 text-[11px] text-gray-500">
-                      {rule.action_type || '-'}
+                    <div className="mt-1 flex items-center justify-between gap-2 text-[11px] text-gray-500">
+                      <span>{rule.action_type || '-'}</span>
+
+                      <span className="rounded bg-amber-50 px-1.5 py-0.5 text-amber-700">
+                        メモ {rule.memos?.length ?? 0}
+                      </span>
                     </div>
                   </button>
                 )
@@ -799,6 +985,14 @@ function RulesPanel({
                 }
               />
 
+              <RuleMemosPanel
+                memos={memos}
+                onAdd={handleAddMemo}
+                onChange={handleMemoChange}
+                onDelete={handleDeleteMemo}
+                disabled={isSaving}
+              />
+
               <JsonEditor
                 id="automation-rule-config-json"
                 label="config_json"
@@ -880,6 +1074,130 @@ function RulesPanel({
         </section>
       </div>
     </>
+  )
+}
+
+
+function RuleMemosPanel({
+  memos,
+  onAdd,
+  onChange,
+  onDelete,
+  disabled = false,
+}) {
+  const items = normalizeMemos(memos)
+
+  return (
+    <div className="rounded-lg border border-amber-200 bg-amber-50/40 p-4">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <h4 className="text-sm font-semibold text-gray-800">
+            ルールメモ
+          </h4>
+          <p className="mt-0.5 text-xs text-gray-500">
+            メモはこの画面から追加・編集・削除できます。
+            無効メモも編集対象として読み込みます。
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-800">
+            {items.length}件
+          </span>
+
+          <button
+            type="button"
+            onClick={onAdd}
+            disabled={disabled}
+            className="rounded-md bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-700 disabled:opacity-50"
+          >
+            メモを追加
+          </button>
+        </div>
+      </div>
+
+      {items.length === 0 ? (
+        <div className="rounded-md border border-dashed border-amber-200 bg-white/70 px-3 py-4 text-center text-sm text-gray-500">
+          メモはありません。「メモを追加」から登録できます。
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {items.map((memo, index) => (
+            <div
+              key={memo._client_id ?? memo.id}
+              className="rounded-md border border-amber-100 bg-white p-3"
+            >
+              <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                <div className="flex items-center gap-2 text-[11px] text-gray-500">
+                  <span className="rounded bg-amber-100 px-1.5 py-0.5 font-semibold text-amber-800">
+                    {index + 1}
+                  </span>
+                  <span>
+                    {memo.id == null ? '新規' : `id: ${memo.id}`}
+                  </span>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => onDelete(memo)}
+                  disabled={disabled}
+                  className="rounded-md border border-red-200 bg-red-50 px-2.5 py-1 text-xs font-medium text-red-700 hover:bg-red-100 disabled:opacity-50"
+                >
+                  削除
+                </button>
+              </div>
+
+              <textarea
+                value={memo.memo}
+                onChange={(event) =>
+                  onChange(
+                    memo._client_id,
+                    'memo',
+                    event.target.value,
+                  )
+                }
+                rows={4}
+                disabled={disabled}
+                placeholder="メモを入力"
+                className="w-full resize-y rounded-md border border-gray-300 px-3 py-2 text-sm leading-6 text-gray-900 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-100 disabled:bg-gray-100"
+              />
+
+              <div className="mt-2 grid gap-3 sm:grid-cols-[180px_auto]">
+                <NumberField
+                  label="並び順"
+                  value={memo.sort_order}
+                  onChange={(value) =>
+                    onChange(
+                      memo._client_id,
+                      'sort_order',
+                      Number(value) || 0,
+                    )
+                  }
+                  min={0}
+                />
+
+                <label className="flex items-end gap-2 pb-2 text-sm text-gray-700">
+                  <input
+                    type="checkbox"
+                    checked={memo.is_active}
+                    onChange={(event) =>
+                      onChange(
+                        memo._client_id,
+                        'is_active',
+                        event.target.checked,
+                      )
+                    }
+                    disabled={disabled}
+                    className="h-4 w-4"
+                  />
+                  <span>有効</span>
+                </label>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -1092,6 +1410,20 @@ function FlowDetail({ flow }) {
                     <div className="mt-1 text-xs text-gray-600">
                       action_type: {step.rule.action_type || '-'}
                     </div>
+
+                    {Array.isArray(step.rule.memos) &&
+                      step.rule.memos.length > 0 && (
+                        <div className="mt-2 space-y-1 border-t border-gray-200 pt-2">
+                          {normalizeMemos(step.rule.memos).map((memo) => (
+                            <div
+                              key={memo.id}
+                              className="whitespace-pre-wrap text-xs text-amber-800"
+                            >
+                              ・{memo.memo}
+                            </div>
+                          ))}
+                        </div>
+                      )}
                   </div>
                 )}
 
