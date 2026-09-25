@@ -202,7 +202,7 @@ export default function PersonalRecordSyncButton({
 
   return (
     <div className={className}>
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2 rounded-md border px-2 py-1">
         <AllSyncButton
           webviewRef={webviewRef}
           webviewReady={webviewReady}

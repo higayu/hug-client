@@ -92,27 +92,30 @@ export default function LeftPanel({
             clearSyncStatus={clearSyncStatus}
           />
 
-          <ProfessionalSupportSyncButton
-            onClick={runSync}
-            disabled={!facilityId || !webviewReady}
-            syncing={syncing}
-            progressText={progressText}
-            syncMessage={syncMessage}
-            syncError={syncError}
-            lastSyncedAt={lastSyncedAt}
-          />
+          <div className="flex flex-wrap items-center gap-2">
+            <ProfessionalSupportSyncButton
+              onClick={runSync}
+              disabled={!facilityId || !webviewReady}
+              syncing={syncing}
+              progressText={progressText}
+              syncMessage={syncMessage}
+              syncError={syncError}
+              lastSyncedAt={lastSyncedAt}
+            />
 
-          <PersonalRecordSyncButton
-            className="min-w-0 flex-1"
-            webviewRef={webviewRef}
-            webviewReady={webviewReady}
-            facilityId={facilityId}
-            year={year}
-            month={month}
-            showInlineResult={false}
-            onResultChange={handlePersonalRecordResultChange}
-            onSyncCompleted={handlePersonalRecordSyncCompleted}
-          />
+            <PersonalRecordSyncButton
+              className="min-w-0 flex-1"
+              webviewRef={webviewRef}
+              webviewReady={webviewReady}
+              facilityId={facilityId}
+              year={year}
+              month={month}
+              showInlineResult={false}
+              onResultChange={handlePersonalRecordResultChange}
+              onSyncCompleted={handlePersonalRecordSyncCompleted}
+            />
+          </div>
+
         </div>
       </div>
 

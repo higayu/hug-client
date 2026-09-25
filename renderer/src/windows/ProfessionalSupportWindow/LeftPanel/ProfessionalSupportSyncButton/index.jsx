@@ -11,7 +11,7 @@ export default function ProfessionalSupportSyncButton({
 }) {
   return (
     <div>
-      <div className="flex items-center justify-start gap-3">
+      <div className="flex items-center justify-start gap-3 rounded-md border px-2 py-1">
         <button
           type="button"
           onClick={onClick}

@@ -55,7 +55,7 @@ export default function ComparisonPanel2({
         <div>
           <h2 className="text-sm font-semibold text-gray-800">
             {calendar
-              ? `${calendar.year}年${String(calendar.month).padStart(2, '0')}月の専門的支援比較`
+              ? `${calendar.year}年${String(calendar.month).padStart(2, '0')}月の専門的支援比較 （※加算登録と出席は前日までのデータを取得します）`
               : '専門的支援 月次比較'}
           </h2>
 
