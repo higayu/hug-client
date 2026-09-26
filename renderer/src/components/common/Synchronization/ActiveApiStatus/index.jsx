@@ -85,7 +85,7 @@ const ActiveApiStatus = ({ className = '' }) => {
       : 'border-red-200 bg-red-50 text-red-800 hover:bg-red-100'
 
   const titleText = [
-    `Laravel API: ${statusLabel}`,
+    `: ${statusLabel}`,
     message,
     checkedAt ? `最終確認: ${checkedAt.toLocaleString('ja-JP')}` : null,
     'クリックすると再確認します',
@@ -108,11 +108,7 @@ const ActiveApiStatus = ({ className = '' }) => {
       aria-label={titleText}
     >
       <span className="shrink-0">{icon}</span>
-
-      <span className="font-semibold">Laravel API</span>
-
       <span className="opacity-75">{statusLabel}</span>
-
       <RefreshCw
         size={10}
         className={['ml-1 opacity-70', checking ? 'animate-spin' : ''].join(' ')}

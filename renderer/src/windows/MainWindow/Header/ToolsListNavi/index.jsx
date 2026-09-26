@@ -20,6 +20,7 @@ import {
   import {
     ProfessionalSupportSearch,
   } from '@/components/common/hug_function/ProfessionalSupport';
+  import AutoLoginButton from '@/components/AutoLoginButton';
 
 export default function ToolsListNavi({
     className = '',
@@ -388,7 +389,28 @@ export default function ToolsListNavi({
               className="my-1 border-t border-gray-200"
               role="separator"
             />
-
+            <li className="m-0 p-0">
+              {/* 自動ログイン */}
+              <AutoLoginButton 
+                className="
+                  flex
+                  w-full
+                  cursor-pointer
+                  items-center
+                  gap-2
+                  border-none
+                  bg-blue-400
+                  px-4
+                  py-2
+                  text-left
+                  text-sm
+                  text-white
+                  transition-colors
+                  hover:bg-blue-500
+                  focus:outline-none
+                "
+              />
+            </li>
             <li className="m-0 p-0">
               <button
                 type="button"

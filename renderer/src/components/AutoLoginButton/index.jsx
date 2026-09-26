@@ -8,7 +8,7 @@ import {
   setLaravelAuthentication,
 } from '@/store/slices/authSlice';
 
-export default function AutoLoginButton() {
+export default function AutoLoginButton({ className = '' }) {
   const { handleLogin } = useHugActions();
   const dispatch = useDispatch();
 
@@ -21,6 +21,7 @@ export default function AutoLoginButton() {
 
       if (!res?.success) {
         dispatch(clearLaravelAuthentication());
+
         console.error(
           'Laravel認証失敗:',
           res?.message,
@@ -32,14 +33,17 @@ export default function AutoLoginButton() {
 
       console.log('Laravel認証成功:', res.data?.user);
 
-      dispatch(setLaravelAuthentication({
-        user: res?.user ?? res?.data?.user ?? null,
-        authenticated: res?.meta?.authenticated === true,
-      }));
+      dispatch(
+        setLaravelAuthentication({
+          user: res?.user ?? res?.data?.user ?? null,
+          authenticated: res?.meta?.authenticated === true,
+        })
+      );
 
       await handleLogin();
     } catch (error) {
       dispatch(clearLaravelAuthentication());
+
       console.error(
         '自動ログイン処理中にエラーが発生しました:',
         error
@@ -48,42 +52,33 @@ export default function AutoLoginButton() {
   }, [dispatch, handleLogin]);
 
   useEffect(() => {
-    document.addEventListener('hug-startup-auto-login', handleLogin_func);
+    document.addEventListener(
+      'hug-startup-auto-login',
+      handleLogin_func
+    );
+
     return () => {
-      document.removeEventListener('hug-startup-auto-login', handleLogin_func);
+      document.removeEventListener(
+        'hug-startup-auto-login',
+        handleLogin_func
+      );
     };
   }, [handleLogin_func]);
 
   return (
-    <nav className="relative z-[1001] ml-0 inline-block min-w-fit flex-shrink-0">
-      <button
-        id="loginBtn"
-        type="button"
-        onClick={handleLogin_func}
-        className="
-          flex
-          cursor-pointer
-          items-center
-          gap-2
-          rounded-full
-          border-none
-          bg-sky-600
-          px-4 py-2
-          text-left
-          text-sm
-          text-white
-          transition-colors
-          hover:bg-gray-800
-        "
-        aria-label="自動ログイン"
-      >
-        <ArrowRightOnRectangleIcon
-          className="h-5 w-5"
-          aria-hidden="true"
-        />
+    <button
+      id="loginBtn"
+      type="button"
+      onClick={handleLogin_func}
+      className={`flex items-center justify-center gap-2 ${className}`}
+      aria-label="自動ログイン"
+    >
+      <ArrowRightOnRectangleIcon
+        className="h-5 w-5 shrink-0"
+        aria-hidden="true"
+      />
 
-        <span>Login</span>
-      </button>
-    </nav>
+      <span>Login</span>
+    </button>
   );
 }

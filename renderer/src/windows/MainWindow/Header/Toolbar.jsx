@@ -12,7 +12,6 @@ import ActiveApiStatus from '@/components/common/Synchronization/ActiveApiStatus
 
 import SupportPlanNavigation from './SupportPlanNavigation';
 import ToolsListNavi from './ToolsListNavi';
-import AutoLoginButton from './AutoLoginButton';
 import SettingsEditButton from './SettingsEditButton';
 import ModeNavi from "./ModeNavi";
 import InformationButton from './InformationButton';
@@ -75,9 +74,6 @@ export default function Toolbar() {
           "
         />
       </nav>
-
-      {/* 自動ログイン */}
-      <AutoLoginButton />
 
 
       {/* URL・施設 */}
