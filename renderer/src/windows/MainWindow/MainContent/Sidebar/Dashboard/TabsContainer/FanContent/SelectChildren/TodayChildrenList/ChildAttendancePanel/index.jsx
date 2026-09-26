@@ -9,7 +9,7 @@ import {
 } from '@/components/common/hug_function/AttendanceAction'
 import { useToast } from '@/provider/ToastProvider/ToastContext'
 import AttendanceActionSection from './AttendanceActionSection'
-import {PersonalRecordCheckPanel} from '@/components/common/hug_function/PersonalRecord'
+import CheckPanels from './CheckPanels'
 
 const pickValue = (...values) => {
   for (const value of values) {
@@ -438,6 +438,7 @@ export default function ChildAttendancePanel({ spaceId }) {
     )
   }
 
+
   // =============================================================
   // 未選択
   // 重要:
@@ -459,10 +460,23 @@ export default function ChildAttendancePanel({ spaceId }) {
   // =============================================================
   if (!isAttendanceLoaded) {
     return renderPanelShell(
-      <div className="flex-1 flex flex-col items-center justify-center text-center">
-        <p className="border rounded-md px-2 py-1 text-xl font-bold text-red-600">
-          今日の利用者データを取得してください
-        </p>
+      <div className="flex-1 min-h-0 overflow-y-auto p-2">
+        <div className="flex min-h-32 flex-col items-center justify-center text-center">
+          <p className="border rounded-md px-2 py-1 text-xl font-bold text-red-600">
+            今日の利用者データを取得してください
+          </p>
+        </div>
+
+        <CheckPanels
+          spaceId={spaceId}
+          facilityId={facilityId}
+          isAbsent={isAbsent}
+          hasEntered={hasEntered}
+          hasExited={hasExited}
+          isUIEnabled={isUIEnabled}
+          isStop={isStop}
+          loadingAction={loadingAction}
+        />
       </div>
     )
   }
@@ -742,14 +756,16 @@ export default function ChildAttendancePanel({ spaceId }) {
         )}
       </div>
 
-      <div className="mt-2 flex w-full gap-1">
-        <PersonalRecordCheckPanel
+      <CheckPanels
           spaceId={spaceId}
-          className="min-w-0 flex-1"
-          expandDirection="up"
+          facilityId={facilityId}
+          isAbsent={isAbsent}
+          hasEntered={hasEntered}
+          hasExited={hasExited}
+          isUIEnabled={isUIEnabled}
+          isStop={isStop}
+          loadingAction={loadingAction}
         />
-
-      </div>
 
     </div>
   )

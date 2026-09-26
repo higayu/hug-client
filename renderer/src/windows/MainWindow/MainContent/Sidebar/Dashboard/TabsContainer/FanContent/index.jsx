@@ -1,6 +1,10 @@
 import { useSelector } from 'react-redux'
+
 import VerticaPanel from '@/components/ui/ResizableSplitPane/VerticaPanel'
+import HorizonPanel from '@/components/ui/ResizableSplitPane/HorizonPanel'
+
 import { selectSpaceCount } from '@/store/slices/chilledspaceSlice'
+
 import SelectChildren from './SelectChildren'
 import WorkingPanel from './WorkingPanel'
 import FanMenu from './FanMenu'
@@ -8,20 +12,30 @@ import FanMenu from './FanMenu'
 function FanContentSpace({ spaceId }) {
   return (
     <section
-      className="flex h-full min-h-0"
+      className="h-full min-h-0 min-w-0"
       aria-label={`児童選択とメインパネル ${spaceId}`}
     >
-      <div className="relative w-[340px] min-w-[280px] max-w-[420px] shrink-0 overflow-visible">
-        <SelectChildren spaceId={spaceId} />
+      <HorizonPanel
+        defaultLeftPercent={30}
+        minLeftWidth={280}
+        minRightWidth={300}
+        resizeBarWidth={10}
+        gripWidth={6}
+        left={(
+          <div className="relative h-full min-h-0 min-w-0 overflow-visible">
+            <SelectChildren spaceId={spaceId} />
 
-        <div className="pointer-events-none absolute bottom-0 left-0 z-30">
-          <FanMenu spaceId={spaceId} />
-        </div>
-      </div>
-
-      <div className="min-w-0 flex-1 overflow-auto rounded-lg border border-gray-200 bg-white shadow-sm">
-        <WorkingPanel spaceId={spaceId} />
-      </div>
+            <div className="pointer-events-none absolute bottom-0 left-0 z-30">
+              <FanMenu spaceId={spaceId} />
+            </div>
+          </div>
+        )}
+        right={(
+          <div className="h-full min-h-0 min-w-0 overflow-auto rounded-lg border border-gray-200 bg-white shadow-sm">
+            <WorkingPanel spaceId={spaceId} />
+          </div>
+        )}
+      />
     </section>
   )
 }

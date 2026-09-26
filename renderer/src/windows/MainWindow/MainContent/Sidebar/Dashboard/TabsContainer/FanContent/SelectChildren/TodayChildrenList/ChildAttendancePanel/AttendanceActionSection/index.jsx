@@ -4,7 +4,6 @@ import {
 } from "react"
 
 import AbsenceButton from "./AbsenceButton"
-import { ProfessionalSupportCheckPanel2 } from '@/components/common/hug_function/ProfessionalSupport';
 
 import {
   EnterButton,
@@ -75,23 +74,6 @@ export default function AttendanceActionSection({
       column6Html,
       column5,
     )
-
-  // 専門的支援まわりの UI / ステータス / 専門＋ / 登録確認は
-  // ProfessionalSupportCheckPanel2 に一本化する。
-  // ChildAttendancePanel 側では入退室状態だけ渡す。
-  const professionalSupportPanel = (
-    <ProfessionalSupportCheckPanel2
-      spaceId={spaceId}
-      facilityId={facilityId}
-      isAbsent={isAbsent}
-      hasEntered={hasEntered}
-      hasExited={hasExited}
-      isUIEnabled={isUIEnabled}
-      isStop={isStop}
-      loadingAction={loadingAction}
-      expandDirection="down"
-    />
-  )
 
   useEffect(() => {
     console.group(
@@ -206,16 +188,6 @@ export default function AttendanceActionSection({
           hasEntered &&
           showLeave,
 
-        showProfessionalSupport:
-          true,
-
-        professionalSupportLinkedEnabled:
-          isUIEnabled &&
-          !isStop &&
-          !Boolean(loadingAction) &&
-          !isAbsent &&
-          hasEntered &&
-          hasExited,
       },
     )
 
@@ -259,7 +231,6 @@ export default function AttendanceActionSection({
           {column5 || "欠席"}
         </span>
 
-        {professionalSupportPanel}
       </div>
     )
   }
@@ -339,7 +310,6 @@ export default function AttendanceActionSection({
           )}
         </div>
 
-        {professionalSupportPanel}
       </div>
     )
   }
@@ -402,7 +372,6 @@ export default function AttendanceActionSection({
         </p>
       ) : null}
 
-      {professionalSupportPanel}
 
     </div>
   )
