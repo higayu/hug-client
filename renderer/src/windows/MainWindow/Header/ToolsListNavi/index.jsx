@@ -275,60 +275,11 @@ export default function ToolsListNavi({
               </button>
             </li>
   
-            <li className="m-0 p-0">
-              <button
-                id="Get-Url"
-                type="button"
-                role="menuitem"
-                onClick={() => {
-                  handleGetUrlClick(
-                    closeMenu,
-                  );
-                }}
-                className="
-                  block
-                  w-full
-                  cursor-pointer
-                  border-none
-                  bg-transparent
-                  px-4
-                  py-2
-                  text-left
-                  text-sm
-                  text-black
-                  transition-colors
-                  hover:bg-[#e3f2fd]
-                  focus:bg-[#e3f2fd]
-                  focus:outline-none
-                "
-              >
-                URLの取得
-              </button>
-            </li>
+
             <li className="m-0 p-0">
               <ProfessionalSupportSearch />
             </li>
-            <li
-              className="m-0 p-0"
-              onClick={closeMenu}
-            >
-              <StaffUpdateButton
-                facilityId={facilityId}
-                disabled={!facilityId}
-                className="w-full"
-              />
-            </li>
 
-            <li
-              className="m-0 p-0"
-              onClick={closeMenu}
-            >
-              <ChildrenUpdateButton
-                facilityId={facilityId}
-                disabled={!facilityId}
-                className="w-full"
-              />
-            </li>
 
             <li
               className="m-0 p-0"
@@ -340,7 +291,58 @@ export default function ToolsListNavi({
             </li>
   
             {DEBUG_FLG && (
-              <>
+            <>
+              <li
+                className="m-0 p-0"
+                onClick={closeMenu}
+              >
+                <StaffUpdateButton
+                  facilityId={facilityId}
+                  disabled={!facilityId}
+                  className="w-full"
+                />
+              </li>
+
+              <li
+                className="m-0 p-0"
+                onClick={closeMenu}
+              >
+                <ChildrenUpdateButton
+                  facilityId={facilityId}
+                  disabled={!facilityId}
+                  className="w-full bg-yellow-500 flex items-center justify-center text-center text-white transition-colors hover:bg-yellow-600 disabled:cursor-wait disabled:opacity-60 text-sm gap-2 px-4 py-2"
+                />
+              </li>
+              <li className="m-0 p-0">
+                <button
+                  id="Get-Url"
+                  type="button"
+                  role="menuitem"
+                  onClick={() => {
+                    handleGetUrlClick(
+                      closeMenu,
+                    );
+                  }}
+                  className="
+                    block
+                    w-full
+                    cursor-pointer
+                    border-none
+                    bg-transparent
+                    px-4
+                    py-2
+                    text-left
+                    text-sm
+                    text-black
+                    transition-colors
+                    hover:bg-[#e3f2fd]
+                    focus:bg-[#e3f2fd]
+                    focus:outline-none
+                  "
+                >
+                  URLの取得
+                </button>
+              </li>
   
                 <li
                   className="m-0 p-0"

@@ -11,7 +11,7 @@ import { fetchChildrenData } from "./fetchChildrenData.js"
 export default function ChildrenUpdateButton({
   facilityId: facilityIdProp,
   disabled = false,
-  className = "flex items-center justify-center gap-2 px-4 py-2 text-center bg-yellow-500 text-sm text-white transition-colors hover:bg-yellow-600 disabled:cursor-wait disabled:opacity-60",
+  className = "",
   webview = null,
 }) {
   const [isLoading, setIsLoading] = useState(false)
