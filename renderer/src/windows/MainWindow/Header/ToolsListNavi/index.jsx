@@ -1,26 +1,26 @@
 import {
-    AdjustmentsHorizontalIcon,
-    ArrowPathIcon,
-    ArrowsPointingOutIcon,
-    MinusIcon,
-    PowerIcon,
-    TrashIcon,
-  } from '@heroicons/react/24/outline';
-  
-  import { useToast } from '@/provider/ToastProvider/ToastContext'
-  import { useAppState } from '@/AppStateContext';
-  import { useTabs } from '@/hooks/useTabs';
-  import { useHugActions } from '@/hooks/useHugActions';
-  
-  import PortalDropdown from '@/components/ui/PortalDropdown';
-  import ServerConnectButton from '@/components/common/Synchronization/ServerConnectButton';
-  import DataBaseButton from '@/components/common/Synchronization/DataBaseButton';
-  import StaffUpdateButton from '@/components/common/Synchronization/StaffUpdateButton';
-  import ChildrenUpdateButton from '@/components/common/Synchronization/ChildrenUpdateButton';
-  import {
-    ProfessionalSupportSearch,
-  } from '@/components/common/hug_function/ProfessionalSupport';
-  import AutoLoginButton from '@/components/AutoLoginButton';
+  AdjustmentsHorizontalIcon,
+  ArrowPathIcon,
+  ArrowsPointingOutIcon,
+  MinusIcon,
+  PowerIcon,
+  TrashIcon,
+} from '@heroicons/react/24/outline';
+
+import { useToast } from '@/provider/ToastProvider/ToastContext'
+import { useAppState } from '@/AppStateContext';
+import { useTabs } from '@/hooks/useTabs';
+import { useHugActions } from '@/hooks/useHugActions';
+
+import PortalDropdown from '@/components/ui/PortalDropdown';
+import ServerConnectButton from '@/components/common/Synchronization/ServerConnectButton';
+import DataBaseButton from '@/components/common/Synchronization/DataBaseButton';
+import StaffUpdateButton from '@/components/common/Synchronization/StaffUpdateButton';
+import ChildrenUpdateButton from '@/components/common/Synchronization/ChildrenUpdateButton';
+import {
+  ProfessionalSupportSearch,
+} from '@/components/common/hug_function/ProfessionalSupport';
+import AutoLoginButton from '@/components/AutoLoginButton';
 
 export default function ToolsListNavi({
     className = '',
