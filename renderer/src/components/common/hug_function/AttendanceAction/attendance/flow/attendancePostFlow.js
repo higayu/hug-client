@@ -319,7 +319,7 @@ function assertStepInputMatches(stepInput, parsedArgs, variables) {
 /**
  * @param {Electron.WebviewTag} webview
  * @param {object} params
- * @param {'attendance_enter'|'attendance_leave'} params.flowKey
+ * @param {'attendance_enter_no_mail'|'attendance_enter_with_mail'|'attendance_leave_no_mail'|'attendance_leave_with_mail'} params.flowKey
  * @param {'enter'|'leave'} params.action
  * @param {object} params.item
  * @param {number} params.mailFlg
