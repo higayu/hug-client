@@ -41,6 +41,7 @@ export default function ChildAttendancePanel({ spaceId }) {
     updateAppState,
     CURRENT_YMD,
     FACILITY_ID,
+    DEBUG_FLG,
 
     // 新名称
     week_children,
@@ -277,6 +278,7 @@ export default function ChildAttendancePanel({ spaceId }) {
 
   const facilityId = pickValue(
     FACILITY_ID,
+    DEBUG_FLG,
     appState?.FACILITY_ID,
     '1'
   )
@@ -739,6 +741,7 @@ export default function ChildAttendancePanel({ spaceId }) {
             hasExited={hasExited}
             isUIEnabled={isUIEnabled}
             isStop={isStop}
+            isDeveloperMode={Boolean(DEBUG_FLG)}
             loadingAction={loadingAction}
             onEnter={runEnter}
             onLeave={runLeave}

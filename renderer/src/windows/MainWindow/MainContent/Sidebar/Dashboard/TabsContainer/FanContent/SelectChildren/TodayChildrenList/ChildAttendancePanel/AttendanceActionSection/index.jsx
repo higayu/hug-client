@@ -35,6 +35,7 @@ export default function AttendanceActionSection({
   hasExited,
   isUIEnabled,
   isStop,
+  isDeveloperMode,
   loadingAction,
   onEnter,
   onLeave,
@@ -141,6 +142,11 @@ export default function AttendanceActionSection({
     )
 
     console.log(
+      "isDeveloperMode:",
+      isDeveloperMode,
+    )
+
+    console.log(
       "loadingAction:",
       loadingAction,
     )
@@ -188,6 +194,11 @@ export default function AttendanceActionSection({
           hasEntered &&
           showLeave,
 
+        showAbsenceButton:
+          !isAbsent &&
+          !hasEntered &&
+          isDeveloperMode,
+
       },
     )
 
@@ -205,6 +216,7 @@ export default function AttendanceActionSection({
     hasExited,
     isUIEnabled,
     isStop,
+    isDeveloperMode,
     loadingAction,
     disabled,
     showEnter,
@@ -354,16 +366,18 @@ export default function AttendanceActionSection({
           </span>
         )}
 
-        <AbsenceButton
-          disabled={
-            disabled ||
-            !column5Html
-          }
-          loading={
-            loadingAction === "absence"
-          }
-          onAbsence={onAbsence}
-        />
+        {isDeveloperMode ? (
+          <AbsenceButton
+            disabled={
+              disabled ||
+              !column5Html
+            }
+            loading={
+              loadingAction === "absence"
+            }
+            onAbsence={onAbsence}
+          />
+        ) : null}
       </div>
 
       {afternoonBlocked ? (
