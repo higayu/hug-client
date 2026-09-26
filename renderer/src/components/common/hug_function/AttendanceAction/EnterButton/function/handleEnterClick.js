@@ -3,7 +3,6 @@ export async function handleEnterClick({
   childId,
   childName,
   dateStr,
-  mailFlg = 0,
 }) {
   if (typeof onEnter !== 'function') {
     console.warn('[EnterButton] onEnterが設定されていません')
@@ -11,24 +10,20 @@ export async function handleEnterClick({
   }
 
   try {
-    console.log('[EnterButton] 入室処理開始:', {
+    console.log('[EnterButton] HUG本体の入室onclick実行開始:', {
       childId,
       childName,
       dateStr,
-      mailFlg,
     })
 
     const result = await onEnter({
-      mailFlg,
-      mail_flg: mailFlg,
-      skipMailPrompt: true,
+      nativeOnclick: true,
     })
 
-    console.log('[EnterButton] 入室処理完了:', {
+    console.log('[EnterButton] HUG本体の入室onclick実行結果:', {
       childId,
       childName,
       dateStr,
-      mailFlg,
       result,
     })
 

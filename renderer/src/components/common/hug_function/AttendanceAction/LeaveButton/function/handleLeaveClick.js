@@ -3,7 +3,6 @@ export async function handleLeaveClick({
   childId,
   childName,
   dateStr,
-  mailFlg = 0,
 }) {
   if (typeof onLeave !== 'function') {
     console.warn('[LeaveButton] onLeaveが設定されていません')
@@ -11,24 +10,20 @@ export async function handleLeaveClick({
   }
 
   try {
-    console.log('[LeaveButton] 退室処理開始:', {
+    console.log('[LeaveButton] HUG本体の退室onclick実行開始:', {
       childId,
       childName,
       dateStr,
-      mailFlg,
     })
 
     const result = await onLeave({
-      mailFlg,
-      mail_flg: mailFlg,
-      skipMailPrompt: true,
+      nativeOnclick: true,
     })
 
-    console.log('[LeaveButton] 退室処理完了:', {
+    console.log('[LeaveButton] HUG本体の退室onclick実行結果:', {
       childId,
       childName,
       dateStr,
-      mailFlg,
       result,
     })
 

@@ -265,34 +265,76 @@ function buildDataListFromRule({ rule, parsedArgs, mailFlg, patch = {} }) {
     );
   }
 
-  const base = {
-    ...patch,
-    attendance_type: attendanceType,
-    r_id: parsedArgs.recordId,
-    c_id: parsedArgs.childId,
-    f_id: parsedArgs.facilityId,
-    attend_flg: parsedArgs.attendFlg,
-    linkage: parsedArgs.linkage,
-    mail_flg: Number(mailFlg) === 1 ? 1 : 0,
-  };
-
+  // HUG の ajax_attendance.php は既存実装で動作確認済みの data_list 形式を
+  // そのまま維持する。解析方法・attendanceType 等は DB Rule を参照するが、
+  // 値の型とキー構成は旧実装と完全互換にする。
   if (attendanceType === 1) {
-    base.date = parsedArgs.date;
-    base.strength_action = parsedArgs.strengthAction;
-    base.special_support = parsedArgs.specialSupport;
-    base.meal_add = parsedArgs.mealAdd;
+    return {
+      attendance_type: 1,
+      r_id: String(parsedArgs.recordId ?? "").trim(),
+      mail_flg: Number(mailFlg) === 1 ? 1 : 0,
+      c_id: Number(parsedArgs.childId),
+      f_id: Number(parsedArgs.facilityId),
+      attend_flg: Number(parsedArgs.attendFlg),
+      linkage: Number(parsedArgs.linkage),
+      date: String(parsedArgs.date ?? "").trim(),
+      strength_action: Number(parsedArgs.strengthAction),
+      special_support: Number(parsedArgs.specialSupport ?? 0),
+      meal_add: Number(parsedArgs.mealAdd ?? 0),
+    };
   }
 
-  if (attendanceType === 2) {
-    base.hidden_mail_only = patch.hidden_mail_only ?? parsedArgs.hiddenMailOnly ?? "";
-  }
-
-  return Object.fromEntries(
-    Object.entries(base)
-      .filter(([, value]) => value !== undefined && value !== null)
-      .map(([key, value]) => [key, numberOrString(value)])
-  );
+  // 退室は旧正常実装 leaveDataListFromOnclick() と同じキー・型・順序に固定する。
+  // onclick の解析自体は DB Rule(config_json.arguments) の結果 parsedArgs を使用する。
+  return {
+    date: String(patch?.date ?? "").trim(),
+    enter_time_hi: String(patch?.enter_time_hi ?? "").trim(),
+    leave_time_hi: String(patch?.leave_time_hi ?? "").trim(),
+    diff_check_time: Number(patch?.diff_check_time),
+    interval_time: String(patch?.interval_time ?? ""),
+    attendance_type: 2,
+    r_id: String(parsedArgs.recordId ?? "").trim(),
+    c_id: Number(parsedArgs.childId),
+    f_id: Number(parsedArgs.facilityId),
+    attend_flg: Number(parsedArgs.attendFlg),
+    linkage: Number(parsedArgs.linkage),
+    mail_flg: Number(mailFlg) === 1 ? 1 : 0,
+    hidden_mail_only: String(
+      patch?.hidden_mail_only ?? parsedArgs.hiddenMailOnly ?? ""
+    ),
+  };
 }
+
+function validateAttendanceDataList(dataList, attendanceType) {
+  const required = attendanceType === 1
+    ? ["r_id", "c_id", "f_id", "date"]
+    : [
+        "date",
+        "enter_time_hi",
+        "leave_time_hi",
+        "diff_check_time",
+        "interval_time",
+        "r_id",
+        "c_id",
+        "f_id",
+      ];
+
+  const missing = required.filter((key) => {
+    const value = dataList?.[key];
+    return value === undefined || value === null || String(value).trim() === "";
+  });
+
+  if (missing.length > 0) {
+    throw new Error(
+      `attendance data_list の必須項目が不足しています: ${missing.join(", ")}`
+    );
+  }
+
+  if (attendanceType === 2 && !Number.isFinite(Number(dataList.diff_check_time))) {
+    throw new Error("退室 diff_check_time が不正です");
+  }
+}
+
 
 function assertStepInputMatches(stepInput, parsedArgs, variables) {
   const expectedChildId = String(stepInput?.childId || variables?.childId || "").trim();
@@ -405,16 +447,25 @@ export async function executeAttendancePostFlow(webview, params = {}) {
       patch,
     });
 
+    validateAttendanceDataList(dataList, expectedAttendanceType);
+
     console.log("[AttendancePostFlow] POST dataList:", {
       flowKey: flow.flow_key,
       stepKey: step.step_key,
       ruleKey: rule.rule_key,
       mailFlg,
       stepInput,
+      postConfig: post,
+      parsedArgs,
+      patch,
       dataList,
     });
 
-    const postResult = await postAttendanceDataListInWebview(webview, dataList);
+    const postResult = await postAttendanceDataListInWebview(
+      webview,
+      dataList,
+      post
+    );
 
     return {
       ...postResult,

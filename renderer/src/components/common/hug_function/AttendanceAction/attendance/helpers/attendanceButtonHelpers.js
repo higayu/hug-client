@@ -65,9 +65,9 @@ export function buildEnterButtonTitle(column5Html, children_id, dateStr) {
   const parts = [];
   if (isEnterMailEnabled(item)) {
     parts.push("メール確認あり（is_mail=1）");
-    parts.push("rendererで通知有無を選択");
+    parts.push("HUG本体の確認処理を使用");
   }
-  parts.push("ajax_attendance.php へ POST（Cache）");
+  parts.push("HUG本体onclickを実行");
   if (
     isAfternoonEnterHeldUntilHalfTime(item.hugAlertPref, getHalfTime(), new Date())
   ) {
@@ -81,8 +81,8 @@ export function buildLeaveButtonTitle(column6Html, children_id, dateStr) {
   const parts = [];
   if (isLeaveMailEnabled(item)) {
     parts.push("メール確認あり（is_mail=1）");
-    parts.push("rendererで通知有無を選択");
+    parts.push("HUG本体の確認処理を使用");
   }
-  parts.push("ajax_attendance.php へ POST（Cache）");
+  parts.push("HUG本体onclickを実行");
   return parts.join(" / ");
 }
