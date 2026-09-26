@@ -80,6 +80,8 @@ export default function useProfessionalSupportSync({
         true,
       )
 
+      console.log('加算一覧のデータ一括取得結果',additionListData);
+
       if (!attendanceData || !additionCountData || !additionListData) {
         throw new Error(
           '3種類のデータをすべて取得できなかったため保存を中止しました。',
