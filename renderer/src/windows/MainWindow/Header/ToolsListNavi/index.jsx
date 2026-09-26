@@ -290,105 +290,7 @@ export default function ToolsListNavi({
                 className="w-full py-2"
               />
             </li>
-  
-            {DEBUG_FLG && (
-            <>
-              <li
-                className="m-0 p-0"
-                onClick={closeMenu}
-              >
-                <StaffUpdateButton
-                  facilityId={facilityId}
-                  disabled={!facilityId}
-                  className="w-full"
-                />
-              </li>
 
-              <li
-                className="m-0 p-0"
-                onClick={closeMenu}
-              >
-                <ChildrenUpdateButton
-                  facilityId={facilityId}
-                  disabled={!facilityId}
-                  className="w-full bg-yellow-500 flex items-center justify-center text-center text-white transition-colors hover:bg-yellow-600 disabled:cursor-wait disabled:opacity-60 text-sm gap-2 px-4 py-2"
-                />
-              </li>
-              <li className="m-0 p-0">
-                <button
-                  id="Get-Url"
-                  type="button"
-                  role="menuitem"
-                  onClick={() => {
-                    handleGetUrlClick(
-                      closeMenu,
-                    );
-                  }}
-                  className="
-                    block
-                    w-full
-                    cursor-pointer
-                    border-none
-                    bg-transparent
-                    px-4
-                    py-2
-                    text-left
-                    text-sm
-                    text-black
-                    transition-colors
-                    hover:bg-[#e3f2fd]
-                    focus:bg-[#e3f2fd]
-                    focus:outline-none
-                  "
-                >
-                  URLの取得
-                </button>
-              </li>
-  
-                <li
-                  className="m-0 p-0"
-                  onClick={closeMenu}
-                >
-                  <ServerConnectButton
-                    className="w-full py-2"
-                  />
-                </li>
-  
-                <li className="m-0 p-0">
-                  <button
-                    id="devtools"
-                    type="button"
-                    role="menuitem"
-                    onClick={() => {
-                      handleOpenDevTools(
-                        closeMenu,
-                      );
-                    }}
-                    className="
-                      w-full
-                      cursor-pointer
-                      whitespace-nowrap
-                      border-none
-                      bg-[#515152]
-                      px-4
-                      py-2
-                      text-white
-                      transition-colors
-                      hover:bg-[#2196f3]
-                      focus:bg-[#2196f3]
-                      focus:outline-none
-                    "
-                  >
-                    デベロッパー
-                  </button>
-                </li>
-              </>
-            )}
-
-            <li
-              className="my-1 border-t border-gray-200"
-              role="separator"
-            />
             <li className="m-0 p-0">
               {/* 自動ログイン */}
               <AutoLoginButton 
@@ -458,6 +360,104 @@ export default function ToolsListNavi({
                 <span>リロード</span>
               </button>
             </li>
+  
+            {DEBUG_FLG && (
+            <>
+              <li className="m-0 p-0">
+                <button
+                  id="devtools"
+                  type="button"
+                  role="menuitem"
+                  onClick={() => {
+                    handleOpenDevTools(
+                      closeMenu,
+                    );
+                  }}
+                  className="
+                    w-full
+                    cursor-pointer
+                    whitespace-nowrap
+                    border-none
+                    bg-[#515152]
+                    px-4
+                    py-2
+                    text-white
+                    transition-colors
+                    hover:bg-[#2196f3]
+                    focus:bg-[#2196f3]
+                    focus:outline-none
+                  "
+                >
+                  デベロッパー
+                </button>
+              </li>
+              <li
+                className="m-0 p-0"
+                onClick={closeMenu}
+              >
+                <StaffUpdateButton
+                  facilityId={facilityId}
+                  disabled={!facilityId}
+                  className="w-full"
+                />
+              </li>
+
+              <li
+                className="m-0 p-0"
+                onClick={closeMenu}
+              >
+                <ChildrenUpdateButton
+                  facilityId={facilityId}
+                  disabled={!facilityId}
+                  className="w-full bg-yellow-500 flex items-center justify-center text-center text-white transition-colors hover:bg-yellow-600 disabled:cursor-wait disabled:opacity-60 text-sm gap-2 px-4 py-2"
+                />
+              </li>
+              <li className="m-0 p-0">
+                <button
+                  id="Get-Url"
+                  type="button"
+                  role="menuitem"
+                  onClick={() => {
+                    handleGetUrlClick(
+                      closeMenu,
+                    );
+                  }}
+                  className="
+                    block
+                    w-full
+                    cursor-pointer
+                    border-none
+                    bg-transparent
+                    px-4
+                    py-2
+                    text-left
+                    text-sm
+                    text-black
+                    transition-colors
+                    hover:bg-[#e3f2fd]
+                    focus:bg-[#e3f2fd]
+                    focus:outline-none
+                  "
+                >
+                  URLの取得
+                </button>
+              </li>
+  
+                <li
+                  className="m-0 p-0"
+                  onClick={closeMenu}
+                >
+                  <ServerConnectButton
+                    className="w-full py-2"
+                  />
+                </li>
+              </>
+            )}
+
+            <li
+              className="my-1 border-t border-gray-200"
+              role="separator"
+            />
 
             <li className="m-0 p-0">
               <button
