@@ -8,14 +8,11 @@ import {
   setLaravelAuthentication,
 } from '@/store/slices/authSlice';
 
-export default function AutoLoginButton({ className = '' }) {
+function useAutoLogin() {
   const { handleLogin } = useHugActions();
   const dispatch = useDispatch();
 
-  /**
-   * 自動ログインボタン押下時の処理
-   */
-  const handleLogin_func = useCallback(async () => {
+  return useCallback(async () => {
     try {
       const res = await window.electronAPI.jwtAutoLogin();
 
@@ -50,26 +47,39 @@ export default function AutoLoginButton({ className = '' }) {
       );
     }
   }, [dispatch, handleLogin]);
+}
+
+/**
+ * App から通知される起動時の自動ログインを常時待ち受ける。
+ */
+export function StartupAutoLoginListener() {
+  const handleAutoLogin = useAutoLogin();
 
   useEffect(() => {
     document.addEventListener(
       'hug-startup-auto-login',
-      handleLogin_func
+      handleAutoLogin
     );
 
     return () => {
       document.removeEventListener(
         'hug-startup-auto-login',
-        handleLogin_func
+        handleAutoLogin
       );
     };
-  }, [handleLogin_func]);
+  }, [handleAutoLogin]);
+
+  return null;
+}
+
+export default function AutoLoginButton({ className = '' }) {
+  const handleAutoLogin = useAutoLogin();
 
   return (
     <button
       id="loginBtn"
       type="button"
-      onClick={handleLogin_func}
+      onClick={handleAutoLogin}
       className={`flex items-center justify-center gap-2 ${className}`}
       aria-label="自動ログイン"
     >

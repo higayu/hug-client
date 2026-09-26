@@ -6,6 +6,7 @@ import MainContent from './MainContent'
 import { usePreloadPath } from '@/hooks/usePreloadPath'
 import { useActiveWebviewLogger } from '@/hooks/useTabs/useActiveWebviewLogger'
 import DataBaseAutoLoader from '@/provider/DataBaseAutoLoader'
+import { StartupAutoLoginListener } from '@/components/AutoLoginButton'
 
 function MainWindowContent() {
   const preloadPath = usePreloadPath()
@@ -18,6 +19,7 @@ function MainWindowContent() {
       <Toolbar />
       <Tabs />
       <MainContent preloadPath={preloadPath} />
+      <StartupAutoLoginListener />
       <pre id="configOutput" className="hidden" />
     </div>
   )
