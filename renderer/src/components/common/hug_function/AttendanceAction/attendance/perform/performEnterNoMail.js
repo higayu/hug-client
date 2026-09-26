@@ -1,9 +1,9 @@
 /**
  * 入室（メール通知なし）。
  *
- * 動作確認済みの旧仕様をそのまま使用する。
- * WebAutomation Flow は通さず、HUG 側 onclick を解析して
- * ajax/ajax_attendance.php へ直接 POST する旧経路を維持する。
+ * DB の web_automation_flows / web_automation_flow_steps /
+ * web_automation_rules に保存された attendance_enter_no_mail を取得し、
+ * DB 定義に従って HUG の入室 POST を実行する。
  */
 
 import { getHugWebviewForCache } from "@/hooks/useHugCache/getHugCache.js";
@@ -11,7 +11,7 @@ import {
   getHalfTime,
   isAfternoonEnterHeldUntilHalfTime,
 } from "../helpers/formHelpers.js";
-import { nyushituInWebview } from "../post/postAttendanceInWebview.js";
+import { executeAttendancePostFlow } from "../flow/attendancePostFlow.js";
 
 export const ENTER_NO_MAIL_FLOW_KEY = "attendance_enter_no_mail";
 
@@ -37,9 +37,20 @@ export async function performEnterNoMail(item, ctx = {}) {
     throw new Error("入室 POST 用の HUG webview を取得できませんでした");
   }
 
-  // 旧仕様: onclick を解析し、mail_flg=0 で直接 POST する。
-  const postResult = await nyushituInWebview(webview, item.enterOnclick, {
-    mail_flg: 0,
+  const postResult = await executeAttendancePostFlow(webview, {
+    flowKey: ENTER_NO_MAIL_FLOW_KEY,
+    action: "enter",
+    item,
+    mailFlg: 0,
+    variables: {
+      childId: item.childId || item.children_id || item.c_id,
+      facilityId: ctx.facilityId || item.facilityId || item.f_id,
+      date: ctx.dateStr || item.detailPageDate || item.date,
+      dateStr: ctx.dateStr || item.detailPageDate || item.date,
+      isMail: 0,
+      mailFlg: 0,
+      mail_flg: 0,
+    },
   });
 
   if (!postResult?.success) {
@@ -49,13 +60,13 @@ export async function performEnterNoMail(item, ctx = {}) {
   }
 
   return {
-    mode: "extension",
-    flowKey: ENTER_NO_MAIL_FLOW_KEY,
-    ruleKey: null,
+    mode: postResult.mode || "web-automation-flow",
+    flowKey: postResult.flow?.flow_key || ENTER_NO_MAIL_FLOW_KEY,
+    ruleKey: postResult.rule?.rule_key || null,
     mail_flg: 0,
     success: true,
     dataList: postResult.dataList,
     json: postResult.json,
-    statusMessage: `入室を記録しました（メール通知なし / r_id=${postResult.dataList.r_id}）`,
+    statusMessage: `入室を記録しました（メール通知なし / DB Flow / r_id=${postResult.dataList.r_id}）`,
   };
 }
