@@ -1,5 +1,6 @@
-import { useCallback } from 'react'
+import { useCallback, useState } from 'react'
 import AttendancePostButton from '../AttendancePostButton'
+import MailNotificationModal from '../MailNotificationModal'
 import { handleLeaveClick } from './function/handleLeaveClick'
 
 function buildDebugTitle({ title, childId, childName, recordId, rowSelector }) {
@@ -26,15 +27,35 @@ export default function LeaveButton({
   title = '',
   onLeave,
 }) {
-  const onClick = useCallback(
-    () =>
+  const [mailModalOpen, setMailModalOpen] = useState(false)
+
+  const executeLeave = useCallback(
+    (mailFlg = null) =>
       handleLeaveClick({
         onLeave,
         childId,
         childName,
         dateStr,
+        mailFlg,
       }),
     [onLeave, childId, childName, dateStr],
+  )
+
+  const onClick = useCallback(() => {
+    if (hasMail) {
+      setMailModalOpen(true)
+      return
+    }
+
+    return executeLeave(null)
+  }, [hasMail, executeLeave])
+
+  const handleMailSelect = useCallback(
+    async (mailFlg) => {
+      setMailModalOpen(false)
+      await executeLeave(mailFlg)
+    },
+    [executeLeave],
   )
 
   const debugTitle = buildDebugTitle({
@@ -46,13 +67,23 @@ export default function LeaveButton({
   })
 
   return (
-    <AttendancePostButton
-      action="leave"
-      hasMail={hasMail}
-      disabled={disabled}
-      loading={loading}
-      title={debugTitle}
-      onClick={onClick}
-    />
+    <>
+      <AttendancePostButton
+        action="leave"
+        hasMail={hasMail}
+        disabled={disabled || mailModalOpen}
+        loading={loading}
+        title={debugTitle}
+        onClick={onClick}
+      />
+
+      <MailNotificationModal
+        open={mailModalOpen}
+        childName={childName}
+        actionLabel="退室"
+        onSelect={handleMailSelect}
+        onCancel={() => setMailModalOpen(false)}
+      />
+    </>
   )
 }

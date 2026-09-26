@@ -18,7 +18,7 @@ export async function performLeaveWithMail(item, ctx = {}) {
     );
   }
 
-  // メール確認もHUG本体のsendLeaveMailに任せる。
+  // renderer側で選択した通知有無を、HUG本体のメール確認ダイアログへ反映する。
   const result = await tryNativeLeave(
     webview,
     item,
@@ -31,6 +31,8 @@ export async function performLeaveWithMail(item, ctx = {}) {
         ctx.dateStr ||
         item.date ||
         item.detailPageDate,
+      mailFlg:
+        Number(ctx.mailFlg ?? ctx.mail_flg) === 1 ? 1 : 0,
     }
   );
 
@@ -38,7 +40,7 @@ export async function performLeaveWithMail(item, ctx = {}) {
     ...result,
     mode: "native-onclick",
     flowKey: LEAVE_WITH_MAIL_FLOW_KEY,
-    mail_flg: null,
+    mail_flg: Number(ctx.mailFlg ?? ctx.mail_flg) === 1 ? 1 : 0,
     success: true,
   };
 }

@@ -1,5 +1,6 @@
-import { useCallback } from 'react'
+import { useCallback, useState } from 'react'
 import AttendancePostButton from '../AttendancePostButton'
+import MailNotificationModal from '../MailNotificationModal'
 import { handleEnterClick } from './function/handleEnterClick'
 
 function buildDebugTitle({ title, childId, childName, recordId, rowSelector }) {
@@ -26,15 +27,35 @@ export default function EnterButton({
   title = '',
   onEnter,
 }) {
-  const onClick = useCallback(
-    () =>
+  const [mailModalOpen, setMailModalOpen] = useState(false)
+
+  const executeEnter = useCallback(
+    (mailFlg = null) =>
       handleEnterClick({
         onEnter,
         childId,
         childName,
         dateStr,
+        mailFlg,
       }),
     [onEnter, childId, childName, dateStr],
+  )
+
+  const onClick = useCallback(() => {
+    if (hasMail) {
+      setMailModalOpen(true)
+      return
+    }
+
+    return executeEnter(null)
+  }, [hasMail, executeEnter])
+
+  const handleMailSelect = useCallback(
+    async (mailFlg) => {
+      setMailModalOpen(false)
+      await executeEnter(mailFlg)
+    },
+    [executeEnter],
   )
 
   const debugTitle = buildDebugTitle({
@@ -46,13 +67,23 @@ export default function EnterButton({
   })
 
   return (
-    <AttendancePostButton
-      action="enter"
-      hasMail={hasMail}
-      disabled={disabled}
-      loading={loading}
-      title={debugTitle}
-      onClick={onClick}
-    />
+    <>
+      <AttendancePostButton
+        action="enter"
+        hasMail={hasMail}
+        disabled={disabled || mailModalOpen}
+        loading={loading}
+        title={debugTitle}
+        onClick={onClick}
+      />
+
+      <MailNotificationModal
+        open={mailModalOpen}
+        childName={childName}
+        actionLabel="入室"
+        onSelect={handleMailSelect}
+        onCancel={() => setMailModalOpen(false)}
+      />
+    </>
   )
 }

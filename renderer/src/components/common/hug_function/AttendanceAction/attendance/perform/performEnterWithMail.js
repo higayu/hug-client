@@ -34,7 +34,7 @@ export async function performEnterWithMail(item, ctx = {}) {
     );
   }
 
-  // メール確認もHUG本体のsendEnterMailに任せる。
+  // renderer側で選択した通知有無を、HUG本体のメール確認ダイアログへ反映する。
   const result = await tryNativeEnter(
     webview,
     item,
@@ -47,6 +47,8 @@ export async function performEnterWithMail(item, ctx = {}) {
         ctx.dateStr ||
         item.date ||
         item.detailPageDate,
+      mailFlg:
+        Number(ctx.mailFlg ?? ctx.mail_flg) === 1 ? 1 : 0,
     }
   );
 
@@ -54,7 +56,7 @@ export async function performEnterWithMail(item, ctx = {}) {
     ...result,
     mode: "native-onclick",
     flowKey: ENTER_WITH_MAIL_FLOW_KEY,
-    mail_flg: null,
+    mail_flg: Number(ctx.mailFlg ?? ctx.mail_flg) === 1 ? 1 : 0,
     success: true,
   };
 }

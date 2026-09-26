@@ -1,9 +1,9 @@
 /**
  * HUG本体の入退室 onclick を、そのままWebViewページ内で実行する。
  *
- * Electron側では ajax_attendance.php のPOST内容を再現しない。
- * attendance.php の最新画面を読み込み、実際のボタンのonclick属性を取得して
- * HUG本体の sendEnterMail / sendLeaveMail を実行する。
+ * メール通知対象の場合は、renderer側ですでに選択された mailFlg を受け取り、
+ * HUG側の #addtend_dialog_mail が開いたタイミングで対応する
+ * .send_mail_button[data-send_mail="0|1"] を自動クリックする。
  */
 
 import { loadAttendanceDetailInWebview } from "../_shared/webview.js";
@@ -37,16 +37,104 @@ function getKindConfig(kind) {
 /**
  * HUGの最新 attendance.php 上から対象ボタンを探し、
  * そのボタンの onclick の中身をページコンテキストでそのまま実行する。
+ *
+ * @param {Electron.WebviewTag} webview
+ * @param {number|string} rId
+ * @param {'enter'|'leave'} kind
+ * @param {{mailFlg?: number|null}} options
  */
-async function executeNativeOnclickInWebview(webview, rId, kind) {
+async function executeNativeOnclickInWebview(
+  webview,
+  rId,
+  kind,
+  options = {}
+) {
   const { cellPrefix, functionName, label } = getKindConfig(kind);
+  const mailFlg =
+    Number(options?.mailFlg) === 1
+      ? 1
+      : Number(options?.mailFlg) === 0
+        ? 0
+        : null;
 
   const script = `
-    (() => {
+    (async () => {
       const rId = ${JSON.stringify(String(rId))};
       const cellId = ${JSON.stringify(cellPrefix)} + rId;
       const functionName = ${JSON.stringify(functionName)};
       const label = ${JSON.stringify(label)};
+      const mailFlg = ${JSON.stringify(mailFlg)};
+
+      const sleep = (ms) =>
+        new Promise((resolve) => setTimeout(resolve, ms));
+
+      const getMailDialogWrapper = () => {
+        const dialog = document.getElementById("addtend_dialog_mail");
+        return dialog?.closest(".ui-dialog") || null;
+      };
+
+      const isVisible = (element) => {
+        if (!element) return false;
+        const style = window.getComputedStyle(element);
+        return (
+          style.display !== "none" &&
+          style.visibility !== "hidden" &&
+          Number(style.opacity || 1) !== 0
+        );
+      };
+
+      const resolveHugMailDialog = async () => {
+        if (mailFlg !== 0 && mailFlg !== 1) {
+          return {
+            handled: false,
+            reason: "renderer-mail-choice-not-supplied",
+          };
+        }
+
+        const startedAt = Date.now();
+        const timeoutMs = 3000;
+
+        while (Date.now() - startedAt < timeoutMs) {
+          const dialog = document.getElementById("addtend_dialog_mail");
+          const wrapper = getMailDialogWrapper();
+
+          if (dialog && wrapper && isVisible(wrapper)) {
+            const button = dialog.querySelector(
+              '.send_mail_button[data-send_mail="' + mailFlg + '"]'
+            );
+
+            if (!button) {
+              return {
+                handled: false,
+                reason: "mail-choice-button-not-found",
+              };
+            }
+
+            console.log(
+              "[Attendance Native Onclick] resolve HUG mail dialog",
+              {
+                kind: ${JSON.stringify(kind)},
+                rId,
+                mailFlg,
+              }
+            );
+
+            button.click();
+
+            return {
+              handled: true,
+              mailFlg,
+            };
+          }
+
+          await sleep(25);
+        }
+
+        return {
+          handled: false,
+          reason: "hug-mail-dialog-not-opened",
+        };
+      };
 
       try {
         const cell = document.getElementById(cellId);
@@ -103,6 +191,19 @@ async function executeNativeOnclickInWebview(webview, rId, kind) {
           };
         }
 
+        // renderer側の確認を使う場合、HUG側モーダルは表示させず、
+        // DOM上では開かせた上で該当ボタンを自動クリックする。
+        const mailDialogWrapper = getMailDialogWrapper();
+        const previousVisibility =
+          mailDialogWrapper?.style?.visibility ?? "";
+
+        if (
+          mailDialogWrapper &&
+          (mailFlg === 0 || mailFlg === 1)
+        ) {
+          mailDialogWrapper.style.visibility = "hidden";
+        }
+
         console.log(
           "[Attendance Native Onclick] execute",
           {
@@ -110,15 +211,21 @@ async function executeNativeOnclickInWebview(webview, rId, kind) {
             rId,
             functionName,
             onclickCode,
+            mailFlg,
             pageUrl: location.href,
           }
         );
 
-        // 実サイトのonclickをそのまま実行する。
-        // これによりHUG側の確認ダイアログ、Ajax、算定処理等も
-        // 本体JavaScriptへそのまま任せる。
         const execute = new Function(onclickCode);
         execute.call(window);
+
+        const mailDialogResult =
+          await resolveHugMailDialog();
+
+        if (mailDialogWrapper) {
+          mailDialogWrapper.style.visibility =
+            previousVisibility;
+        }
 
         return {
           success: true,
@@ -127,6 +234,8 @@ async function executeNativeOnclickInWebview(webview, rId, kind) {
           rId,
           functionName,
           onclickCode,
+          mailFlg,
+          mailDialogResult,
           pageUrl: location.href,
         };
       } catch (error) {
@@ -162,7 +271,7 @@ async function executeNativeOnclickInWebview(webview, rId, kind) {
 export async function tryNativeEnter(
   webview,
   item,
-  { facilityId, dateStr }
+  { facilityId, dateStr, mailFlg = null }
 ) {
   if (!webview) {
     throw new Error("HUG webview がありません");
@@ -182,7 +291,8 @@ export async function tryNativeEnter(
     await executeNativeOnclickInWebview(
       webview,
       item.r_id,
-      "enter"
+      "enter",
+      { mailFlg }
     );
 
   return {
@@ -198,7 +308,7 @@ export async function tryNativeEnter(
 export async function tryNativeLeave(
   webview,
   item,
-  { facilityId, dateStr }
+  { facilityId, dateStr, mailFlg = null }
 ) {
   if (!webview) {
     throw new Error("HUG webview がありません");
@@ -218,7 +328,8 @@ export async function tryNativeLeave(
     await executeNativeOnclickInWebview(
       webview,
       item.r_id,
-      "leave"
+      "leave",
+      { mailFlg }
     );
 
   return {
@@ -228,7 +339,6 @@ export async function tryNativeLeave(
   };
 }
 
-// 旧import互換
 export function shouldDelegateEnterToNative(item) {
   return Boolean(item?.r_id);
 }
