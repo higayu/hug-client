@@ -60,9 +60,29 @@ export function isAfternoonEnterBlocked(column5Html, children_id, dateStr) {
   );
 }
 
-export function buildEnterButtonTitle(column5Html, children_id, dateStr) {
-  const item = buildRowItemFromColumns({ children_id, column5Html, dateStr });
-  const parts = [];
+export function buildEnterButtonTitle(
+  column5Html,
+  children_id,
+  dateStr,
+  children_name = "",
+  hug_record_id = ""
+) {
+  const item = buildRowItemFromColumns({
+    children_id,
+    children_name,
+    column5Html,
+    dateStr,
+  });
+  const recordId = String(hug_record_id || item.r_id || "").trim();
+  const childName = String(children_name || item.name || "").trim();
+  const parts = [
+    childName ? `児童名：${childName}` : null,
+    children_id ? `児童ID：${children_id}` : null,
+    recordId ? `HUG行ID：${recordId}` : null,
+    recordId
+      ? `HUG行：#releasetable > tr.children${recordId} > td.realname`
+      : null,
+  ].filter(Boolean);
   if (isEnterMailEnabled(item)) {
     parts.push("メール確認あり（is_mail=1）");
     parts.push("HUG本体の確認処理を使用");
@@ -76,9 +96,29 @@ export function buildEnterButtonTitle(column5Html, children_id, dateStr) {
   return parts.join(" / ");
 }
 
-export function buildLeaveButtonTitle(column6Html, children_id, dateStr) {
-  const item = buildRowItemFromColumns({ children_id, column6Html, dateStr });
-  const parts = [];
+export function buildLeaveButtonTitle(
+  column6Html,
+  children_id,
+  dateStr,
+  children_name = "",
+  hug_record_id = ""
+) {
+  const item = buildRowItemFromColumns({
+    children_id,
+    children_name,
+    column6Html,
+    dateStr,
+  });
+  const recordId = String(hug_record_id || item.r_id || "").trim();
+  const childName = String(children_name || item.name || "").trim();
+  const parts = [
+    childName ? `児童名：${childName}` : null,
+    children_id ? `児童ID：${children_id}` : null,
+    recordId ? `HUG行ID：${recordId}` : null,
+    recordId
+      ? `HUG行：#releasetable > tr.children${recordId} > td.realname`
+      : null,
+  ].filter(Boolean);
   if (isLeaveMailEnabled(item)) {
     parts.push("メール確認あり（is_mail=1）");
     parts.push("HUG本体の確認処理を使用");

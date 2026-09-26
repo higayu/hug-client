@@ -199,10 +199,29 @@ function processAttendanceRow(row, rowIndex) {
   const { children_id, children_name } = extractChildrenInfo(cell1Html)
   const { column5, column5Html, column6, column6Html } = extractTimeColumns(cells)
 
+  // HUG側の1行を一意に識別する record id。
+  // 例: <tr class="odd children46961"> → 46961
+  const rowClassName = row.className || ''
+  const recordIdMatch = String(rowClassName).match(/(?:^|\s)children(\d+)(?:\s|$)/)
+  const hugRecordId = recordIdMatch?.[1] || ''
+
+  // デバッグ用。renderer側の入退室ボタンtitleから、
+  // 実際にHUGのどの行を操作する予定か確認できるようにする。
+  const hugRowSelector = hugRecordId
+    ? `#releasetable > tr.children${hugRecordId}`
+    : ''
+  const hugRealnameSelector = hugRecordId
+    ? `${hugRowSelector} > td.realname`
+    : ''
+
   const rowData = {
     rowIndex: rowIndex + 1, // 1から始まる行番号
     children_id, // 児童ID
     children_name, // 児童名
+    hug_record_id: hugRecordId, // HUG出席行ID (r_id)
+    hug_row_class: rowClassName,
+    hug_row_selector: hugRowSelector,
+    hug_realname_selector: hugRealnameSelector,
     column1Html: cell1Html, // 2列目のHTML（児童情報）
     column5, // 入室時間のテキスト
     column5Html // 入室時間のHTML（ボタン情報など）
