@@ -281,10 +281,21 @@ function registerLaravelAuthHandlers(
 
   ipcMain.handle(
     "laravel:web-automation-flows:get",
-
-  "laravel:web-automation-execution-logs:create",
-  "laravel:web-automation-execution-logs:update",
     webAutomationFlows.getHandler
+  );
+
+  // ============================================================
+  // Web自動化実行ログ
+  // ============================================================
+
+  ipcMain.handle(
+    "laravel:web-automation-execution-logs:create",
+    webAutomationExecutionLogs.createHandler
+  );
+
+  ipcMain.handle(
+    "laravel:web-automation-execution-logs:update",
+    webAutomationExecutionLogs.updateHandler
   );
 
   // ============================================================

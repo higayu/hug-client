@@ -1,25 +1,41 @@
 import { useEffect } from 'react'
+
 import Sidebar from './Sidebar'
+
+import WebViewPanel from '@/components/WebViewPanel'
 import HorizonPanel from '@/components/ui/ResizableSplitPane/HorizonPanel'
 
 function MainContent({ preloadPath }) {
   useEffect(() => {
-    if (!preloadPath) return
+    if (!preloadPath) {
+      return
+    }
 
-    // グローバルにpreloadパスを保存
+    /*
+     * 他の処理からも参照できるように、
+     * preloadパスをグローバルへ保持する。
+     */
     window.preloadPath = preloadPath
 
-    const webview = document.getElementById('hugview')
-    if (webview && webview.getAttribute('preload') !== preloadPath) {
-      webview.setAttribute('preload', preloadPath)
-      console.log('✅ [MainContent] 初期webviewにpreload属性を設定:', preloadPath)
-    }
+    console.log(
+      '✅ [MainContent] preloadPathを設定:',
+      preloadPath,
+    )
   }, [preloadPath])
 
   return (
     <div
       id="content"
-      className="relative z-[1] flex h-full min-h-0 min-w-0 flex-1 overflow-hidden"
+      className="
+        relative
+        z-[1]
+        flex
+        h-full
+        min-h-0
+        min-w-0
+        flex-1
+        overflow-hidden
+      "
     >
       <HorizonPanel
         defaultLeftPercent={70}
@@ -30,7 +46,19 @@ function MainContent({ preloadPath }) {
         left={(
           <aside
             id="settings"
-            className="settings-sidebar z-10 flex h-full w-full flex-col overflow-hidden bg-[#f8f8f8] p-0 text-black shadow-[2px_0_8px_rgba(0,0,0,0.1)]"
+            className="
+              settings-sidebar
+              z-10
+              flex
+              h-full
+              w-full
+              flex-col
+              overflow-hidden
+              bg-[#f8f8f8]
+              p-0
+              text-black
+              shadow-[2px_0_8px_rgba(0,0,0,0.1)]
+            "
           >
             <Sidebar />
           </aside>
@@ -38,15 +66,16 @@ function MainContent({ preloadPath }) {
         right={(
           <main
             id="webview-container"
-            className="relative h-full min-h-0 min-w-0 overflow-hidden"
+            className="
+              relative
+              h-full
+              min-h-0
+              min-w-0
+              overflow-hidden
+            "
           >
-            <webview
-              id="hugview"
-              src="https://www.hug-ayumu.link/hug/wm/"
-              allowpopups="true"
-              disablewebsecurity="true"
-              preload={preloadPath}
-              className="absolute inset-0 z-[1] h-full w-full overflow-hidden border-none"
+            <WebViewPanel
+              preloadPath={preloadPath}
             />
           </main>
         )}

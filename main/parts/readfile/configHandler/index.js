@@ -5,7 +5,23 @@ const { app, dialog, shell } = require("electron");
 const { getDataDir, getConfigPath } = require("../../utils/pathResolver");
 const { DEFAULT_CONFIG, getDefaultConfig } = require("./defaultConfig");
 
+function removeHandlerIfRegistered(ipcMain, channel) {
+  try {
+    ipcMain.removeHandler(channel);
+  } catch (error) {
+    console.warn(
+      `⚠️ IPCハンドラーを解除できませんでした: ${channel}`,
+      error?.message ?? error,
+    );
+  }
+}
+
 function handleConfigAccess(ipcMain) {
+  removeHandlerIfRegistered(ipcMain, "read-config");
+  removeHandlerIfRegistered(ipcMain, "save-config");
+  removeHandlerIfRegistered(ipcMain, "import-config-file");
+  removeHandlerIfRegistered(ipcMain, "open-config-folder");
+
   // ============================================================
   // 📖 config.json 読み込み
   // ============================================================

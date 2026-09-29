@@ -4,7 +4,23 @@ const path = require("path");
 const { getIniPath } = require("../../utils/pathResolver");
 const { DEFAULT_INI, getDefaultIni } = require("./defaultIni");
 
+function removeHandlerIfRegistered(ipcMain, channel) {
+  try {
+    ipcMain.removeHandler(channel);
+  } catch (error) {
+    console.warn(
+      `⚠️ IPCハンドラーを解除できませんでした: ${channel}`,
+      error?.message ?? error,
+    );
+  }
+}
+
 function handleIniAccess(ipcMain) {
+  removeHandlerIfRegistered(ipcMain, "read-ini");
+  removeHandlerIfRegistered(ipcMain, "save-ini");
+  removeHandlerIfRegistered(ipcMain, "reset-ini");
+  removeHandlerIfRegistered(ipcMain, "update-ini-setting");
+
   // ============================================================
   // 📖 ini.json 読み込み
   // ============================================================

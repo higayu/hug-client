@@ -174,7 +174,7 @@ function registerDatabaseSwitchHandler(ipcMain) {
 /**
  * IPCハンドラーをまとめて登録する。
  */
-async function handleApiCalls(ipcMain) {
+function handleApiCalls(ipcMain) {
   console.log("🔥 [handleApiCalls] START");
 
   if (!ipcMain || typeof ipcMain.handle !== "function") {
@@ -196,7 +196,7 @@ async function handleApiCalls(ipcMain) {
       );
     }
 
-    await Promise.resolve(registerHandlers(ipcMain));
+    registerHandlers(ipcMain);
   }
 
   registerDatabaseTypeHandler(ipcMain);
