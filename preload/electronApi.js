@@ -131,6 +131,30 @@ function createElectronApi(ipcRenderer, isDebugMode) {
         params,
       ),
 
+    // ---- Web自動化実行ログ ----
+    /**
+     * Web自動化処理の実行開始ログを保存する。
+     *
+     * POST /api/web-automation-execution-logs
+     */
+    laravel_webAutomationExecutionLog_create: (data = {}) =>
+      ipcRenderer.invoke(
+        "laravel:web-automation-execution-logs:create",
+        data,
+      ),
+
+    /**
+     * Web自動化実行ログへ成功・失敗・結果情報を反映する。
+     *
+     * PATCH /api/web-automation-execution-logs/{id}
+     */
+    laravel_webAutomationExecutionLog_update: (id, data = {}) =>
+      ipcRenderer.invoke(
+        "laravel:web-automation-execution-logs:update",
+        id,
+        data,
+      ),
+
     // ---- Q&A・障害対応ナレッジ ----
     laravel_troubleshootingKnowledge_getAll: (params = {}) =>
       ipcRenderer.invoke(

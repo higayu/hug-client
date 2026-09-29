@@ -9,6 +9,7 @@ const children = require("./children");
 const aiRecordEditer = require("./aiRecordEditer");
 const webAutomationRules = require("./webAutomationRules");
 const webAutomationFlows = require("./webAutomationFlows");
+const webAutomationExecutionLogs = require("./webAutomationExecutionLogs");
 const troubleshootingKnowledge = require("./troubleshootingKnowledge");
 const personalRecordSyncs = require("./personalRecordSyncs");
 const laravelApiClient = require("../../../../src/laravelApiClient");
@@ -42,6 +43,9 @@ const IPC_CHANNELS = [
 
   "laravel:web-automation-flows:list",
   "laravel:web-automation-flows:get",
+
+  "laravel:web-automation-execution-logs:create",
+  "laravel:web-automation-execution-logs:update",
 
   // ============================================================
   // Q&A・障害対応ナレッジ
@@ -277,6 +281,9 @@ function registerLaravelAuthHandlers(
 
   ipcMain.handle(
     "laravel:web-automation-flows:get",
+
+  "laravel:web-automation-execution-logs:create",
+  "laravel:web-automation-execution-logs:update",
     webAutomationFlows.getHandler
   );
 
