@@ -15,7 +15,9 @@ import WebAutomation from './WebAutomation'
 
 export default function AdminTab() {
   const auth = useSelector(selectLaravelAuth)
-  const isAdmin = Number(auth.user?.role_id) === 1
+  const roleId = Number(auth.user?.role_id ?? 0)
+  const isMentorOrAbove = roleId >= 50
+  const isAdmin = roleId >= 100
   const authenticatedStaffId = auth.user?.staff_id
   const {
     databaseState,
@@ -25,17 +27,21 @@ export default function AdminTab() {
     ADMIN_SECTION_IDS.STAFF_MANAGEMENT,
   )
 
-  const visibleAdminSections = DEBUG_FLG
-    ? ADMIN_SECTIONS
-    : ADMIN_SECTIONS.filter(
-        (section) => section.id !== ADMIN_SECTION_IDS.WEB_AUTOMATION,
-      )
+  const visibleAdminSections = ADMIN_SECTIONS.filter((section) => {
+    if (section.id === ADMIN_SECTION_IDS.WEB_AUTOMATION) {
+      return isAdmin && DEBUG_FLG
+    }
 
-  const visibleActiveSection = DEBUG_FLG
+    return true
+  })
+
+  const visibleActiveSection = visibleAdminSections.some(
+    (section) => section.id === activeAdminSection,
+  )
     ? activeAdminSection
     : ADMIN_SECTION_IDS.STAFF_MANAGEMENT
 
-  if (!isAdmin) {
+  if (!isMentorOrAbove) {
     return null
   }
 
@@ -56,10 +62,11 @@ export default function AdminTab() {
         />
       )}
 
-      {DEBUG_FLG &&
+      {isAdmin &&
+        DEBUG_FLG &&
         visibleActiveSection === ADMIN_SECTION_IDS.WEB_AUTOMATION && (
-        <WebAutomation />
-      )}
+          <WebAutomation />
+        )}
     </div>
   )
 }

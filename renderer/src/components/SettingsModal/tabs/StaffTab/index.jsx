@@ -72,7 +72,9 @@ export default function StaffTab({
   title = '職員情報',
 }) {
   const auth = useSelector(selectLaravelAuth)
-  const isAdmin = Number(auth.user?.role_id) === 1
+  const roleId = Number(auth.user?.role_id ?? 0)
+  const isMentorOrAbove = roleId >= 50
+  const isAdmin = roleId >= 100
 
   const {
     STAFF_ID,
@@ -397,12 +399,17 @@ export default function StaffTab({
               : 0
             : null,
 
-        ...(isAdmin
+        ...(isMentorOrAbove
           ? {
               is_delete:
                 Number(form.is_delete) === 1 ? 1 : 0,
+            }
+          : {}),
+
+        ...(isAdmin
+          ? {
               role_id:
-                Number(form.role_id) === 1 ? 1 : 0,
+                Number(form.role_id),
             }
           : {}),
       }
@@ -656,44 +663,36 @@ export default function StaffTab({
       </div>
 
       {/* 権限・削除状態 */}
-      {isAdmin && (
-      <div className="mt-5 flex flex-wrap gap-6">
-        <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-          <input
-            type="checkbox"
-            name="role_id"
-            checked={
-              Number(
-                form.role_id,
-              ) === 1
-            }
-            onChange={
-              handleChange
-            }
-            className="h-4 w-4"
-          />
+      {isMentorOrAbove && (
+        <div className="mt-5 flex flex-wrap items-end gap-6">
+          {isAdmin && (
+            <label className="flex min-w-56 flex-col gap-1 text-sm font-medium text-gray-700">
+              権限
+              <select
+                name="role_id"
+                value={Number(form.role_id ?? 0)}
+                onChange={handleChange}
+                className="rounded-md border border-gray-300 bg-white px-3 py-2 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-200"
+              >
+                <option value={0}>user</option>
+                <option value={50}>mentor</option>
+                <option value={100}>admin</option>
+              </select>
+            </label>
+          )}
 
-          管理者
-        </label>
+          <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+            <input
+              type="checkbox"
+              name="is_delete"
+              checked={Number(form.is_delete) === 1}
+              onChange={handleChange}
+              className="h-4 w-4"
+            />
 
-        <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-          <input
-            type="checkbox"
-            name="is_delete"
-            checked={
-              Number(
-                form.is_delete,
-              ) === 1
-            }
-            onChange={
-              handleChange
-            }
-            className="h-4 w-4"
-          />
-
-          削除済み
-        </label>
-      </div>
+            利用停止
+          </label>
+        </div>
       )}
 
       {/* メモ */}

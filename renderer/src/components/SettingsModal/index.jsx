@@ -62,7 +62,7 @@ const BASE_TABS = [
 const ADMIN_TABS = [
   {
     id: 'admin',
-    label: '管理者設定',
+    label: '管理設定',
     icon: LockClosedIcon,
     component: AdminTab,
   },
@@ -99,7 +99,9 @@ export default function SettingsModal({
   const [activeTab, setActiveTab] = useState(DEFAULT_TAB_ID)
 
   const auth = useSelector(selectLaravelAuth)
-  const isAdmin = Number(auth.user?.role_id) === 1
+  const roleId = Number(auth.user?.role_id ?? 0)
+  const isMentorOrAbove = roleId >= 50
+  const isAdmin = roleId >= 100
 
   /*
    * モーダルを開いた際に、
@@ -116,7 +118,7 @@ export default function SettingsModal({
     ? DEBUG_TABS
     : DEBUG_TABS.filter((tab) => tab.id !== 'debug')
 
-  const baseTabs = isAdmin
+  const baseTabs = isMentorOrAbove
     ? [...BASE_TABS, ...ADMIN_TABS]
     : BASE_TABS
 

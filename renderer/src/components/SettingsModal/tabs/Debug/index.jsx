@@ -12,7 +12,7 @@ function formatValue(value) {
 export default function DebugTab() {
   const auth = useSelector(selectLaravelAuth)
 
-  if (auth.user?.role_id !== true) {
+  if (Number(auth.user?.role_id ?? 0) < 100) {
     return null
   }
 
