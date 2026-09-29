@@ -14,19 +14,21 @@ export const NATIVE_STATUS_ENTER =
 export const NATIVE_STATUS_LEAVE =
   "HUG本体の退室処理を開始しました。";
 
-function getKindConfig(kind) {
+function getKindConfig(kind, nativeConfig = {}) {
   if (kind === "enter") {
     return {
-      cellPrefix: "enter",
-      functionName: "sendEnterMail",
+      cellPrefix: nativeConfig.cellIdPrefix || "enter",
+      functionName: nativeConfig.functionName || "sendEnterMail",
+      selectorTemplate: nativeConfig.selectorTemplate || null,
       label: "入室",
     };
   }
 
   if (kind === "leave") {
     return {
-      cellPrefix: "leave",
-      functionName: "sendLeaveMail",
+      cellPrefix: nativeConfig.cellIdPrefix || "leave",
+      functionName: nativeConfig.functionName || "sendLeaveMail",
+      selectorTemplate: nativeConfig.selectorTemplate || null,
       label: "退室",
     };
   }
@@ -49,7 +51,9 @@ async function executeNativeOnclickInWebview(
   kind,
   options = {}
 ) {
-  const { cellPrefix, functionName, label } = getKindConfig(kind);
+  const nativeConfig = options?.nativeConfig || {};
+  const { cellPrefix, functionName, selectorTemplate, label } =
+    getKindConfig(kind, nativeConfig);
   const mailFlg =
     Number(options?.mailFlg) === 1
       ? 1
@@ -62,6 +66,7 @@ async function executeNativeOnclickInWebview(
       const rId = ${JSON.stringify(String(rId))};
       const cellId = ${JSON.stringify(cellPrefix)} + rId;
       const functionName = ${JSON.stringify(functionName)};
+      const selectorTemplate = ${JSON.stringify(selectorTemplate)};
       const label = ${JSON.stringify(label)};
       const mailFlg = ${JSON.stringify(mailFlg)};
 
@@ -139,7 +144,17 @@ async function executeNativeOnclickInWebview(
       try {
         const cell = document.getElementById(cellId);
 
-        if (!cell) {
+        const resolvedSelector = selectorTemplate
+          ? selectorTemplate.replace(/\{\{\s*recordId\s*\}\}/g, rId)
+          : null;
+
+        const button = resolvedSelector
+          ? document.querySelector(resolvedSelector)
+          : cell?.querySelector(
+              "button[onclick*='" + functionName + "']"
+            );
+
+        if (!cell && !resolvedSelector) {
           return {
             success: false,
             error: label + "セルが見つかりません: #" + cellId,
@@ -147,20 +162,14 @@ async function executeNativeOnclickInWebview(
           };
         }
 
-        const button = cell.querySelector(
-          "button[onclick*='" + functionName + "']"
-        );
-
         if (!button) {
           return {
             success: false,
             error:
               label +
-              "ボタンが見つかりません: #" +
-              cellId +
-              " button[onclick*='" +
-              functionName +
-              "']",
+              "ボタンが見つかりません: " +
+              (resolvedSelector ||
+                ("#" + cellId + " button[onclick*=\'" + functionName + "\']")),
             pageUrl: location.href,
           };
         }
@@ -271,7 +280,7 @@ async function executeNativeOnclickInWebview(
 export async function tryNativeEnter(
   webview,
   item,
-  { facilityId, dateStr, mailFlg = null }
+  { facilityId, dateStr, mailFlg = null, nativeConfig = {} }
 ) {
   if (!webview) {
     throw new Error("HUG webview がありません");
@@ -281,18 +290,20 @@ export async function tryNativeEnter(
     throw new Error("入室対象の r_id がありません");
   }
 
-  await loadAttendanceDetailInWebview(
-    webview,
-    facilityId,
-    dateStr
-  );
+  if (nativeConfig.reloadAttendanceDetailBeforeExecute !== false) {
+    await loadAttendanceDetailInWebview(
+      webview,
+      facilityId,
+      dateStr
+    );
+  }
 
   const result =
     await executeNativeOnclickInWebview(
       webview,
       item.r_id,
       "enter",
-      { mailFlg }
+      { mailFlg, nativeConfig }
     );
 
   return {
@@ -308,7 +319,7 @@ export async function tryNativeEnter(
 export async function tryNativeLeave(
   webview,
   item,
-  { facilityId, dateStr, mailFlg = null }
+  { facilityId, dateStr, mailFlg = null, nativeConfig = {} }
 ) {
   if (!webview) {
     throw new Error("HUG webview がありません");
@@ -318,18 +329,20 @@ export async function tryNativeLeave(
     throw new Error("退室対象の r_id がありません");
   }
 
-  await loadAttendanceDetailInWebview(
-    webview,
-    facilityId,
-    dateStr
-  );
+  if (nativeConfig.reloadAttendanceDetailBeforeExecute !== false) {
+    await loadAttendanceDetailInWebview(
+      webview,
+      facilityId,
+      dateStr
+    );
+  }
 
   const result =
     await executeNativeOnclickInWebview(
       webview,
       item.r_id,
       "leave",
-      { mailFlg }
+      { mailFlg, nativeConfig }
     );
 
   return {
