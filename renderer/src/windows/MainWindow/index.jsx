@@ -7,6 +7,8 @@ import { usePreloadPath } from '@/hooks/usePreloadPath'
 import { useActiveWebviewLogger } from '@/hooks/useTabs/useActiveWebviewLogger'
 import DataBaseAutoLoader from '@/provider/DataBaseAutoLoader'
 import { StartupAutoLoginListener } from '@/components/AutoLoginButton'
+import HugAutomationWebview from '@/components/common/HugAutomationWebview'
+import HugAuthSyncBridge from '@/components/common/HugAuthSyncBridge'
 
 function MainWindowContent() {
   const preloadPath = usePreloadPath()
@@ -19,6 +21,8 @@ function MainWindowContent() {
       <Toolbar />
       <Tabs />
       <MainContent preloadPath={preloadPath} />
+      <HugAutomationWebview preloadPath={preloadPath} />
+      <HugAuthSyncBridge />
       <StartupAutoLoginListener />
       <pre id="configOutput" className="hidden" />
     </div>

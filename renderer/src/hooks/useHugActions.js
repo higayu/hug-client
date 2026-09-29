@@ -16,10 +16,13 @@ export function useHugActions(spaceId) {
   const { showSuccessToast, showErrorToast } = useToast()
 
   // 自動ログイン
-  const handleLogin = useCallback(async () => {
-    console.log('🖱️ [HugActions] loginBtn clicked')
+  const handleLogin = useCallback(async ({ webviewId = null } = {}) => {
+    console.log('🖱️ [HugActions] login requested', { webviewId })
 
-    const vw = getActiveWebview()
+    const vw = webviewId
+      ? document.getElementById(webviewId)
+      : getActiveWebview()
+
     if (!vw) {
       alert('Webview が見つかりません')
       return
@@ -41,16 +44,52 @@ export function useHugActions(spaceId) {
     console.log('🚀 自動ログイン開始...')
 
     try {
-      await vw.executeJavaScript(`
-        document.querySelector('input[name="username"]').value = ${JSON.stringify(appState.HUG_USERNAME)};
-        document.querySelector('input[name="password"]').value = ${JSON.stringify(appState.HUG_PASSWORD)};
-        const checkbox = document.querySelector('input[name="setexpire"]');
-        if (checkbox && !checkbox.checked) checkbox.click();
-        document.querySelector("input.btn-login")?.click();
+      const navigationCompleted = new Promise((resolve) => {
+        let settled = false
+
+        const finish = () => {
+          if (settled) return
+          settled = true
+          clearTimeout(timeoutId)
+          resolve()
+        }
+
+        const timeoutId = setTimeout(finish, 10000)
+        vw.addEventListener('did-finish-load', finish, { once: true })
+      })
+
+      const clicked = await vw.executeJavaScript(`
+        (() => {
+          const username = document.querySelector('input[name="username"]');
+          const password = document.querySelector('input[name="password"]');
+          const loginButton = document.querySelector('input.btn-login');
+
+          if (!username || !password || !loginButton) {
+            return false;
+          }
+
+          username.value = ${JSON.stringify(appState.HUG_USERNAME)};
+          password.value = ${JSON.stringify(appState.HUG_PASSWORD)};
+
+          const checkbox = document.querySelector('input[name="setexpire"]');
+          if (checkbox && !checkbox.checked) checkbox.click();
+
+          loginButton.click();
+          return true;
+        })()
       `)
+
+      if (!clicked) {
+        console.warn('⚠️ ログインフォームが見つかりませんでした')
+        return false
+      }
+
+      await navigationCompleted
+      return true
     } catch (err) {
       console.error('❌ ログインスクリプト実行エラー:', err)
       alert('ログインスクリプト実行に失敗しました')
+      return false
     }
   }, [appState.HUG_USERNAME, appState.HUG_PASSWORD])
 

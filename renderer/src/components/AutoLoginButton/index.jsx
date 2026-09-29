@@ -1,5 +1,7 @@
 import { useCallback, useEffect } from 'react';
 import { ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline';
+import { isHugLoggedIn } from '@/hooks/useHugCache/isHugLoggedIn.js';
+import { HUG_AUTOMATION_WEBVIEW_ID } from '@/hooks/useHugCache/getHugCache.js';
 
 import { useHugActions } from '@/hooks/useHugActions';
 import { useDispatch } from 'react-redux';
@@ -12,7 +14,7 @@ function useAutoLogin() {
   const { handleLogin } = useHugActions();
   const dispatch = useDispatch();
 
-  return useCallback(async () => {
+  return useCallback(async ({ webviewId = null } = {}) => {
     try {
       const res = await window.electronAPI.jwtAutoLogin();
 
@@ -37,7 +39,27 @@ function useAutoLogin() {
         })
       );
 
-      await handleLogin();
+      const targetWebviewId = webviewId ?? HUG_AUTOMATION_WEBVIEW_ID;
+      const loginStarted = await handleLogin({ webviewId: targetWebviewId });
+
+      if (!loginStarted) {
+        return false;
+      }
+
+      const automationWebview = document.getElementById(targetWebviewId);
+      const loggedIn = automationWebview
+        ? await isHugLoggedIn(automationWebview)
+        : false;
+
+      if (!loggedIn) {
+        console.error('HUGログイン確認に失敗しました');
+        return false;
+      }
+
+      // 表示用 #hugview への反映は HugAuthSyncBridge に任せる。
+      // 同一sessionのCookieを共有し、裏WebViewのログイン成功を検知した時だけ
+      // 未ログイン側の表示用WebViewがreloadされる。
+      return true;
     } catch (error) {
       dispatch(clearLaravelAuthentication());
 
@@ -56,15 +78,21 @@ export function StartupAutoLoginListener() {
   const handleAutoLogin = useAutoLogin();
 
   useEffect(() => {
+    const handleStartupAutoLogin = (event) => {
+      handleAutoLogin({
+        webviewId: event?.detail?.webviewId ?? HUG_AUTOMATION_WEBVIEW_ID,
+      });
+    };
+
     document.addEventListener(
       'hug-startup-auto-login',
-      handleAutoLogin
+      handleStartupAutoLogin
     );
 
     return () => {
       document.removeEventListener(
         'hug-startup-auto-login',
-        handleAutoLogin
+        handleStartupAutoLogin
       );
     };
   }, [handleAutoLogin]);
@@ -79,7 +107,11 @@ export default function AutoLoginButton({ className = '' }) {
     <button
       id="loginBtn"
       type="button"
-      onClick={handleAutoLogin}
+      onClick={() =>
+        handleAutoLogin({
+          webviewId: HUG_AUTOMATION_WEBVIEW_ID,
+        })
+      }
       className={`flex items-center justify-center gap-2 ${className}`}
       aria-label="自動ログイン"
     >

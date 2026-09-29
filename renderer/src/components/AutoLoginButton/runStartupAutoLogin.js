@@ -1,4 +1,5 @@
 import { isHugLoggedIn } from '@/hooks/useHugCache/isHugLoggedIn.js'
+import { HUG_AUTOMATION_WEBVIEW_ID } from '@/hooks/useHugCache/getHugCache.js'
 
 function waitForElement(id, timeout = 15000) {
   const currentElement = document.getElementById(id)
@@ -32,10 +33,17 @@ export async function runStartupAutoLogin() {
 
   if (!hasCredentials) return
 
-  const webview = await waitForElement('hugview')
+  // 起動時ログインは表示用 #hugview ではなく、裏の常駐WebViewを対象にする。
+  const webview = await waitForElement(HUG_AUTOMATION_WEBVIEW_ID)
   if (await isHugLoggedIn(webview)) return
 
-  document.dispatchEvent(new CustomEvent('hug-startup-auto-login'))
+  document.dispatchEvent(
+    new CustomEvent('hug-startup-auto-login', {
+      detail: {
+        webviewId: HUG_AUTOMATION_WEBVIEW_ID,
+      },
+    })
+  )
 }
 
 export default runStartupAutoLogin
