@@ -135,7 +135,7 @@ export default function SettingsModal({
     }
 
     setActiveTab(DEFAULT_TAB_ID)
-  }, [isOpen])
+  }, [isOpen, auth.user, roleId])
 
   /*
    * ESCキーで閉じる。
