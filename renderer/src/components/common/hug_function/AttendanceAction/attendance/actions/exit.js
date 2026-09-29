@@ -11,7 +11,13 @@ import {
   MailDialogCancelledError,
 } from "../perform/performLeaveAction.js";
 import { runAttendanceUpdate } from "../update/runAttendanceUpdate.js";
+import { fetchAttendanceRowByChildId } from "../fetch/fetchAttendanceListInWebview.js";
 import store from "@/store/store.js";
+import { getHugWebviewForCache } from "@/hooks/useHugCache/getHugCache.js";
+import {
+  clickHugMailDialogChoice,
+  cancelHugMailDialog,
+} from "../update/nativeDelegateInWebview.js";
 
 /**
  * @param {string} column6Html
@@ -29,52 +35,120 @@ import store from "@/store/store.js";
  *   skipRefresh?: boolean,
  *   mailFlg?: number,
  *   mail_flg?: number,
- *   skipMailPrompt?: boolean,
  * }} [opts]
  */
 export async function clickExitButton(column6Html, targetChildrenId, opts = {}) {
   try {
+
+    // HUG側の本物のメール通知モーダルが開いた後の操作。
+    // RendererではReact MailNotificationModalだけを表示し、
+    // 選択結果はWebView内 .send_mail_button の実DOM clickへ委譲する。
+    if (opts.mailDialogAction === "select") {
+      const webview = await getHugWebviewForCache();
+      const choice = Number(opts.mailDialogChoice) === 1 ? 1 : 0;
+      const result = await clickHugMailDialogChoice(webview, choice);
+
+      console.log("[Attendance MailDialog] Renderer選択をHUGへ反映", {
+        action: "退室",
+        choice,
+        result,
+      });
+
+      if (opts.dispatch && !opts.skipRefresh) {
+        await runAttendanceUpdate({
+          facilityId: opts.facilityId || store.getState().appState?.FACILITY_ID || "1",
+          dateStr: opts.dateStr || store.getState().appState?.CURRENT_YMD,
+          dispatch: opts.dispatch,
+          updateAppState: opts.updateAppState,
+        });
+      }
+
+      return { success: true, ...result, mailDialogCompleted: true };
+    }
+
+    if (opts.mailDialogAction === "cancel") {
+      const webview = await getHugWebviewForCache();
+      const result = await cancelHugMailDialog(webview);
+      console.log("[Attendance MailDialog] RendererキャンセルをHUGへ反映", {
+        action: "退室",
+        result,
+      });
+      return { success: true, cancelled: true, ...result };
+    }
+
     const state = store.getState().appState;
     const facilityId = opts.facilityId || state?.FACILITY_ID || "1";
     const dateStr =
       opts.dateStr || state?.CURRENT_YMD || new Date().toISOString().slice(0, 10);
 
-    const hasRendererMailDecision = opts.skipMailPrompt === true;
+    console.log("[clickExitButton] 退室処理開始", {
+      targetChildrenId,
+      facilityId,
+      dateStr,
+      column6Html,
+      opts,
+    });
 
-    let item;
-    let resolvedWebview = null;
+    const resolved = await resolveAttendanceRowItem({
+      facilityId,
+      dateStr,
+      children_id: targetChildrenId,
+      children_name: opts.children_name,
+      column5: opts.enterTime || opts.column5,
+      column5Html: opts.column5Html,
+      column6: opts.column6,
+      column6Html,
+    });
 
-    if (hasRendererMailDecision) {
-      // React renderer モーダルで通知有無を決定済み。
-      // webview の HUG メールダイアログを経由しない。
-      item = buildRowItemFromColumns({
-        children_id: targetChildrenId,
-        children_name: opts.children_name,
-        column5: opts.enterTime || opts.column5,
-        column5Html: opts.column5Html,
-        column6: opts.column6,
-        column6Html,
-        dateStr,
-      });
-    } else {
-      const resolved = await resolveAttendanceRowItem({
+    if (!resolved.ok || !resolved.item) {
+      throw new Error(resolved.error || "出席行の解決に失敗しました");
+    }
+
+    let item = resolved.item;
+    let resolvedWebview = resolved.webview || null;
+
+    // Renderer側のメール選択後は column6Html が渡らない場合がある。
+    // r_id が空なら HUG の最新 attendance.php を取得し、
+    // 実際の sendLeaveMail(...) onclick の第1引数から復元する。
+    if (item && !item.r_id) {
+      console.warn(
+        "[clickExitButton] r_id 未取得。HUG本体のonclickから再取得します",
+        { targetChildrenId, facilityId, dateStr, item }
+      );
+
+      const fetched = await fetchAttendanceRowByChildId({
         facilityId,
         dateStr,
-        children_id: targetChildrenId,
-        children_name: opts.children_name,
-        column5: opts.enterTime || opts.column5,
-        column5Html: opts.column5Html,
-        column6: opts.column6,
-        column6Html,
+        childId: targetChildrenId,
       });
 
-      if (!resolved.ok || !resolved.item) {
-        throw new Error(resolved.error || "出席行の解決に失敗しました");
-      }
+      console.log("[clickExitButton] onclick再取得結果", {
+        ok: fetched?.ok,
+        error: fetched?.error,
+        fetchedItem: fetched?.item,
+        leaveOnclick: fetched?.item?.leaveOnclick,
+        extractedRId: fetched?.item?.r_id,
+      });
 
-      item = resolved.item;
-      resolvedWebview = resolved.webview || null;
+      if (fetched?.ok && fetched?.item) {
+        item = {
+          ...item,
+          ...fetched.item,
+          c_id: String(fetched.item.c_id || item.c_id || targetChildrenId),
+          r_id: String(fetched.item.r_id || item.r_id || ""),
+          leaveOnclick: fetched.item.leaveOnclick || item.leaveOnclick || "",
+        };
+        resolvedWebview = fetched.webview || resolvedWebview;
+      }
     }
+
+    console.log("[clickExitButton] 解決した退室対象 item", {
+      item,
+      resolvedWebview: Boolean(resolvedWebview),
+      r_id: item?.r_id,
+      c_id: item?.c_id,
+      leaveOnclick: item?.leaveOnclick,
+    });
 
     if (!item) {
       throw new Error("退室対象データを作成できませんでした");
@@ -96,10 +170,13 @@ export async function clickExitButton(column6Html, targetChildrenId, opts = {}) 
       webview: resolvedWebview,
       mailFlg: requestedMailFlg,
       mail_flg: requestedMailFlg,
-      skipMailPrompt: hasRendererMailDecision,
     });
 
-    if (opts.dispatch && !opts.skipRefresh) {
+    const waitingForMailDialog = Boolean(
+      result?.mailDialogDetected || result?.mailDialog?.detected
+    );
+
+    if (!waitingForMailDialog && opts.dispatch && !opts.skipRefresh) {
       await runAttendanceUpdate({
         facilityId,
         dateStr,

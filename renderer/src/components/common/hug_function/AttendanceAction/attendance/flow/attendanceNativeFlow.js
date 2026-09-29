@@ -300,15 +300,17 @@ function validateNativeRule(flow, rule, action) {
       "",
   ).trim();
 
-  if (executor !== "native-onclick") {
+  // 実行は常にWebView内の実DOMボタン click()。
+  // DB移行中の旧 native-onclick 定義も同じDOM click経路へ読み替える。
+  if (!["dom-click", "native-onclick"].includes(executor)) {
     throw new Error(
-      `${flow.flow_key} は native-onclick executor ではありません: ${executor || "未設定"}`,
+      `${flow.flow_key} は dom-click executor ではありません: ${executor || "未設定"}`,
     );
   }
 
-  if (rule?.action_type && rule.action_type !== "execute-function") {
+  if (rule?.action_type && !["click", "execute-function"].includes(rule.action_type)) {
     throw new Error(
-      `${rule.rule_key} の action_type が execute-function ではありません`,
+      `${rule.rule_key} の action_type が click ではありません: ${rule.action_type}`,
     );
   }
 
@@ -332,7 +334,7 @@ function validateNativeRule(flow, rule, action) {
 }
 
 /**
- * DBのWebAutomation Flow/Ruleを実行時に取得し、HUG本体のnative onclickを実行する。
+ * DBのWebAutomation Flow/Ruleを実行時に取得し、HUG本体WebView上の実ボタンをDOM clickする。
  */
 export async function executeAttendanceNativeFlow(
   flowKey,
@@ -434,7 +436,7 @@ export async function executeAttendanceNativeFlow(
         duration_ms: durationMs,
         result_json: {
           success: true,
-          mode: "web-automation-native-onclick",
+          mode: "web-automation-dom-click",
           mailFlg,
           statusMessage: result?.statusMessage ?? null,
           result,
@@ -453,7 +455,7 @@ export async function executeAttendanceNativeFlow(
     return {
       ...result,
       success: true,
-      mode: "web-automation-native-onclick",
+      mode: "web-automation-dom-click",
       flowKey: flow.flow_key,
       ruleKey: rule.rule_key,
       mail_flg: mailFlg,

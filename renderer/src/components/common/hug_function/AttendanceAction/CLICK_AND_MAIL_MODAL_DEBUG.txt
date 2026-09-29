@@ -1,0 +1,21 @@
+変更内容（2026-09-29）
+
+1. Rendererの入室/退室ボタン押下時、Renderer側メール確認モーダルは開かない。
+2. HUG WebView内の実際の入室/退室buttonを検索し、button.click() を実行する。
+3. sendEnterMail / sendLeaveMail をRendererから直接呼び出さない。
+4. button.click() 後、HUG側 #addtend_dialog_mail / .ui-dialog の表示を最大3秒監視する。
+5. メール通知モーダルを検知した場合、結果に以下を含める。
+   - mailDialog.detected = true
+   - mailDialog.dialogId
+   - mailDialog.buttons[] (text / data-send_mail / disabled / className)
+   - mailDialog.detectedAfterMs
+6. HUG側メール通知モーダル内のボタンは自動クリックしない。モーダルはWebView側に残す。
+
+主なConsoleログ:
+[EnterButton] renderer click
+[LeaveButton] renderer click
+[Attendance DOM Click][renderer] executeJavaScript開始
+[Attendance DOM Click] WebView内の実ボタンをclickします
+[Attendance DOM Click] button.click() 完了
+[Attendance DOM Click] HUGメール通知モーダル検知
+[Attendance DOM Click][renderer] HUGメールモーダルを検知

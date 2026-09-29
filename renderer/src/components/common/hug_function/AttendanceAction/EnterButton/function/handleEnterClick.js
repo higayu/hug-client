@@ -2,8 +2,9 @@ export async function handleEnterClick({
   onEnter,
   childId,
   childName,
+  recordId = '',
+  rowSelector = '',
   dateStr,
-  mailFlg = null,
 }) {
   if (typeof onEnter !== 'function') {
     console.warn('[EnterButton] onEnterが設定されていません')
@@ -11,35 +12,40 @@ export async function handleEnterClick({
   }
 
   try {
-    console.log('[EnterButton] HUG本体の入室onclick実行開始:', {
-      childId,
-      childName,
-      dateStr,
-      mailFlg,
-    })
-
-    const result = await onEnter({
+    const payload = {
       nativeOnclick: true,
-      mailFlg,
-      mail_flg: mailFlg,
-      skipMailPrompt: mailFlg === 0 || mailFlg === 1,
-    })
+      domClick: true,
+      recordId,
+      r_id: recordId,
+      rowSelector,
+    }
 
-    console.log('[EnterButton] HUG本体の入室onclick実行結果:', {
+    console.log('[EnterButton] onEnter呼び出し（DOM click方式）', {
       childId,
       childName,
       dateStr,
-      mailFlg,
+      payload,
+    })
+
+    const result = await onEnter(payload)
+
+    console.log('[EnterButton] HUG入室ボタン click 実行結果', {
+      childId,
+      childName,
+      recordId,
+      rowSelector,
       result,
+      mailDialogDetected: Boolean(result?.mailDialog?.detected || result?.mailDialogResult?.detected),
     })
 
     return result
   } catch (error) {
-    console.error('[EnterButton] 入室処理に失敗しました:', {
+    console.error('[EnterButton] 入室DOM click処理に失敗しました', {
       childId,
       childName,
+      recordId,
+      rowSelector,
       dateStr,
-      mailFlg,
       error,
     })
     return undefined

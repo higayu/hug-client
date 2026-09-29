@@ -54,7 +54,19 @@ export default function AttendancePostButton({
       disabled={disabled || loading}
       title={title}
       aria-label={ariaLabel}
-      onClick={onClick}
+      onClick={(event) => {
+        console.log('[AttendancePostButton] click', {
+          action,
+          label,
+          hasMail,
+          disabled,
+          loading,
+          title,
+          nativeEventType: event?.nativeEvent?.type,
+        })
+
+        return onClick?.(event)
+      }}
     >
       {hasMail ? (
         <span className="hug-btn-label-with-mail">

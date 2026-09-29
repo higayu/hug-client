@@ -38,6 +38,13 @@ function extractRIdFromRowClass(html) {
   return m ? m[1] : "";
 }
 
+function extractRIdFromAttendanceOnclick(onclick) {
+  const m = String(onclick || "").match(
+    /send(?:Enter|Leave)Mail\s*\(\s*['"]?([^'",)\s]+)['"]?/i
+  );
+  return m ? String(m[1]).trim() : "";
+}
+
 /**
  * 列データのみから item を組み立て（一覧取得失敗時のフォールバック）
  */
@@ -79,18 +86,52 @@ export function buildRowItemFromColumns({
     enterTextNorm.includes("欠席") && !hasEnterBtn;
 
   let leaveIsMail = null;
+  let leaveArgs = null;
   if (leaveOnclick) {
     try {
-      leaveIsMail = argsFromLeaveButton(leaveOnclick).is_mail;
-    } catch {
-      /* ignore */
+      leaveArgs = argsFromLeaveButton(leaveOnclick);
+      leaveIsMail = leaveArgs.is_mail;
+
+      // 退室済み/退室ボタン表示時は column5Html 側に r_id を持たないケースがある。
+      // 実際の HUG 側 onclick: sendLeaveMail(r_id, ...) の第1引数を優先して補完する。
+      if (!r_id && leaveArgs.r_id) {
+        r_id = String(leaveArgs.r_id).trim();
+      }
+    } catch (error) {
+      console.warn("[attendanceRowItem] sendLeaveMail onclick の解析に失敗", {
+        children_id,
+        children_name,
+        leaveOnclick,
+        error,
+      });
     }
   }
+
+  const rIdFromLeaveOnclick = extractRIdFromAttendanceOnclick(leaveOnclick);
+  const rIdFromEnterOnclick = extractRIdFromAttendanceOnclick(enterOnclick);
+  const resolvedRId =
+    r_id ||
+    rIdFromLeaveOnclick ||
+    rIdFromEnterOnclick ||
+    extractRIdFromRowClass(column5Html);
+
+  console.log("[attendanceRowItem] buildRowItemFromColumns", {
+    children_id,
+    children_name,
+    resolvedRId,
+    rIdFromLeaveOnclick,
+    rIdFromEnterOnclick,
+    enterOnclick,
+    leaveOnclick,
+    leaveArgs,
+    column5,
+    column6,
+  });
 
   return {
     c_id: String(children_id),
     name: children_name || "",
-    r_id: r_id || extractRIdFromRowClass(column5Html),
+    r_id: resolvedRId,
     enterOnclick,
     leaveOnclick,
     enterTime,

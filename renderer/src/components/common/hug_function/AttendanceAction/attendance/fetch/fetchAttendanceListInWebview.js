@@ -32,9 +32,13 @@ export async function fetchAttendanceListInWebview(webview, opts) {
           .replace(/\\s+/g, " ")
           .trim();
 
-      const extractRecordId = (onclick) => {
-        const match = String(onclick || "").match(/[?&]id=(\\d+)/);
-        return match ? match[1] : null;
+      // HUG本体の入退室ボタン onclick から r_id を取得する。
+      // 例: sendLeaveMail(48965,1,111,3,4,0);
+      const extractRecordIdFromAttendanceOnclick = (onclick) => {
+        const match = String(onclick || "").match(
+          /send(?:Enter|Leave)Mail\\s*\\(\\s*[\'"]?([^\'",)\\s]+)[\'"]?/i
+        );
+        return match ? String(match[1]).trim() : "";
       };
 
       const RE_SEND_ENTER_IS_MAIL =
@@ -116,7 +120,7 @@ export async function fetchAttendanceListInWebview(webview, opts) {
           const c_id = match ? match[1] : "";
           const name = link ? normalizeText(link) : "";
           const ridMatch = tr.className.match(/children(\\d+)/);
-          const r_id = ridMatch ? ridMatch[1] : "";
+          const rIdFromRowClass = ridMatch ? ridMatch[1] : "";
 
           const enterTd = tr.querySelector("td.enter");
           const leaveTd = tr.querySelector("td.leave");
@@ -131,6 +135,28 @@ export async function fetchAttendanceListInWebview(webview, opts) {
             "button[onclick*='sendLeaveMail']"
           );
           const leaveOnclick = leaveBtn?.getAttribute("onclick") ?? "";
+
+          // 退室ボタンの onclick 第1引数を最優先で r_id として採用する。
+          const rIdFromLeaveOnclick =
+            extractRecordIdFromAttendanceOnclick(leaveOnclick);
+          const rIdFromEnterOnclick =
+            extractRecordIdFromAttendanceOnclick(enterOnclick);
+          const r_id =
+            rIdFromLeaveOnclick ||
+            rIdFromEnterOnclick ||
+            rIdFromRowClass ||
+            "";
+
+          console.log("[HUG Attendance] r_id resolve", {
+            c_id,
+            name,
+            r_id,
+            rIdFromLeaveOnclick,
+            rIdFromEnterOnclick,
+            rIdFromRowClass,
+            leaveOnclick,
+            enterOnclick
+          });
 
           const { isAbsenceStatus, absenceLabel } =
             extractAbsenceFromEnterCell(enterTd);

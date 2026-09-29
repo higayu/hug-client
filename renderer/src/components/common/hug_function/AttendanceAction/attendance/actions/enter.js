@@ -16,6 +16,11 @@ import {
 } from "../perform/performEnterAction.js";
 import { runAttendanceUpdate } from "../update/runAttendanceUpdate.js";
 import store from "@/store/store.js";
+import { getHugWebviewForCache } from "@/hooks/useHugCache/getHugCache.js";
+import {
+  clickHugMailDialogChoice,
+  cancelHugMailDialog,
+} from "../update/nativeDelegateInWebview.js";
 
 /**
  * @param {string} column5Html
@@ -32,53 +37,69 @@ import store from "@/store/store.js";
  *   skipRefresh?: boolean,
  *   mailFlg?: number,
  *   mail_flg?: number,
- *   skipMailPrompt?: boolean,
  * }} [opts]
  */
 export async function clickEnterButton(column5Html, targetChildrenId, opts = {}) {
   try {
+
+    // HUG側の本物のメール通知モーダルが開いた後の操作。
+    // RendererではReact MailNotificationModalだけを表示し、
+    // 選択結果はWebView内 .send_mail_button の実DOM clickへ委譲する。
+    if (opts.mailDialogAction === "select") {
+      const webview = await getHugWebviewForCache();
+      const choice = Number(opts.mailDialogChoice) === 1 ? 1 : 0;
+      const result = await clickHugMailDialogChoice(webview, choice);
+
+      console.log("[Attendance MailDialog] Renderer選択をHUGへ反映", {
+        action: "入室",
+        choice,
+        result,
+      });
+
+      if (opts.dispatch && !opts.skipRefresh) {
+        await runAttendanceUpdate({
+          facilityId: opts.facilityId || store.getState().appState?.FACILITY_ID || "1",
+          dateStr: opts.dateStr || store.getState().appState?.CURRENT_YMD,
+          dispatch: opts.dispatch,
+          updateAppState: opts.updateAppState,
+        });
+      }
+
+      return { success: true, ...result, mailDialogCompleted: true };
+    }
+
+    if (opts.mailDialogAction === "cancel") {
+      const webview = await getHugWebviewForCache();
+      const result = await cancelHugMailDialog(webview);
+      console.log("[Attendance MailDialog] RendererキャンセルをHUGへ反映", {
+        action: "入室",
+        result,
+      });
+      return { success: true, cancelled: true, ...result };
+    }
+
     const state = store.getState().appState;
     const facilityId = opts.facilityId || state?.FACILITY_ID || "1";
     const dateStr =
       opts.dateStr || state?.CURRENT_YMD || new Date().toISOString().slice(0, 10);
 
-    const hasRendererMailDecision = opts.skipMailPrompt === true;
+    const resolved = await resolveAttendanceRowItem({
+      facilityId,
+      dateStr,
+      children_id: targetChildrenId,
+      children_name: opts.children_name,
+      column5: opts.column5,
+      column5Html,
+      column6: opts.column6,
+      column6Html: opts.column6Html,
+    });
 
-    let item;
-    let resolvedWebview = null;
-
-    if (hasRendererMailDecision) {
-      // renderer モーダルで既に通知有無を決定済み。
-      // ここでは webview に触れず、手元の列 HTML だけで item を作る。
-      item = buildRowItemFromColumns({
-        children_id: targetChildrenId,
-        children_name: opts.children_name,
-        column5: opts.column5,
-        column5Html,
-        column6: opts.column6,
-        column6Html: opts.column6Html,
-        dateStr,
-      });
-    } else {
-      // renderer 以外から呼ばれた場合の互換ルート。
-      const resolved = await resolveAttendanceRowItem({
-        facilityId,
-        dateStr,
-        children_id: targetChildrenId,
-        children_name: opts.children_name,
-        column5: opts.column5,
-        column5Html,
-        column6: opts.column6,
-        column6Html: opts.column6Html,
-      });
-
-      if (!resolved.ok || !resolved.item) {
-        throw new Error(resolved.error || "出席行の解決に失敗しました");
-      }
-
-      item = resolved.item;
-      resolvedWebview = resolved.webview || null;
+    if (!resolved.ok || !resolved.item) {
+      throw new Error(resolved.error || "出席行の解決に失敗しました");
     }
+
+    const item = resolved.item;
+    const resolvedWebview = resolved.webview || null;
 
     if (!item) {
       throw new Error("入室対象データを作成できませんでした");
@@ -100,10 +121,11 @@ export async function clickEnterButton(column5Html, targetChildrenId, opts = {})
       webview: resolvedWebview,
       mailFlg: requestedMailFlg,
       mail_flg: requestedMailFlg,
-      skipMailPrompt: hasRendererMailDecision,
     });
 
-    if (result.mode !== "native" && opts.dispatch && !opts.skipRefresh) {
+    const waitingForMailDialog = Boolean(result?.mailDialogDetected || result?.mailDialog?.detected);
+
+    if (!waitingForMailDialog && result.mode !== "native" && opts.dispatch && !opts.skipRefresh) {
       await runAttendanceUpdate({
         facilityId,
         dateStr,
