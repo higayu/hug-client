@@ -64,10 +64,6 @@ export default function PersonalRecordButton({
           : '児童を選択してください'
       }
       className={`
-        bg-[#00a405] text-white
-        cursor-pointer transition-all whitespace-nowrap
-        hover:bg-[#006305] hover:scale-105
-        active:bg-[#005004] active:scale-[0.97]
         disabled:grayscale disabled:opacity-50
         disabled:cursor-not-allowed
         disabled:hover:scale-100

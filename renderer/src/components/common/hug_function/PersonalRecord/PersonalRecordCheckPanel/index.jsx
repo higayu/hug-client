@@ -224,7 +224,7 @@ export default function PersonalRecordCheckPanel({
                 currentYmd={currentYmd}
                 disabled={!selectedChildId}
                 label="個人記録"
-                className="flex h-8 shrink-0 items-center justify-center rounded px-3 text-xs font-bold whitespace-nowrap"
+                className="text-white bg-[#00a405] cursor-pointer transition-all whitespace-nowrap hover:bg-[#006305] hover:scale-105 active:bg-[#005004] active:scale-[0.97] flex h-8 shrink-0 items-center justify-center rounded px-3 text-xs font-bold"
               />
             </div>,
             document.body
@@ -253,6 +253,7 @@ export default function PersonalRecordCheckPanel({
             disabled={!selectedChildId}
             label="個人記録"
             className={[
+              "text-white bg-[#00a405] cursor-pointer transition-all whitespace-nowrap hover:bg-[#006305] hover:scale-105 active:bg-[#005004] active:scale-[0.97]",
               "flex h-full items-center justify-center rounded-none border-0 px-2",
               "text-xs font-bold whitespace-nowrap",
               "focus:outline-none focus:ring-1 focus:ring-inset focus:ring-green-400",
