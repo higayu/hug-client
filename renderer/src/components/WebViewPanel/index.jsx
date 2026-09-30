@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { useAppState } from '@/AppStateContext'
 
@@ -29,6 +29,9 @@ function isDebugEnabled(value) {
 export default function WebViewPanel({ preloadPath }) {
   const { appState } = useAppState()
 
+  const hugWebviewRef = useRef(null)
+  const automationWebviewRef = useRef(null)
+
   const debugEnabled = isDebugEnabled(
     appState?.DEBUG_FLG,
   )
@@ -46,6 +49,31 @@ export default function WebViewPanel({ preloadPath }) {
   const showAutomation =
     debugEnabled &&
     activeTab === WEBVIEW_TABS.AUTOMATION
+
+  /**
+   * 現在表示中のWebViewのDevToolsを開く。
+   */
+  const handleOpenDevTools = () => {
+    const webview = showAutomation
+      ? automationWebviewRef.current
+      : hugWebviewRef.current
+
+    if (!webview) {
+      console.warn(
+        '[WebViewPanel] WebViewがまだ準備されていないためDevToolsを開けません。',
+      )
+      return
+    }
+
+    if (typeof webview.openDevTools !== 'function') {
+      console.error(
+        '[WebViewPanel] openDevTools() が利用できません。',
+      )
+      return
+    }
+
+    webview.openDevTools()
+  }
 
   return (
     <section className="flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden bg-white">
@@ -81,7 +109,20 @@ export default function WebViewPanel({ preloadPath }) {
             Automation WebView
           </button>
 
-          <span className="ml-auto text-[11px] font-medium text-red-600">
+          <button
+            type="button"
+            onClick={handleOpenDevTools}
+            className="ml-auto rounded bg-slate-700 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-slate-800"
+            title={
+              showAutomation
+                ? 'Automation WebView のDevToolsを開く'
+                : 'HUG WebView のDevToolsを開く'
+            }
+          >
+            DevTools
+          </button>
+
+          <span className="text-[11px] font-medium text-red-600">
             開発者モード
           </span>
         </div>
@@ -96,7 +137,10 @@ export default function WebViewPanel({ preloadPath }) {
               : 'invisible z-0 pointer-events-none',
           ].join(' ')}
         >
-          <HugWebview preloadPath={preloadPath} />
+          <HugWebview
+            ref={hugWebviewRef}
+            preloadPath={preloadPath}
+          />
         </div>
 
         <div
@@ -107,7 +151,10 @@ export default function WebViewPanel({ preloadPath }) {
               : 'invisible z-0 pointer-events-none',
           ].join(' ')}
         >
-          <HugAutomationWebview preloadPath={preloadPath} />
+          <HugAutomationWebview
+            ref={automationWebviewRef}
+            preloadPath={preloadPath}
+          />
         </div>
       </div>
     </section>
