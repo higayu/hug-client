@@ -13,7 +13,7 @@ import {
   runEnableTemporaryChatAfterLoad,
 } from "./enableTemporaryChatInWebview.js"
 
-const OPENAI_URL = "https://chat.openai.com/"
+const OPENAI_URL = "https://chatgpt.com/?temporary-chat=true"
 const TAB_LABEL = "OpenAI ChatGPT"
 
 export default function OpenAiTabButton() {

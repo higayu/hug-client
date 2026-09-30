@@ -7,7 +7,7 @@ const INITIAL_DELAY_MS = 1000
 const RETRY_INTERVAL_MS = 800
 const MAX_ATTEMPTS = 20
 
-export const isOpenAiChatUrl = (url = "") =>
+export const isOpenAiChatUrl = (url = "https://chatgpt.com/?temporary-chat=true") =>
   typeof url === "string" &&
   (url.includes("chat.openai.com") || url.includes("chatgpt.com"))
 
@@ -31,41 +31,6 @@ export const enableTemporaryChatInWebview = async (vw) => {
 
   if (!isOpenAiChatUrl(url)) {
     console.warn("❌ ChatGPT ドメインではない:", url)
-    return false
-  }
-
-  try {
-    return await vw.executeJavaScript(`
-      (() => {
-        const ON_LABEL = ${JSON.stringify(TEMP_CHAT_ON_ARIA)};
-        const OFF_LABEL = ${JSON.stringify(TEMP_CHAT_OFF_ARIA)};
-        const SELECTOR = ${JSON.stringify(TEMP_CHAT_BUTTON_SELECTOR)};
-
-        if (document.querySelector('button[aria-label="' + OFF_LABEL + '"]')) {
-          console.log('✅ 一時チャットは既にオン');
-          return true;
-        }
-
-        let btn = document.querySelector('button[aria-label="' + ON_LABEL + '"]');
-        if (!btn) btn = document.querySelector(SELECTOR);
-
-        if (!btn) {
-          const header = document.querySelector('#conversation-header-actions');
-          if (header) btn = header.querySelector('button');
-        }
-
-        if (!btn) {
-          console.warn('❌ 一時チャットボタンが見つかりません');
-          return false;
-        }
-
-        btn.click();
-        console.log('✅ 一時チャットをオンにクリック');
-        return true;
-      })();
-    `)
-  } catch (err) {
-    console.error("❌ 一時チャット有効化スクリプト失敗:", err)
     return false
   }
 }
