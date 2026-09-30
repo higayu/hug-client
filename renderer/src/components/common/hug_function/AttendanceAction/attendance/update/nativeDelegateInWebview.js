@@ -2,7 +2,7 @@
  * HUG本体WebView上の入退室ボタンそのものを button.click() で実行する。
  *
  * sendEnterMail / sendLeaveMail をRenderer側から直接呼ばない。
- * click後にHUG側の #addtend_dialog_mail が展開されたかを検知してRendererへ返す。
+ * HUG側ボタンをclickする前にMutationObserverを開始し、#addtend_dialog_mail の表示を検知したらRendererで選択済みの通知値を自動クリックする。
  */
 
 import { loadAttendanceDetailInWebview } from "../_shared/webview.js";
@@ -51,6 +51,7 @@ async function executeNativeOnclickInWebview(
   options = {}
 ) {
   const nativeConfig = options?.nativeConfig || {};
+  const normalizedMailFlg = Number(options?.mailFlg) === 1 ? 1 : 0;
   const { cellPrefix, functionName, selectorTemplate, label } =
     getKindConfig(kind, nativeConfig);
 
@@ -61,9 +62,7 @@ async function executeNativeOnclickInWebview(
       const functionName = ${JSON.stringify(functionName)};
       const selectorTemplate = ${JSON.stringify(selectorTemplate)};
       const label = ${JSON.stringify(label)};
-
-      const sleep = (ms) =>
-        new Promise((resolve) => setTimeout(resolve, ms));
+      const selectedSendMail = ${JSON.stringify(normalizedMailFlg)};
 
       const isVisible = (element) => {
         if (!element) return false;
@@ -78,57 +77,91 @@ async function executeNativeOnclickInWebview(
         );
       };
 
-      const detectMailDialog = async () => {
-        const startedAt = Date.now();
-        const timeoutMs = 3000;
+      /**
+       * HUG側メールモーダルの表示をMutationObserverで待ち、
+       * Rendererで選択済みの data-send_mail=1/0 を自動クリックする。
+       *
+       * #addtend_dialog_mail 自体が事前にDOMへ存在していて、
+       * jQuery UIがstyle/classだけ変更するケースも拾うため attributes も監視する。
+       */
+      const waitAndApplyMailChoice = () =>
+        new Promise((resolve) => {
+          const startedAt = Date.now();
+          const timeoutMs = 10000;
+          let finished = false;
+          let observer = null;
+          let timer = null;
 
-        while (Date.now() - startedAt < timeoutMs) {
-          const dialog = document.getElementById("addtend_dialog_mail");
-          const wrapper = dialog?.closest(".ui-dialog") || null;
-          const visibleTarget = wrapper || dialog;
+          const finish = (result) => {
+            if (finished) return;
+            finished = true;
+            if (observer) observer.disconnect();
+            if (timer) clearTimeout(timer);
+            resolve(result);
+          };
 
-          if (dialog && isVisible(visibleTarget)) {
-            const buttons = Array.from(
-              dialog.querySelectorAll('.send_mail_button')
-            ).map((button) => ({
-              text: (button.textContent || "").trim(),
-              sendMail: button.getAttribute("data-send_mail"),
-              disabled: Boolean(button.disabled),
-              className: button.className || "",
-            }));
+          const tryApply = () => {
+            const dialog = document.getElementById("addtend_dialog_mail");
+            if (!dialog) return false;
 
-            const result = {
+            const wrapper = dialog.closest(".ui-dialog");
+            const visibleTarget = wrapper || dialog;
+            if (!isVisible(visibleTarget)) return false;
+
+            const target = dialog.querySelector(
+              '.send_mail_button[data-send_mail="' + selectedSendMail + '"]'
+            );
+            if (!target || target.disabled) return false;
+
+            const info = {
               detected: true,
+              autoSelected: true,
+              sendMail: selectedSendMail,
+              text: (target.textContent || "").trim(),
               dialogId: dialog.id,
               wrapperClass: wrapper?.className || "",
-              buttons,
               detectedAfterMs: Date.now() - startedAt,
             };
 
             console.log(
-              "[Attendance DOM Click] HUGメール通知モーダル検知",
-              result
+              "[Attendance MutationObserver] HUGメールモーダル検知・自動選択",
+              info
             );
 
-            return result;
-          }
+            // HUG本来のクリックイベントを通す。
+            target.click();
+            finish(info);
+            return true;
+          };
 
-          await sleep(25);
-        }
+          observer = new MutationObserver(() => {
+            tryApply();
+          });
 
-        const result = {
-          detected: false,
-          reason: "hug-mail-dialog-not-opened",
-          waitedMs: Date.now() - startedAt,
-        };
+          observer.observe(document.body || document.documentElement, {
+            childList: true,
+            subtree: true,
+            attributes: true,
+            attributeFilter: ["style", "class", "aria-hidden"],
+          });
 
-        console.log(
-          "[Attendance DOM Click] HUGメール通知モーダル未検知",
-          result
-        );
+          // 既に表示済みのケースにも対応。
+          tryApply();
 
-        return result;
-      };
+          timer = setTimeout(() => {
+            const dialog = document.getElementById("addtend_dialog_mail");
+            const wrapper = dialog?.closest(".ui-dialog") || null;
+            finish({
+              detected: false,
+              autoSelected: false,
+              reason: "hug-mail-dialog-not-opened",
+              waitedMs: Date.now() - startedAt,
+              dialogExists: Boolean(dialog),
+              dialogVisible: Boolean(dialog && isVisible(wrapper || dialog)),
+              pageUrl: location.href,
+            });
+          }, timeoutMs);
+        });
 
       try {
         const cell = document.getElementById(cellId);
@@ -164,7 +197,6 @@ async function executeNativeOnclickInWebview(
         }
 
         const onclickCode = button.getAttribute("onclick") || "";
-
         const buttonInfo = {
           id: button.id || null,
           className: button.className || "",
@@ -174,40 +206,51 @@ async function executeNativeOnclickInWebview(
         };
 
         console.log(
-          "[Attendance DOM Click] WebView内の実ボタンをclickします",
+          "[Attendance DOM Click] MutationObserverを開始してからHUG実ボタンをclickします",
           {
             kind: ${JSON.stringify(kind)},
             rId,
+            selectedSendMail,
             resolvedSelector,
             buttonInfo,
             pageUrl: location.href,
           }
         );
 
-        // sendEnterMail/sendLeaveMailをRendererから直接呼び出さない。
-        // WebView内に存在するHUG本体の実ボタン自体をクリックする。
+        // 重要: HUGボタンを押す前に監視を開始する。
+        // sendEnterMail/sendLeaveMailが同期的にモーダルを開いても取りこぼさない。
+        const mailDialogPromise = waitAndApplyMailChoice();
+
+        // HUG本体の実ボタンをクリックして、本来のsendEnterMail/sendLeaveMailを発火。
         button.click();
 
-        console.log(
-          "[Attendance DOM Click] button.click() 完了",
-          {
+        const mailDialog = await mailDialogPromise;
+
+        if (!mailDialog?.detected) {
+          return {
+            success: false,
+            mode: "dom-button-click-mutation-observer",
             kind: ${JSON.stringify(kind)},
             rId,
+            buttonInfo,
+            mailDialog,
+            error:
+              "HUG側のメール通知モーダルを検知できませんでした。" +
+              " HUG本体の処理は開始されています。",
             pageUrl: location.href,
-          }
-        );
-
-        // click後にHUG側がメール通知モーダルを開く場合があるため検知する。
-        const mailDialog = await detectMailDialog();
+          };
+        }
 
         return {
           success: true,
-          mode: "dom-button-click",
+          mode: "dom-button-click-mutation-observer",
           kind: ${JSON.stringify(kind)},
           rId,
           buttonInfo,
           mailDialog,
-          mailDialogDetected: Boolean(mailDialog?.detected),
+          mailDialogDetected: true,
+          mailDialogAutoSelected: true,
+          selectedSendMail,
           pageUrl: location.href,
         };
       } catch (error) {
@@ -229,6 +272,7 @@ async function executeNativeOnclickInWebview(
     cellPrefix,
     selectorTemplate,
     functionName,
+    mailFlg: normalizedMailFlg,
   });
 
   const result = await webview.executeJavaScript(script);
@@ -240,14 +284,6 @@ async function executeNativeOnclickInWebview(
       result?.error ||
         `HUG本体の${label}ボタンクリックに失敗しました`
     );
-  }
-
-  if (result?.mailDialogDetected) {
-    console.log("[Attendance DOM Click][renderer] HUGメールモーダルを検知", {
-      kind,
-      rId: String(rId),
-      mailDialog: result.mailDialog,
-    });
   }
 
   return result;

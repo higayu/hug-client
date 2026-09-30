@@ -173,7 +173,8 @@ export async function clickExitButton(column6Html, targetChildrenId, opts = {}) 
     });
 
     const waitingForMailDialog = Boolean(
-      result?.mailDialogDetected || result?.mailDialog?.detected
+      (result?.mailDialogDetected || result?.mailDialog?.detected) &&
+      !result?.mailDialogAutoSelected
     );
 
     if (!waitingForMailDialog && opts.dispatch && !opts.skipRefresh) {

@@ -30,43 +30,27 @@ export default function EnterButton({
   const [mailModalOpen, setMailModalOpen] = useState(false)
   const [mailModalLoading, setMailModalLoading] = useState(false)
 
-  const executeEnter = useCallback(async () => {
-    console.log('[EnterButton] RendererからHUG入室ボタンのDOM clickを実行', {
+  const executeEnter = useCallback(async (mailFlg = 0) => {
+    console.log('[EnterButton] 入室処理を実行', {
       childId,
       childName,
       recordId,
       rowSelector,
       dateStr,
       hasMail,
+      mailFlg,
       hasOnEnter: typeof onEnter === 'function',
     })
 
-    const result = await handleEnterClick({
+    return handleEnterClick({
       onEnter,
       childId,
       childName,
       recordId,
       rowSelector,
       dateStr,
+      mailFlg,
     })
-
-    const mailDialogDetected = Boolean(
-      result?.mailDialogDetected ||
-      result?.mailDialog?.detected ||
-      result?.mailDialogResult?.detected,
-    )
-
-    console.log('[EnterButton] HUGメールモーダル検知判定', {
-      hasMail,
-      mailDialogDetected,
-      result,
-    })
-
-    if (hasMail && mailDialogDetected) {
-      setMailModalOpen(true)
-    }
-
-    return result
   }, [onEnter, childId, childName, recordId, rowSelector, dateStr, hasMail])
 
   const onClick = useCallback(() => {
@@ -81,29 +65,32 @@ export default function EnterButton({
       loading,
     })
 
-    return executeEnter()
+    // メール通知対象の場合はRenderer側モーダルを先に表示する。
+    // 選択後にHUG側の実ボタンをclickし、HUGモーダルをMutationObserverで検知して自動選択する。
+    if (hasMail) {
+      setMailModalOpen(true)
+      return undefined
+    }
+
+    return executeEnter(0)
   }, [executeEnter, childId, childName, recordId, rowSelector, dateStr, hasMail, disabled, loading])
 
   const handleMailSelect = useCallback(async (sendMail) => {
     if (typeof onEnter !== 'function') return
 
+    const mailFlg = Number(sendMail) === 1 ? 1 : 0
+
     setMailModalLoading(true)
     try {
-      console.log('[EnterButton] Rendererメール選択 → HUGモーダルDOM click', {
-        sendMail,
+      console.log('[EnterButton] Rendererメール選択 → HUG入室ボタン実行', {
+        mailFlg,
         childId,
         recordId,
       })
 
-      const result = await onEnter({
-        mailDialogAction: 'select',
-        mailDialogChoice: Number(sendMail) === 1 ? 1 : 0,
-        recordId,
-        r_id: recordId,
-        rowSelector,
-      })
+      const result = await executeEnter(mailFlg)
 
-      console.log('[EnterButton] HUGメール選択結果', result)
+      console.log('[EnterButton] 入室メール選択反映結果', result)
 
       if (result?.success !== false) {
         setMailModalOpen(false)
@@ -111,28 +98,12 @@ export default function EnterButton({
     } finally {
       setMailModalLoading(false)
     }
-  }, [onEnter, childId, recordId, rowSelector])
+  }, [onEnter, executeEnter, childId, recordId])
 
-  const handleMailCancel = useCallback(async () => {
-    if (typeof onEnter !== 'function') {
-      setMailModalOpen(false)
-      return
-    }
-
-    setMailModalLoading(true)
-    try {
-      console.log('[EnterButton] Rendererメール選択キャンセル → HUGモーダルを閉じる')
-      await onEnter({
-        mailDialogAction: 'cancel',
-        recordId,
-        r_id: recordId,
-        rowSelector,
-      })
-      setMailModalOpen(false)
-    } finally {
-      setMailModalLoading(false)
-    }
-  }, [onEnter, recordId, rowSelector])
+  const handleMailCancel = useCallback(() => {
+    // HUG側ボタンはまだ押していないため、Rendererモーダルを閉じるだけでよい。
+    setMailModalOpen(false)
+  }, [])
 
   const debugTitle = buildDebugTitle({
     title,

@@ -5,6 +5,7 @@ export async function handleLeaveClick({
   recordId = '',
   rowSelector = '',
   dateStr,
+  mailFlg = 0,
 }) {
   if (typeof onLeave !== 'function') {
     console.warn('[LeaveButton] onLeaveが設定されていません')
@@ -12,15 +13,17 @@ export async function handleLeaveClick({
   }
 
   try {
+    const normalizedMailFlg = Number(mailFlg) === 1 ? 1 : 0
     const payload = {
-      nativeOnclick: true,
-      domClick: true,
       recordId,
       r_id: recordId,
       rowSelector,
+      mailFlg: normalizedMailFlg,
+      mail_flg: normalizedMailFlg,
+      rendererMailResolved: true,
     }
 
-    console.log('[LeaveButton] onLeave呼び出し（DOM click方式）', {
+    console.log('[LeaveButton] onLeave呼び出し', {
       childId,
       childName,
       dateStr,
@@ -29,25 +32,26 @@ export async function handleLeaveClick({
 
     const result = await onLeave(payload)
 
-    console.log('[LeaveButton] HUG退室ボタン click 実行結果', {
+    console.log('[LeaveButton] 退室処理結果', {
       childId,
       childName,
       recordId,
       rowSelector,
+      mailFlg: normalizedMailFlg,
       result,
-      mailDialogDetected: Boolean(result?.mailDialog?.detected || result?.mailDialogResult?.detected),
     })
 
     return result
   } catch (error) {
-    console.error('[LeaveButton] 退室DOM click処理に失敗しました', {
+    console.error('[LeaveButton] 退室処理に失敗しました', {
       childId,
       childName,
       recordId,
       rowSelector,
       dateStr,
+      mailFlg,
       error,
     })
-    return undefined
+    return { success: false, error: error?.message || String(error) }
   }
 }

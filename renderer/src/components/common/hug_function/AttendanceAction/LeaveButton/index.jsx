@@ -30,43 +30,27 @@ export default function LeaveButton({
   const [mailModalOpen, setMailModalOpen] = useState(false)
   const [mailModalLoading, setMailModalLoading] = useState(false)
 
-  const executeLeave = useCallback(async () => {
-    console.log('[LeaveButton] RendererからHUG退室ボタンのDOM clickを実行', {
+  const executeLeave = useCallback(async (mailFlg = 0) => {
+    console.log('[LeaveButton] 退室処理を実行', {
       childId,
       childName,
       recordId,
       rowSelector,
       dateStr,
       hasMail,
+      mailFlg,
       hasOnLeave: typeof onLeave === 'function',
     })
 
-    const result = await handleLeaveClick({
+    return handleLeaveClick({
       onLeave,
       childId,
       childName,
       recordId,
       rowSelector,
       dateStr,
+      mailFlg,
     })
-
-    const mailDialogDetected = Boolean(
-      result?.mailDialogDetected ||
-      result?.mailDialog?.detected ||
-      result?.mailDialogResult?.detected,
-    )
-
-    console.log('[LeaveButton] HUGメールモーダル検知判定', {
-      hasMail,
-      mailDialogDetected,
-      result,
-    })
-
-    if (hasMail && mailDialogDetected) {
-      setMailModalOpen(true)
-    }
-
-    return result
   }, [onLeave, childId, childName, recordId, rowSelector, dateStr, hasMail])
 
   const onClick = useCallback(() => {
@@ -81,29 +65,32 @@ export default function LeaveButton({
       loading,
     })
 
-    return executeLeave()
+    // メール通知対象の場合はRenderer側モーダルを先に表示する。
+    // 選択後にHUG側の実ボタンをclickし、HUGモーダルをMutationObserverで検知して自動選択する。
+    if (hasMail) {
+      setMailModalOpen(true)
+      return undefined
+    }
+
+    return executeLeave(0)
   }, [executeLeave, childId, childName, recordId, rowSelector, dateStr, hasMail, disabled, loading])
 
   const handleMailSelect = useCallback(async (sendMail) => {
     if (typeof onLeave !== 'function') return
 
+    const mailFlg = Number(sendMail) === 1 ? 1 : 0
+
     setMailModalLoading(true)
     try {
-      console.log('[LeaveButton] Rendererメール選択 → HUGモーダルDOM click', {
-        sendMail,
+      console.log('[LeaveButton] Rendererメール選択 → HUG退室ボタン実行', {
+        mailFlg,
         childId,
         recordId,
       })
 
-      const result = await onLeave({
-        mailDialogAction: 'select',
-        mailDialogChoice: Number(sendMail) === 1 ? 1 : 0,
-        recordId,
-        r_id: recordId,
-        rowSelector,
-      })
+      const result = await executeLeave(mailFlg)
 
-      console.log('[LeaveButton] HUGメール選択結果', result)
+      console.log('[LeaveButton] 退室メール選択反映結果', result)
 
       if (result?.success !== false) {
         setMailModalOpen(false)
@@ -111,28 +98,12 @@ export default function LeaveButton({
     } finally {
       setMailModalLoading(false)
     }
-  }, [onLeave, childId, recordId, rowSelector])
+  }, [onLeave, executeLeave, childId, recordId])
 
-  const handleMailCancel = useCallback(async () => {
-    if (typeof onLeave !== 'function') {
-      setMailModalOpen(false)
-      return
-    }
-
-    setMailModalLoading(true)
-    try {
-      console.log('[LeaveButton] Rendererメール選択キャンセル → HUGモーダルを閉じる')
-      await onLeave({
-        mailDialogAction: 'cancel',
-        recordId,
-        r_id: recordId,
-        rowSelector,
-      })
-      setMailModalOpen(false)
-    } finally {
-      setMailModalLoading(false)
-    }
-  }, [onLeave, recordId, rowSelector])
+  const handleMailCancel = useCallback(() => {
+    // HUG側ボタンはまだ押していないため、Rendererモーダルを閉じるだけでよい。
+    setMailModalOpen(false)
+  }, [])
 
   const debugTitle = buildDebugTitle({
     title,

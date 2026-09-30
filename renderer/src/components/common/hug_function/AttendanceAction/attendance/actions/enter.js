@@ -123,7 +123,10 @@ export async function clickEnterButton(column5Html, targetChildrenId, opts = {})
       mail_flg: requestedMailFlg,
     });
 
-    const waitingForMailDialog = Boolean(result?.mailDialogDetected || result?.mailDialog?.detected);
+    const waitingForMailDialog = Boolean(
+      (result?.mailDialogDetected || result?.mailDialog?.detected) &&
+      !result?.mailDialogAutoSelected
+    );
 
     if (!waitingForMailDialog && result.mode !== "native" && opts.dispatch && !opts.skipRefresh) {
       await runAttendanceUpdate({
