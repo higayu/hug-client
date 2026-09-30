@@ -241,6 +241,102 @@ async function executeNativeOnclickInWebview(
           };
         }
 
+        // メール選択ボタンのclick()はHUG側Ajax処理の「開始」に過ぎない。
+        // ここで即successを返すと、Renderer側の利用者再取得がHUG更新完了より
+        // 先に走り、古い一覧を再取得してしまう。
+        // 対象セルから元の入室/退室ボタンが消えるまで待ち、HUG側の画面反映を
+        // 成功条件としてからRendererへsuccessを返す。
+        const waitForAttendanceActionCompletion = () =>
+          new Promise((resolve) => {
+            const startedAt = Date.now();
+            const timeoutMs = 12000;
+            let finished = false;
+            let observer = null;
+            let timer = null;
+
+            const finish = (result) => {
+              if (finished) return;
+              finished = true;
+              if (observer) observer.disconnect();
+              if (timer) clearTimeout(timer);
+              resolve(result);
+            };
+
+            const checkCompleted = () => {
+              const currentCell = document.getElementById(cellId);
+              if (!currentCell) return false;
+
+              const remainingButton = currentCell.querySelector(
+                "button[onclick*='" + functionName + "']"
+              );
+
+              // HUGの正常完了後は対象セルの入室/退室ボタンが時刻表示へ変わる。
+              if (!remainingButton) {
+                finish({
+                  completed: true,
+                  completedAfterMs: Date.now() - startedAt,
+                  cellId,
+                  cellText: (currentCell.textContent || "").trim(),
+                  pageUrl: location.href,
+                });
+                return true;
+              }
+
+              return false;
+            };
+
+            observer = new MutationObserver(() => {
+              checkCompleted();
+            });
+
+            observer.observe(document.body || document.documentElement, {
+              childList: true,
+              subtree: true,
+              characterData: true,
+              attributes: true,
+              attributeFilter: ["style", "class", "disabled"],
+            });
+
+            // Ajaxが非常に速く完了していた場合にも対応する。
+            checkCompleted();
+
+            timer = setTimeout(() => {
+              const currentCell = document.getElementById(cellId);
+              const remainingButton = currentCell?.querySelector(
+                "button[onclick*='" + functionName + "']"
+              );
+
+              finish({
+                completed: false,
+                reason: "attendance-action-completion-timeout",
+                waitedMs: Date.now() - startedAt,
+                cellId,
+                cellExists: Boolean(currentCell),
+                buttonStillExists: Boolean(remainingButton),
+                cellText: (currentCell?.textContent || "").trim(),
+                pageUrl: location.href,
+              });
+            }, timeoutMs);
+          });
+
+        const completion = await waitForAttendanceActionCompletion();
+
+        if (!completion?.completed) {
+          return {
+            success: false,
+            mode: "dom-button-click-mutation-observer",
+            kind: ${JSON.stringify(kind)},
+            rId,
+            buttonInfo,
+            mailDialog,
+            completion,
+            error:
+              "HUG側のメール選択は完了しましたが、" +
+              label + "処理の完了を確認できませんでした。",
+            pageUrl: location.href,
+          };
+        }
+
         return {
           success: true,
           mode: "dom-button-click-mutation-observer",
@@ -248,8 +344,10 @@ async function executeNativeOnclickInWebview(
           rId,
           buttonInfo,
           mailDialog,
+          completion,
           mailDialogDetected: true,
           mailDialogAutoSelected: true,
+          attendanceActionCompleted: true,
           selectedSendMail,
           pageUrl: location.href,
         };
