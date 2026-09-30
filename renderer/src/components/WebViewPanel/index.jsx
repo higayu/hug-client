@@ -91,7 +91,7 @@ export default function WebViewPanel({ preloadPath }) {
                 : 'text-slate-600 hover:bg-white/70',
             ].join(' ')}
           >
-            HUG WebView
+            HUG-WebView
           </button>
 
           <button
@@ -106,7 +106,7 @@ export default function WebViewPanel({ preloadPath }) {
                 : 'text-slate-600 hover:bg-white/70',
             ].join(' ')}
           >
-            Automation WebView
+            Automation
           </button>
 
           <button
@@ -123,7 +123,7 @@ export default function WebViewPanel({ preloadPath }) {
           </button>
 
           <span className="text-[11px] font-medium text-red-600">
-            開発者モード
+            Debug
           </span>
         </div>
       )}
