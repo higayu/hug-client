@@ -164,3 +164,23 @@ export const getPersonalRecordStatus = ({ row, personalRecordStatusMap }) => {
 
   return formatPersonalRecordStatus(status)
 }
+
+export const getMonthlySummaryWarningState = (item) => {
+  const attendanceCount = Number(item?.attendanceCount) || 0
+  const additionCount = Number(item?.additionCount) || 0
+  const recordCount = Number(item?.recordCount) || 0
+
+  const isAdditionWarning =
+    (attendanceCount >= 2 && additionCount < 2) ||
+    (attendanceCount === 1 && additionCount === 0)
+
+  const isRecordWarning =
+    (attendanceCount >= 2 && recordCount < 2) ||
+    (attendanceCount === 1 && recordCount === 0)
+
+  return {
+    isAdditionWarning,
+    isRecordWarning,
+    hasWarning: isAdditionWarning || isRecordWarning,
+  }
+}

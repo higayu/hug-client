@@ -1,5 +1,6 @@
 import {
   formatMonthDay,
+  getMonthlySummaryWarningState,
   getPersonalRecordStatus,
   getRecordStatus,
   hasProfessionalSupportAddition,
@@ -17,15 +18,8 @@ export default function MonthlySummaryRow({
   const recordCount = Number(item.recordCount) || 0
   const personalRecordCount = Number(item.personalRecordCount) || 0
 
-  const isAdditionWarning =
-    (attendanceCount >= 2 && additionCount < 2) ||
-    (attendanceCount === 1 && additionCount === 0)
-
-  const isRecordWarning =
-    (attendanceCount >= 2 && recordCount < 2) ||
-    (attendanceCount === 1 && recordCount === 0)
-
-  const hasWarning = isAdditionWarning || isRecordWarning
+  const { isAdditionWarning, isRecordWarning, hasWarning } =
+    getMonthlySummaryWarningState(item)
   const childRows = Array.isArray(item.rows) ? item.rows : []
 
   return (
