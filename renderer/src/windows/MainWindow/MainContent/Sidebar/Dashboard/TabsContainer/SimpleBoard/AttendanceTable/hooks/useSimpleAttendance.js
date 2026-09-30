@@ -7,7 +7,7 @@ import {
   performLeaveAction,
   EnterMailDialogCancelledError,
   LeaveMailDialogCancelledError,
-} from '@/components/common/hug_function/AttendanceAction';
+} from '@/components/common/hug_function';
 
 const normalizeText = (value) => String(value ?? '').replace(/\s+/g, ' ').trim();
 

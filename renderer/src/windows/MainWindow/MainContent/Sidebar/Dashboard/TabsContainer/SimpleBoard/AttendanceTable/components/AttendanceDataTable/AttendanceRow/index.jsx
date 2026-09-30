@@ -1,9 +1,7 @@
-import PersonalRecordButton from './PersonalRecordButton';
-import ProfessionalSupportCheckPanel from './ProfessionalSupportCheckPanel';
-import EditButton from './EditButton';
-import { useAppState } from '@/AppStateContext';
-
 import {
+  PersonalRecordButton,
+  ProfessionalSupportCheckPanel,
+  EditButton,
   EnterButton,
   LeaveButton,
   hasEnterMail,
@@ -11,11 +9,18 @@ import {
   buildEnterButtonTitle,
   buildLeaveButtonTitle,
   isAfternoonEnterBlocked,
-} from '@/components/common/hug_function/AttendanceAction';
+} from '@/components/common/hug_function';
 
+import { useAppState } from '@/AppStateContext';
 export default function AttendanceRow({ row, busy, onAction }) {
   const { CURRENT_YMD } = useAppState();
   const canOpenPersonalRecord = Boolean(row.childId);
+  const recordId = String(row.rId ?? '').startsWith('attendance-')
+    ? ''
+    : String(row.rId ?? '');
+  const rowSelector = recordId
+    ? `#releasetable > tr.children${recordId}`
+    : '';
 
   const enterHasMail = hasEnterMail(
     row.column5Html,
@@ -99,6 +104,8 @@ export default function AttendanceRow({ row, busy, onAction }) {
               <EnterButton
                 childId={row.childId}
                 childName={row.name}
+                recordId={recordId}
+                rowSelector={rowSelector}
                 dateStr={CURRENT_YMD}
                 hasMail={enterHasMail}
                 disabled={busy || afternoonBlocked}
@@ -116,6 +123,8 @@ export default function AttendanceRow({ row, busy, onAction }) {
               <LeaveButton
                 childId={row.childId}
                 childName={row.name}
+                recordId={recordId}
+                rowSelector={rowSelector}
                 dateStr={CURRENT_YMD}
                 hasMail={leaveHasMail}
                 disabled={busy}

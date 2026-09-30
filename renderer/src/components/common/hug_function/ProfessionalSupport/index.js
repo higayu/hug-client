@@ -1,2 +1,3 @@
-export { default as ProfessionalSupportSearch } from './ProfessionalSupportSearch';
-export { default as ProfessionalSupportCheckPanel2 } from './ProfessionalSupportCheckPanel2';
+export { default as ProfessionalSupportSearch } from './ProfessionalSupportSearch'
+export { default as ProfessionalSupportCheckPanel } from './ProfessionalSupportCheckPanel'
+export { default as ProfessionalSupportCheckPanel2 } from './ProfessionalSupportCheckPanel2'

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 
 import { useAppState } from "@/AppStateContext";
 import { useDispatch, useSelector } from "react-redux";
@@ -10,7 +10,7 @@ import {
 } from "@/store/slices/aiChatSlice.js";
 
 import ProfessionalPlan from "@/components/common/hug_function/ProfessionalPlan";
-import {ProfessionalSupportCheckPanel2} from "@/components/common/hug_function/ProfessionalSupport";
+import {ProfessionalSupportCheckPanel2} from "@/components/common/hug_function";
 
 import ChildNotesTabs from "../ChildNotesTabs";
 
@@ -31,7 +31,29 @@ export default function ProfessionalPrompt1({
   const {
     PROMPTS,
     CURRENT_YMD,
+    FACILITY_ID,
+    attendanceData,
   } = appState;
+
+  const attendanceItem = useMemo(() => {
+    const list = Array.isArray(attendanceData)
+      ? attendanceData
+      : Array.isArray(attendanceData?.data)
+        ? attendanceData.data
+        : [];
+
+    return list.find((item) =>
+      String(item?.children_id ?? item?.child_id ?? item?.id ?? '') ===
+      String(selectedChildId ?? '')
+    ) ?? null;
+  }, [attendanceData, selectedChildId]);
+
+  const attendanceEnterText = String(attendanceItem?.column5 ?? '').trim();
+  const attendanceLeaveText = String(attendanceItem?.column6 ?? '').trim();
+  const isAbsent = attendanceEnterText.startsWith('欠席');
+  const hasEntered = /^\d{1,2}:\d{2}$/.test(attendanceEnterText);
+  const hasExited = /^\d{1,2}:\d{2}$/.test(attendanceLeaveText);
+  const isUIEnabled = Boolean(selectedChildId && attendanceItem);
 
   const [text1, setText1] = useState("");
   const [dbNote, setDbNote] = useState("");
@@ -216,9 +238,15 @@ export default function ProfessionalPrompt1({
             <div className="w-[30%]">
               <ProfessionalSupportCheckPanel2
                 spaceId={spaceId}
+                facilityId={FACILITY_ID}
+                isAbsent={isAbsent}
+                hasEntered={hasEntered}
+                hasExited={hasExited}
+                isUIEnabled={isUIEnabled}
+                isStop={false}
+                loadingAction={null}
                 logTag="ProfessionalPrompt1"
                 className="w-full"
-                labelClassName="w-full"
               />
             </div>
           )}

@@ -1,3 +1,5 @@
-export { default as PersonalRecordCheckPanel} from './PersonalRecordCheckPanel';
-export { default as PersonalRecordLaravelLoader } from './PersonalRecordLaravelLoader';
-export { default as PersonalRecordManagerPanel2 } from './PersonalRecordManagerPanel2';
+export { default as PersonalRecordButton } from './PersonalRecordButton'
+export { openPersonalRecordTab } from './PersonalRecordButton/openPersonalRecordTab.js'
+export { default as PersonalRecordCheckPanel } from './PersonalRecordCheckPanel'
+export { default as PersonalRecordLaravelLoader } from './PersonalRecordLaravelLoader'
+export { default as PersonalRecordManagerPanel2 } from './PersonalRecordManagerPanel2'

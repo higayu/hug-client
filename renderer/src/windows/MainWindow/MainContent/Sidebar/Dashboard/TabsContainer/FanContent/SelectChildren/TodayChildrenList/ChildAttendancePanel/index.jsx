@@ -6,7 +6,7 @@ import {
   clickAbsenceButton,
   clickExitButton,
   isAttendanceDataLoaded,
-} from '@/components/common/hug_function/AttendanceAction'
+} from '@/components/common/hug_function'
 import { useToast } from '@/provider/ToastProvider/ToastContext'
 import AttendanceActionSection from './AttendanceActionSection'
 import CheckPanels from './CheckPanels'

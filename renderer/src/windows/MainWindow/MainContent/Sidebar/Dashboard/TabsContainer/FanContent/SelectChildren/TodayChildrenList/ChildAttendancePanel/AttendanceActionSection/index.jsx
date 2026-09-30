@@ -16,7 +16,20 @@ import {
   buildEnterButtonTitle,
   buildLeaveButtonTitle,
   isAfternoonEnterBlocked,
-} from "@/components/common/hug_function/AttendanceAction"
+} from "@/components/common/hug_function"
+
+
+const extractActionRecordId = (...htmlValues) => {
+  for (const html of htmlValues) {
+    const match = String(html ?? '').match(
+      /send(?:Enter|Leave)Mail\s*\(\s*['"]?([^'",)\s]+)/i,
+    )
+
+    if (match?.[1]) return String(match[1]).trim()
+  }
+
+  return ''
+}
 
 /**
  * 拡張入退室フォーム相当の入室・退室・欠席 UI
@@ -54,6 +67,11 @@ export default function AttendanceActionSection({
       childId,
       dateStr,
     )
+
+  const recordId = extractActionRecordId(column5Html, column6Html)
+  const rowSelector = recordId
+    ? `#releasetable > tr.children${recordId}`
+    : ''
 
   const enterHasMail = useMemo(
     () =>
@@ -292,6 +310,8 @@ export default function AttendanceActionSection({
               <LeaveButton
                 childId={childId}
                 childName={childName}
+                recordId={recordId}
+                rowSelector={rowSelector}
                 dateStr={dateStr}
                 hasMail={
                   hasLeaveMail(
@@ -345,6 +365,8 @@ export default function AttendanceActionSection({
           <EnterButton
             childId={childId}
             childName={childName}
+            recordId={recordId}
+            rowSelector={rowSelector}
             dateStr={dateStr}
             hasMail={enterHasMail}
             disabled={

@@ -1,5 +1,7 @@
-import { PersonalRecordCheckPanel } from '@/components/common/hug_function/PersonalRecord'
-import { ProfessionalSupportCheckPanel2 } from '@/components/common/hug_function/ProfessionalSupport'
+import {
+  PersonalRecordCheckPanel,
+  ProfessionalSupportCheckPanel2,
+} from '@/components/common/hug_function'
 
 export default function CheckPanels({
   spaceId,
