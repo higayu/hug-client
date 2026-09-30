@@ -67,6 +67,13 @@ export default function AttendanceRow({ row, busy, onAction }) {
       </td>
       <td className="border border-slate-300 p-3 text-center">{row.enterTime || '―'}</td>
       <td className="border border-slate-300 p-3 text-center">{row.leaveTime || '―'}</td>
+      <td className="border border-slate-300 p-3 text-center">
+        {row.enterTime ? (
+          <EditButton disabled={busy} />
+        ) : (
+          <span className="text-slate-400">―</span>
+        )}
+      </td>
       <td className="border border-slate-300 p-2 align-top">
         <ProfessionalSupportCheckPanel
           currentYmd={CURRENT_YMD}
@@ -84,13 +91,6 @@ export default function AttendanceRow({ row, busy, onAction }) {
           className="min-w-[220px]"
           labelClassName="border border-slate-100"
         />
-      </td>
-      <td className="border border-slate-300 p-3 text-center">
-        {row.enterTime ? (
-          <EditButton disabled={busy} />
-        ) : (
-          <span className="text-slate-400">―</span>
-        )}
       </td>
       <td className="border border-slate-300 p-3">
         <div className="child-memo-attendance-form flex flex-col items-center gap-1">

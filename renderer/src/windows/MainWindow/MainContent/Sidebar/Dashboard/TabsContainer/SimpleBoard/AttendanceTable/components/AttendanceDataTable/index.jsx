@@ -51,8 +51,8 @@ export default function AttendanceDataTable({
             <th className="border border-slate-300 p-3 text-left">児童名</th>
             <th className="border border-slate-300 p-3">入室</th>
             <th className="border border-slate-300 p-3">退室</th>
-            <th className="border border-slate-300 p-3">専門支援</th>
             <th className="border border-slate-300 p-3">編集</th>
+            <th className="border border-slate-300 p-3">専門支援</th>
             <th className="border border-slate-300 p-3">操作</th>
           </tr>
         </thead>
