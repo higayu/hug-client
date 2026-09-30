@@ -76,7 +76,10 @@ export default function WebViewPanel({ preloadPath }) {
   }
 
   return (
-    <section className="flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden bg-white">
+    <section
+      id="webview-panel"
+      className="flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden bg-white"
+    >
       {debugEnabled && (
         <div className="flex flex-none items-center gap-1 border-b border-slate-300 bg-slate-100 px-2 py-1">
           <button
@@ -128,7 +131,10 @@ export default function WebViewPanel({ preloadPath }) {
         </div>
       )}
 
-      <div className="relative h-full min-h-0 min-w-0 flex-1 overflow-hidden bg-white">
+      <div
+        id="webview-panel-content"
+        className="relative h-full min-h-0 min-w-0 flex-1 overflow-hidden bg-white"
+      >
         <div
           className={[
             'absolute inset-0',

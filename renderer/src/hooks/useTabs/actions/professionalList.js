@@ -15,11 +15,11 @@ export function addProfessionalSupportListAction(appState, space) {
     document.getElementById('tabs')
 
   const webviewContainer =
-    document.getElementById('webview-container')
+    document.getElementById('webview-panel-content')
 
   if (!tabsContainer || !webviewContainer) {
     console.error(
-      '❌ tabs または webview-container が見つかりません'
+      '❌ tabs または webview-panel-content が見つかりません'
     )
     return
   }

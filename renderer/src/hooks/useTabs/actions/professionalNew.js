@@ -10,10 +10,10 @@ export function addProfessionalSupportNewAction(appState, space) {
   }
 
   const tabsContainer = document.getElementById('tabs')
-  const webviewContainer = document.getElementById('webview-container')
+  const webviewContainer = document.getElementById('webview-panel-content')
 
   if (!tabsContainer || !webviewContainer) {
-    console.error('❌ tabs または webview-container が見つかりません')
+    console.error('❌ tabs または webview-panel-content が見つかりません')
     return
   }
 
@@ -141,10 +141,10 @@ export function addProfessionalSupportCheckAction(appState, space) {
   }
 
   const tabsContainer = document.getElementById('tabs')
-  const webviewContainer = document.getElementById('webview-container')
+  const webviewContainer = document.getElementById('webview-panel-content')
 
   if (!tabsContainer || !webviewContainer) {
-    console.error('❌ tabs または webview-container が見つかりません')
+    console.error('❌ tabs または webview-panel-content が見つかりません')
     return
   }
 
@@ -276,10 +276,10 @@ export function addProfessionalSupportNewAction2(appState, space) {
   }
 
   const tabsContainer = document.getElementById('tabs')
-  const webviewContainer = document.getElementById('webview-container')
+  const webviewContainer = document.getElementById('webview-panel-content')
 
   if (!tabsContainer || !webviewContainer) {
-    console.error('❌ tabs または webview-container が見つかりません')
+    console.error('❌ tabs または webview-panel-content が見つかりません')
     return
   }
 
@@ -462,10 +462,10 @@ export function addProfessionalSupportNewAction3(appState, space) {
   }
 
   const tabsContainer = document.getElementById('tabs')
-  const webviewContainer = document.getElementById('webview-container')
+  const webviewContainer = document.getElementById('webview-panel-content')
 
   if (!tabsContainer || !webviewContainer) {
-    console.error('❌ tabs または webview-container が見つかりません')
+    console.error('❌ tabs または webview-panel-content が見つかりません')
     return
   }
 

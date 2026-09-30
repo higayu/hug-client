@@ -29,7 +29,7 @@ export function addMonitoringTabAction(appState, space) {
 
   const webviewContainer =
     document.getElementById(
-      'webview-container'
+      'webview-panel-content'
     )
 
   if (
@@ -37,7 +37,7 @@ export function addMonitoringTabAction(appState, space) {
     !webviewContainer
   ) {
     console.error(
-      '❌ tabs または webview-container が見つかりません'
+      '❌ tabs または webview-panel-content が見つかりません'
     )
 
     return
