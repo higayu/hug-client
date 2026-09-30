@@ -7,17 +7,13 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useSelector } from "react-redux";
 
-import PersonalRecordButton from "@/components/common/PersonalRecordButton";
+import PersonalRecordButton from "../PersonalRecordButton";
 
 import { usePersonRecordCheck } from "./usePersonRecordCheck";
 
 import {
   selectCurrentYmd,
 } from "@/store/slices/appStateSlice.js";
-import {
-  selectActiveSpaceId,
-  selectSpaceChildId,
-} from "@/store/slices/chilledspaceSlice.js";
 
 import { selectPersonalRecordStatus } from "@/store/slices/recordStatusSlice.js";
 
@@ -94,20 +90,17 @@ export function PersonalRecordRegisteredStatus({
 export default function PersonalRecordCheckPanel({
   className = "",
   expandDirection = "up",
-  spaceId,
+  selectedChildId = "",
+  selectedChildName = "",
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const panelRef = useRef(null);
   const popupRef = useRef(null);
   const [popupStyle, setPopupStyle] = useState(null);
 
-  const activeSpaceId = useSelector(selectActiveSpaceId);
-  const effectiveSpaceId = spaceId || activeSpaceId;
-
-  const { checking, runCheck } = usePersonRecordCheck(effectiveSpaceId);
+  const { checking, runCheck } = usePersonRecordCheck(selectedChildId);
 
   const currentYmd = useSelector(selectCurrentYmd);
-  const selectedChildId = useSelector(selectSpaceChildId(effectiveSpaceId));
 
   const personalRecordStatus = useSelector((state) =>
     selectPersonalRecordStatus(state, currentYmd, selectedChildId)
@@ -226,6 +219,9 @@ export default function PersonalRecordCheckPanel({
               </button>
 
               <PersonalRecordButton
+                selectedChildId={selectedChildId}
+                selectedChildName={selectedChildName}
+                currentYmd={currentYmd}
                 disabled={!selectedChildId}
                 label="個人記録"
                 className="flex h-8 shrink-0 items-center justify-center rounded px-3 text-xs font-bold whitespace-nowrap"
@@ -251,6 +247,9 @@ export default function PersonalRecordCheckPanel({
           onClick={() => setIsOpen(false)}
         >
           <PersonalRecordButton
+            selectedChildId={selectedChildId}
+            selectedChildName={selectedChildName}
+            currentYmd={currentYmd}
             disabled={!selectedChildId}
             label="個人記録"
             className={[

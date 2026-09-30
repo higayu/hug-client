@@ -471,6 +471,8 @@ export default function ChildAttendancePanel({ spaceId }) {
 
         <CheckPanels
           spaceId={spaceId}
+          selectedChildId={selectChild}
+          selectedChildName={selectedChildName}
           facilityId={facilityId}
           isAbsent={isAbsent}
           hasEntered={hasEntered}
@@ -761,6 +763,8 @@ export default function ChildAttendancePanel({ spaceId }) {
 
       <CheckPanels
           spaceId={spaceId}
+          selectedChildId={selectChild}
+          selectedChildName={selectedChildName}
           facilityId={facilityId}
           isAbsent={isAbsent}
           hasEntered={hasEntered}

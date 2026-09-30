@@ -10,25 +10,64 @@ export default function PersonalRecordButton({
   selectedChildId = '',
   selectedChildName = '',
   currentYmd = '',
+  ...buttonProps
 }) {
   const { appState } = useAppState();
+  const childId = selectedChildId != null
+    ? String(selectedChildId)
+    : '';
 
   const handleClick = useCallback(() => {
+    if (!childId) {
+      console.warn(
+        '[PersonalRecordButton] 選択児童IDを取得できません',
+        { selectedChildId }
+      );
+      return;
+    }
+
+    console.log(
+      '[PersonalRecordButton] 個人記録を開きます',
+      {
+        childId,
+        childName: selectedChildName,
+      }
+    );
+
     openPersonalRecordTab({
       appState,
-      selectedChildId,
+      selectedChildId: childId,
       selectedChildName,
       currentYmd,
     });
-  }, [appState, currentYmd, selectedChildId, selectedChildName]);
+  }, [
+    appState,
+    childId,
+    currentYmd,
+    selectedChildId,
+    selectedChildName,
+  ]);
+
+  const isDisabled =
+    disabled ||
+    !childId;
 
   return (
     <button
+      {...buttonProps}
       type="button"
       onClick={handleClick}
-      disabled={disabled}
-      title="個人記録を開く"
+      disabled={isDisabled}
+      title={
+        childId
+          ? `個人記録を開く（児童ID: ${childId}）`
+          : '児童を選択してください'
+      }
       className={`
+        bg-[#00a405] text-white
+        cursor-pointer transition-all whitespace-nowrap
+        hover:bg-[#006305] hover:scale-105
+        active:bg-[#005004] active:scale-[0.97]
         disabled:grayscale disabled:opacity-50
         disabled:cursor-not-allowed
         disabled:hover:scale-100

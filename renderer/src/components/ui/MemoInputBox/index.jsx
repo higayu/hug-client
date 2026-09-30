@@ -7,11 +7,13 @@ import React, {
 
 import { useToast } from "@/provider/ToastProvider/ToastContext.jsx";
 import { useSelector } from "react-redux";
-import { selectSpaceChildId } from "@/store/slices/chilledspaceSlice.js";
+import {
+  selectSpaceChildId,
+  selectSpaceChildName,
+} from "@/store/slices/chilledspaceSlice.js";
 import { useNote } from "@/hooks/useNote";
-import PersonalRecordButton from "@/components/common/PersonalRecordButton";
+import { PersonalRecordButton } from '@/components/common/hug_function';
 import CopyButton from "@/components/ui/CopyButton";
-
 
 export default function MemoInputBox({
   memoType,
@@ -29,6 +31,7 @@ export default function MemoInputBox({
 
   const { showSuccessToast, showErrorToast } = useToast();
   const selectedChildId = useSelector(selectSpaceChildId(spaceId));
+  const selectedChildName = useSelector(selectSpaceChildName(spaceId));
   const { saveTemp1, saveTemp2, loadTemp } = useNote();
 
   const [value, setValue] = useState("");
@@ -477,6 +480,8 @@ export default function MemoInputBox({
         {(memoType === 1 || memoType === 2) && (
           <PersonalRecordButton
             id={`kojin-kiroku-${memoType}`}
+            selectedChildId={selectedChildId}
+            selectedChildName={selectedChildName}
             disabled={!selectedChildId}
             label="個人記録"
             className="
