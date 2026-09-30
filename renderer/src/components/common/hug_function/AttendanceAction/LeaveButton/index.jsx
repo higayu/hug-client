@@ -1,6 +1,5 @@
 import { useCallback, useState } from 'react'
 import AttendancePostButton from '../AttendancePostButton'
-import EditButton from '../EditButton'
 import MailNotificationModal from '../MailNotificationModal'
 import { handleLeaveClick } from './function/handleLeaveClick'
 
@@ -152,10 +151,6 @@ export default function LeaveButton({
         loading={loading || mailModalLoading}
         title={debugTitle}
         onClick={onClick}
-      />
-
-      <EditButton
-        disabled={disabled || mailModalOpen || mailModalLoading}
       />
 
       <MailNotificationModal
