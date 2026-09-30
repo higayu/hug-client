@@ -3,6 +3,7 @@ import './index.css'
 // UI components
 export { default as EnterButton } from './EnterButton'
 export { default as LeaveButton } from './LeaveButton'
+export { default as EditButton } from './EditButton'
 export { default as AttendancePostButton } from './AttendancePostButton'
 export { default as MailNotificationModal } from './MailNotificationModal'
 

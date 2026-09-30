@@ -176,6 +176,29 @@
   flex-wrap: nowrap;
 }
 
+
+/* 入室済みの場合に表示する編集ボタン */
+.child-memo-attendance-form .hug-btn-attendance-edit {
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  border: 1px solid #607d8b;
+  border-radius: 4px;
+  background: #eceff1;
+  color: #263238;
+  white-space: nowrap;
+}
+
+.child-memo-attendance-form .hug-btn-attendance-edit:hover:not(:disabled) {
+  background: #cfd8dc;
+}
+
+.child-memo-attendance-form .hug-btn-attendance-edit:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 /* HUG #addtend_dialog_mail 相当: renderer 側の保護者通知確認 */
 .hug-mail-dialog-overlay {
   position: fixed;

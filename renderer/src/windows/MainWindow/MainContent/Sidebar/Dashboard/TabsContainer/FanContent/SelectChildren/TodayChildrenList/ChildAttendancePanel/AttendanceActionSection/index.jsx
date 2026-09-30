@@ -8,6 +8,7 @@ import AbsenceButton from "./AbsenceButton"
 import {
   EnterButton,
   LeaveButton,
+  EditButton,
   canPostEnter,
   canPostLeave,
   hasEnterMail,
@@ -322,6 +323,9 @@ export default function AttendanceActionSection({
           )}
         </div>
 
+        <div className="hug-post-actions hug-post-actions-inline">
+          <EditButton />
+        </div>
       </div>
     )
   }
