@@ -319,6 +319,10 @@ function validateNativeRule(flow, rule, action) {
       ruleConfig.reloadAttendanceDetailBeforeExecute ??
       flowConfig.reloadAttendanceDetailBeforeExecute ??
       true,
+    detectMailDialog:
+      ruleConfig.detectMailDialog ??
+      flowConfig.detectMailDialog ??
+      true,
     functionName:
       rule?.function_name ||
       ruleConfig.functionName ||
@@ -330,6 +334,25 @@ function validateNativeRule(flow, rule, action) {
       ruleConfig.selectorTemplate ||
       rule?.target_selector ||
       null,
+    mailDialogSelector:
+      ruleConfig.mailDialogSelector ||
+      flowConfig.mailDialogSelector ||
+      "#addtend_dialog_mail",
+    mailDialogButtonSelector:
+      ruleConfig.mailDialogButtonSelector ||
+      '.send_mail_button[data-send_mail="{{sendMail}}"]',
+    mailDialogTimeoutMs:
+      Number(
+        ruleConfig.mailDialogTimeoutMs ??
+          flowConfig.mailDialogTimeoutMs ??
+          10000,
+      ) || 10000,
+    attendanceActionCompletionTimeoutMs:
+      Number(
+        ruleConfig.attendanceActionCompletionTimeoutMs ??
+          flowConfig.attendanceActionCompletionTimeoutMs ??
+          12000,
+      ) || 12000,
   };
 }
 
@@ -393,31 +416,35 @@ export async function executeAttendanceNativeFlow(
       developerMode,
     });
 
-    // 開発者モードでは開始時点からログを残す。
-    if (developerMode) {
-      executionLogId = await createExecutionLog({
-        ...buildLogBase({
-          executionUuid,
-          flow,
-          step,
-          rule,
-          action,
-          webview,
-          item,
-          options,
-          mailFlg,
-          nativeConfig,
-          pageUrlBefore,
-        }),
-        status: "running",
-        started_at: new Date(startedAtMs).toISOString(),
-        debug_json: {
-          developerMode: true,
-          reloadAttendanceDetailBeforeExecute:
-            nativeConfig.reloadAttendanceDetailBeforeExecute,
-        },
-      });
-    }
+    // デバッグモードに関係なく、実行開始ログを必ず保存する。
+    // ログAPI失敗は入退室処理自体を止めず、console warning に留める。
+    executionLogId = await createExecutionLog({
+      ...buildLogBase({
+        executionUuid,
+        flow,
+        step,
+        rule,
+        action,
+        webview,
+        item,
+        options,
+        mailFlg,
+        nativeConfig,
+        pageUrlBefore,
+      }),
+      status: "running",
+      started_at: new Date(startedAtMs).toISOString(),
+      debug_json: {
+        developerMode,
+        reloadAttendanceDetailBeforeExecute:
+          nativeConfig.reloadAttendanceDetailBeforeExecute,
+        detectMailDialog: nativeConfig.detectMailDialog,
+        mailDialogSelector: nativeConfig.mailDialogSelector,
+        mailDialogTimeoutMs: nativeConfig.mailDialogTimeoutMs,
+        attendanceActionCompletionTimeoutMs:
+          nativeConfig.attendanceActionCompletionTimeoutMs,
+      },
+    });
 
     const result =
       action === "enter"
@@ -427,8 +454,8 @@ export async function executeAttendanceNativeFlow(
     const durationMs = Date.now() - startedAtMs;
     const pageUrlAfter = getWebviewUrl(webview);
 
-    // 成功ログは開発者モード時だけ保存。
-    if (developerMode && executionLogId) {
+    // 成功ログもデバッグモードに関係なく保存する。
+    if (executionLogId) {
       await updateExecutionLog(executionLogId, {
         status: "success",
         page_url_after: pageUrlAfter,
@@ -442,7 +469,7 @@ export async function executeAttendanceNativeFlow(
           result,
         },
         debug_json: {
-          developerMode: true,
+          developerMode,
           action,
           flowKey: flow?.flow_key ?? flowKey,
           stepKey: step?.step_key ?? null,

@@ -14,20 +14,38 @@ export const NATIVE_STATUS_LEAVE =
   "HUG本体の退室処理を開始しました。";
 
 function getKindConfig(kind, nativeConfig = {}) {
+  const common = {
+    selectorTemplate: nativeConfig.selectorTemplate || null,
+    detectMailDialog: nativeConfig.detectMailDialog !== false,
+    mailDialogSelector:
+      nativeConfig.mailDialogSelector || "#addtend_dialog_mail",
+    mailDialogButtonSelector:
+      nativeConfig.mailDialogButtonSelector ||
+      '.send_mail_button[data-send_mail="{{sendMail}}"]',
+    mailDialogTimeoutMs:
+      Number(nativeConfig.mailDialogTimeoutMs) > 0
+        ? Number(nativeConfig.mailDialogTimeoutMs)
+        : 10000,
+    attendanceActionCompletionTimeoutMs:
+      Number(nativeConfig.attendanceActionCompletionTimeoutMs) > 0
+        ? Number(nativeConfig.attendanceActionCompletionTimeoutMs)
+        : 12000,
+  };
+
   if (kind === "enter") {
     return {
+      ...common,
       cellPrefix: nativeConfig.cellIdPrefix || "enter",
       functionName: nativeConfig.functionName || "sendEnterMail",
-      selectorTemplate: nativeConfig.selectorTemplate || null,
       label: "入室",
     };
   }
 
   if (kind === "leave") {
     return {
+      ...common,
       cellPrefix: nativeConfig.cellIdPrefix || "leave",
       functionName: nativeConfig.functionName || "sendLeaveMail",
-      selectorTemplate: nativeConfig.selectorTemplate || null,
       label: "退室",
     };
   }
@@ -52,8 +70,17 @@ async function executeNativeOnclickInWebview(
 ) {
   const nativeConfig = options?.nativeConfig || {};
   const normalizedMailFlg = Number(options?.mailFlg) === 1 ? 1 : 0;
-  const { cellPrefix, functionName, selectorTemplate, label } =
-    getKindConfig(kind, nativeConfig);
+  const {
+    cellPrefix,
+    functionName,
+    selectorTemplate,
+    label,
+    detectMailDialog,
+    mailDialogSelector,
+    mailDialogButtonSelector,
+    mailDialogTimeoutMs,
+    attendanceActionCompletionTimeoutMs,
+  } = getKindConfig(kind, nativeConfig);
 
   const script = `
     (async () => {
@@ -63,6 +90,11 @@ async function executeNativeOnclickInWebview(
       const selectorTemplate = ${JSON.stringify(selectorTemplate)};
       const label = ${JSON.stringify(label)};
       const selectedSendMail = ${JSON.stringify(normalizedMailFlg)};
+      const detectMailDialog = ${JSON.stringify(detectMailDialog)};
+      const mailDialogSelector = ${JSON.stringify(mailDialogSelector)};
+      const mailDialogButtonSelector = ${JSON.stringify(mailDialogButtonSelector)};
+      const mailDialogTimeoutMs = ${JSON.stringify(mailDialogTimeoutMs)};
+      const attendanceActionCompletionTimeoutMs = ${JSON.stringify(attendanceActionCompletionTimeoutMs)};
 
       const isVisible = (element) => {
         if (!element) return false;
@@ -87,7 +119,7 @@ async function executeNativeOnclickInWebview(
       const waitAndApplyMailChoice = () =>
         new Promise((resolve) => {
           const startedAt = Date.now();
-          const timeoutMs = 10000;
+          const timeoutMs = mailDialogTimeoutMs;
           let finished = false;
           let observer = null;
           let timer = null;
@@ -101,16 +133,16 @@ async function executeNativeOnclickInWebview(
           };
 
           const tryApply = () => {
-            const dialog = document.getElementById("addtend_dialog_mail");
+            const dialog = document.querySelector(mailDialogSelector);
             if (!dialog) return false;
 
             const wrapper = dialog.closest(".ui-dialog");
             const visibleTarget = wrapper || dialog;
             if (!isVisible(visibleTarget)) return false;
 
-            const target = dialog.querySelector(
-              '.send_mail_button[data-send_mail="' + selectedSendMail + '"]'
-            );
+            const resolvedMailButtonSelector = mailDialogButtonSelector
+              .replace(/\{\{\s*sendMail\s*\}\}/g, String(selectedSendMail));
+            const target = dialog.querySelector(resolvedMailButtonSelector);
             if (!target || target.disabled) return false;
 
             const info = {
@@ -149,7 +181,7 @@ async function executeNativeOnclickInWebview(
           tryApply();
 
           timer = setTimeout(() => {
-            const dialog = document.getElementById("addtend_dialog_mail");
+            const dialog = document.querySelector(mailDialogSelector);
             const wrapper = dialog?.closest(".ui-dialog") || null;
             finish({
               detected: false,
@@ -160,7 +192,7 @@ async function executeNativeOnclickInWebview(
               dialogVisible: Boolean(dialog && isVisible(wrapper || dialog)),
               pageUrl: location.href,
             });
-          }, timeoutMs);
+          }, mailDialogTimeoutMs);
         });
 
       try {
@@ -219,14 +251,21 @@ async function executeNativeOnclickInWebview(
 
         // 重要: HUGボタンを押す前に監視を開始する。
         // sendEnterMail/sendLeaveMailが同期的にモーダルを開いても取りこぼさない。
-        const mailDialogPromise = waitAndApplyMailChoice();
+        const mailDialogPromise = detectMailDialog
+          ? waitAndApplyMailChoice()
+          : Promise.resolve({
+              detected: false,
+              autoSelected: false,
+              skipped: true,
+              reason: "mail-dialog-detection-disabled-by-db",
+            });
 
         // HUG本体の実ボタンをクリックして、本来のsendEnterMail/sendLeaveMailを発火。
         button.click();
 
         const mailDialog = await mailDialogPromise;
 
-        if (!mailDialog?.detected) {
+        if (detectMailDialog && !mailDialog?.detected) {
           return {
             success: false,
             mode: "dom-button-click-mutation-observer",
@@ -249,7 +288,7 @@ async function executeNativeOnclickInWebview(
         const waitForAttendanceActionCompletion = () =>
           new Promise((resolve) => {
             const startedAt = Date.now();
-            const timeoutMs = 12000;
+            const timeoutMs = attendanceActionCompletionTimeoutMs;
             let finished = false;
             let observer = null;
             let timer = null;
@@ -345,8 +384,8 @@ async function executeNativeOnclickInWebview(
           buttonInfo,
           mailDialog,
           completion,
-          mailDialogDetected: true,
-          mailDialogAutoSelected: true,
+          mailDialogDetected: Boolean(mailDialog?.detected),
+          mailDialogAutoSelected: Boolean(mailDialog?.autoSelected),
           attendanceActionCompleted: true,
           selectedSendMail,
           pageUrl: location.href,
@@ -371,6 +410,11 @@ async function executeNativeOnclickInWebview(
     selectorTemplate,
     functionName,
     mailFlg: normalizedMailFlg,
+    detectMailDialog,
+    mailDialogSelector,
+    mailDialogButtonSelector,
+    mailDialogTimeoutMs,
+    attendanceActionCompletionTimeoutMs,
   });
 
   const result = await webview.executeJavaScript(script);
