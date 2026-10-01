@@ -27,14 +27,12 @@ function isDebugEnabled(value) {
  * visible / invisible / z-index / pointer-events だけを切り替える。
  */
 export default function WebViewPanel({ preloadPath }) {
-  const { appState } = useAppState()
+  const { DEBUG_FLG } = useAppState()
 
   const hugWebviewRef = useRef(null)
   const automationWebviewRef = useRef(null)
 
-  const debugEnabled = isDebugEnabled(
-    appState?.DEBUG_FLG,
-  )
+  const debugEnabled = isDebugEnabled(DEBUG_FLG)
 
   const [activeTab, setActiveTab] = useState(
     WEBVIEW_TABS.HUG,
