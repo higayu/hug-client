@@ -32,6 +32,12 @@ export default function WebViewPanel({ preloadPath }) {
   const hugWebviewRef = useRef(null)
   const automationWebviewRef = useRef(null)
 
+  // useTabs / webviewState 側で管理されている、
+  // 現在アクティブなWebViewを保持する。
+  // 個人記録・専門的支援・OpenAI・DeepSeekなどの
+  // 動的WebViewも active-webview-changed から取得できる。
+  const activeWebviewRef = useRef(null)
+
   const debugEnabled = isDebugEnabled(DEBUG_FLG)
 
   const [activeTab, setActiveTab] = useState(
@@ -44,17 +50,55 @@ export default function WebViewPanel({ preloadPath }) {
     }
   }, [debugEnabled])
 
+  // 初期表示のHUG WebViewをDevTools対象として保持する。
+  useEffect(() => {
+    if (hugWebviewRef.current && !activeWebviewRef.current) {
+      activeWebviewRef.current = hugWebviewRef.current
+    }
+  }, [])
+
+  // useTabs/common/activateTab.js から setActiveWebview() が呼ばれると、
+  // active-webview-changed が発火する。
+  // これを監視することで動的に追加されたWebViewもDevTools対象にできる。
+  useEffect(() => {
+    const handleActiveWebviewChanged = (event) => {
+      const webview = event?.detail?.webview
+
+      if (webview) {
+        activeWebviewRef.current = webview
+      }
+    }
+
+    document.addEventListener(
+      'active-webview-changed',
+      handleActiveWebviewChanged,
+    )
+
+    return () => {
+      document.removeEventListener(
+        'active-webview-changed',
+        handleActiveWebviewChanged,
+      )
+    }
+  }, [])
+
   const showAutomation =
     debugEnabled &&
     activeTab === WEBVIEW_TABS.AUTOMATION
 
   /**
-   * 現在表示中のWebViewのDevToolsを開く。
+   * 現在アクティブになっているWebViewのDevToolsを開く。
+   *
+   * 対象例:
+   * - HUG
+   * - Automation
+   * - 個人記録
+   * - 専門的支援
+   * - OpenAI
+   * - DeepSeek
    */
   const handleOpenDevTools = () => {
-    const webview = showAutomation
-      ? automationWebviewRef.current
-      : hugWebviewRef.current
+    const webview = activeWebviewRef.current
 
     if (!webview) {
       console.warn(
@@ -84,6 +128,10 @@ export default function WebViewPanel({ preloadPath }) {
             type="button"
             onClick={() => {
               setActiveTab(WEBVIEW_TABS.HUG)
+
+              if (hugWebviewRef.current) {
+                activeWebviewRef.current = hugWebviewRef.current
+              }
             }}
             className={[
               'rounded px-3 py-1.5 text-xs font-semibold transition-colors',
@@ -99,6 +147,10 @@ export default function WebViewPanel({ preloadPath }) {
             type="button"
             onClick={() => {
               setActiveTab(WEBVIEW_TABS.AUTOMATION)
+
+              if (automationWebviewRef.current) {
+                activeWebviewRef.current = automationWebviewRef.current
+              }
             }}
             className={[
               'rounded px-3 py-1.5 text-xs font-semibold transition-colors',
@@ -114,11 +166,7 @@ export default function WebViewPanel({ preloadPath }) {
             type="button"
             onClick={handleOpenDevTools}
             className="ml-auto rounded bg-slate-700 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-slate-800"
-            title={
-              showAutomation
-                ? 'Automation WebView のDevToolsを開く'
-                : 'HUG WebView のDevToolsを開く'
-            }
+            title="現在アクティブなWebViewのDevToolsを開く"
           >
             DevTools
           </button>
