@@ -20,10 +20,14 @@ export async function fetchAttendanceTableInWebview(webview, opts) {
       const F_ID = ${JSON.stringify(String(facilityId))};
       const DATE_STR = ${JSON.stringify(String(dateStr))};
       const DETAIL_BASE = "https://www.hug-ayumu.link/hug/wm/attendance.php";
+      // HUG側の入退室Ajax完了直後に同じURLを再取得すると、
+      // ブラウザ/HTTPキャッシュ由来の古いHTMLが返る可能性がある。
+      // 毎回一意のクエリを付与し、必ず最新の出席表を取りに行く。
       const params = new URLSearchParams({
         mode: "detail",
         f_id: F_ID,
-        date: DATE_STR
+        date: DATE_STR,
+        _hug_refresh: String(Date.now())
       });
       const TARGET_URL = DETAIL_BASE + "?" + params.toString();
 
@@ -51,7 +55,12 @@ export async function fetchAttendanceTableInWebview(webview, opts) {
 
         const response = await fetch(TARGET_URL, {
           method: "GET",
-          credentials: "include"
+          credentials: "include",
+          cache: "no-store",
+          headers: {
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Pragma": "no-cache"
+          }
         });
 
         if (!response.ok) {

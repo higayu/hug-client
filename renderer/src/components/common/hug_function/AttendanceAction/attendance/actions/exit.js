@@ -60,6 +60,13 @@ export async function clickExitButton(column6Html, targetChildrenId, opts = {}) 
           dateStr: opts.dateStr || store.getState().appState?.CURRENT_YMD,
           dispatch: opts.dispatch,
           updateAppState: opts.updateAppState,
+          // HUGメール通知モーダルのclick()はAjax開始直後に戻るため、
+          // 対象児童の更新済みHTMLが取得できるまで確認付きで再取得する。
+          targetChildrenId,
+          action: "leave",
+          verifyUpdated: true,
+          retryCount: 6,
+          retryDelayMs: 500,
         });
       }
 
