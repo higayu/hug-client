@@ -135,10 +135,13 @@ export default function WebViewPanel({ preloadPath }) {
       >
         <div
           className={[
-            'absolute inset-0',
+            // webview は非表示時も描画サイズを維持する。
+            // visibility:hidden にすると Electron/Chromium 側で再描画されず、
+            // 再表示時に真っ白になることがあるため opacity で切り替える。
+            'absolute inset-0 h-full w-full',
             !showAutomation
-              ? 'visible z-10'
-              : 'invisible z-0 pointer-events-none',
+              ? 'z-10 opacity-100'
+              : 'z-0 opacity-0 pointer-events-none',
           ].join(' ')}
         >
           <HugWebview
@@ -149,10 +152,12 @@ export default function WebViewPanel({ preloadPath }) {
 
         <div
           className={[
-            'absolute inset-0',
+            // 自動処理用WebViewは常時DOM上・描画領域ありの状態を保つ。
+            // 非表示時も読み込み/JS/モーダル操作を継続できるようにする。
+            'absolute inset-0 h-full w-full',
             showAutomation
-              ? 'visible z-10'
-              : 'invisible z-0 pointer-events-none',
+              ? 'z-10 opacity-100'
+              : 'z-0 opacity-0 pointer-events-none',
           ].join(' ')}
         >
           <HugAutomationWebview

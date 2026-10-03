@@ -23,7 +23,8 @@ const HugAutomationWebview = forwardRef(
         allowpopups="true"
         disablewebsecurity="true"
         preload={preloadPath || undefined}
-        className="h-full min-h-0 w-full min-w-0 border-0"
+        className="absolute inset-0 h-full w-full border-0"
+      style={{ width: '100%', height: '100%' }}
       />
     )
   },
