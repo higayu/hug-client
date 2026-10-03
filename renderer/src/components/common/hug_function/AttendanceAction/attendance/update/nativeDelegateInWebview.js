@@ -75,12 +75,18 @@ async function executeNativeOnclickInWebview(
     functionName,
     selectorTemplate,
     label,
-    detectMailDialog,
+    detectMailDialog: configuredDetectMailDialog,
     mailDialogSelector,
     mailDialogButtonSelector,
     mailDialogTimeoutMs,
     attendanceActionCompletionTimeoutMs,
   } = getKindConfig(kind, nativeConfig);
+
+  // フロー設定だけでなく、最終的な mailFlg も安全弁として確認する。
+  // mailFlg=0（通知なし）の場合はHUG側メールモーダルを待たない。
+  // DB設定が誤って detectMailDialog=true のままでも誤エラーにしない。
+  const detectMailDialog =
+    configuredDetectMailDialog && normalizedMailFlg === 1;
 
   const script = `
     (async () => {

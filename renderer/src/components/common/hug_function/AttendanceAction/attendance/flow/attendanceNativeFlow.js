@@ -314,15 +314,29 @@ function validateNativeRule(flow, rule, action) {
     );
   }
 
+  // メール通知なしフローでは、HUG側のメール通知モーダル自体が表示されない。
+  // DB側に detectMailDialog=true が残っていてもモーダル待機を行わないようにする。
+  // これにより、実際の入退室処理が成功した後に
+  // 「メール通知モーダルを検知できない」という誤エラーになるのを防ぐ。
+  const mailMode = String(
+    ruleConfig.mailMode || flowConfig.mailMode || "",
+  ).trim();
+
+  const detectMailDialog =
+    mailMode === "no_mail"
+      ? false
+      : (
+          ruleConfig.detectMailDialog ??
+          flowConfig.detectMailDialog ??
+          true
+        );
+
   return {
     reloadAttendanceDetailBeforeExecute:
       ruleConfig.reloadAttendanceDetailBeforeExecute ??
       flowConfig.reloadAttendanceDetailBeforeExecute ??
       true,
-    detectMailDialog:
-      ruleConfig.detectMailDialog ??
-      flowConfig.detectMailDialog ??
-      true,
+    detectMailDialog,
     functionName:
       rule?.function_name ||
       ruleConfig.functionName ||
