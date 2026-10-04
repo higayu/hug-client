@@ -474,6 +474,9 @@ export default function ChildAttendancePanel({ spaceId }) {
           selectedChildId={selectChild}
           selectedChildName={selectedChildName}
           facilityId={facilityId}
+          currentYmd={dateStr}
+          enterTime={column5 || ''}
+          leaveTime={column6 || ''}
           isAbsent={isAbsent}
           hasEntered={hasEntered}
           hasExited={hasExited}
@@ -766,6 +769,9 @@ export default function ChildAttendancePanel({ spaceId }) {
           selectedChildId={selectChild}
           selectedChildName={selectedChildName}
           facilityId={facilityId}
+          currentYmd={dateStr}
+          enterTime={column5 || ''}
+          leaveTime={column6 || ''}
           isAbsent={isAbsent}
           hasEntered={hasEntered}
           hasExited={hasExited}

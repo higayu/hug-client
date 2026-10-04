@@ -1,6 +1,7 @@
 import {
   PersonalRecordButton,
-  ProfessionalSupportCheckPanel,
+  ProfessionalSupportCheckPanel2,
+  addProfessionalSupportListAction,
   EditButton,
   EnterButton,
   LeaveButton,
@@ -13,7 +14,7 @@ import {
 
 import { useAppState } from '@/AppStateContext';
 export default function AttendanceRow({ row, busy, onAction }) {
-  const { CURRENT_YMD } = useAppState();
+  const { appState, CURRENT_YMD, FACILITY_ID } = useAppState();
   const canOpenPersonalRecord = Boolean(row.childId);
   const recordId = String(row.rId ?? '').startsWith('attendance-')
     ? ''
@@ -80,12 +81,16 @@ export default function AttendanceRow({ row, busy, onAction }) {
         )}
       </td>
       <td className="border border-slate-300 p-2 align-top">
-        <ProfessionalSupportCheckPanel
+        <ProfessionalSupportCheckPanel2
+          facilityId={FACILITY_ID}
           currentYmd={CURRENT_YMD}
           selectedChildId={row.childId}
           selectedChildName={row.name}
           enterTime={row.enterTime}
           leaveTime={row.leaveTime}
+          onOpenProfessionalSupportList={() =>
+            addProfessionalSupportListAction(appState, row.childId, row.name)
+          }
           isAbsent={row.isAbsent}
           hasEntered={Boolean(row.enterTime)}
           hasExited={Boolean(row.leaveTime)}
@@ -94,7 +99,6 @@ export default function AttendanceRow({ row, busy, onAction }) {
           loadingAction={busy ? 'attendance' : null}
           logTag={`AttendanceRow:${row.rId}`}
           className="min-w-[220px]"
-          labelClassName="border border-slate-100"
         />
       </td>
       <td className="border border-slate-300 p-3">

@@ -1,15 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import { useAppState } from "@/AppStateContext";
 import { usePatchChildUseSpeDate } from "@/components/common/hug_function/GetTodayUsersChildren/SelectChildFilter/usePatchChildUseSpeDate";
-import {
-  selectCurrentYmd,
-  selectFacilityId,
-} from "@/store/slices/appStateSlice.js";
-import {
-  selectActiveSpaceId,
-  selectSpaceChildId,
-} from "@/store/slices/chilledspaceSlice.js";
 import {
   setProfessionalSupportStatus,
   setRecordStatusError,
@@ -30,26 +22,17 @@ import { fetchProfessionalSupportUseDaysViaHugTab } from "./fetchHook1";
  * - 取得結果を recordStatusSlice に保存する
  */
 export function useProfessionalSupportCheck2(
-  spaceId,
-  logTag = "ProfessionalSupportCheck2"
+  logTag = "ProfessionalSupportCheck2",
+  selectedChildId,
+  facilityId,
+  currentYmd
 ) {
   const dispatch = useDispatch();
 
   const {
-    FACILITY_ID,
-    CURRENT_YMD,
-
     // loadDataBase() が AppState に保存したデータを読む
     childrenData,
   } = useAppState();
-
-  const activeSpaceId = useSelector(selectActiveSpaceId);
-  const effectiveSpaceId = spaceId || activeSpaceId;
-  const selectedChildIdFromStore = useSelector(
-    selectSpaceChildId(effectiveSpaceId)
-  );
-  const facilityIdFromStore = useSelector(selectFacilityId);
-  const currentYmdFromStore = useSelector(selectCurrentYmd);
 
   const { patchChildUseSpeDate } = usePatchChildUseSpeDate();
 
@@ -57,21 +40,11 @@ export function useProfessionalSupportCheck2(
     return Array.isArray(childrenData) ? childrenData : [];
   }, [childrenData]);
 
-  console.log(`[HUG WM] 当日の日付 store値（${logTag}）`, {
-    currentYmdFromStore,
-    currentYmdFromStoreType: typeof currentYmdFromStore,
-  });
+  const effectiveChildId = selectedChildId ? String(selectedChildId) : "";
+  const effectiveFacilityId = facilityId || null;
+  const effectiveCurrentYmd = currentYmd || "";
 
-  const effectiveChildId = selectedChildIdFromStore;
-  const effectiveFacilityId = facilityIdFromStore || FACILITY_ID || null;
-  const effectiveCurrentYmd = currentYmdFromStore || CURRENT_YMD;
-
-  console.log(`[HUG WM] 有効な取得条件 初期解決（${logTag}）`, {
-    selectedChildIdFromStore,
-    facilityIdFromStore,
-    currentYmdFromStore,
-    FACILITY_ID,
-    CURRENT_YMD,
+  console.log(`[HUG WM] 有効な取得条件（${logTag}）`, {
     effectiveChildId,
     effectiveFacilityId,
     effectiveCurrentYmd,
@@ -164,15 +137,6 @@ export function useProfessionalSupportCheck2(
     console.groupCollapsed(`[HUG WM] 専門的支援チェック開始（${logTag}）`);
 
     console.log(`[HUG WM] 取得条件の解決結果（${logTag}）`, {
-      store: {
-        selectedChildIdFromStore,
-        facilityIdFromStore,
-        currentYmdFromStore,
-      },
-      appState: {
-            FACILITY_ID,
-        CURRENT_YMD,
-      },
       effective: {
         childId: effectiveChildId,
         facilityId: effectiveFacilityId,
@@ -202,8 +166,6 @@ export function useProfessionalSupportCheck2(
       console.warn(`[HUG WM] 専門的支援チェック中断（${logTag}）`, {
         reason: "対象日付が未設定",
         effectiveCurrentYmd,
-        currentYmdFromStore,
-        CURRENT_YMD,
       });
 
       console.groupEnd();
@@ -532,11 +494,6 @@ export function useProfessionalSupportCheck2(
     }
   }, [
     dispatch,
-    FACILITY_ID,
-    CURRENT_YMD,
-    selectedChildIdFromStore,
-    facilityIdFromStore,
-    currentYmdFromStore,
     effectiveChildId,
     effectiveFacilityId,
     effectiveCurrentYmd,

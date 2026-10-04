@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 
 import { useAppState } from "@/AppStateContext";
+import { useTabs } from "@/hooks/useTabs";
 import { useDispatch, useSelector } from "react-redux";
 import { selectSpaceChildId } from "@/store/slices/chilledspaceSlice.js";
 import {
@@ -33,7 +34,10 @@ export default function ProfessionalPrompt1({
     CURRENT_YMD,
     FACILITY_ID,
     attendanceData,
+    chilledSpaces,
   } = appState;
+
+  const { addProfessionalSupportListTab } = useTabs(spaceId);
 
   const attendanceItem = useMemo(() => {
     const list = Array.isArray(attendanceData)
@@ -47,6 +51,12 @@ export default function ProfessionalPrompt1({
       String(selectedChildId ?? '')
     ) ?? null;
   }, [attendanceData, selectedChildId]);
+
+  const selectedChildName =
+    chilledSpaces?.[spaceId]?.childName ??
+    attendanceItem?.children_name ??
+    attendanceItem?.name ??
+    '';
 
   const attendanceEnterText = String(attendanceItem?.column5 ?? '').trim();
   const attendanceLeaveText = String(attendanceItem?.column6 ?? '').trim();
@@ -242,8 +252,13 @@ export default function ProfessionalPrompt1({
           {showSupportCheck && (
             <div className="w-[30%]">
               <ProfessionalSupportCheckPanel2
-                spaceId={spaceId}
                 facilityId={FACILITY_ID}
+                currentYmd={CURRENT_YMD}
+                selectedChildId={selectedChildId}
+                selectedChildName={selectedChildName}
+                enterTime={attendanceEnterText}
+                leaveTime={attendanceLeaveText}
+                onOpenProfessionalSupportList={addProfessionalSupportListTab}
                 isAbsent={isAbsent}
                 hasEntered={hasEntered}
                 hasExited={hasExited}

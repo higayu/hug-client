@@ -2,13 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useSelector } from 'react-redux'
 import { useAppState } from '@/AppStateContext'
-import { useTabs } from '@/hooks/useTabs'
 import { useNote } from '@/hooks/useNote'
-import { selectCurrentYmd } from '@/store/slices/appStateSlice.js'
-import {
-  selectActiveSpaceId,
-  selectSpaceChildId,
-} from '@/store/slices/chilledspaceSlice.js'
 import { selectProfessionalSupportStatus } from '@/store/slices/recordStatusSlice.js'
 import { useProfessionalSupportCheck2 } from './useProfessionalSupportCheck2'
 import ProfessionalSupportPostModal from './ProfessionalSupportPostModal'
@@ -93,8 +87,13 @@ async function checkProfessionalSupportRegistration({
 export default function ProfessionalSupportCheckPanel2({
   className = '',
   logTag = 'ProfessionalSupportCheckPanel2',
-  spaceId,
   facilityId,
+  currentYmd,
+  selectedChildId,
+  selectedChildName = '',
+  enterTime = '',
+  leaveTime = '',
+  onOpenProfessionalSupportList = null,
   isAbsent = false,
   hasEntered = false,
   hasExited = false,
@@ -130,25 +129,15 @@ export default function ProfessionalSupportCheckPanel2({
       ? 'rotate-0'
       : 'rotate-180'
 
-  const activeSpaceId = useSelector(selectActiveSpaceId)
-  const effectiveSpaceId = spaceId || activeSpaceId
-  const currentYmdFromStore = useSelector(selectCurrentYmd)
-  const childIdFromStore = useSelector(selectSpaceChildId(effectiveSpaceId))
-
-  const { appState, chilledSpaces, CURRENT_YMD, FACILITY_ID, iniState } = useAppState()
-  const currentSpace = chilledSpaces?.[effectiveSpaceId] ?? {}
+  const { appState, iniState } = useAppState()
   const professionalSupportSaveMode =
     iniState?.apiSettings?.professionalSupportSaveMode === 'created'
       ? 'created'
       : 'draft'
 
-  const childId = childIdFromStore ?? currentSpace.childId ?? ''
-  const dateStr =
-    currentYmdFromStore ?? CURRENT_YMD ?? appState?.CURRENT_YMD ?? ''
-  const resolvedFacilityId =
-    facilityId ?? FACILITY_ID ?? appState?.FACILITY_ID ?? ''
-
-  const { addProfessionalSupportListTab } = useTabs(effectiveSpaceId)
+  const childId = selectedChildId ? String(selectedChildId) : ''
+  const dateStr = currentYmd || ''
+  const resolvedFacilityId = facilityId ?? ''
   const { loadTemp } = useNote()
 
   const professionalSupportStatus = useSelector((state) =>
@@ -156,8 +145,10 @@ export default function ProfessionalSupportCheckPanel2({
   )
 
   const { checking, runCheck } = useProfessionalSupportCheck2(
-    effectiveSpaceId,
     logTag,
+    childId,
+    resolvedFacilityId,
+    dateStr,
   )
 
   const useDays = professionalSupportStatus?.useDays ?? null
@@ -525,8 +516,8 @@ export default function ProfessionalSupportCheckPanel2({
 
           <button
             type="button"
-            onClick={addProfessionalSupportListTab}
-            disabled={typeof addProfessionalSupportListTab !== 'function'}
+            onClick={onOpenProfessionalSupportList}
+            disabled={typeof onOpenProfessionalSupportList !== 'function'}
             className="flex h-8 items-center justify-center rounded bg-gray-100 px-2 text-xs font-semibold text-gray-700 transition hover:bg-gray-200 disabled:opacity-50"
             title="専門的支援の一覧を表示"
           >
@@ -660,12 +651,12 @@ export default function ProfessionalSupportCheckPanel2({
       <ProfessionalSupportPostModal
         open={postModalOpen}
         submitting={linkedLoading}
-        childName={currentSpace?.childName || ''}
+        childName={selectedChildName || ''}
         childId={childId}
         facilityId={resolvedFacilityId}
         initialDate={dateStr}
-        initialStartTime={currentSpace?.selectedChildColumn5 || ''}
-        initialEndTime={currentSpace?.selectedChildColumn6 || ''}
+        initialStartTime={enterTime || ''}
+        initialEndTime={leaveTime || ''}
         initialContents={postModalInitialContents}
         errorMessage={postModalError}
         saveMode={professionalSupportSaveMode}

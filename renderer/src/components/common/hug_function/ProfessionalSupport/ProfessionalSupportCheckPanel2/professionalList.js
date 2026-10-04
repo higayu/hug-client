@@ -1,4 +1,3 @@
-// banso-navi\hug-client-not-request\renderer\src\windows\MainWindow\MainContent\Sidebar\NomalMode\SimpleBoard\AttendanceTable\components\AttendanceDataTable\AttendanceRow\ProfessionalSupportCheckPanel\ProfessionalSupportListButton\professionalList.js
 
 import {
   createWebview,
