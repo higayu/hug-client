@@ -1018,3 +1018,48 @@ main/preload/共通executor：
 を整理して提示してください。
 
 その分析後、実際のSQLと修正版コードを作成してください。
+
+# 20. 管理画面の配置と renderer API
+
+## 管理画面の配置
+
+Web自動化の管理画面は以下に配置しています。
+
+```text
+renderer/src/components/SettingsModal/tabs/Admin/WebAutomation
+```
+
+この画面は、Web自動化設定の確認・編集と、ChatGPTへ渡すDB駆動化指示書のコピー／Markdown出力に使用します。
+
+
+## renderer から使用する electronAPI
+
+Web自動化のRule / Flowを取得・更新するときは、既存の以下のAPIを使用します。
+
+### Rule
+
+```javascript
+window.electronAPI.laravel_webAutomationRules_getAll(params)
+window.electronAPI.laravel_webAutomationRule_get(ruleKey, params)
+window.electronAPI.laravel_webAutomationRule_update(ruleKey, data, params)
+```
+
+### Flow
+
+```javascript
+window.electronAPI.laravel_webAutomationFlows_getAll(params)
+window.electronAPI.laravel_webAutomationFlow_get(flowKey, params)
+```
+
+基本的なscopeは以下です。
+
+```javascript
+const params = {
+  app_key: 'hug-banso-navi',
+  webview_key: '*',
+}
+```
+
+既存APIで対応できる場合、新しいIPCや別APIを追加しないでください。
+
+main / preload を変更する前に、上記APIと既存のWeb自動化共通処理で対応できないか確認してください。
