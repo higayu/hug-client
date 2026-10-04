@@ -2,7 +2,7 @@
 import PersonalRecordPrompt from "../../parts/PersonalRecordPrompt";
 import ProfessionalPrompt1 from "../../parts/ProfessionalPrompt1";
 import ProfessionalPrompt2 from "../../parts/ProfessionalPrompt2";
-import DeepseekTabButton from "@/components/common/AI/DeepseekTabButton";
+import DeepseekTabButton from "./DeepseekTabButton";
 
 export const AI_PROMPT_COMPONENT_MAP = {
   personal: {

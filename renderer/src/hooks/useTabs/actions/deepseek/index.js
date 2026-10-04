@@ -7,7 +7,7 @@ import {
   createTabButton,
   activateTab,
   closeTab,
-} from '../common/index.js'
+} from '../../common/index.js'
 
 const DEEPSEEK_URL = 'https://chat.deepseek.com/'
 const TAB_LABEL = 'DeepSeek'

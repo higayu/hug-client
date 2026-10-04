@@ -2,7 +2,7 @@
 import PersonalRecordPrompt from "../../parts/PersonalRecordPrompt";
 import ProfessionalPrompt1 from "../../parts/ProfessionalPrompt1";
 import ProfessionalPrompt2 from "../../parts/ProfessionalPrompt2";
-import OpenAiTabButton from "@/components/common/AI/OpenAiTabButton";
+import OpenAiTabButton from "./OpenAiTabButton";
 
 export const AI_PROMPT_COMPONENT_MAP = {
   personal: {

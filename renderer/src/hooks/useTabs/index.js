@@ -43,13 +43,8 @@ import {
   addProfessionalSupportCheckAction,
 } from './actions/professionalNew.js'
 
-import {
-  addOpenAiTabAction,
-} from './actions/openAi.js'
-
-import {
-  addDeepseekTabAction,
-} from './actions/deepseek.js'
+import { addOpenAiTabAction,} from './actions/openAi';
+import { addDeepseekTabAction,} from './actions/deepseek';
 
 // useTabs() は複数コンポーネントから呼ばれるため、
 // 初期化はアプリ全体で1回だけ行う

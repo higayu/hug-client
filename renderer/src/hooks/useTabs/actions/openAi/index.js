@@ -7,8 +7,8 @@ import {
   createTabButton,
   activateTab,
   closeTab,
-} from '../common/index.js'
-import { runEnableTemporaryChatAfterLoad } from '@/components/common/AI/OpenAiTabButton/enableTemporaryChatInWebview.js'
+} from '../../common/index.js'
+import { runEnableTemporaryChatAfterLoad } from './enableTemporaryChatInWebview';
 
 const OPENAI_URL = 'https://chatgpt.com/?temporary-chat=true'
 const TAB_LABEL = 'OpenAI ChatGPT'
