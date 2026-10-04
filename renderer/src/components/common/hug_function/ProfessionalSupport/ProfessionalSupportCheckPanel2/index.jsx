@@ -287,12 +287,9 @@ export default function ProfessionalSupportCheckPanel2({
       if (!result.childFound) {
         setAction('warning', '対象児童が出席表に見つかりません')
       } else if (result.registered === true) {
-        setAction(
-          'success',
-          result.registrationId
-            ? `専門＋ 登録済み ID:${result.registrationId}`
-            : '専門＋ 登録済み',
-        )
+        // 登録済み状態は plusStatusLabel 側で常設表示するため、
+        // actionMessage に同じ内容を重複表示しない。
+        setAction('idle', '')
       } else {
         setAction('warning', '専門＋ 未登録')
       }

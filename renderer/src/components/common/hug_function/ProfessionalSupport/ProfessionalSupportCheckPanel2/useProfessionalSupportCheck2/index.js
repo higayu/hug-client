@@ -289,6 +289,7 @@ export function useProfessionalSupportCheck2(
          * 実際の rows の日付キーをここに追加してください。
          */
         const dateCandidate =
+          row?.interviewDate ??
           row?.ymd ??
           row?.date ??
           row?.use_date ??
