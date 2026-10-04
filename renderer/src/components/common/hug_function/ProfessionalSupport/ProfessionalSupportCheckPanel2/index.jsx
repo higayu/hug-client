@@ -332,6 +332,20 @@ export default function ProfessionalSupportCheckPanel2({
     }
   }
 
+
+  const runProfessionalPlusUnified = async () => {
+    if (operationBusy || !childId || !dateStr || !resolvedFacilityId) return
+
+    // まず加算一覧を確認し、登録済みなら何もしない。
+    const checkResult = await runProfessionalPlusRegistrationCheck({ force: true })
+
+    if (!checkResult?.ok || !checkResult?.childFound) return checkResult
+    if (checkResult.registered === true) return checkResult
+
+    // 未登録の場合だけ専門＋を登録し、登録後に再確認する。
+    return runProfessionalPlusOnly()
+  }
+
   const openLinkedModal = async () => {
     if (linkedDisabled || postModalPreparing) return
 
@@ -523,36 +537,26 @@ export default function ProfessionalSupportCheckPanel2({
 
           <button
             type="button"
-            onClick={runProfessionalPlusOnly}
+            onClick={runProfessionalPlusUnified}
             disabled={operationBusy || !childId || !dateStr || !resolvedFacilityId}
-            className="flex h-8 items-center justify-center rounded bg-red-600 px-2 text-xs font-semibold text-white transition hover:bg-red-700 disabled:opacity-50"
-            title="専門＋だけを登録"
-          >
-            {plusLoading ? '登録中...' : '専門＋'}
-          </button>
-
-          <button
-            type="button"
-            onClick={() => runProfessionalPlusRegistrationCheck()}
-            disabled={
-              operationBusy || !childId || !dateStr || !resolvedFacilityId
-            }
-            className={`flex h-8 items-center justify-center rounded px-2 text-xs font-semibold text-white transition disabled:opacity-50 ${
+            className={`col-span-2 flex h-8 items-center justify-center rounded px-2 text-xs font-semibold text-white transition disabled:opacity-50 ${
               plusRegistered === true
                 ? 'bg-green-600 hover:bg-green-700'
                 : plusRegistered === false
                   ? 'bg-orange-600 hover:bg-orange-700'
-                  : 'bg-slate-600 hover:bg-slate-700'
+                  : 'bg-red-600 hover:bg-red-700'
             }`}
-            title={`登録確認 / f_id=${resolvedFacilityId || '-'} / date=${dateStr || '-'}`}
+            title={`専門＋の登録状態を加算一覧で確認し、未登録なら登録します / f_id=${resolvedFacilityId || '-'} / date=${dateStr || '-'}`}
           >
             {registrationCheckLoading
-              ? '確認中...'
-              : plusRegistered === true
-                ? '登録済み'
-                : plusRegistered === false
-                  ? '未登録'
-                  : '登録確認'}
+              ? '専門＋ 確認中...'
+              : plusLoading
+                ? '専門＋ 登録中...'
+                : plusRegistered === true
+                  ? '専門＋ 登録済み'
+                  : plusRegistered === false
+                    ? '専門＋ 未登録・登録する'
+                    : '専門＋ 確認・登録'}
           </button>
         </div>
 
