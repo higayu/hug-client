@@ -39,6 +39,7 @@ export default function AttendanceActionSection({
   facilityId,
   childId,
   childName,
+  row,
   dateStr,
   column5,
   column5Html,
@@ -344,7 +345,10 @@ export default function AttendanceActionSection({
         </div>
 
         <div className="hug-post-actions hug-post-actions-inline">
-          <EditButton />
+          <EditButton
+            editUrl={row?.edit_url || row?.editUrl || ''}
+            childName={childName}
+          />
         </div>
       </div>
     )

@@ -1,26 +1,96 @@
-import { useCallback } from 'react'
+import { useCallback, useMemo, useState } from 'react'
+
+import { openAttendanceEditPage } from './function.js'
 
 /**
  * 入退室時刻の編集ボタン。
- * 現時点では表示のみ実装し、クリック時の内部処理は未実装。
+ *
+ * 同じ行から取得した以下2つを直接受け取る。
+ * - name         : 児童名
+ * - locationHref : HUG本体の location.href の遷移先
+ *                  例 attendance.php?mode=edit&id=47534&s_id=1
+ *
+ * 既存呼び出しとの互換用に childName / editUrl も受け付ける。
  */
 export default function EditButton({
+  name = '',
+  locationHref = '',
+
+  // 旧propsとの互換用
+  childName = '',
+  editUrl = '',
+
+  webview = null,
   disabled = false,
-  title = '入退室時間を編集',
+  title = '',
+  onOpened = null,
+  onError = null,
 }) {
-  const handleClick = useCallback(() => {
-    // TODO: 編集処理は後で実装する
-  }, [])
+  const [isOpening, setIsOpening] = useState(false)
+
+  // 新しいpropsを優先し、旧propsはフォールバックとして使用する。
+  const resolvedName = String(name || childName || '').trim()
+  const resolvedLocationHref = String(locationHref || editUrl || '').trim()
+
+  /**
+   * 取得結果確認用。
+   * 名前と、同じ行から取得した location.href を表示する。
+   */
+  const resolvedTitle = useMemo(() => {
+    if (title) return title
+
+    return [
+      `名前: ${resolvedName || '(未取得)'}`,
+      `location.href: ${resolvedLocationHref || '(未取得)'}`,
+    ].join('\n')
+  }, [title, resolvedName, resolvedLocationHref])
+
+  const cannotOpen = disabled || isOpening || !resolvedLocationHref
+
+  const handleClick = useCallback(async () => {
+    if (cannotOpen) return
+
+    setIsOpening(true)
+
+    try {
+      const result = await openAttendanceEditPage({
+        editUrl: resolvedLocationHref,
+        webview,
+      })
+
+      onOpened?.({
+        ...result,
+        name: resolvedName,
+        locationHref: resolvedLocationHref,
+      })
+    } catch (error) {
+      console.error('[Attendance Edit] 編集画面GET遷移失敗:', {
+        name: resolvedName,
+        locationHref: resolvedLocationHref,
+        error,
+      })
+      onError?.(error)
+    } finally {
+      setIsOpening(false)
+    }
+  }, [
+    cannotOpen,
+    resolvedLocationHref,
+    resolvedName,
+    webview,
+    onOpened,
+    onError,
+  ])
 
   return (
     <button
       type="button"
       className="hug-btn-attendance-edit"
-      disabled={disabled}
-      title={title}
+      disabled={cannotOpen}
+      title={resolvedTitle}
       onClick={handleClick}
     >
-      編集
+      {isOpening ? '移動中...' : '編集'}
     </button>
   )
 }

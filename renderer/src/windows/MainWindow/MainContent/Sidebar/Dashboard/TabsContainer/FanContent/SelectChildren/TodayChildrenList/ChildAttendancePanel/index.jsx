@@ -736,6 +736,7 @@ export default function ChildAttendancePanel({ spaceId }) {
             facilityId={facilityId}
             childId={selectChild}
             childName={childName}
+            row={attendanceItem}
             dateStr={dateStr}
             column5={column5}
             column5Html={column5Html}

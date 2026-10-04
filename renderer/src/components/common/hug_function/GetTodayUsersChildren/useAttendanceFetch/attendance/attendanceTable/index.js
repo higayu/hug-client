@@ -15,6 +15,7 @@ const DEFAULT_CONFIG = {
   },
   columns: {
     childInfo: 1,
+    edit: 4,
     enter: 5,
     leave: 6
   },
@@ -209,6 +210,57 @@ function extractChildrenInfo(cellHtml, config) {
   return { children_id, children_name }
 }
 
+
+function extractEditInfo(cells, config) {
+  const editIndex = Number(config.columns.edit ?? 4)
+  const editCell = cells[editIndex]
+
+  const result = {
+    edit_id: '',
+    edit_s_id: '',
+    edit_url: '',
+    location_href: ''
+  }
+
+  if (!editCell) {
+    return result
+  }
+
+  const button = editCell.querySelector('button[onclick*="attendance.php"][onclick*="mode=edit"]')
+  if (!button) {
+    return result
+  }
+
+  const onclickCode = button.getAttribute('onclick') || ''
+
+  // HUG本体:
+  // location.href='attendance.php?mode=edit&id=47534&s_id=1'
+  const hrefMatch = onclickCode.match(
+    /location\.href\s*=\s*["']([^"']*attendance\.php\?[^"']*mode=edit[^"']*)["']/i
+  )
+
+  if (!hrefMatch?.[1]) {
+    return result
+  }
+
+  const decodedUrl = hrefMatch[1].replace(/&amp;/g, '&')
+  result.edit_url = decodedUrl
+  result.location_href = decodedUrl
+
+  try {
+    const parsedUrl = new URL(decodedUrl, 'https://www.hug-ayumu.link/hug/wm/')
+    result.edit_id = parsedUrl.searchParams.get('id') || ''
+    result.edit_s_id = parsedUrl.searchParams.get('s_id') || ''
+  } catch (error) {
+    console.warn('⚠️ [ATTENDANCE] 編集URL解析失敗:', {
+      decodedUrl,
+      error
+    })
+  }
+
+  return result
+}
+
 function extractTimeColumns(cells, config) {
   const enterIndex = Number(config.columns.enter ?? 5)
   const leaveIndex = Number(config.columns.leave ?? 6)
@@ -243,12 +295,19 @@ function processAttendanceRow(row, rowIndex, config) {
 
   const cell1Html = cells[childInfoIndex]?.innerHTML.trim() || ''
   const { children_id, children_name } = extractChildrenInfo(cell1Html, config)
+  const { edit_id, edit_s_id, edit_url, location_href } = extractEditInfo(cells, config)
   const { column5, column5Html, column6, column6Html } = extractTimeColumns(cells, config)
 
   const rowData = {
     rowIndex: rowIndex + 1,
     children_id,
     children_name,
+    // HUG本体の「編集」ボタンが持つGETパラメータ。
+    // EditButtonから location.href で同じ編集画面へ遷移するため保存する。
+    edit_id,
+    edit_s_id,
+    edit_url,
+    location_href,
     // 下流互換のためkey名は変更しない。
     column1Html: cell1Html,
     column5,

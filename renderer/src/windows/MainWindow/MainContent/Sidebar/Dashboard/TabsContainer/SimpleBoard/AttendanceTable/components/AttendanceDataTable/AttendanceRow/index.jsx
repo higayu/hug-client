@@ -75,7 +75,11 @@ export default function AttendanceRow({ row, busy, onAction }) {
       <td className="border border-slate-300 p-3 text-center">{row.leaveTime || '―'}</td>
       <td className="border border-slate-300 p-3 text-center">
         {row.enterTime ? (
-          <EditButton disabled={busy} />
+          <EditButton
+            editUrl={row.editUrl}
+            childName={row.name}
+            disabled={busy}
+          />
         ) : (
           <span className="text-slate-400">―</span>
         )}
