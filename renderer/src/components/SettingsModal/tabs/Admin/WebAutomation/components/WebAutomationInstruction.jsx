@@ -1,202 +1,107 @@
-import { useMemo } from 'react'
+import { Download } from 'lucide-react'
+import { saveAs } from 'file-saver'
 
 import CopyButton from '@/components/ui/CopyButton'
+import { useToast } from '@/provider/ToastProvider/ToastContext.jsx'
+
+// webAuto.md をこのコンポーネントと同じフォルダに配置する想定
+import FULL_INSTRUCTION_TEXT from '@/assets/md/webAuto.md?raw'
 
 const SUMMARY_TEXT = `Web自動化設定は、Admin/WebAutomation 配下で管理しています。
 対象DBは web_automation_rules / web_automation_flows / web_automation_flow_steps の3テーブルです。
 renderer は window.electronAPI の laravel_webAutomationRules_getAll / laravel_webAutomationRule_get / laravel_webAutomationRule_update / laravel_webAutomationFlows_getAll / laravel_webAutomationFlow_get を使います。
-入退室処理は attendance_enter / attendance_leave Flowを取得し、Stepに紐づくRuleのconfig_jsonとStepのinput_jsonを使ってPOST内容を組み立てます。
+DB駆動処理は Flow → FlowStep → Rule の順に取得し、Stepのinput_jsonで実行時入力を渡し、Ruleのconfig_jsonに従って共通executorで実行します。
 Rule更新は config_json のJSON形式を崩さないこと、app_key と webview_key のScopeを合わせることが重要です。`
 
-const FULL_INSTRUCTION_TEXT = `# Hug Banso Web自動化 管理画面の構成
+const BUTTON_CLASS =
+  'inline-flex items-center gap-1.5 rounded-md border border-blue-200 bg-blue-50 px-3 py-1.5 text-sm font-semibold text-blue-700 transition hover:bg-blue-100'
 
-## 目的
-ChatGPTに修正相談するときは、この指示書を貼り付けてから、修正したい内容を伝えます。
-この画面は管理者だけが使う想定で、web_automation_rules / web_automation_flows / web_automation_flow_steps を確認・編集するための画面です。
-
-## 配置
-renderer/src/components/SettingsModal/tabs/Admin/WebAutomation
-
-主な構成:
-- index.jsx
-  - WebAutomation全体の入口です。
-  - WebAutomationInstruction と AutomationRulesTab を表示します。
-- components/WebAutomationInstruction.jsx
-  - ChatGPTへ構成を伝えるための指示書コンポーネントです。
-- AutomationRulesTab/index.jsx
-  - Rules / Flows の取得、表示、Rule更新を担当します。
-
-## DBテーブル
-
-### web_automation_rules
-1つの自動化処理の実体です。
-主に onclick解析、POST先、POSTデータ生成ルール、DOM取得ルールなどを config_json に持ちます。
-
-主な項目:
-- app_key
-- webview_key
-- rule_key
-- name
-- category
-- action_type
-- target_url_pattern
-- target_selector
-- parser_type
-- function_name
-- config_json
-- is_active
-- sort_order
-- version
-
-### web_automation_flows
-複数Stepを束ねるフローです。
-入室なら attendance_enter、退室なら attendance_leave を使います。
-
-主な項目:
-- app_key
-- webview_key
-- flow_key
-- name
-- trigger_type
-- target_url_pattern
-- config_json
-- is_active
-- version
-
-### web_automation_flow_steps
-Flow内の実行順を管理します。
-StepはRuleと紐づき、input_json で childId / facilityId / date / isMail などをRuleへ渡します。
-
-主な項目:
-- flow_id
-- rule_id
-- step_key
-- step_order
-- step_type
-- name
-- input_json
-- config_json
-- is_active
-
-## 入退室で使うFlow
-
-### attendance_enter
-入室処理です。
-StepからRuleへ以下の値を渡す想定です。
-
-{
-  "childId": "{{childId}}",
-  "facilityId": "{{facilityId}}",
-  "date": "{{date}}",
-  "isMail": "{{isMail}}"
-}
-
-### attendance_leave
-退室処理です。
-StepからRuleへ以下の値を渡す想定です。
-
-{
-  "childId": "{{childId}}",
-  "facilityId": "{{facilityId}}",
-  "date": "{{date}}",
-  "isMail": "{{isMail}}"
-}
-
-## rendererから使うelectronAPI
-
-取得:
-- window.electronAPI.laravel_webAutomationRules_getAll(params)
-- window.electronAPI.laravel_webAutomationRule_get(ruleKey, params)
-- window.electronAPI.laravel_webAutomationFlows_getAll(params)
-- window.electronAPI.laravel_webAutomationFlow_get(flowKey, params)
-
-更新:
-- window.electronAPI.laravel_webAutomationRule_update(ruleKey, data, params)
-
-params は基本的に以下です。
-{
-  app_key: "hug-banso-navi",
-  webview_key: "*"
-}
-
-## 編集時の注意点
-
-1. config_json は必ず正しいJSONにしてください。
-2. app_key / webview_key のScopeが一致しないと取得できません。
-3. Flowはこの画面では参照のみ、Ruleは更新可能です。
-4. 入退室処理はメール通知あり/なしを isMail または mail_flg として扱います。
-5. 既存の入退室が止まらないよう、renderer側の実行処理ではDB Flow取得失敗時に旧POSTへフォールバックする構成にしています。
-6. main/preloadには Rules取得、Rule更新、Flows取得のIPC導線が必要です。
-
-## ChatGPTへ依頼するときの例
-
-以下の構成で修正してください。
-- Admin/WebAutomation配下の管理画面です。
-- web_automation_rules / web_automation_flows / web_automation_flow_steps を使います。
-- Ruleは更新可能、Flowは参照のみです。
-- rendererからは window.electronAPI.laravel_webAutomationRule_update を使って保存します。
-- config_json はJSON形式を維持してください。
-
-依頼内容:
-ここに修正したい内容を書く。
-`
-
-function CodeBlock({ children }) {
+function CodeBlock({ children, className = '' }) {
   return (
-    <pre className="max-h-72 overflow-auto whitespace-pre-wrap rounded-md border border-slate-700 bg-slate-950 p-3 text-xs leading-5 text-slate-100">
+    <pre
+      className={`max-h-96 overflow-auto whitespace-pre-wrap break-words rounded-md border border-slate-200 bg-slate-950 p-3 text-xs leading-6 text-slate-100 ${className}`}
+    >
       {children}
     </pre>
   )
 }
 
-export default function WebAutomationInstruction() {
-  const fullText = useMemo(
-    () => FULL_INSTRUCTION_TEXT,
-    [],
-  )
+export default function WebAutomationInstruction({
+  title = 'ChatGPT修正用 指示書',
+  filename = 'webAuto.md',
+}) {
+  const { showSuccessToast, showErrorToast } = useToast()
+
+  const hasInstruction =
+    typeof FULL_INSTRUCTION_TEXT === 'string' &&
+    Boolean(FULL_INSTRUCTION_TEXT.trim())
+
+  const handleExport = () => {
+    if (!hasInstruction) {
+      showErrorToast('出力する指示書がありません')
+      return
+    }
+
+    try {
+      saveAs(
+        new Blob([FULL_INSTRUCTION_TEXT], {
+          type: 'text/markdown;charset=utf-8',
+        }),
+        filename,
+      )
+      showSuccessToast('指示書の出力を開始しました')
+    } catch (error) {
+      console.error('[WebAutomationInstruction] 出力エラー:', error)
+      showErrorToast('指示書の出力に失敗しました')
+    }
+  }
 
   return (
-    <details className="rounded-xl border border-amber-200 bg-amber-50/60 p-4 text-sm text-gray-800" open>
+    <details
+      className="rounded-xl border border-amber-200 bg-amber-50/60 p-4 text-sm text-gray-800"
+      open
+    >
       <summary className="cursor-pointer select-none text-base font-semibold text-amber-900">
-        ChatGPT修正用 指示書
+        {title}
       </summary>
 
       <div className="mt-3 space-y-4">
         <p className="text-sm leading-6 text-amber-900">
-          Web自動化の編集機能をChatGPTに相談しながら修正するための説明です。
-          相談時は下の要約、または全文をコピーして貼り付けてください。
+          Web自動化のDB駆動化や修正をChatGPTへ依頼するときに使用する指示書です。
+          要約だけをコピーすることも、完全版をコピー・Markdown出力することもできます。
         </p>
 
         <div className="flex flex-wrap gap-2">
-          <div className="inline-flex items-center gap-2 rounded-md border border-blue-200 bg-blue-50 px-3 py-1.5">
-            <span className="text-xs font-semibold text-blue-700">
-              要約
-            </span>
-            <CopyButton
-              text={SUMMARY_TEXT}
-              title="要約をコピー"
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-700 transition-opacity hover:opacity-75"
-              fontStyle="text-blue-700"
-            />
-          </div>
+          <CopyButton
+            text={SUMMARY_TEXT}
+            title="要約をコピー"
+            className={BUTTON_CLASS}
+            fontStyle="text-blue-700"
+          />
 
-          <div className="inline-flex items-center gap-2 rounded-md border border-blue-200 bg-blue-50 px-3 py-1.5">
-            <span className="text-xs font-semibold text-blue-700">
-              指示書全文
-            </span>
-            <CopyButton
-              text={fullText}
-              title="指示書全文をコピー"
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-700 transition-opacity hover:opacity-75"
-              fontStyle="text-blue-700"
-            />
-          </div>
+          {hasInstruction && (
+            <>
+              <CopyButton
+                text={FULL_INSTRUCTION_TEXT}
+                title="指示書全文をコピー"
+                className={BUTTON_CLASS}
+                fontStyle="text-blue-700"
+              />
+
+              <button
+                type="button"
+                onClick={handleExport}
+                className={BUTTON_CLASS}
+              >
+                <Download size={16} aria-hidden="true" />
+                Markdown出力
+              </button>
+            </>
+          )}
         </div>
 
         <section className="rounded-lg border border-amber-200 bg-white p-3">
-          <h4 className="mb-2 font-semibold text-gray-800">
-            要約
-          </h4>
+          <h4 className="mb-2 font-semibold text-gray-800">要約</h4>
           <CodeBlock>{SUMMARY_TEXT}</CodeBlock>
         </section>
 
@@ -206,8 +111,8 @@ export default function WebAutomationInstruction() {
               web_automation_rules
             </h4>
             <p className="mt-2 text-xs leading-5 text-gray-600">
-              1つの自動化処理の実体です。onclick解析、POST設定、DOM取得などを
-              config_jsonで管理します。この画面ではRuleを更新できます。
+              1つの自動化処理の実体です。対象URL、selector、action_type、
+              parser、config_jsonなど、実際のWebView操作定義を管理します。
             </p>
           </div>
 
@@ -216,7 +121,8 @@ export default function WebAutomationInstruction() {
               web_automation_flows
             </h4>
             <p className="mt-2 text-xs leading-5 text-gray-600">
-              複数Stepをまとめるフローです。入室はattendance_enter、退室はattendance_leaveを使います。
+              複数Stepをまとめる処理全体の入口です。rendererからは基本的に
+              flow_keyを指定して処理を開始します。
             </p>
           </div>
 
@@ -225,7 +131,8 @@ export default function WebAutomationInstruction() {
               web_automation_flow_steps
             </h4>
             <p className="mt-2 text-xs leading-5 text-gray-600">
-              Flow内の順番とRuleへの入力値を管理します。input_jsonでchildId、date、isMailなどを渡します。
+              Flow内の実行順とRuleへの入力値を管理します。input_jsonで
+              childId、facilityId、date、textValueなどを渡します。
             </p>
           </div>
         </section>
@@ -239,6 +146,52 @@ window.electronAPI.laravel_webAutomationRule_get(ruleKey, params)
 window.electronAPI.laravel_webAutomationRule_update(ruleKey, data, params)
 window.electronAPI.laravel_webAutomationFlows_getAll(params)
 window.electronAPI.laravel_webAutomationFlow_get(flowKey, params)`}</CodeBlock>
+        </section>
+
+        <section className="rounded-lg border border-gray-200 bg-white p-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h4 className="font-semibold text-gray-800">指示書全文</h4>
+              <p className="mt-1 text-xs text-gray-500">
+                webAuto.md の内容をそのまま表示しています。
+              </p>
+            </div>
+
+            {hasInstruction && (
+              <div className="flex flex-wrap gap-2">
+                <CopyButton
+                  text={FULL_INSTRUCTION_TEXT}
+                  title="指示書全文をコピー"
+                  className={BUTTON_CLASS}
+                  fontStyle="text-blue-700"
+                />
+
+                <button
+                  type="button"
+                  onClick={handleExport}
+                  className={BUTTON_CLASS}
+                >
+                  <Download size={16} aria-hidden="true" />
+                  Markdown出力
+                </button>
+              </div>
+            )}
+          </div>
+
+          {hasInstruction ? (
+            <details className="mt-3">
+              <summary className="cursor-pointer text-sm text-gray-600">
+                指示書全文を表示
+              </summary>
+              <CodeBlock className="mt-3">
+                {FULL_INSTRUCTION_TEXT}
+              </CodeBlock>
+            </details>
+          ) : (
+            <p className="mt-3 text-sm text-gray-500">
+              指示書がありません。
+            </p>
+          )}
         </section>
       </div>
     </details>
