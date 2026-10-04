@@ -95,7 +95,10 @@ export function useAttendanceFetch(logTag = "GetTodayUsersChildren") {
           return;
         }
 
-        const extracted = await extractColumnData(result.html);
+        const extracted = await extractColumnData(
+          result.html,
+          result.automationConfig || {},
+        );
 
         const tableData = {
           success: true,

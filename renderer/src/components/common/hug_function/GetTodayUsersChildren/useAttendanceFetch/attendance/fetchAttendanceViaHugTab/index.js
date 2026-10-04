@@ -1,13 +1,15 @@
-import { getHugWebviewForCache } from "@/hooks/useHugCache/getHugCache";
-import { fetchAttendanceTableInWebview } from "./fetchAttendanceTableInWebview";
+import { executeAttendanceFetchFlow } from "../flow/attendanceFetchFlow";
 
 /**
- * hugview の Cookie だけ使い、ページ遷移なしで利用者テーブルを取得する
+ * DBの attendance_fetch_today_users Flow を使用して、
+ * HUGログイン済みWebViewのCookieセッションで利用者テーブルを取得する。
+ *
+ * 戻り値の形はDB化前と同じ:
+ * { ok, html, rowCount, className, pageTitle, pageUrl }
+ *
  * @param {{ facilityId: string|number, dateStr: string }} opts
  */
 export async function fetchAttendanceViaHugTab({ facilityId, dateStr }) {
-  const webview = await getHugWebviewForCache();
-
   if (!facilityId || !dateStr) {
     return {
       ok: false,
@@ -15,10 +17,8 @@ export async function fetchAttendanceViaHugTab({ facilityId, dateStr }) {
     };
   }
 
-  return fetchAttendanceTableInWebview(webview, {
+  return executeAttendanceFetchFlow({
     facilityId: String(facilityId),
     dateStr: String(dateStr),
   });
 }
-
-
