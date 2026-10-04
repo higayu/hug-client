@@ -1,6 +1,6 @@
 import {
   PersonalRecordButton,
-  ProfessionalSupportCheckPanel2,
+  ProfessionalSupportManagerPanel,
   addProfessionalSupportListAction,
   EditButton,
   EnterButton,
@@ -81,7 +81,7 @@ export default function AttendanceRow({ row, busy, onAction }) {
         )}
       </td>
       <td className="border border-slate-300 p-2 align-top">
-        <ProfessionalSupportCheckPanel2
+        <ProfessionalSupportManagerPanel
           facilityId={FACILITY_ID}
           currentYmd={CURRENT_YMD}
           selectedChildId={row.childId}

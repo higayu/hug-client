@@ -1,8 +1,8 @@
-# ProfessionalSupportCheckPanel2 DB Flow化
+# ProfessionalSupportManagerPanel DB Flow化
 
 ## 変更概要
 
-`renderer/src/components/common/hug_function/ProfessionalSupport/ProfessionalSupportCheckPanel2` 内の固定実装を、DB の `web_automation_flows` / `web_automation_flow_steps` / `web_automation_rules` から設定取得して実行する形へ差し替えました。
+`renderer/src/components/common/hug_function/ProfessionalSupport/ProfessionalSupportManagerPanel` 内の固定実装を、DB の `web_automation_flows` / `web_automation_flow_steps` / `web_automation_rules` から設定取得して実行する形へ差し替えました。
 
 ## DB Flow化した機能
 
@@ -30,7 +30,7 @@
 - `postProfessionalSupportDraft.js`
   - 固定URL/固定POSTを廃止し、`professional_support_draft_save` Flowから設定取得して実行
 
-- `useProfessionalSupportCheck2/fetchHook1/fetchProfessionalCheck/index.js`
+- `useProfessionalSupportStatusCheck/fetchHook1/fetchProfessionalCheck/index.js`
   - 固定検索POSTを廃止し、`professional_support_use_days_check` Flowから設定取得して実行
 
 - `index.jsx`

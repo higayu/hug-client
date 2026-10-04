@@ -2,7 +2,7 @@
 
 変更内容:
 
-1. `ProfessionalSupportCheckPanel2` で `useNote()` を使用。
+1. `ProfessionalSupportManagerPanel` で `useNote()` を使用。
 2. 専門的支援ボタンを押した時、モーダルを開く前に `loadTemp(childId, proxy)` を実行。
 3. 読み込んだ `memo2` を `ProfessionalSupportPostModal` の `initialContents` に渡す。
 4. モーダルの「記録内容」テキストエリアは `initialContents` を初期値にする。

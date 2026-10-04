@@ -2,10 +2,10 @@
 
 専門的支援関連の UI と処理は以下へ一本化済みです。
 
-`renderer/src/components/common/hug_function/ProfessionalSupportCheckPanel2/index.jsx`
+`renderer/src/components/common/hug_function/ProfessionalSupportManagerPanel/index.jsx`
 
 ChildAttendancePanel 側は `AttendanceActionSection/index.jsx` から
-`ProfessionalSupportCheckPanel2` を1回だけ表示し、以下の状態だけ props で渡します。
+`ProfessionalSupportManagerPanel` を1回だけ表示し、以下の状態だけ props で渡します。
 
 - spaceId
 - facilityId

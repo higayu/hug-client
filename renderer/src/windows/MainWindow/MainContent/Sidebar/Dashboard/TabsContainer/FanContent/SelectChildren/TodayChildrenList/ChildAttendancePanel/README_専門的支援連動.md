@@ -2,14 +2,14 @@
 
 ## 閉じた状態
 
-`ProfessionalSupportCheckPanel2` を参考に、専門的支援操作を1つのコンパクトUIへ統合しました。
+`ProfessionalSupportManagerPanel` を参考に、専門的支援操作を1つのコンパクトUIへ統合しました。
 
 - 左: `保存 N個 / 本日 済・未` ステータス
   - クリックで `runCheck()` を実行し再確認
 - 中央: `専門的支援`（連動型）
 - 右: 展開ボタン
 
-従来 ChildAttendancePanel 下部にあった `ProfessionalSupportCheckPanel2` は重複するため削除しています。
+従来 ChildAttendancePanel 下部にあった `ProfessionalSupportManagerPanel` は重複するため削除しています。
 
 ## 連動型の処理
 

@@ -21,7 +21,7 @@ import { fetchProfessionalSupportUseDaysViaHugTab } from "./fetchHook1";
  * - 取得件数を useSpeDate に反映する
  * - 取得結果を recordStatusSlice に保存する
  */
-export function useProfessionalSupportCheck2(
+export function useProfessionalSupportStatusCheck(
   logTag = "ProfessionalSupportCheck2",
   selectedChildId,
   facilityId,

@@ -2,7 +2,7 @@
 
 ## 変更内容
 
-`ProfessionalSupportCheckPanel2` の閉じた状態の「専門的支援」ボタンを押したとき、
+`ProfessionalSupportManagerPanel` の閉じた状態の「専門的支援」ボタンを押したとき、
 HUG の `record_proceedings.php?mode=edit` タブを開いてページを書き換える方式を使用しません。
 
 新しい処理:
@@ -39,6 +39,6 @@ CSRFトークンを固定値にはせず、送信直前にHUGの登録フォー�
 
 ## 注意
 
-この修正版では `ProfessionalSupportCheckPanel2` の「専門的支援」ボタンは
+この修正版では `ProfessionalSupportManagerPanel` の「専門的支援」ボタンは
 `addProfessionalSupportNewTab()` を呼ばなくなります。
 専門的支援一覧ボタンは従来の `useTabs` をそのまま使用します。

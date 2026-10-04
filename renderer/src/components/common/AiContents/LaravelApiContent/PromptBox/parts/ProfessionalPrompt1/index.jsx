@@ -11,7 +11,7 @@ import {
 } from "@/store/slices/aiChatSlice.js";
 
 import ProfessionalPlan from "@/components/common/hug_function/ProfessionalPlan";
-import {ProfessionalSupportCheckPanel2} from "@/components/common/hug_function";
+import {ProfessionalSupportManagerPanel} from "@/components/common/hug_function";
 
 import ChildNotesTabs from "../ChildNotesTabs";
 
@@ -251,7 +251,7 @@ export default function ProfessionalPrompt1({
 
           {showSupportCheck && (
             <div className="w-[30%]">
-              <ProfessionalSupportCheckPanel2
+              <ProfessionalSupportManagerPanel
                 facilityId={FACILITY_ID}
                 currentYmd={CURRENT_YMD}
                 selectedChildId={selectedChildId}

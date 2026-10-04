@@ -1,7 +1,7 @@
 import { useTabs } from '@/hooks/useTabs'
 import {
   PersonalRecordCheckPanel,
-  ProfessionalSupportCheckPanel2,
+  ProfessionalSupportManagerPanel,
 } from '@/components/common/hug_function'
 
 export default function CheckPanels({
@@ -30,7 +30,7 @@ export default function CheckPanels({
         expandDirection="up"
       />
 
-      <ProfessionalSupportCheckPanel2
+      <ProfessionalSupportManagerPanel
         facilityId={facilityId}
         currentYmd={currentYmd}
         selectedChildId={selectedChildId}

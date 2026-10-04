@@ -1,2 +1,2 @@
-export { default as ProfessionalSupportCheckPanel2 } from './ProfessionalSupportCheckPanel2'
-export { addProfessionalSupportListAction } from './ProfessionalSupportCheckPanel2/professionalList.js'
+export { default as ProfessionalSupportManagerPanel } from './ProfessionalSupportManagerPanel'
+export { addProfessionalSupportListAction } from './ProfessionalSupportManagerPanel/professionalList.js'

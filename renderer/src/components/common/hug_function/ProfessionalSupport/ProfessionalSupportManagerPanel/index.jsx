@@ -4,70 +4,15 @@ import { useSelector } from 'react-redux'
 import { useAppState } from '@/AppStateContext'
 import { useNote } from '@/hooks/useNote'
 import { selectProfessionalSupportStatus } from '@/store/slices/recordStatusSlice.js'
-import { useProfessionalSupportCheck2 } from './useProfessionalSupportCheck2'
+import { useProfessionalSupportStatusCheck } from './useProfessionalSupportStatusCheck'
 import ProfessionalSupportPostModal from './ProfessionalSupportPostModal'
 import { postProfessionalSupportDraft } from './postProfessionalSupportDraft.js'
+import { useProfessionalSupportPlusCheck } from './useProfessionalSupportPlusCheck'
+import { registerProfessionalSupportPlus } from './checks/professionalSupportPlusCheck.js'
 import {
-  executeProfessionalSupportPlusRegister,
-  executeProfessionalSupportPlusRegistrationCheck,
-} from './professionalSupportWebAutomation.js'
-
-const normalizeInterviewDateToYmd = (dateText) => {
-  if (!dateText) return null
-
-  const match = String(dateText).match(
-    /^(\d{4})年(\d{1,2})月(\d{1,2})日$/,
-  )
-
-  if (!match) return null
-
-  const [, year, month, day] = match
-  return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
-}
-
-const hasTodayProfessionalSupportRecord = (useDaysResult, currentYmd) => {
-  const rows = useDaysResult?.rows ?? []
-
-  return rows.some((row) => {
-    const interviewYmd = normalizeInterviewDateToYmd(row.interviewDate)
-    return interviewYmd === currentYmd
-  })
-}
-
-const getRegisteredLabel = (
-  registered,
-  checking,
-  lastUseDaysResult,
-  currentYmd,
-) => {
-  if (checking) return '確認中'
-  if (lastUseDaysResult && lastUseDaysResult.ok === false) return '失敗'
-  if (registered === true) return '済'
-  if (hasTodayProfessionalSupportRecord(lastUseDaysResult, currentYmd)) {
-    return '済'
-  }
-  return '未'
-}
-
-async function addProfessionalSupport({ childId, facilityId, dateStr }) {
-  return executeProfessionalSupportPlusRegister({
-    childId,
-    facilityId,
-    dateStr,
-  })
-}
-
-async function checkProfessionalSupportRegistration({
-  childId,
-  facilityId,
-  dateStr,
-}) {
-  return executeProfessionalSupportPlusRegistrationCheck({
-    childId,
-    facilityId,
-    dateStr,
-  })
-}
+  getProfessionalSupportRegisteredLabel,
+  hasTodayProfessionalSupportRecord,
+} from './checks/professionalSupportRecordCheck.js'
 
 /**
  * 専門的支援 統合パネル
@@ -84,9 +29,9 @@ async function checkProfessionalSupportRegistration({
  * - 専門＋登録済み確認
  * - 保存件数 / 本日 / 専門＋の詳細ステータス
  */
-export default function ProfessionalSupportCheckPanel2({
+export default function ProfessionalSupportManagerPanel({
   className = '',
-  logTag = 'ProfessionalSupportCheckPanel2',
+  logTag = 'ProfessionalSupportManagerPanel',
   facilityId,
   currentYmd,
   selectedChildId,
@@ -105,10 +50,6 @@ export default function ProfessionalSupportCheckPanel2({
   const menuRef = useRef(null)
   const [isOpen, setIsOpen] = useState(false)
   const [linkedLoading, setLinkedLoading] = useState(false)
-  const [plusLoading, setPlusLoading] = useState(false)
-  const [registrationCheckLoading, setRegistrationCheckLoading] = useState(false)
-  const [plusRegistered, setPlusRegistered] = useState(null)
-  const [plusRegistrationId, setPlusRegistrationId] = useState(null)
   const [actionMessage, setActionMessage] = useState('')
   const [actionKind, setActionKind] = useState('idle')
   const [postModalOpen, setPostModalOpen] = useState(false)
@@ -144,7 +85,7 @@ export default function ProfessionalSupportCheckPanel2({
     selectProfessionalSupportStatus(state, dateStr, childId),
   )
 
-  const { checking, runCheck } = useProfessionalSupportCheck2(
+  const { checking, runCheck } = useProfessionalSupportStatusCheck(
     logTag,
     childId,
     resolvedFacilityId,
@@ -156,7 +97,7 @@ export default function ProfessionalSupportCheckPanel2({
   const recordCount = professionalSupportStatus?.recordCount
   const lastUseDaysResult = professionalSupportStatus?.lastUseDaysResult
 
-  const registeredLabel = getRegisteredLabel(
+  const registeredLabel = getProfessionalSupportRegisteredLabel(
     registered,
     checking,
     lastUseDaysResult,
@@ -178,6 +119,26 @@ export default function ProfessionalSupportCheckPanel2({
       : useDays >= 2
         ? 'text-sky-300'
         : 'text-red-300'
+
+  const setAction = (kind, message) => {
+    setActionKind(kind)
+    setActionMessage(message)
+  }
+
+  const {
+    plusLoading,
+    registrationCheckLoading,
+    plusRegistered,
+    plusRegistrationId,
+    runRegistrationCheck: runProfessionalPlusRegistrationCheck,
+    runCheckAndRegister: runProfessionalPlusUnified,
+  } = useProfessionalSupportPlusCheck({
+    childId,
+    facilityId: resolvedFacilityId,
+    dateStr,
+    logTag,
+    setAction,
+  })
 
   // 連動型の「専門的支援」ボタンだけに適用する無効条件。
   // ステータス確認・展開は入退室前でも使える。
@@ -245,105 +206,14 @@ export default function ProfessionalSupportCheckPanel2({
     }
   }, [isOpen, isExpandDown])
 
-  const setAction = (kind, message) => {
-    setActionKind(kind)
-    setActionMessage(message)
-  }
-
   const runStatusCheck = async () => {
     if (checking) return
 
     try {
       await runCheck()
     } catch (error) {
-      console.error('[ProfessionalSupportCheckPanel2] check error:', error)
+      console.error('[ProfessionalSupportManagerPanel] check error:', error)
     }
-  }
-
-  const runProfessionalPlusRegistrationCheck = async ({ force = false } = {}) => {
-    if (
-      (!force && operationBusy) ||
-      registrationCheckLoading ||
-      !childId ||
-      !dateStr ||
-      !resolvedFacilityId
-    ) {
-      return
-    }
-
-    setRegistrationCheckLoading(true)
-    setAction('working', '専門＋ 登録確認中')
-
-    try {
-      const result = await checkProfessionalSupportRegistration({
-        childId,
-        facilityId: resolvedFacilityId,
-        dateStr,
-      })
-
-      setPlusRegistered(result.registered === true)
-      setPlusRegistrationId(result.registrationId || null)
-
-      if (!result.childFound) {
-        setAction('warning', '対象児童が出席表に見つかりません')
-      } else if (result.registered === true) {
-        // 登録済み状態は plusStatusLabel 側で常設表示するため、
-        // actionMessage に同じ内容を重複表示しない。
-        setAction('idle', '')
-      } else {
-        setAction('warning', '専門＋ 未登録')
-      }
-
-      return result
-    } catch (error) {
-      console.error('[ProfessionalSupportCheckPanel2] registration check:', error)
-      setPlusRegistered(null)
-      setPlusRegistrationId(null)
-      setAction('error', `確認失敗: ${error?.message || error}`)
-      return { ok: false, error: error?.message || String(error) }
-    } finally {
-      setRegistrationCheckLoading(false)
-    }
-  }
-
-  const runProfessionalPlusOnly = async () => {
-    if (operationBusy || !childId || !dateStr || !resolvedFacilityId) return
-
-    setPlusLoading(true)
-    setAction('working', '専門＋ 登録中')
-
-    try {
-      const result = await addProfessionalSupport({
-        childId,
-        facilityId: resolvedFacilityId,
-        dateStr,
-      })
-
-      setPlusRegistered(true)
-      setAction('success', '専門＋ 登録OK')
-      await runProfessionalPlusRegistrationCheck({ force: true })
-      return result
-    } catch (error) {
-      console.error('[ProfessionalSupportCheckPanel2] plus error:', error)
-      setAction('error', `失敗: ${error?.message || error}`)
-      return { ok: false, error: error?.message || String(error) }
-    } finally {
-      setPlusLoading(false)
-    }
-  }
-
-
-  const runProfessionalPlusUnified = async () => {
-    if (operationBusy || !childId || !dateStr || !resolvedFacilityId) return
-
-    // まず加算一覧を確認し、登録済みなら何もしない。
-    const checkResult = await runProfessionalPlusRegistrationCheck({ force: true })
-
-    if (!checkResult?.ok || !checkResult?.childFound) return checkResult
-    if (checkResult.registered === true) return checkResult
-
-    // 未登録の場合だけ専門＋を登録し、登録後に再確認する。
-    return runProfessionalPlusOnly()
   }
 
   const openLinkedModal = async () => {
@@ -371,7 +241,7 @@ export default function ProfessionalSupportCheckPanel2({
       setPostModalOpen(true)
       setAction('idle', '')
     } catch (error) {
-      console.error('[ProfessionalSupportCheckPanel2] temp memo2 load error:', error)
+      console.error('[ProfessionalSupportManagerPanel] temp memo2 load error:', error)
       setPostModalInitialContents('')
       setPostModalOpen(true)
       setPostModalError(
@@ -429,13 +299,12 @@ export default function ProfessionalSupportCheckPanel2({
 
       setAction('working', `${saveLabel}OK → 専門＋登録中`)
 
-      const plusResult = await addProfessionalSupport({
+      const plusResult = await registerProfessionalSupportPlus({
         childId,
         facilityId: resolvedFacilityId,
         dateStr: modalDateStr || dateStr,
       })
 
-      setPlusRegistered(true)
       setPostModalOpen(false)
       setAction('success', '連動OK')
 
@@ -450,7 +319,7 @@ export default function ProfessionalSupportCheckPanel2({
         plusResult,
       }
     } catch (error) {
-      console.error('[ProfessionalSupportCheckPanel2] linked error:', error)
+      console.error('[ProfessionalSupportManagerPanel] linked error:', error)
       const message = error?.message || String(error)
       setPostModalError(message)
       setAction('error', `失敗: ${message}`)
