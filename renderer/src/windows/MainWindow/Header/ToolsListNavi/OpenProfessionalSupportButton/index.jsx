@@ -8,7 +8,7 @@ import { selectFacilitys } from '@/store/slices/databaseSlice'
  * HUGの専門的支援検索ウィンドウを開くボタン。
  * CustomButtons には依存せず、このコンポーネント内で必要な値を取得する。
  */
-export default function ProfessionalSupportSearch({
+export default function OpenProfessionalSupportButton({
   className = '',
   label = '専門的支援検索',
   disabled = false,

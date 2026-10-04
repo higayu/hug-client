@@ -17,9 +17,7 @@ import ServerConnectButton from '@/components/common/Synchronization/ServerConne
 import DataBaseButton from '@/components/common/Synchronization/DataBaseButton';
 import StaffUpdateButton from '@/components/common/Synchronization/StaffUpdateButton';
 import ChildrenUpdateButton from '@/components/common/Synchronization/ChildrenUpdateButton';
-import {
-  ProfessionalSupportSearch,
-} from '@/components/common/hug_function/ProfessionalSupport';
+import OpenProfessionalSupportButton from './OpenProfessionalSupportButton';
 import AutoLoginButton from '@/components/AutoLoginButton';
 
 export default function ToolsListNavi({
@@ -278,7 +276,7 @@ export default function ToolsListNavi({
   
 
             <li className="m-0 p-0">
-              <ProfessionalSupportSearch />
+              <OpenProfessionalSupportButton />
             </li>
 
 
