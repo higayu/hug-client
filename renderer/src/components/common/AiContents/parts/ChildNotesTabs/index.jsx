@@ -5,7 +5,7 @@ import { useAppState } from "@/AppStateContext";
 import { useSelector } from "react-redux";
 import { selectSpaceChildId } from "@/store/slices/chilledspaceSlice.js";
 import ChildNotes from "./ChildNotes";
-import PersonSupportPlan from "@/components/common/hug_function/PersonSupportPlan";
+import { PersonSupportPlan } from "@/components/common/hug_function/Plan";
 
 const DBG = "ChildNotesTabs";
 
