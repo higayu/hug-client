@@ -1,9 +1,8 @@
 import { useCallback, useMemo, useState } from 'react'
+import { Clock3 } from 'lucide-react'
 import { useDispatch } from 'react-redux'
 
 import { useAppState } from '@/AppStateContext'
-
-import { ModalPortal } from '@/components/modals/ModalPortal.jsx'
 
 import {
   openAttendanceEditPage,
@@ -11,47 +10,7 @@ import {
   saveAttendanceEditTimes,
 } from './function.js'
 import { runAttendanceUpdate } from '../attendance/update/runAttendanceUpdate.js'
-
-const HOURS = Array.from({ length: 24 }, (_, index) => String(index))
-const MINUTES = Array.from({ length: 60 }, (_, index) => String(index))
-
-function TimeSelect({ label, hour, minute, onHourChange, onMinuteChange, disabled }) {
-  return (
-    <div className="hug-attendance-edit-time-row">
-      <div className="hug-attendance-edit-time-label">{label}</div>
-
-      <div className="hug-attendance-edit-time-selects">
-        <select
-          value={hour}
-          onChange={(event) => onHourChange(event.target.value)}
-          disabled={disabled}
-        >
-          <option value="">--</option>
-          {HOURS.map((value) => (
-            <option key={value} value={value}>
-              {value.padStart(2, '0')}
-            </option>
-          ))}
-        </select>
-        <span>時</span>
-
-        <select
-          value={minute}
-          onChange={(event) => onMinuteChange(event.target.value)}
-          disabled={disabled}
-        >
-          <option value="">--</option>
-          {MINUTES.map((value) => (
-            <option key={value} value={value}>
-              {value.padStart(2, '0')}
-            </option>
-          ))}
-        </select>
-        <span>分</span>
-      </div>
-    </div>
-  )
-}
+import AttendanceEditModal from './AttendanceEditModal.jsx'
 
 /**
  * 入退室時刻の編集ボタン。
@@ -256,108 +215,33 @@ export default function EditButton({
     <>
       <button
         type="button"
-        className="px-4 py-2 rounded-md bg-gray-300 hover:bg-gray-400 text-gray-800 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 hug-btn-attendance-edit"
+        className="px-4 py-2 rounded-md bg-gray-300 hover:bg-gray-400 text-gray-800 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 hug-btn-attendance-edit inline-flex items-center gap-1.5"
         disabled={cannotOpen}
         title={resolvedTitle}
         onClick={handleClick}
       >
-        {isOpening ? '取得中...' : '編集'}
+        <Clock3 size={16} aria-hidden="true" />
+        <span>{isOpening ? '取得中...' : '編集'}</span>
       </button>
 
-      {isModalOpen && (
-        <ModalPortal>
-          <div
-            className="hug-attendance-edit-overlay"
-            role="presentation"
-            onMouseDown={(event) => {
-              if (event.target === event.currentTarget) {
-                handleClose()
-              }
-            }}
-          >
-            <div
-              className="hug-attendance-edit-modal"
-              role="dialog"
-              aria-modal="true"
-              aria-label="入退室時間の編集"
-            >
-              <div className="hug-attendance-edit-header">
-                <div>
-                  <h2>入退室時間の編集</h2>
-                  <p>{resolvedName || editData?.name || '名前未取得'}</p>
-                </div>
-
-                <button
-                  type="button"
-                  className="hug-attendance-edit-close"
-                  onClick={handleClose}
-                  disabled={isSaving}
-                  aria-label="閉じる"
-                >
-                  ×
-                </button>
-              </div>
-
-              <div className="hug-attendance-edit-body">
-                {isOpening ? (
-                  <div className="py-8 text-center text-sm text-gray-500">
-                    編集情報を取得中...
-                  </div>
-                ) : loadError ? (
-                  <div className="rounded border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700">
-                    編集情報の取得に失敗しました。
-                    <div className="mt-1 break-all text-xs">{loadError}</div>
-                  </div>
-                ) : (
-                  <>
-                    {editData?.date && (
-                      <div className="hug-attendance-edit-date">{editData.date}</div>
-                    )}
-
-                    <TimeSelect
-                      label="入室時間"
-                      hour={startHour}
-                      minute={startMinute}
-                      onHourChange={setStartHour}
-                      onMinuteChange={setStartMinute}
-                      disabled={isSaving}
-                    />
-
-                    <TimeSelect
-                      label="退室時間"
-                      hour={endHour}
-                      minute={endMinute}
-                      onHourChange={setEndHour}
-                      onMinuteChange={setEndMinute}
-                      disabled={isSaving}
-                    />
-                  </>
-                )}
-              </div>
-
-              <div className="hug-attendance-edit-actions">
-                <button
-                  type="button"
-                  className="hug-attendance-edit-cancel"
-                  onClick={handleClose}
-                  disabled={isSaving}
-                >
-                  キャンセル
-                </button>
-
-                <button
-                  type="button"
-                  className="hug-attendance-edit-save"
-                  onClick={handleSave}
-                  disabled={isSaving || isOpening || !editData || Boolean(loadError)}
-                >
-                  {isSaving ? '保存中...' : isOpening ? '取得中...' : '保存'}
-                </button>
-              </div>
-            </div>
-          </div>
-        </ModalPortal>
-      )}
+      <AttendanceEditModal
+        open={isModalOpen}
+        name={resolvedName}
+        editData={editData}
+        isOpening={isOpening}
+        isSaving={isSaving}
+        loadError={loadError}
+        startHour={startHour}
+        startMinute={startMinute}
+        endHour={endHour}
+        endMinute={endMinute}
+        onStartHourChange={setStartHour}
+        onStartMinuteChange={setStartMinute}
+        onEndHourChange={setEndHour}
+        onEndMinuteChange={setEndMinute}
+        onClose={handleClose}
+        onSave={handleSave}
+      />
     </>
   )
 }
