@@ -51,6 +51,7 @@ export function parseAttendanceEditHtml(html = "") {
   return {
     attendanceId: getValue("id"),
     childId: getValue("c_id"),
+    facilityId: getValue("f_id"),
     serviceId: getValue("s_id"),
     date: getValue("date"),
     name: pageName,
@@ -151,7 +152,39 @@ export async function saveAttendanceEditTimes({
 
   console.log("[Attendance Edit] 保存開始:", values);
 
-  const result = await targetWebview.executeJavaScript(`
+  // requestSubmit() は送信開始直後に制御が戻るため、
+  // HUG側のPOST完了（ページ再読込）を待ってから呼び出し元へ返す。
+  const saveCompletedPromise = new Promise((resolve, reject) => {
+    const timeoutId = setTimeout(() => {
+      targetWebview.removeEventListener("did-finish-load", handleFinishLoad);
+      reject(new Error("HUG編集内容の保存完了待ちがタイムアウトしました"));
+    }, 15000);
+
+    const handleFinishLoad = async () => {
+      clearTimeout(timeoutId);
+      targetWebview.removeEventListener("did-finish-load", handleFinishLoad);
+
+      try {
+        const pageInfo = await targetWebview.executeJavaScript(`
+          (() => ({
+            href: location.href,
+            title: document.title,
+          }))();
+        `);
+
+        resolve(pageInfo);
+      } catch (error) {
+        reject(error);
+      }
+    };
+
+    targetWebview.addEventListener("did-finish-load", handleFinishLoad);
+  });
+
+  let result;
+
+  try {
+    result = await targetWebview.executeJavaScript(`
     (() => {
       const values = ${JSON.stringify(values)};
 
@@ -197,8 +230,19 @@ export async function saveAttendanceEditTimes({
       };
     })();
   `);
+  } catch (error) {
+    throw error;
+  }
 
-  return result;
+  const savePage = await saveCompletedPromise;
+
+  console.log("[Attendance Edit] HUG保存完了:", savePage);
+
+  return {
+    ...result,
+    savePage,
+    webview: targetWebview,
+  };
 }
 
 // 旧関数名を使用している箇所があっても壊れないよう残す。

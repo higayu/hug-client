@@ -1,4 +1,7 @@
 import { useCallback, useMemo, useState } from 'react'
+import { useDispatch } from 'react-redux'
+
+import { useAppState } from '@/AppStateContext'
 
 import { ModalPortal } from '@/components/modals/ModalPortal.jsx'
 
@@ -7,6 +10,7 @@ import {
   parseAttendanceEditHtml,
   saveAttendanceEditTimes,
 } from './function.js'
+import { runAttendanceUpdate } from '../attendance/update/runAttendanceUpdate.js'
 
 const HOURS = Array.from({ length: 24 }, (_, index) => String(index))
 const MINUTES = Array.from({ length: 60 }, (_, index) => String(index))
@@ -77,6 +81,9 @@ export default function EditButton({
   onSaved = null,
   onError = null,
 }) {
+  const dispatch = useDispatch()
+  const { FACILITY_ID, CURRENT_YMD, updateAppState } = useAppState()
+
   const [isOpening, setIsOpening] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -190,6 +197,27 @@ export default function EditButton({
 
       console.log('[Attendance Edit] 保存処理実行:', result)
 
+      const refreshFacilityId =
+        editData?.facilityId || FACILITY_ID || '1'
+      const refreshDateStr =
+        editData?.date || CURRENT_YMD || new Date().toISOString().slice(0, 10)
+
+      console.log('[Attendance Edit] 保存後の利用者一覧を再取得:', {
+        facilityId: refreshFacilityId,
+        dateStr: refreshDateStr,
+        childId: editData?.childId,
+      })
+
+      await runAttendanceUpdate({
+        facilityId: refreshFacilityId,
+        dateStr: refreshDateStr,
+        dispatch,
+        updateAppState,
+        silent: false,
+      })
+
+      console.log('[Attendance Edit] 保存後の利用者一覧再取得完了')
+
       setIsModalOpen(false)
 
       onSaved?.({
@@ -216,6 +244,10 @@ export default function EditButton({
     editData,
     resolvedName,
     resolvedLocationHref,
+    FACILITY_ID,
+    CURRENT_YMD,
+    dispatch,
+    updateAppState,
     onSaved,
     onError,
   ])
