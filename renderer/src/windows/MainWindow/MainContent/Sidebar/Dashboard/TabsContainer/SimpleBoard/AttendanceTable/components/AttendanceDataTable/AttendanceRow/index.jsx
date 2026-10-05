@@ -73,7 +73,7 @@ export default function AttendanceRow({ row, busy, onAction }) {
       </td>
       <td className="border border-slate-300 p-3 text-center">{row.enterTime || '―'}</td>
       <td className="border border-slate-300 p-3 text-center">{row.leaveTime || '―'}</td>
-      <td className="border border-slate-300 p-3 text-center">
+      <td className="border border-slate-300 text-center">
         {row.enterTime ? (
           <EditButton
             editUrl={row.editUrl}
