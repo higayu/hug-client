@@ -7,6 +7,7 @@ export default function DateSelect({
   id = "dateSelect",
   name = "dateSelect",
   className = "",
+  onDateChange,
 }) {
   const {
     CURRENT_YMD,
@@ -28,6 +29,14 @@ export default function DateSelect({
     }
 
     setCurrentYmd(selectedDate);
+
+    // CURRENT_YMD の React state 更新完了を待たず、
+    // 選択された日付そのものを呼び出し元へ渡す。
+    // GetTodayUsersChildren 側では、この値を使って
+    // ログイン済みHUGキャッシュから利用者一覧を再取得する。
+    Promise.resolve(onDateChange?.(selectedDate)).catch((error) => {
+      console.error("[DateSelect] 日付変更後処理に失敗:", error);
+    });
 
     showInfoToast(
       `📅 日付を ${selectedDate} に設定しました`
