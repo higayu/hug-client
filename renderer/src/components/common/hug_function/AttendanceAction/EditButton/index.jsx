@@ -82,6 +82,7 @@ export default function EditButton({
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editWebview, setEditWebview] = useState(null)
   const [editData, setEditData] = useState(null)
+  const [loadError, setLoadError] = useState('')
 
   const [startHour, setStartHour] = useState('')
   const [startMinute, setStartMinute] = useState('')
@@ -105,6 +106,15 @@ export default function EditButton({
   const handleClick = useCallback(async () => {
     if (cannotOpen) return
 
+    // 編集ボタンを押した時点で先にRenderer側モーダルを表示する。
+    // HUG編集画面のGET中はモーダル内で「取得中」を表示する。
+    setLoadError('')
+    setEditData(null)
+    setStartHour('')
+    setStartMinute('')
+    setEndHour('')
+    setEndMinute('')
+    setIsModalOpen(true)
     setIsOpening(true)
 
     try {
@@ -123,7 +133,6 @@ export default function EditButton({
       setStartMinute(parsed.startMinute ?? '')
       setEndHour(parsed.endHour ?? '')
       setEndMinute(parsed.endMinute ?? '')
-      setIsModalOpen(true)
 
       onOpened?.({
         ...result,
@@ -132,6 +141,11 @@ export default function EditButton({
         locationHref: resolvedLocationHref,
       })
     } catch (error) {
+      const message =
+        error instanceof Error ? error.message : String(error || '編集画面の取得に失敗しました')
+
+      setLoadError(message)
+
       console.error('[Attendance Edit] 編集画面取得失敗:', {
         name: resolvedName,
         locationHref: resolvedLocationHref,
@@ -153,6 +167,7 @@ export default function EditButton({
   const handleClose = useCallback(() => {
     if (isSaving) return
     setIsModalOpen(false)
+    setLoadError('')
   }, [isSaving])
 
   const handleSave = useCallback(async () => {
@@ -252,27 +267,40 @@ export default function EditButton({
               </div>
 
               <div className="hug-attendance-edit-body">
-                {editData?.date && (
-                  <div className="hug-attendance-edit-date">{editData.date}</div>
+                {isOpening ? (
+                  <div className="py-8 text-center text-sm text-gray-500">
+                    編集情報を取得中...
+                  </div>
+                ) : loadError ? (
+                  <div className="rounded border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700">
+                    編集情報の取得に失敗しました。
+                    <div className="mt-1 break-all text-xs">{loadError}</div>
+                  </div>
+                ) : (
+                  <>
+                    {editData?.date && (
+                      <div className="hug-attendance-edit-date">{editData.date}</div>
+                    )}
+
+                    <TimeSelect
+                      label="入室時間"
+                      hour={startHour}
+                      minute={startMinute}
+                      onHourChange={setStartHour}
+                      onMinuteChange={setStartMinute}
+                      disabled={isSaving}
+                    />
+
+                    <TimeSelect
+                      label="退室時間"
+                      hour={endHour}
+                      minute={endMinute}
+                      onHourChange={setEndHour}
+                      onMinuteChange={setEndMinute}
+                      disabled={isSaving}
+                    />
+                  </>
                 )}
-
-                <TimeSelect
-                  label="入室時間"
-                  hour={startHour}
-                  minute={startMinute}
-                  onHourChange={setStartHour}
-                  onMinuteChange={setStartMinute}
-                  disabled={isSaving}
-                />
-
-                <TimeSelect
-                  label="退室時間"
-                  hour={endHour}
-                  minute={endMinute}
-                  onHourChange={setEndHour}
-                  onMinuteChange={setEndMinute}
-                  disabled={isSaving}
-                />
               </div>
 
               <div className="hug-attendance-edit-actions">
@@ -289,9 +317,9 @@ export default function EditButton({
                   type="button"
                   className="hug-attendance-edit-save"
                   onClick={handleSave}
-                  disabled={isSaving}
+                  disabled={isSaving || isOpening || !editData || Boolean(loadError)}
                 >
-                  {isSaving ? '保存中...' : '保存'}
+                  {isSaving ? '保存中...' : isOpening ? '取得中...' : '保存'}
                 </button>
               </div>
             </div>
