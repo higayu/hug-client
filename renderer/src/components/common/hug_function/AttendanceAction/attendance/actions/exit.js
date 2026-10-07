@@ -184,7 +184,7 @@ export async function clickExitButton(column6Html, targetChildrenId, opts = {}) 
       !result?.mailDialogAutoSelected
     );
 
-    if (!waitingForMailDialog && !opts.skipRefresh) {
+    if (!waitingForMailDialog && result.mode !== "web-automation-v2" && !opts.skipRefresh) {
       // 呼び出し元が dispatch を渡していない場合でも、
       // Redux store.dispatch を使って必ず一覧を更新する。
       // メールあり退室は HUG 側 Ajax/DB 更新の反映を確認できるまで再取得を繰り返す。
@@ -205,7 +205,9 @@ export async function clickExitButton(column6Html, targetChildrenId, opts = {}) 
       });
     }
 
-    window.showSuccessToast?.(result.statusMessage, 3000);
+    if (!result?.handledToast) {
+      window.showSuccessToast?.(result.statusMessage, 3000);
+    }
     return { success: true, ...result };
   } catch (err) {
     if (err instanceof MailDialogCancelledError) {

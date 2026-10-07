@@ -13,8 +13,8 @@ import { MailDialogCancelledError } from "../helpers/mailDialog.js";
 import { NATIVE_STATUS_ENTER } from "../update/nativeDelegateInWebview.js";
 
 export async function performEnterAction(item, ctx = {}) {
-  if (!item?.enterOnclick) {
-    throw new Error("入室 onclick がありません");
+  if (!item) {
+    throw new Error("入退室対象データがありません");
   }
 
   if (isEnterMailEnabled(item)) {

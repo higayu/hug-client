@@ -7,7 +7,7 @@ import {
  * renderer で入力した専門的支援の内容を、HUG の編集画面を開かずに直接 POST する。
  *
  * 送信先URL、POST項目、CSRF取得、専門的支援IDなどは
- * DB の web_automation_flows / web_automation_flow_steps / web_automation_rules から取得する。
+ * DB の WebAutomation V2 Flow / Step から取得する。
  *
  * 使用Flow:
  * - professional_support_draft_save

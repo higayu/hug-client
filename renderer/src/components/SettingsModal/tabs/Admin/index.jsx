@@ -11,13 +11,11 @@ import {
   ADMIN_SECTIONS,
 } from './constants/adminSections'
 import StaffManagement from './StaffManagement'
-import WebAutomation from './WebAutomation'
 
 export default function AdminTab() {
   const auth = useSelector(selectLaravelAuth)
   const roleId = Number(auth.user?.role_id ?? 0)
   const isMentorOrAbove = roleId >= 50
-  const isAdmin = roleId >= 100
   const authenticatedStaffId = auth.user?.staff_id
   const {
     databaseState,
@@ -27,13 +25,7 @@ export default function AdminTab() {
     ADMIN_SECTION_IDS.STAFF_MANAGEMENT,
   )
 
-  const visibleAdminSections = ADMIN_SECTIONS.filter((section) => {
-    if (section.id === ADMIN_SECTION_IDS.WEB_AUTOMATION) {
-      return isAdmin && DEBUG_FLG
-    }
-
-    return true
-  })
+  const visibleAdminSections = ADMIN_SECTIONS
 
   const visibleActiveSection = visibleAdminSections.some(
     (section) => section.id === activeAdminSection,
@@ -61,12 +53,6 @@ export default function AdminTab() {
           authenticatedStaffId={authenticatedStaffId}
         />
       )}
-
-      {isAdmin &&
-        DEBUG_FLG &&
-        visibleActiveSection === ADMIN_SECTION_IDS.WEB_AUTOMATION && (
-          <WebAutomation />
-        )}
     </div>
   )
 }

@@ -7,12 +7,12 @@ import { useToast } from '@/provider/ToastProvider/ToastContext'
 import { selectFacilityId } from '@/store/slices/appStateSlice'
 import { getActiveWebview } from '@/utils/webview/webviewState.js'
 
-import { fetchStaffData } from '../StaffUpdateButton/fetchStaffData.js'
-import { fetchChildrenData } from '../ChildrenUpdateButton/fetchChildrenData.js'
-
-import { buildPersonalRecordFetchScript } from './personalRecord'
-import { fetchPersonalRecordDetails } from './fetchPersonalRecordDetails'
-import { loadAllSyncAutomation } from './allSyncWebAutomation'
+import {
+  fetchStaffV2,
+  fetchChildrenV2,
+  fetchPersonalRecordListV2,
+  fetchPersonalRecordDetailsV2,
+} from '@/components/WebAutomationV2/runtime/synchronizationFlows.js'
 
 const PERSONAL_RECORD_ITEM_ID = 1
 const TOTAL_STEPS = 5
@@ -219,18 +219,17 @@ export default function AllSyncButton({
     return targetWebview ?? getActiveWebview()
   }
 
-  const syncStaffs = async (activeWebview, automationRule) => {
+  const syncStaffs = async (activeWebview) => {
     setLabel(formatStepLabel(1, '職員更新中...'))
 
-    const result = await fetchStaffData(
-      (page, maxPage) => {
-        setLabel(
-          formatStepLabel(1, `職員取得 ${page}/${maxPage}`),
-        )
+    const result = await fetchStaffV2(
+      { facilityId },
+      {
+        webviewRef: activeWebview,
+        onStaffProgress: (page, maxPage) => {
+          setLabel(formatStepLabel(1, `職員取得 ${page}/${maxPage}`))
+        },
       },
-      facilityId,
-      activeWebview,
-      { config: automationRule?.config ?? {} },
     )
 
     console.groupCollapsed(
@@ -257,22 +256,20 @@ export default function AllSyncButton({
     }
   }
 
-  const syncChildren = async (activeWebview, automationRule) => {
+  const syncChildren = async (activeWebview) => {
     setLabel(formatStepLabel(2, '児童更新中...'))
 
     const now = new Date()
     const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
 
-    const result = await fetchChildrenData(
-      (page, maxPage) => {
-        setLabel(
-          formatStepLabel(2, `児童取得 ${page}/${maxPage}`),
-        )
+    const result = await fetchChildrenV2(
+      { facilityId, targetDate: today },
+      {
+        webviewRef: activeWebview,
+        onChildrenProgress: (page, maxPage) => {
+          setLabel(formatStepLabel(2, `児童取得 ${page}/${maxPage}`))
+        },
       },
-      facilityId,
-      today,
-      activeWebview,
-      { config: automationRule?.config ?? {} },
     )
 
     console.groupCollapsed(
@@ -336,30 +333,18 @@ export default function AllSyncButton({
     }
   }
 
-  const fetchPersonalRecords = async (activeWebview, automation) => {
+  const fetchPersonalRecords = async (activeWebview) => {
     setLoading?.(true)
     setSending?.(false)
     setError?.('')
     setSendError?.('')
     setSendResult?.(null)
 
-    const listAutomation =
-      automation.rules.personal_record_list_fetch
-    const detailAutomation =
-      automation.rules.personal_record_detail_fetch
-
     setLabel(formatStepLabel(3, '個人記録一覧取得中...'))
 
-    const script = buildPersonalRecordFetchScript({
-      facilityId,
-      year,
-      month,
-      config: listAutomation?.config ?? {},
-    })
-
-    const listResult = await activeWebview.executeJavaScript(
-      script,
-      true,
+    const listResult = await fetchPersonalRecordListV2(
+      { facilityId, year, month },
+      { webviewRef: activeWebview },
     )
 
     if (listResult?.ok === false) {
@@ -379,12 +364,11 @@ export default function AllSyncButton({
       ),
     )
 
-    const detailResult = await fetchPersonalRecordDetails(
-      activeWebview,
-      listRecords,
+    const detailResult = await fetchPersonalRecordDetailsV2(
+      { records: listRecords },
       {
-        config: detailAutomation?.config ?? {},
-        onProgress: (current, total) => {
+        webviewRef: activeWebview,
+        onPersonalRecordDetailProgress: (current, total) => {
           setLabel(
             formatStepLabel(
               4,
@@ -408,11 +392,13 @@ export default function AllSyncButton({
       detailFetchOk: detailResult.ok,
       detailFetchError: detailResult.ok ? '' : detailResult.error,
       webAutomation: {
-        flowKey: automation.flow?.flow_key ?? 'all_sync',
-        staffRuleVersion: automation.rules.staff_fetch?.rule?.version,
-        childrenRuleVersion: automation.rules.children_fetch?.rule?.version,
-        listRuleVersion: listAutomation?.rule?.version,
-        detailRuleVersion: detailAutomation?.rule?.version,
+        engine: 'v2',
+        flows: [
+          'staff_fetch',
+          'children_fetch',
+          'personal_record_list_fetch',
+          'personal_record_detail_fetch',
+        ],
       },
     }
 
@@ -583,36 +569,19 @@ export default function AllSyncButton({
     let completed = false
 
     try {
-      phase = 'Web自動化設定取得'
-      const automation = await loadAllSyncAutomation()
-
-      console.groupCollapsed('[個人記録の更新] all_sync Web自動化設定')
-      console.log('Flow:', automation.flow)
-      console.log('Rules:', automation.rules)
-      console.groupEnd()
-
       // 1/5 職員取得・DB更新
       phase = '職員更新'
-      const staffResult = await syncStaffs(
-        activeWebview,
-        automation.rules.staff_fetch,
-      )
+      const staffResult = await syncStaffs(activeWebview)
 
       // 2/5 児童取得・DB更新
       currentStep = 2
       phase = '児童更新'
-      const childrenResult = await syncChildren(
-        activeWebview,
-        automation.rules.children_fetch,
-      )
+      const childrenResult = await syncChildren(activeWebview)
 
       // 3/5 + 4/5 個人記録一覧・詳細取得
       currentStep = 3
       phase = '個人記録一覧取得'
-      const personalRecordData = await fetchPersonalRecords(
-        activeWebview,
-        automation,
-      )
+      const personalRecordData = await fetchPersonalRecords(activeWebview)
 
       // 詳細取得まで完了しているため、保存工程へ進む。
       currentStep = 5

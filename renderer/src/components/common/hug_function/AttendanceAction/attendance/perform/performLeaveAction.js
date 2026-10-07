@@ -13,8 +13,8 @@ import { MailDialogCancelledError } from "../helpers/mailDialog.js";
 import { NATIVE_STATUS_LEAVE } from "../update/nativeDelegateInWebview.js";
 
 export async function performLeaveAction(item, ctx = {}) {
-  if (!item?.leaveOnclick) {
-    throw new Error("退室 onclick がありません");
+  if (!item) {
+    throw new Error("入退室対象データがありません");
   }
 
   if (isLeaveMailEnabled(item)) {

@@ -6,7 +6,7 @@ import { ArrowPathIcon } from "@heroicons/react/24/outline"
 import { useToast } from "@/provider/ToastProvider/ToastContext.jsx"
 import { selectFacilityId } from "@/store/slices/appStateSlice"
 
-import { fetchChildrenData } from "./fetchChildrenData.js"
+import { fetchChildrenV2 } from "@/components/WebAutomationV2/runtime/synchronizationFlows.js"
 
 export default function ChildrenUpdateButton({
   facilityId: facilityIdProp,
@@ -36,13 +36,14 @@ export default function ChildrenUpdateButton({
       const now = new Date()
       const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
 
-      const result = await fetchChildrenData(
-        (page, maxPage) => {
-          setLabel(`児童取得 ${page}/${maxPage}`)
+      const result = await fetchChildrenV2(
+        { facilityId, targetDate: today },
+        {
+          webviewRef: webview,
+          onChildrenProgress: (page, maxPage) => {
+            setLabel(`児童取得 ${page}/${maxPage}`)
+          },
         },
-        facilityId,
-        today,
-        webview,
       )
 
       console.log(

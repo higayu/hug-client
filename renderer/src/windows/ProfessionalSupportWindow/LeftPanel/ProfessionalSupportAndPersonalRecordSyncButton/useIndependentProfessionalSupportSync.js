@@ -1,8 +1,16 @@
 import { useCallback, useState } from 'react'
 
-import { buildAttendanceFetchScript } from './attendance'
-import { buildAdditionCountFetchScript } from './additionCount'
-import { buildAdditionListFetchScript } from './additionList'
+import {
+  fetchProfessionalSupportMonthAttendanceV2,
+  fetchProfessionalSupportMonthAdditionCountV2,
+  fetchProfessionalSupportMonthAdditionListV2,
+} from '@/components/WebAutomationV2'
+
+import {
+  fetchProfessionalSupportMonthAttendanceV2,
+  fetchProfessionalSupportMonthAdditionCountV2,
+  fetchProfessionalSupportMonthAdditionListV2,
+} from '@/components/WebAutomationV2'
 import { buildProfessionalSupportSyncPayload } from './syncProfessionalSupport'
 
 export default function useProfessionalSupportSync({
@@ -51,34 +59,36 @@ export default function useProfessionalSupportSync({
     onFetchStart?.()
 
     try {
-      // 同じWebViewセッションを使用するため、HUGへのPOSTは順番に実行する。
-      const attendanceData = await webview.executeJavaScript(
-        buildAttendanceFetchScript({
-          facilityId,
-          targetDate,
-        }),
-        true,
-      )
+      // HUGセッションは同じWebViewを使用し、V2 Flowを順番に実行する。
+      const flowArgs = {
+        facilityId,
+        year,
+        month,
+        targetDate,
+      }
+      const flowOptions = { webviewRef }
+
+      const attendanceData =
+        await fetchProfessionalSupportMonthAttendanceV2(
+          flowArgs,
+          flowOptions,
+        )
 
       setProgressText('HUGから加算数データを取得中...')
 
-      const additionCountData = await webview.executeJavaScript(
-        buildAdditionCountFetchScript({
-          facilityId,
-          targetDate,
-        }),
-        true,
-      )
+      const additionCountData =
+        await fetchProfessionalSupportMonthAdditionCountV2(
+          flowArgs,
+          flowOptions,
+        )
 
       setProgressText('HUGから加算一覧データを取得中...')
 
-      const additionListData = await webview.executeJavaScript(
-        buildAdditionListFetchScript({
-          facilityId,
-          targetDate,
-        }),
-        true,
-      )
+      const additionListData =
+        await fetchProfessionalSupportMonthAdditionListV2(
+          flowArgs,
+          flowOptions,
+        )
 
       if (!attendanceData || !additionCountData || !additionListData) {
         throw new Error(

@@ -1,117 +1,5 @@
+import { executeFlowV2 } from "@/components/WebAutomationV2";
 import { getActiveWebview } from "@/utils/webview/webviewState.js";
-
-const APP_KEY = "hug-banso-navi";
-const WEBVIEW_KEY = "*";
-const FLOW_CACHE_TTL_MS = 60 * 1000;
-const flowCache = new Map();
-
-function normalizeJson(value, fallback = {}) {
-  if (value == null || value === "") return fallback;
-  if (typeof value === "object") return value;
-  try {
-    return JSON.parse(value);
-  } catch {
-    return fallback;
-  }
-}
-
-function isActive(value) {
-  return value !== false && value !== 0 && value !== "0";
-}
-
-function unwrapData(result) {
-  if (result?.data?.data && !Array.isArray(result.data.data)) return result.data.data;
-  if (result?.data && !Array.isArray(result.data)) return result.data;
-  return result ?? null;
-}
-
-function createExecutionUuid() {
-  if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID();
-  return `ai-web-auto-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-}
-
-function getExecutionLogId(response) {
-  return response?.data?.id ?? response?.data?.data?.id ?? response?.id ?? null;
-}
-
-async function createExecutionLog(payload) {
-  const api = window.electronAPI?.laravel_webAutomationExecutionLog_create;
-  if (typeof api !== "function") return null;
-  try {
-    const response = await api(payload);
-    return response?.success ? getExecutionLogId(response) : null;
-  } catch (error) {
-    console.warn("[AI WebAutomation] execution log create failed", error);
-    return null;
-  }
-}
-
-async function updateExecutionLog(id, payload) {
-  if (!id) return;
-  const api = window.electronAPI?.laravel_webAutomationExecutionLog_update;
-  if (typeof api !== "function") return;
-  try {
-    await api(id, payload);
-  } catch (error) {
-    console.warn("[AI WebAutomation] execution log update failed", error);
-  }
-}
-
-function normalizeFlow(flow) {
-  return {
-    ...flow,
-    config_json: normalizeJson(flow?.config_json),
-    steps: Array.isArray(flow?.steps)
-      ? [...flow.steps]
-          .filter((step) => isActive(step?.is_active))
-          .sort((a, b) => Number(a?.step_order ?? 0) - Number(b?.step_order ?? 0))
-          .map((step) => ({
-            ...step,
-            input_json: normalizeJson(step?.input_json),
-            config_json: normalizeJson(step?.config_json),
-            rule: step?.rule
-              ? { ...step.rule, config_json: normalizeJson(step.rule.config_json) }
-              : null,
-          }))
-      : [],
-  };
-}
-
-async function getFlow(flowKey, { force = false } = {}) {
-  const key = String(flowKey || "").trim();
-  if (!key) throw new Error("AI WebAutomation flowKey がありません");
-
-  const cached = flowCache.get(key);
-  if (!force && cached && Date.now() - cached.loadedAt < FLOW_CACHE_TTL_MS) {
-    return cached.flow;
-  }
-
-  const api = window.electronAPI?.laravel_webAutomationFlow_get;
-  if (typeof api !== "function") {
-    throw new Error("laravel_webAutomationFlow_get が preload に公開されていません");
-  }
-
-  const response = await api(key, { app_key: APP_KEY, webview_key: WEBVIEW_KEY });
-  if (!response?.success) {
-    throw new Error(response?.message || response?.error || `${key} のFlow取得に失敗しました`);
-  }
-
-  const flow = normalizeFlow(unwrapData(response));
-  if (!flow?.id) throw new Error(`${key} のFlowが見つかりません`);
-  if (!isActive(flow?.is_active)) throw new Error(`${key} は無効なFlowです`);
-
-  flowCache.set(key, { flow, loadedAt: Date.now() });
-  return flow;
-}
-
-function mergeConfig(flow, step, rule) {
-  // 優先順位: flow < step < rule
-  return {
-    ...(flow?.config_json || {}),
-    ...(step?.config_json || {}),
-    ...(rule?.config_json || {}),
-  };
-}
 
 function replaceTemplateString(value, vars) {
   if (typeof value !== "string") return value;
@@ -492,126 +380,84 @@ async function executeElectronApi({ config, input }) {
   return { text: String(text), data: result, targetUrl: null };
 }
 
-function safeLogInput(input) {
-  const copy = { ...input };
-  if (copy.apiKey) copy.apiKey = "[REDACTED]";
-  if (copy.textValue) copy.textValue = { length: String(copy.textValue).length };
-  if (copy.prompt) copy.prompt = { length: String(copy.prompt).length };
-  if (copy.message) copy.message = { length: String(copy.message).length };
-  return copy;
-}
+export async function executeAiAutomationFlow({ flowKey, input = {} }) {
+  const runtime = {
+    appKey: "hug-banso-navi",
+    engineVersion: 1,
+    extractors: {
+      "ai-prompt-send": async ({ config, context }) => {
+        const executor = config?.executor;
+        const runtimeInput = { ...context };
+        const provider = String(config?.provider || "");
+        const effectiveConfig = JSON.parse(JSON.stringify(config || {}));
 
-export async function executeAiAutomationFlow({ flowKey, input = {}, forceReloadFlow = false }) {
-  const startedAtMs = Date.now();
-  const executionUuid = createExecutionUuid();
-  let flow = null;
-  let step = null;
-  let rule = null;
-  let config = null;
-  let executionLogId = null;
-  let webview = null;
-  let targetUrl = null;
+        if (provider === "gemini") {
+          effectiveConfig.request = effectiveConfig.request || {};
+          effectiveConfig.request.body = effectiveConfig.request.body || {
+            contents: [{ role: "user", parts: [{ text: "{{textValue}}" }] }],
+          };
+        } else if (provider === "ollama") {
+          effectiveConfig.request = effectiveConfig.request || {};
+          effectiveConfig.request.body = effectiveConfig.request.body || {
+            model: "{{model}}", prompt: "{{textValue}}", stream: false,
+          };
+          effectiveConfig.request.variants = effectiveConfig.request.variants || [{
+            urlEndsWith: "/api/chat",
+            body: {
+              model: "{{model}}",
+              messages: [{ role: "user", content: "{{textValue}}" }],
+              stream: false,
+            },
+          }];
+        } else if (provider === "openrouter") {
+          effectiveConfig.request = effectiveConfig.request || {};
+          effectiveConfig.request.body = effectiveConfig.request.body || {
+            model: "{{model}}",
+            messages: [
+              { role: "system", content: "あなたは日本語の文章整形アシスタントです。箇条書きの意味を変えず、情報を追加せず、自然な1つの日本語文に整えてください。出力は文章のみ。" },
+              { role: "user", content: "次の箇条書きを1つの自然な日本語文にしてください。\n\n{{textValue}}" },
+            ],
+            temperature: 0.2,
+            max_tokens: 500,
+          };
+        } else if (provider === "laravel") {
+          effectiveConfig.electronApi = effectiveConfig.electronApi || {};
+          effectiveConfig.electronApi.payload = effectiveConfig.electronApi.payload || {
+            prompt: "{{prompt}}", message: "{{message}}",
+          };
+        }
 
-  try {
-    flow = await getFlow(flowKey, { force: forceReloadFlow });
-    step = flow.steps.find((item) => item?.step_type === "rule" && item?.rule && isActive(item.rule?.is_active));
-    if (!step?.rule) throw new Error(`${flowKey} に有効なRule Stepがありません`);
-    rule = step.rule;
-    config = mergeConfig(flow, step, rule);
+        if (executor === "ai-webview-prompt") {
+          const output = await executeWebviewPrompt({
+            flow: null,
+            step: null,
+            rule: {
+              target_url_pattern:
+                config?.webview?.domains?.length
+                  ? `https://${config.webview.domains[0]}/*`
+                  : null,
+            },
+            config: effectiveConfig,
+            input: runtimeInput,
+          });
+          return output?.text ?? output?.result?.success ?? true;
+        }
 
-    const expandedStepInput = expandTemplates(step.input_json || {}, input);
-    const runtimeInput = { ...input, ...expandedStepInput };
+        if (executor === "http-json") {
+          const output = await executeHttpJson({ config: effectiveConfig, input: runtimeInput });
+          return output?.text ?? true;
+        }
 
-    executionLogId = await createExecutionLog({
-      execution_uuid: executionUuid,
-      app_key: APP_KEY,
-      webview_key: WEBVIEW_KEY,
-      flow_id: flow.id,
-      flow_key: flow.flow_key,
-      flow_step_id: step.id,
-      step_key: step.step_key,
-      rule_id: rule.id,
-      rule_key: rule.rule_key,
-      action_type: rule.action_type,
-      executor: config.executor || rule.parser_type || null,
-      target_url: rule.target_url_pattern || flow.target_url_pattern || null,
-      target_selector: rule.target_selector || null,
-      input_json: safeLogInput(runtimeInput),
-      status: "running",
-      started_at: new Date(startedAtMs).toISOString(),
-    });
+        if (executor === "electron-api") {
+          const output = await executeElectronApi({ config: effectiveConfig, input: runtimeInput });
+          return output?.text ?? true;
+        }
 
-    let output;
-    const executor = config.executor || rule.parser_type || rule.action_type;
-    if (executor === "ai-webview-prompt") {
-      output = await executeWebviewPrompt({ flow, step, rule, config, input: runtimeInput });
-      webview = output.webview;
-      targetUrl = output.targetUrl;
-    } else if (executor === "http-json") {
-      output = await executeHttpJson({ config, input: runtimeInput });
-      targetUrl = output.targetUrl;
-    } else if (executor === "electron-api") {
-      output = await executeElectronApi({ config, input: runtimeInput });
-    } else {
-      throw new Error(`未対応のAI executorです: ${executor}`);
-    }
-
-    const durationMs = Date.now() - startedAtMs;
-    await updateExecutionLog(executionLogId, {
-      status: "success",
-      webview_id: webview?.id || null,
-      page_url_after: webview ? getWebviewUrl(webview) : null,
-      target_url: targetUrl || rule.target_url_pattern || null,
-      result_json: {
-        success: true,
-        hasText: Boolean(output?.text),
-        textLength: output?.text ? String(output.text).length : 0,
-        mode: executor,
-        model: output?.model || null,
+        throw new Error(`未対応のAI executorです: ${executor}`);
       },
-      finished_at: new Date().toISOString(),
-      duration_ms: durationMs,
-    });
+    },
+  };
 
-    return output?.text ?? output?.result?.success ?? true;
-  } catch (error) {
-    const durationMs = Date.now() - startedAtMs;
-    const failed = {
-      status: "failed",
-      webview_id: webview?.id || null,
-      page_url_after: webview ? getWebviewUrl(webview) : null,
-      finished_at: new Date().toISOString(),
-      duration_ms: durationMs,
-      error_code: error?.code || "AI_WEB_AUTOMATION_FAILED",
-      error_message: error?.message || String(error),
-      debug_json: {
-        flowKey: flow?.flow_key || flowKey,
-        stepKey: step?.step_key || null,
-        ruleKey: rule?.rule_key || null,
-        stack: error?.stack || null,
-      },
-    };
-
-    if (executionLogId) {
-      await updateExecutionLog(executionLogId, failed);
-    } else {
-      await createExecutionLog({
-        execution_uuid: executionUuid,
-        app_key: APP_KEY,
-        webview_key: WEBVIEW_KEY,
-        flow_id: flow?.id ?? null,
-        flow_key: flow?.flow_key || flowKey,
-        flow_step_id: step?.id ?? null,
-        step_key: step?.step_key ?? null,
-        rule_id: rule?.id ?? null,
-        rule_key: rule?.rule_key ?? null,
-        action_type: rule?.action_type ?? null,
-        executor: config?.executor || rule?.parser_type || null,
-        input_json: safeLogInput(input),
-        started_at: new Date(startedAtMs).toISOString(),
-        ...failed,
-      });
-    }
-    throw error;
-  }
+  const result = await executeFlowV2(flowKey, input, { runtime });
+  return result?.context?.aiResult ?? true;
 }

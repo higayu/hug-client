@@ -17,9 +17,7 @@ import {
   getActiveWebview,
 } from '@/utils/webview/webviewState.js';
 
-import {
-  fetchStaffData,
-} from './fetchStaffData.js';
+import { fetchStaffV2 } from '@/components/WebAutomationV2/runtime/synchronizationFlows.js';
 
 export default function StaffUpdateButton({
   facilityId: facilityIdProp,
@@ -102,14 +100,14 @@ export default function StaffUpdateButton({
         );
       }
 
-      const result = await fetchStaffData(
-        (page, maxPage) => {
-          setLabel(
-            `職員取得 ${page}/${maxPage}`,
-          );
+      const result = await fetchStaffV2(
+        { facilityId },
+        {
+          webviewRef: activeWebview,
+          onStaffProgress: (page, maxPage) => {
+            setLabel(`職員取得 ${page}/${maxPage}`);
+          },
         },
-        facilityId,
-        activeWebview,
       );
 
       console.groupCollapsed(

@@ -76,27 +76,131 @@ async function loadWebAutomationRuleConfig({
   flowKey,
   expectedRuleKey = '',
 }) {
-  if (!window.electronAPI?.laravel_webAutomationFlow_get) {
-    throw new Error('laravel_webAutomationFlow_get が使用できません')
+  const api = window.electronAPI?.laravel_webAutomationV2Flow_get
+  if (typeof api !== 'function') {
+    throw new Error('laravel_webAutomationV2Flow_get が使用できません')
   }
 
-  const response = await window.electronAPI.laravel_webAutomationFlow_get(
-    flowKey,
-    WEB_AUTOMATION_SCOPE,
-  )
+  const response = await api(flowKey, {
+    app_key: 'hug-banso-navi',
+    engine_version: 1,
+  })
 
-  const rule = getRuleFromFlowResponse(response, expectedRuleKey)
-  const config = parseMaybeJson(rule?.config_json, null)
-
-  if (!rule || !config) {
-    throw new Error(`web_automation_flows からRule設定を取得できません: ${flowKey}`)
+  if (!response?.success || !response?.data) {
+    throw new Error(response?.message || response?.error?.message || `V2 Flow取得失敗: ${flowKey}`)
   }
+
+  const flow = response.data
+  const step = [...(flow?.steps || [])]
+    .filter((item) => item?.is_active !== false && Number(item?.is_active ?? 1) !== 0)
+    .sort((a, b) => Number(a?.step_order || 0) - Number(b?.step_order || 0))[0]
+
+  if (!step) {
+    throw new Error(`V2 Stepが見つかりません: ${flowKey}`)
+  }
+
+  const rawConfig = parseMaybeJson(step?.config_json, {})
+  const config = adaptProfessionalSupportV2Config(flowKey, rawConfig)
 
   return {
     response,
-    rule,
+    rule: {
+      id: step.id,
+      rule_key: expectedRuleKey || step.step_key,
+      config_json: config,
+    },
     config,
   }
+}
+
+function adaptProfessionalSupportV2Config(flowKey, rawConfig = {}) {
+  if (flowKey === 'professional_support_draft_save') {
+    return {
+      request: {
+        form_url: rawConfig?.request?.formUrl || 'https://www.hug-ayumu.link/hug/wm/record_proceedings.php?mode=edit',
+        post_url: rawConfig?.request?.postUrl || 'https://www.hug-ayumu.link/hug/wm/record_proceedings.php',
+        method: rawConfig?.request?.method || 'POST',
+        body_type: rawConfig?.request?.bodyType || 'form-data',
+        credentials: rawConfig?.request?.credentials || 'include',
+        redirect: rawConfig?.request?.redirect || 'follow',
+      },
+      csrf: {
+        enabled: rawConfig?.csrf?.enabled !== false,
+        fetch_method: rawConfig?.csrf?.fetchMethod || 'GET',
+        selector: rawConfig?.csrf?.selector || '#csrf_token_from_client',
+        variable: rawConfig?.csrf?.variable || 'csrf',
+      },
+      constants: {
+        professional_support_id: rawConfig?.constants?.professionalSupportId || '55',
+        mode: 'regist', draft_flg: '{{saveMode}}', id: 'insert', select_s_id: '',
+        ap_flg: '0', ap_id: '0', mode_token: 'edit', support_office_id: '0',
+      },
+      body: {
+        mode: 'regist', draft_flg: '{{saveMode}}', id: 'insert', select_s_id: '', ap_flg: '0', ap_id: '0', mode_token: 'edit',
+        csrf_token_from_client: '{{csrf}}', adding_children_id: '55', title: '',
+        'c_id_list[{{childId}}][id]': '{{childId}}',
+        'c_id_list[{{childId}}][person_absence_note]': '',
+        'c_id_list[{{childId}}][f_id]': '{{facilityId}}',
+        'c_id_list[{{childId}}][s_id]': '1',
+        recorder: '{{staffId}}', interview_date: '{{interviewDate}}',
+        start_hour: '{{startHour}}', start_time: '{{startMinute}}', end_hour: '{{endHour}}', end_time: '{{endMinute}}',
+        start_hour2: '', start_time2: '', end_hour2: '', end_time2: '', add_date: '', nursing_support_date: '',
+        'interview_staff[]': '{{staffId}}',
+        'ro_list[1][related_organizations]': '', 'ro_list[1][related_organizations_manager]': '',
+        'ro_list[2][related_organizations]': '', 'ro_list[2][related_organizations_manager]': '',
+        support_office_id: '0', support_office_manager: '',
+        'customize[title][]': '{{safeTitle}}', 'customize[contents][]': '{{safeContents}}',
+      },
+      response: {
+        parse: rawConfig?.response?.parse || 'html',
+        error_selectors: rawConfig?.response?.errorSelectors || ['.js_data_err', 'p.err'],
+        failure_selector: rawConfig?.response?.failureSelector || '#form_id',
+        success_when_form_absent: rawConfig?.response?.successWhenFormAbsent !== false,
+      },
+    }
+  }
+
+  if (flowKey === 'professional_support_use_days_check') {
+    return {
+      request: {
+        url: rawConfig?.request?.url || 'https://www.hug-ayumu.link/hug/wm/record_proceedings.php',
+        form_method: rawConfig?.request?.formMethod || 'GET',
+        method: rawConfig?.request?.method || 'POST',
+        credentials: rawConfig?.request?.credentials || 'include',
+        contentType: rawConfig?.request?.contentType || 'application/x-www-form-urlencoded; charset=UTF-8',
+      },
+      csrf: { selector: rawConfig?.csrfSelector || '[name="csrf_token_from_client"]' },
+      modeToken: { selector: rawConfig?.modeTokenSelector || '[name="mode_token"]', defaultValue: rawConfig?.modeTokenDefault || 'nomode' },
+      formCheck: { selector: rawConfig?.formSelector || '#form_id' },
+      constants: { professional_support_id: rawConfig?.professionalSupportId || '55' },
+      search: rawConfig?.search || {},
+      table: rawConfig?.table || {},
+      response: { parse: 'html', returnRows: true },
+    }
+  }
+
+  if (flowKey === 'professional_support_plus_register' || flowKey === 'professional_support_plus_registration_check') {
+    return {
+      request: {
+        detail_url: rawConfig?.request?.detailUrl || 'https://www.hug-ayumu.link/hug/wm/attendance.php',
+        detail_method: rawConfig?.request?.detailMethod || 'GET',
+        post_url: rawConfig?.request?.postUrl || 'https://www.hug-ayumu.link/hug/wm/ajax/ajax_adding_contents_2024.php',
+        post_method: rawConfig?.request?.postMethod || 'POST',
+        credentials: rawConfig?.request?.credentials || 'include',
+        contentType: rawConfig?.request?.contentType || 'application/x-www-form-urlencoded; charset=UTF-8',
+        requestedWith: rawConfig?.request?.requestedWith || 'XMLHttpRequest',
+        detail_query: { mode: 'detail', f_id: '{{facilityId}}', date: '{{dateStr}}' },
+      },
+      constants: { professional_support_id: rawConfig?.professionalSupportId || '55' },
+      selectors: rawConfig?.selectors || {
+        tbody: 'tbody[id^="js_adding_list"]', childInput: '[name="c_id"]', facilityInput: '[name="f_id"]',
+        hoikuInput: '[name="hoiku_flg"]', registeredLabel: '.js_adding_td b.green, .js_adding_td b',
+      },
+      match: { labelText: rawConfig?.labelText || '専門的支援実施加算' },
+    }
+  }
+
+  return rawConfig
 }
 
 function template(value, context) {

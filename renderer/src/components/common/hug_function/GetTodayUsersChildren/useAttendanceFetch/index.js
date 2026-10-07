@@ -4,9 +4,11 @@ import { useDispatch } from "react-redux";
 import { useAppState } from "@/AppStateContext";
 import { useToast } from '@/provider/ToastProvider/ToastContext'
 import { isHugLoggedIn } from "@/hooks/useHugCache/isHugLoggedIn.js";
-import { fetchAttendanceViaHugTab } from "./attendance/fetchAttendanceViaHugTab";
-import { extractColumnData } from "./attendance/attendanceTable";
 import { setExtractedData, setTableData } from "@/store/slices/attendanceSlice";
+import {
+  createAttendanceRuntime,
+  executeFlowV2,
+} from "@/components/WebAutomationV2";
 
 const AUTO_FETCH_INTERVAL_MS = 60_000;
 
@@ -92,66 +94,34 @@ export function useAttendanceFetch(logTag = "GetTodayUsersChildren") {
           showInfoToast("📥 利用者データ取得中...");
         }
 
-        const result = await fetchAttendanceViaHugTab({
-          facilityId,
-          dateStr,
+        const runtime = createAttendanceRuntime({
+          dispatch,
+          updateAppState,
         });
 
-        if (!result.ok) {
-          console.error(`[${logTag}] 利用者データ取得失敗:`, result.error);
-          showInfoToast(`⚠️ 取得失敗: ${result.error || "不明なエラー"}`);
-          return;
-        }
-
-        const extracted = await extractColumnData(
-          result.html,
-          result.automationConfig || {},
+        const result = await executeFlowV2(
+          "attendance_fetch_today_users",
+          {
+            facilityId: String(facilityId),
+            dateStr: String(dateStr),
+          },
+          { runtime },
         );
 
-        const tableData = {
-          success: true,
-          html: result.html,
-          rowCount: result.rowCount,
-          pageTitle: result.pageTitle,
-          pageUrl: result.pageUrl,
-          facility_id: facilityId,
-          date_str: dateStr,
-        };
+        const attendanceData = result?.context?.attendanceData || window.AppState?.attendanceData;
 
-        dispatch(setTableData(tableData));
-
-        if (extracted?.success) {
-          dispatch(setExtractedData(extracted));
-
-          const attendanceData = {
-            facilityId,
-            dateStr,
-            extractedAt: new Date().toISOString(),
-            rowCount: extracted.rowCount,
-            data: extracted.data,
-          };
-
-          updateAppState({ attendanceData });
-
-          if (window.AppState) {
-            window.AppState.attendanceData = attendanceData;
-          }
-
-          if (!silent) {
-            showInfoToast(
-              `✅ 利用者データを抽出・保存しました。\n行数: ${
-                attendanceData.rowCount || "不明"
-              }`
-            );
-          }
-        } else if (!silent) {
-          showInfoToast("⚠️ データ抽出に失敗しました（テーブルは取得済み）");
+        if (!silent) {
+          showInfoToast(
+            `✅ 利用者データを抽出・保存しました。\n行数: ${
+              attendanceData?.rowCount ?? "不明"
+            }`
+          );
         }
 
-        console.log(`[${logTag}] 利用者データ取得完了`, {
+        console.log(`[${logTag}] 利用者データ取得完了(V2)`, {
           facilityId,
           dateStr,
-          rowCount: result.rowCount,
+          rowCount: attendanceData?.rowCount,
           silent,
         });
       } catch (e) {

@@ -7,7 +7,7 @@ import {
  * 「専門的支援実施加算」の月初〜指定日までの保存済み件数を取得する。
  *
  * URL、検索POST項目、結果テーブルセレクタ、専門的支援IDなどは
- * DB の web_automation_flows / web_automation_flow_steps / web_automation_rules から取得する。
+ * DB の WebAutomation V2 Flow / Step から取得する。
  *
  * 使用Flow:
  * - professional_support_use_days_check

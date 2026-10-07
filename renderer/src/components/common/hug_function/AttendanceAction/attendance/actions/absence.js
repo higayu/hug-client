@@ -1,74 +1,33 @@
-// 欠席: 非表示 hugview に出席詳細を読込み、モーダル表示（タブ active なし）
-
-import { resolveAttendanceWebview } from "../_shared/webview.js";
 import {
-  extractAbsenceButtonId,
-  assertAbsenceChildId,
-} from "../_shared/extractors.js";
+  createAttendanceRuntime,
+  executeFlowV2,
+} from "@/components/WebAutomationV2";
 
 /**
- * 欠席ボタン → モーダル表示まで（児童ID一致チェック付き）
+ * 欠席ボタン → HUG本体の欠席モーダル表示。
+ * 実行設定は WebAutomation V2 の attendance_absence から取得する。
  */
 export async function clickAbsenceButton(column5Html, targetChildrenId) {
   try {
-    console.log("🔘 [ATTENDANCE] 欠席モーダル表示 START (Cache)", {
-      targetChildrenId,
-    });
+    const runtime = createAttendanceRuntime();
+    const result = await executeFlowV2(
+      "attendance_absence",
+      {
+        column5Html: String(column5Html || ""),
+        childId: String(targetChildrenId || ""),
+      },
+      { runtime },
+    );
 
-    const webview = await resolveAttendanceWebview({ loadDetailPage: true });
-
-    const absenceId = extractAbsenceButtonId(column5Html);
-    if (!absenceId) {
-      throw new Error("欠席ボタンID(absence_...)を抽出できませんでした");
-    }
-
-    assertAbsenceChildId(absenceId, targetChildrenId);
-
-    const script = `
-      (function(){
-        try {
-          const id = ${JSON.stringify(absenceId)};
-          const btn = document.getElementById(id);
-          if (!btn) return { success:false, error:"欠席ボタンが見つかりません: " + id };
-
-          btn.click();
-
-          return new Promise((resolve) => {
-            const start = Date.now();
-            (function waitOpen(){
-              const dialog = document.getElementById("addtend_dialog");
-              const wrapper = dialog ? dialog.closest(".ui-dialog") : null;
-              const isOpen = !!(wrapper && wrapper.style.display !== "none");
-
-              if (isOpen) {
-                resolve({ success:true, logInfo:"addtend_dialog opened", absenceId:id });
-                return;
-              }
-              if (Date.now() - start > 2000) {
-                resolve({ success:false, error:"addtend_dialog が開きませんでした", absenceId:id });
-                return;
-              }
-              setTimeout(waitOpen, 100);
-            })();
-          });
-        } catch(e) {
-          return { success:false, error: e?.message || String(e) };
-        }
-      })();
-    `;
-
-    const result = await webview.executeJavaScript(script);
-
-    if (result?.success) {
-      console.log("✅ [ATTENDANCE] 欠席モーダル表示 OK:", result.logInfo);
-      window.showSuccessToast?.("✅ 欠席モーダルを開きました", 2000);
-      return { success: true, absenceId };
-    }
-
-    throw new Error(result?.error || "欠席モーダル表示に失敗しました");
+    window.showSuccessToast?.("✅ 欠席モーダルを開きました", 2000);
+    return {
+      success: true,
+      absenceId: result?.context?.absenceResult?.absenceId || null,
+      executionUuid: result?.executionUuid || null,
+    };
   } catch (err) {
-    console.error("❌ [ATTENDANCE] 欠席モーダル表示 NG:", err);
-    window.showErrorToast?.(`❌ 欠席モーダル表示失敗\n${err.message}`, 3000);
-    return { success: false, error: err.message };
+    console.error("❌ [ATTENDANCE V2] 欠席モーダル表示 NG:", err);
+    window.showErrorToast?.(`❌ 欠席モーダル表示失敗\n${err?.message || err}`, 3000);
+    return { success: false, error: err?.message || String(err) };
   }
 }

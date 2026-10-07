@@ -135,7 +135,7 @@ export async function clickEnterButton(column5Html, targetChildrenId, opts = {})
       !result?.mailDialogAutoSelected
     );
 
-    if (!waitingForMailDialog && result.mode !== "native" && !opts.skipRefresh) {
+    if (!waitingForMailDialog && result.mode !== "native" && result.mode !== "web-automation-v2" && !opts.skipRefresh) {
       // 呼び出し元が dispatch を渡していない場合でも、
       // このモジュールが参照している Redux store.dispatch で必ず一覧を更新する。
       // 特にメールありは、HUG 側のモーダル選択直後は Ajax/DB 更新が
@@ -157,7 +157,9 @@ export async function clickEnterButton(column5Html, targetChildrenId, opts = {})
       });
     }
 
-    window.showSuccessToast?.(result.statusMessage, 3000);
+    if (!result?.handledToast) {
+      window.showSuccessToast?.(result.statusMessage, 3000);
+    }
     return { success: true, ...result };
   } catch (err) {
     if (err instanceof MailDialogCancelledError) {

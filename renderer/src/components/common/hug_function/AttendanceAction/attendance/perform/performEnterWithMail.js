@@ -2,17 +2,27 @@ import {
   getHalfTime,
   isAfternoonEnterHeldUntilHalfTime,
 } from "../helpers/formHelpers.js";
-import { executeAttendanceNativeFlow } from "../flow/attendanceNativeFlow.js";
+import { executeAttendanceEnterV2 } from "@/components/WebAutomationV2/runtime/attendanceFlows.js";
 
 export const ENTER_WITH_MAIL_FLOW_KEY = "attendance_enter_with_mail";
 
-/**
- * メール通知対象の入室。
- *
- * 実行内容は web_automation_flows / web_automation_flow_steps /
- * web_automation_rules から取得し、executeAttendanceNativeFlow に一本化する。
- * Renderer の MailNotificationModal で選択した mailFlg も Flow 実行へ渡す。
- */
+function buildInput(item, ctx = {}) {
+  const sendMail = Number(ctx.mailFlg ?? ctx.mail_flg ?? 1) === 1 ? 1 : 0;
+
+  return {
+    facilityId: ctx.facilityId || item?.facilityId || item?.f_id || "1",
+    dateStr:
+      ctx.dateStr ||
+      item?.date ||
+      item?.detailPageDate ||
+      new Date().toISOString().slice(0, 10),
+    childId: item?.c_id ?? item?.childId ?? item?.children_id,
+    recordId: item?.r_id ?? item?.recordId ?? item?.record_id,
+    sendMail,
+    mailFlg: sendMail,
+  };
+}
+
 export async function performEnterWithMail(item, ctx = {}) {
   if (
     isAfternoonEnterHeldUntilHalfTime(
@@ -26,10 +36,17 @@ export async function performEnterWithMail(item, ctx = {}) {
     );
   }
 
-  return executeAttendanceNativeFlow(
-    ENTER_WITH_MAIL_FLOW_KEY,
-    "enter",
-    item,
-    ctx,
-  );
+  const result = await executeAttendanceEnterV2(buildInput(item, ctx), {
+    updateAppState: ctx.updateAppState,
+  });
+
+  return {
+    ...result,
+    success: true,
+    mode: "web-automation-v2",
+    flowKey: result?.flow?.flow_key || ENTER_WITH_MAIL_FLOW_KEY,
+    handledRefresh: true,
+    handledToast: true,
+    statusMessage: "入室処理が完了しました",
+  };
 }
