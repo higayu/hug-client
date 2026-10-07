@@ -218,20 +218,32 @@ async function executeWebviewPrompt({ rule, config, input }) {
       const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
       const findScope = () => {
-        if (!cfg.scopeSelectors.length) return document;
         for (const selector of cfg.scopeSelectors) {
-          const el = document.querySelector(selector);
-          if (el) return el;
+          try {
+            const el = document.querySelector(selector);
+            if (el) return el;
+          } catch (_) {
+            // ChatGPT側のDOM変更などで一部selectorが無効でも、次候補を試す。
+          }
         }
-        return null;
+
+        // scopeSelectorsがすべて見つからない場合でも、
+        // document全体からeditorSelectorsを検索できるようにする。
+        return document;
       };
 
       const findFirst = (root, selectors) => {
         if (!root) return null;
+
         for (const selector of selectors) {
-          const el = root.querySelector(selector);
-          if (el) return el;
+          try {
+            const el = root.querySelector(selector);
+            if (el) return el;
+          } catch (_) {
+            // 1つのselectorが無効でも、残りの候補を継続して試す。
+          }
         }
+
         return null;
       };
 
