@@ -9,6 +9,8 @@ const children = require("./children");
 const aiRecordEditer = require("./aiRecordEditer");
 const webAutomationRules = require("./webAutomationRules");
 const webAutomationFlows = require("./webAutomationFlows");
+const webAutomationV2Flows = require("./webAutomationV2Flows");
+const webAutomationV2ExecutionLogs = require("./webAutomationV2ExecutionLogs");
 const webAutomationExecutionLogs = require("./webAutomationExecutionLogs");
 const troubleshootingKnowledge = require("./troubleshootingKnowledge");
 const personalRecordSyncs = require("./personalRecordSyncs");
@@ -43,6 +45,11 @@ const IPC_CHANNELS = [
 
   "laravel:web-automation-flows:list",
   "laravel:web-automation-flows:get",
+
+  "laravel:web-automation-v2-flows:list",
+  "laravel:web-automation-v2-flows:get",
+  "laravel:web-automation-v2-execution-logs:create",
+  "laravel:web-automation-v2-execution-logs:update",
 
   "laravel:web-automation-execution-logs:create",
   "laravel:web-automation-execution-logs:update",
@@ -282,6 +289,30 @@ function registerLaravelAuthHandlers(
   ipcMain.handle(
     "laravel:web-automation-flows:get",
     webAutomationFlows.getHandler
+  );
+
+  // ============================================================
+  // Web自動化V2 Flow / Execution Log
+  // ============================================================
+
+  ipcMain.handle(
+    "laravel:web-automation-v2-flows:list",
+    webAutomationV2Flows.listHandler
+  );
+
+  ipcMain.handle(
+    "laravel:web-automation-v2-flows:get",
+    webAutomationV2Flows.getHandler
+  );
+
+  ipcMain.handle(
+    "laravel:web-automation-v2-execution-logs:create",
+    webAutomationV2ExecutionLogs.createHandler
+  );
+
+  ipcMain.handle(
+    "laravel:web-automation-v2-execution-logs:update",
+    webAutomationV2ExecutionLogs.updateHandler
   );
 
   // ============================================================
