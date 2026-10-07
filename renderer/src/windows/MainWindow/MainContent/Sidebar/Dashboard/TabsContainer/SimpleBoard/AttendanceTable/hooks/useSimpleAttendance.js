@@ -47,6 +47,9 @@ const toAttendanceRow = (child, index) => {
     name: childName,
     furiganaName: '',
 
+    // GetTodayUsersChildren が同じ行から取得した編集ボタンURL。
+    editUrl: String(child?.edit_url ?? child?.editUrl ?? ''),
+
     enterTime: /^\d{1,2}:\d{2}$/.test(enterText)
       ? enterText.padStart(5, '0')
       : '',

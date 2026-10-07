@@ -266,3 +266,142 @@
   background: #fff;
   color: #666;
 }
+
+/* Renderer側 入退室時間編集モーダル */
+.hug-attendance-edit-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000010;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.hug-attendance-edit-modal {
+  width: min(440px, calc(100vw - 40px));
+  overflow: hidden;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.3);
+  color: #222;
+}
+
+.hug-attendance-edit-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 20px 14px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.hug-attendance-edit-header h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.hug-attendance-edit-header p {
+  margin: 5px 0 0;
+  color: #555;
+  font-size: 13px;
+}
+
+.hug-attendance-edit-close {
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #666;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.hug-attendance-edit-close:hover:not(:disabled) {
+  background: #f1f3f5;
+}
+
+.hug-attendance-edit-body {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 20px;
+}
+
+.hug-attendance-edit-date {
+  color: #666;
+  font-size: 13px;
+}
+
+.hug-attendance-edit-time-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.hug-attendance-edit-time-label {
+  min-width: 72px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.hug-attendance-edit-time-selects {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.hug-attendance-edit-time-selects select {
+  min-width: 72px;
+  padding: 7px 8px;
+  border: 1px solid #cbd5e1;
+  border-radius: 5px;
+  background: #fff;
+  color: #222;
+  font-size: 14px;
+}
+
+.hug-attendance-edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 14px 20px 18px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.hug-attendance-edit-actions button {
+  min-width: 96px;
+  padding: 8px 16px;
+  border-radius: 5px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.hug-attendance-edit-cancel {
+  border: 1px solid #aeb7c2;
+  background: #fff;
+  color: #444;
+}
+
+.hug-attendance-edit-save {
+  border: 1px solid #1d4ed8;
+  background: #2563eb;
+  color: #fff;
+}
+
+.hug-attendance-edit-save:hover:not(:disabled) {
+  background: #1d4ed8;
+}
+
+.hug-attendance-edit-actions button:disabled,
+.hug-attendance-edit-close:disabled,
+.hug-attendance-edit-time-selects select:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}

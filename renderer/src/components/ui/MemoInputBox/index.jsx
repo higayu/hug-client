@@ -484,11 +484,13 @@ export default function MemoInputBox({
             selectedChildName={selectedChildName}
             disabled={!selectedChildId}
             label="個人記録"
-            className="
-              flex items-center justify-center shrink-0
-              px-3 py-2
-              rounded-lg font-bold text-xs
-            "
+            className={[
+              "px-2 py-2 rounded-md text-white bg-[#00a405] cursor-pointer transition-all whitespace-nowrap hover:bg-[#006305] hover:scale-105 active:bg-[#005004] active:scale-[0.97]",
+              "flex h-full items-center justify-center rounded-none border-0 px-2",
+              "text-xs font-bold whitespace-nowrap",
+              "focus:outline-none focus:ring-1 focus:ring-inset focus:ring-green-400",
+              "disabled:cursor-not-allowed disabled:opacity-40",
+            ].join(" ")}
           />
         )}
       </div>

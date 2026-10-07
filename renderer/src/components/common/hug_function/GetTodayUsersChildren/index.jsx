@@ -224,6 +224,27 @@ export default function GetTodayUsersChildren({
   };
 
   // =============================================
+  // 日付変更時の利用者再取得
+  // =============================================
+  const handleDateChange = async (selectedDate) => {
+    if (!selectedDate) return;
+
+    console.log(
+      "[GetTodayUsersChildren] 日付変更による利用者再取得",
+      { selectedDate }
+    );
+
+    // runFetch 内で useHugCache -> isHugLoggedIn を使って
+    // 常駐HUG WebViewのログイン状態を確認する。
+    // 未ログイン・キャッシュ未準備の場合は silent のため画面を邪魔せずスキップ。
+    await runFetch({
+      silent: true,
+      dateStr: selectedDate,
+      disableAutoFetchOnLoggedOut: false,
+    });
+  };
+
+  // =============================================
   // title
   // =============================================
   const statusTitle = [
@@ -277,6 +298,7 @@ export default function GetTodayUsersChildren({
               <DateSelect
                 id="getTodayUsersChildrenDate"
                 name="getTodayUsersChildrenDate"
+                onDateChange={handleDateChange}
                 className="
                   h-8
                   py-1

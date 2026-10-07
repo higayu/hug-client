@@ -95,7 +95,7 @@ rg "react-redux|@/store|store/store" renderer/src/components/common/hug_function
 - `onResult` の中で dispatch する Redux 接続用 hook を FanContent 側に置く。
 - またはチェック結果を呼び出し元へ返し、画面側で dispatch する。
 
-### `ProfessionalSupport/ProfessionalSupportCheckPanel2/index.jsx`
+### `ProfessionalSupport/ProfessionalSupportManagerPanel/index.jsx`
 
 現状：active space、児童ID、対象日、専門支援の確認状態を内部で取得している。
 
@@ -104,7 +104,7 @@ rg "react-redux|@/store|store/store" renderer/src/components/common/hug_function
 - `selectedChildId`、`currentYmd`、`registered`、`recordCount`、`checking`、`onCheck` を props 化する。
 - FanContent の各呼び出し元で対象 space の値を Redux から取得する。
 
-### `ProfessionalSupport/ProfessionalSupportCheckPanel2/useProfessionalSupportCheck2/index.js`
+### `ProfessionalSupport/ProfessionalSupportManagerPanel/useProfessionalSupportCheck2/index.js`
 
 現状：active space、児童ID、施設ID、対象日を selector で取得し、確認結果を dispatch している。
 

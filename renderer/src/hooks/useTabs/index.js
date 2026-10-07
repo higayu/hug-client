@@ -43,6 +43,9 @@ import {
   addProfessionalSupportCheckAction,
 } from './actions/professionalNew.js'
 
+import { addOpenAiTabAction,} from './actions/openAi';
+import { addDeepseekTabAction,} from './actions/deepseek';
+
 // useTabs() は複数コンポーネントから呼ばれるため、
 // 初期化はアプリ全体で1回だけ行う
 let tabsSystemInitialized = false
@@ -158,6 +161,28 @@ export function useTabs(spaceId) {
         appState,
         space,
       ]
+    )
+
+  // ============================================
+  // OpenAI タブ
+  // ============================================
+  const addOpenAiTab =
+    useCallback(
+      () => {
+        addOpenAiTabAction(appState)
+      },
+      [appState]
+    )
+
+  // ============================================
+  // DeepSeek タブ
+  // ============================================
+  const addDeepseekTab =
+    useCallback(
+      () => {
+        addDeepseekTabAction(appState)
+      },
+      [appState]
     )
 
   // ============================================
@@ -392,6 +417,9 @@ export function useTabs(spaceId) {
     addProfessionalSupportListTab,
     addProfessionalSupportNewTab,
     addProfessionalSupportCheckTab,
+
+    addOpenAiTab,
+    addDeepseekTab,
 
     activateTab,
     closeTab,

@@ -5,7 +5,7 @@ import {
   selectSpaceActiveFanContentPanel,
 } from '@/store/slices/chilledspaceSlice'
 import {PersonalRecordManagerPanel2} from '@/components/common/hug_function'
-import AiContents from './AiContents'
+import AiContents from '@/components/common/AiContents'
 import ChildKadai from './ChildKadai'
 import DeleteChilledSpaceBtn from './DeleteChilledSpaceBtn'
 

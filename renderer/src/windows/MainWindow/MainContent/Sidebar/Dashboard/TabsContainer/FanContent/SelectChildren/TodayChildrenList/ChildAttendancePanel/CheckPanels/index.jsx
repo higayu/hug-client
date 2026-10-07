@@ -1,6 +1,7 @@
+import { useTabs } from '@/hooks/useTabs'
 import {
   PersonalRecordCheckPanel,
-  ProfessionalSupportCheckPanel2,
+  ProfessionalSupportManagerPanel,
 } from '@/components/common/hug_function'
 
 export default function CheckPanels({
@@ -8,6 +9,9 @@ export default function CheckPanels({
   selectedChildId,
   selectedChildName,
   facilityId,
+  currentYmd,
+  enterTime,
+  leaveTime,
   isAbsent,
   hasEntered,
   hasExited,
@@ -15,6 +19,8 @@ export default function CheckPanels({
   isStop,
   loadingAction,
 }) {
+  const { addProfessionalSupportListTab } = useTabs(spaceId)
+
   return (
     <div className="mt-2 flex w-full items-center gap-1">
       <PersonalRecordCheckPanel
@@ -24,9 +30,14 @@ export default function CheckPanels({
         expandDirection="up"
       />
 
-      <ProfessionalSupportCheckPanel2
-        spaceId={spaceId}
+      <ProfessionalSupportManagerPanel
         facilityId={facilityId}
+        currentYmd={currentYmd}
+        selectedChildId={selectedChildId}
+        selectedChildName={selectedChildName}
+        enterTime={enterTime}
+        leaveTime={leaveTime}
+        onOpenProfessionalSupportList={addProfessionalSupportListTab}
         isAbsent={isAbsent}
         hasEntered={hasEntered}
         hasExited={hasExited}
