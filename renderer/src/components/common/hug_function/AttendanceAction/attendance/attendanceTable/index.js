@@ -164,6 +164,74 @@ function extractChildrenInfo(cellHtml) {
  * @param {NodeList} cells - 行のセル要素のリスト
  * @returns {Object} {column5: string, column5Html: string, column6: string, column6Html: string}
  */
+/**
+ * HUG出席行から「編集」画面へのURLを抽出する。
+ *
+ * HUG側では編集リンクが以下のどちらかで出力される可能性があるため、
+ * href / onclick の両方を確認する。
+ *
+ * - <a href="attendance.php?mode=edit&id=...&s_id=...">
+ * - onclick="location.href='attendance.php?mode=edit&id=...&s_id=...'"
+ *
+ * @param {HTMLElement} row
+ * @returns {string}
+ */
+function extractAttendanceEditUrl(row) {
+  if (!row) return ''
+
+  const normalizeUrl = (value) =>
+    String(value ?? '')
+      .replace(/&amp;/g, '&')
+      .trim()
+
+  // 1. href を優先する。
+  const links = Array.from(row.querySelectorAll('a[href]'))
+  for (const link of links) {
+    const href = normalizeUrl(link.getAttribute('href'))
+
+    if (/attendance\.php/i.test(href) && /[?&]mode=edit(?:&|$)/i.test(href)) {
+      return href
+    }
+
+    // href="javascript:location.href='attendance.php?...'" のような形式にも対応。
+    const embeddedHrefMatch = href.match(
+      /['"]([^'"]*attendance\.php\?[^'"]*\bmode=edit[^'"]*)['"]/i,
+    )
+
+    if (embeddedHrefMatch?.[1]) {
+      return normalizeUrl(embeddedHrefMatch[1])
+    }
+  }
+
+  // 2. onclick 内の location.href / window.location.href を探す。
+  const onclickElements = Array.from(row.querySelectorAll('[onclick]'))
+  for (const element of onclickElements) {
+    const onclick = String(element.getAttribute('onclick') ?? '')
+
+    const locationHrefMatch = onclick.match(
+      /(?:window\.)?location(?:\.href)?\s*=\s*['"]([^'"]+)['"]/i,
+    )
+
+    if (locationHrefMatch?.[1]) {
+      const href = normalizeUrl(locationHrefMatch[1])
+      if (/attendance\.php/i.test(href) && /[?&]mode=edit(?:&|$)/i.test(href)) {
+        return href
+      }
+    }
+
+    // location.href を直接代入せず、関数引数等にURL文字列だけ含むケースにも対応。
+    const rawUrlMatch = onclick.match(
+      /['"]([^'"]*attendance\.php\?[^'"]*\bmode=edit[^'"]*)['"]/i,
+    )
+
+    if (rawUrlMatch?.[1]) {
+      return normalizeUrl(rawUrlMatch[1])
+    }
+  }
+
+  return ''
+}
+
 function extractTimeColumns(cells) {
   const column5 = cells[5]?.textContent.trim() || '' // 入室時間（6列目）
   const column5Html = cells[5]?.innerHTML.trim() || '' // 入室時間のHTML（ボタン情報など）
@@ -198,6 +266,7 @@ function processAttendanceRow(row, rowIndex) {
   const cell1Html = cells[1]?.innerHTML.trim() || '' // 2列目のHTML（児童情報）
   const { children_id, children_name } = extractChildrenInfo(cell1Html)
   const { column5, column5Html, column6, column6Html } = extractTimeColumns(cells)
+  const editUrl = extractAttendanceEditUrl(row)
 
   // HUG側の1行を一意に識別する record id。
   // 例: <tr class="odd children46961"> → 46961
@@ -222,6 +291,10 @@ function processAttendanceRow(row, rowIndex) {
     hug_row_class: rowClassName,
     hug_row_selector: hugRowSelector,
     hug_realname_selector: hugRealnameSelector,
+    // SimpleBoard / FanContent の編集ボタンで使用するHUG編集画面URL。
+    // 呼び出し側に旧snake_case / 新camelCaseの両方があるため両方保持する。
+    edit_url: editUrl,
+    editUrl,
     column1Html: cell1Html, // 2列目のHTML（児童情報）
     column5, // 入室時間のテキスト
     column5Html // 入室時間のHTML（ボタン情報など）
