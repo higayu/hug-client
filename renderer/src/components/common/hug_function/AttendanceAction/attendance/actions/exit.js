@@ -54,11 +54,11 @@ export async function clickExitButton(column6Html, targetChildrenId, opts = {}) 
         result,
       });
 
-      if (opts.dispatch && !opts.skipRefresh) {
+      if (!opts.skipRefresh) {
         await runAttendanceUpdate({
           facilityId: opts.facilityId || store.getState().appState?.FACILITY_ID || "1",
           dateStr: opts.dateStr || store.getState().appState?.CURRENT_YMD,
-          dispatch: opts.dispatch,
+          dispatch: opts.dispatch || store.dispatch,
           updateAppState: opts.updateAppState,
           // HUGメール通知モーダルのclick()はAjax開始直後に戻るため、
           // 対象児童の更新済みHTMLが取得できるまで確認付きで再取得する。
@@ -184,12 +184,24 @@ export async function clickExitButton(column6Html, targetChildrenId, opts = {}) 
       !result?.mailDialogAutoSelected
     );
 
-    if (!waitingForMailDialog && opts.dispatch && !opts.skipRefresh) {
+    if (!waitingForMailDialog && !opts.skipRefresh) {
+      // 呼び出し元が dispatch を渡していない場合でも、
+      // Redux store.dispatch を使って必ず一覧を更新する。
+      // メールあり退室は HUG 側 Ajax/DB 更新の反映を確認できるまで再取得を繰り返す。
+      const refreshDispatch = opts.dispatch || store.dispatch;
+      const isWithMailFlow = result?.flowKey === "attendance_leave_with_mail";
+
       await runAttendanceUpdate({
         facilityId,
         dateStr,
-        dispatch: opts.dispatch,
+        dispatch: refreshDispatch,
         updateAppState: opts.updateAppState,
+        targetChildrenId: isWithMailFlow ? targetChildrenId : null,
+        action: isWithMailFlow ? "leave" : "",
+        verifyUpdated: isWithMailFlow,
+        retryCount: isWithMailFlow ? 10 : 1,
+        retryDelayMs: 500,
+        silent: false,
       });
     }
 

@@ -56,11 +56,11 @@ export async function clickEnterButton(column5Html, targetChildrenId, opts = {})
         result,
       });
 
-      if (opts.dispatch && !opts.skipRefresh) {
+      if (!opts.skipRefresh) {
         await runAttendanceUpdate({
           facilityId: opts.facilityId || store.getState().appState?.FACILITY_ID || "1",
           dateStr: opts.dateStr || store.getState().appState?.CURRENT_YMD,
-          dispatch: opts.dispatch,
+          dispatch: opts.dispatch || store.dispatch,
           updateAppState: opts.updateAppState,
           // HUGメール通知モーダルのclick()はAjax開始直後に戻るため、
           // 対象児童の更新済みHTMLが取得できるまで確認付きで再取得する。
@@ -135,12 +135,25 @@ export async function clickEnterButton(column5Html, targetChildrenId, opts = {})
       !result?.mailDialogAutoSelected
     );
 
-    if (!waitingForMailDialog && result.mode !== "native" && opts.dispatch && !opts.skipRefresh) {
+    if (!waitingForMailDialog && result.mode !== "native" && !opts.skipRefresh) {
+      // 呼び出し元が dispatch を渡していない場合でも、
+      // このモジュールが参照している Redux store.dispatch で必ず一覧を更新する。
+      // 特にメールありは、HUG 側のモーダル選択直後は Ajax/DB 更新が
+      // まだ反映されていない場合があるため、対象児童の状態変化を確認しながら再取得する。
+      const refreshDispatch = opts.dispatch || store.dispatch;
+      const isWithMailFlow = result?.flowKey === "attendance_enter_with_mail";
+
       await runAttendanceUpdate({
         facilityId,
         dateStr,
-        dispatch: opts.dispatch,
+        dispatch: refreshDispatch,
         updateAppState: opts.updateAppState,
+        targetChildrenId: isWithMailFlow ? targetChildrenId : null,
+        action: isWithMailFlow ? "enter" : "",
+        verifyUpdated: isWithMailFlow,
+        retryCount: isWithMailFlow ? 10 : 1,
+        retryDelayMs: 500,
+        silent: false,
       });
     }
 
