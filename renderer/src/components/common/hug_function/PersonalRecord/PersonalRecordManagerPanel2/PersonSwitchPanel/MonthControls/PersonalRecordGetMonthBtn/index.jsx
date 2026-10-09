@@ -3,7 +3,7 @@ import { useAppState } from "@/AppStateContext";
 import { useSelector } from "react-redux";
 import { selectSpaceChildId } from "@/store/slices/chilledspaceSlice.js";
 import { useToast } from '@/provider/ToastProvider/ToastContext'
-import { fetchPersonalRecord2 } from "./fetchPersonalRecord2";
+import { fetchPersonalRecordV2 } from "../../fetchPersonalRecordV2";
 import { postServiceRecordsToLocalApi } from "./postServiceRecordsToLocalApi";
 import { useDataBase } from "@/hooks/useDataBase";
 
@@ -119,10 +119,10 @@ export default function PersonalRecordGetMonthBtn({
     });
 
     try {
-      const result = await fetchPersonalRecord2({
+      const result = await fetchPersonalRecordV2({
         childId: selectedChildId,
         facilityId,
-        year_month: yearMonth,
+        yearMonth,
       });
 
       onDebugResult?.(result);

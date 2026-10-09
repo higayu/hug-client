@@ -1,0 +1,2 @@
+V2化: professional_support_draft_save / professional_support_use_days_check / professional_support_plus_register / professional_support_plus_registration_check
+RendererはexecuteFlowV2へ置換。DBはDB/professional_support_remaining_v2_all.sqlを実行。

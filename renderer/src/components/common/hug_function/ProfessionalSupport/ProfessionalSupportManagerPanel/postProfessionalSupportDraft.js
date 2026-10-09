@@ -1,4 +1,3 @@
-import { getHugWebviewForCache } from '@/hooks/useHugCache/getHugCache.js'
 import {
   executeProfessionalSupportDraftPostInWebview,
 } from './professionalSupportWebAutomation.js'
@@ -35,9 +34,6 @@ export async function postProfessionalSupportDraft({
     throw new Error(`保存種別が不正です: ${saveMode}`)
   }
 
-  const webview = await getHugWebviewForCache()
-  if (!webview) throw new Error('HUG の WebView が見つかりません')
-
   const payload = {
     childId: String(childId),
     facilityId: String(facilityId),
@@ -51,7 +47,7 @@ export async function postProfessionalSupportDraft({
   }
 
   const result = await executeProfessionalSupportDraftPostInWebview(
-    webview,
+    null,
     payload,
   )
 

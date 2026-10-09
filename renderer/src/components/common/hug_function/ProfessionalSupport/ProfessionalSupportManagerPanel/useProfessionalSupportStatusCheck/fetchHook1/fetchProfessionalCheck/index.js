@@ -35,10 +35,6 @@ import {
 export async function fetchProfessionalSupportUseDaysInWebview(webview, opts) {
   const { childId, facilityId = '3', interviewDate = '' } = opts || {}
 
-  if (!webview) {
-    return { ok: false, error: 'webview がありません' }
-  }
-
   if (!childId) {
     return { ok: false, error: '児童ID（childId）がありません' }
   }

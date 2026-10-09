@@ -3,7 +3,7 @@ import { useAppState } from "@/AppStateContext";
 import { useSelector } from "react-redux";
 import { selectSpaceChildId } from "@/store/slices/chilledspaceSlice.js";
 import { useToast } from '@/provider/ToastProvider/ToastContext'
-import { fetchPersonalRecord } from "@/utils/fetchPersonalRecord";
+import { fetchPersonalRecordV2 } from "../../fetchPersonalRecordV2";
 import { postServiceRecordsToLocalApi } from "./postServiceRecordsToLocalApi";
 import { useDataBase } from "@/hooks/useDataBase";
 
@@ -70,10 +70,11 @@ export default function PersonalRecordGetDayBtn({
     });
 
     try {
-      const result = await fetchPersonalRecord({
+      const result = await fetchPersonalRecordV2({
         childId: selectedChildId,
         facilityId,
-        currentYmd,
+        yearMonth: currentYmd.slice(0, 7),
+        dateStr: currentYmd,
       });
 
       onDebugResult?.(result);

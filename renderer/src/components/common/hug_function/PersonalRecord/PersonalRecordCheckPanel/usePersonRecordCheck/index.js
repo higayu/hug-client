@@ -9,7 +9,7 @@ import {
   setPersonalRecordStatus,
   setRecordStatusError,
 } from "@/store/slices/recordStatusSlice.js";
-import { fetchPersonalRecord } from "@/utils/fetchPersonalRecord";
+import { fetchPersonalRecordV2 } from "../../PersonalRecordManagerPanel2/PersonSwitchPanel/fetchPersonalRecordV2";
 import { parseTodayPersonalRecordStatus } from "./parseTodayPersonalRecordStatus";
 
 /**
@@ -56,10 +56,11 @@ export function usePersonRecordCheck(
     setTodayPersonalRecordCount(null);
 
     try {
-      const contactResult = await fetchPersonalRecord({
+      const contactResult = await fetchPersonalRecordV2({
         childId: effectiveChildId,
         facilityId: effectiveFacilityId,
-        currentYmd: effectiveCurrentYmd,
+        yearMonth: String(effectiveCurrentYmd || "").slice(0, 7),
+        dateStr: effectiveCurrentYmd,
       });
 
       if (!contactResult.ok) {
