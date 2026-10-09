@@ -2,8 +2,8 @@
  * 入室処理の振り分け。
  *
  * メール通知設定で処理を分離する。
- * - メールなし: 動作確認済み旧直接POST経路
- * - メールあり: attendance_enter_with_mail の新WebAutomation経路
+ * - メールなし: Renderer直書きDOMクリック経路
+ * - メールあり: attendance_enter_with_mail のRenderer直書きDOMクリック経路
  */
 
 import { isEnterMailEnabled } from "../helpers/mailDialog.js";

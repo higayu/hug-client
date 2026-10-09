@@ -1,15 +1,20 @@
 import { executeAttendanceFetchFlow } from "../flow/attendanceFetchFlow";
 
 /**
- * DBの attendance_fetch_today_users Flow を使用して、
- * HUGログイン済みWebViewのCookieセッションで利用者テーブルを取得する。
+ * HUGログイン済みWebViewのCookieセッションを使用して、
+ * 指定施設・指定日の利用者テーブルを取得する。
  *
- * 戻り値の形はDB化前と同じ:
+ * DB Flow / Rule は使用しない。
+ *
+ * 戻り値:
  * { ok, html, rowCount, className, pageTitle, pageUrl }
  *
  * @param {{ facilityId: string|number, dateStr: string }} opts
  */
-export async function fetchAttendanceViaHugTab({ facilityId, dateStr }) {
+export async function fetchAttendanceViaHugTab({
+  facilityId,
+  dateStr,
+}) {
   if (!facilityId || !dateStr) {
     return {
       ok: false,

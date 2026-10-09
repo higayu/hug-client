@@ -9,9 +9,8 @@ export const ENTER_WITH_MAIL_FLOW_KEY = "attendance_enter_with_mail";
 /**
  * メール通知対象の入室。
  *
- * 実行内容は web_automation_flows / web_automation_flow_steps /
- * web_automation_rules から取得し、executeAttendanceNativeFlow に一本化する。
- * Renderer の MailNotificationModal で選択した mailFlg も Flow 実行へ渡す。
+ * 実行内容はRenderer側へ直接定義し、executeAttendanceNativeFlow に一本化する。
+ * Renderer の MailNotificationModal で選択した mailFlg をHUG側モーダルへ反映する。
  */
 export async function performEnterWithMail(item, ctx = {}) {
   if (

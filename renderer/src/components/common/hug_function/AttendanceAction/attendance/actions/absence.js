@@ -1,4 +1,6 @@
-// 欠席: 非表示 hugview に出席詳細を読込み、モーダル表示（タブ active なし）
+// 欠席処理
+// DB Flow / Step / Rule は使用しない。
+// HUG出席詳細画面を直接操作して、欠席ダイアログを開く。
 
 import { resolveAttendanceWebview } from "../_shared/webview.js";
 import {
@@ -6,69 +8,162 @@ import {
   assertAbsenceChildId,
 } from "../_shared/extractors.js";
 
+const ABSENCE_DIALOG_ID = "addtend_dialog";
+const ABSENCE_DIALOG_WRAPPER_SELECTOR = ".ui-dialog";
+const ABSENCE_DIALOG_TIMEOUT_MS = 2000;
+const ABSENCE_DIALOG_POLL_INTERVAL_MS = 100;
+
 /**
- * 欠席ボタン → モーダル表示まで（児童ID一致チェック付き）
+ * 欠席ボタンをクリックして、HUG本体の欠席ダイアログを開く。
+ *
+ * 処理:
+ * 1. 非表示HUG WebViewで当日のattendance detailを読み込む
+ * 2. column5Htmlから absence_xxx / absense_xxx のIDを取得
+ * 3. ボタン内の児童IDと対象児童IDを照合
+ * 4. 実DOM上の欠席ボタンをclick()
+ * 5. #addtend_dialog が開くまで待機
  */
 export async function clickAbsenceButton(column5Html, targetChildrenId) {
   try {
-    console.log("🔘 [ATTENDANCE] 欠席モーダル表示 START (Cache)", {
-      targetChildrenId,
+    const childId = String(targetChildrenId ?? "").trim();
+
+    if (!childId) {
+      throw new Error("欠席処理対象の児童IDがありません");
+    }
+
+    console.log("🔘 [ATTENDANCE] 欠席モーダル表示 START", {
+      targetChildrenId: childId,
     });
 
-    const webview = await resolveAttendanceWebview({ loadDetailPage: true });
+    // 現在選択中の施設・日付でHUG attendance detailを強制再読込する。
+    const webview = await resolveAttendanceWebview({
+      loadDetailPage: true,
+    });
 
-    const absenceId = extractAbsenceButtonId(column5Html);
-    if (!absenceId) {
-      throw new Error("欠席ボタンID(absence_...)を抽出できませんでした");
+    if (!webview) {
+      throw new Error("HUG WebViewを取得できませんでした");
     }
 
-    assertAbsenceChildId(absenceId, targetChildrenId);
+    // 一覧取得時に保持したHTMLからHUG本体の欠席ボタンIDを取得する。
+    const absenceId = extractAbsenceButtonId(column5Html);
 
-    const script = `
-      (function(){
+    if (!absenceId) {
+      throw new Error(
+        "欠席ボタンID(absence_... / absense_...)を抽出できませんでした"
+      );
+    }
+
+    // 別児童の欠席ボタンを誤って押さないためのチェック。
+    assertAbsenceChildId(absenceId, childId);
+
+    const result = await webview.executeJavaScript(`
+      (async () => {
         try {
-          const id = ${JSON.stringify(absenceId)};
-          const btn = document.getElementById(id);
-          if (!btn) return { success:false, error:"欠席ボタンが見つかりません: " + id };
+          const absenceId = ${JSON.stringify(absenceId)};
+          const dialogId = ${JSON.stringify(ABSENCE_DIALOG_ID)};
+          const wrapperSelector = ${JSON.stringify(
+            ABSENCE_DIALOG_WRAPPER_SELECTOR
+          )};
+          const timeoutMs = ${ABSENCE_DIALOG_TIMEOUT_MS};
+          const pollIntervalMs = ${ABSENCE_DIALOG_POLL_INTERVAL_MS};
 
-          btn.click();
+          const button = document.getElementById(absenceId);
 
-          return new Promise((resolve) => {
-            const start = Date.now();
-            (function waitOpen(){
-              const dialog = document.getElementById("addtend_dialog");
-              const wrapper = dialog ? dialog.closest(".ui-dialog") : null;
-              const isOpen = !!(wrapper && wrapper.style.display !== "none");
+          if (!button) {
+            return {
+              success: false,
+              error: "欠席ボタンが見つかりません: " + absenceId,
+              absenceId,
+              pageUrl: location.href,
+            };
+          }
+
+          // HUG本体のイベント/JavaScriptへ処理を委譲する。
+          button.click();
+
+          const startedAt = Date.now();
+
+          while (Date.now() - startedAt < timeoutMs) {
+            const dialog = document.getElementById(dialogId);
+            const wrapper = dialog
+              ? dialog.closest(wrapperSelector)
+              : null;
+
+            if (dialog && wrapper) {
+              const style = window.getComputedStyle(wrapper);
+              const isOpen =
+                style.display !== "none" &&
+                style.visibility !== "hidden";
 
               if (isOpen) {
-                resolve({ success:true, logInfo:"addtend_dialog opened", absenceId:id });
-                return;
+                return {
+                  success: true,
+                  absenceId,
+                  dialogId,
+                  waitedMs: Date.now() - startedAt,
+                  pageUrl: location.href,
+                };
               }
-              if (Date.now() - start > 2000) {
-                resolve({ success:false, error:"addtend_dialog が開きませんでした", absenceId:id });
-                return;
-              }
-              setTimeout(waitOpen, 100);
-            })();
-          });
-        } catch(e) {
-          return { success:false, error: e?.message || String(e) };
+            }
+
+            await new Promise((resolve) =>
+              setTimeout(resolve, pollIntervalMs)
+            );
+          }
+
+          return {
+            success: false,
+            error: dialogId + " が開きませんでした",
+            absenceId,
+            waitedMs: Date.now() - startedAt,
+            pageUrl: location.href,
+          };
+        } catch (error) {
+          return {
+            success: false,
+            error: error?.message || String(error),
+            pageUrl: location.href,
+          };
         }
       })();
-    `;
+    `);
 
-    const result = await webview.executeJavaScript(script);
-
-    if (result?.success) {
-      console.log("✅ [ATTENDANCE] 欠席モーダル表示 OK:", result.logInfo);
-      window.showSuccessToast?.("✅ 欠席モーダルを開きました", 2000);
-      return { success: true, absenceId };
+    if (!result?.success) {
+      throw new Error(
+        result?.error || "欠席モーダル表示に失敗しました"
+      );
     }
 
-    throw new Error(result?.error || "欠席モーダル表示に失敗しました");
-  } catch (err) {
-    console.error("❌ [ATTENDANCE] 欠席モーダル表示 NG:", err);
-    window.showErrorToast?.(`❌ 欠席モーダル表示失敗\n${err.message}`, 3000);
-    return { success: false, error: err.message };
+    console.log("✅ [ATTENDANCE] 欠席モーダル表示 OK", result);
+
+    window.showSuccessToast?.(
+      "✅ 欠席モーダルを開きました",
+      2000
+    );
+
+    return {
+      success: true,
+      absenceId,
+      dialogId: result.dialogId,
+      waitedMs: result.waitedMs,
+      pageUrl: result.pageUrl,
+    };
+  } catch (error) {
+    const message =
+      error instanceof Error
+        ? error.message
+        : String(error || "欠席モーダル表示に失敗しました");
+
+    console.error("❌ [ATTENDANCE] 欠席モーダル表示 NG", error);
+
+    window.showErrorToast?.(
+      `❌ 欠席モーダル表示失敗\n${message}`,
+      3000
+    );
+
+    return {
+      success: false,
+      error: message,
+    };
   }
 }

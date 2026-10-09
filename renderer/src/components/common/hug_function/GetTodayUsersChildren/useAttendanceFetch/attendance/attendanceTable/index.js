@@ -1,13 +1,13 @@
 // renderer/src/components/common/hug_function/GetTodayUsersChildren/useAttendanceFetch/attendance/attendanceTable/index.js
 // 出勤データテーブルのパース・列抽出
 //
-// DB駆動化後は attendance_fetch_today_users Rule の以下を参照する:
+// Renderer直書きの attendance_fetch_today_users 設定を使用する。
 // - table.bodySelector
 // - columns.childInfo / enter / leave
 // - child.idQueryParameter / nameSelector
 // - attendance.timePattern
 //
-// DB値が欠けた場合のみ、DB化前と同じ値をフォールバックとして使用する。
+// 設定値が欠けた場合は既定値へフォールバックする。
 
 const DEFAULT_CONFIG = {
   table: {
@@ -327,7 +327,7 @@ function processAttendanceRow(row, rowIndex, config) {
  * 戻り値の構造はDB化前から変更しない。
  *
  * @param {string} tableHTML
- * @param {Object} automationConfig attendance_fetch_today_users Ruleの実行時config
+ * @param {Object} automationConfig attendance_fetch_today_users の実行時config
  */
 export async function extractColumnData(tableHTML, automationConfig = {}) {
   try {
@@ -351,7 +351,7 @@ export async function extractColumnData(tableHTML, automationConfig = {}) {
       }
     })
 
-    console.log('✅ [ATTENDANCE][DB] 列データ抽出完了:', {
+    console.log('✅ [ATTENDANCE][DIRECT] 列データ抽出完了:', {
       extractedCount: extractedData.length,
       sample: extractedData,
       columns: config.columns
@@ -363,7 +363,7 @@ export async function extractColumnData(tableHTML, automationConfig = {}) {
       rowCount: extractedData.length
     }
   } catch (error) {
-    console.error('❌ [ATTENDANCE][DB] 列データ抽出エラー:', error)
+    console.error('❌ [ATTENDANCE][DIRECT] 列データ抽出エラー:', error)
     return {
       success: false,
       error: error.message,
