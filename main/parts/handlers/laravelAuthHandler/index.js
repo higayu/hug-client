@@ -53,6 +53,12 @@ const IPC_CHANNELS = [
   "laravel:web-automation-v2:execution-log:start",
   "laravel:web-automation-v2:execution-log:finish",
 
+  // Web自動化 V2 管理者用
+  "laravel:web-automation-v2:admin:flows:list",
+  "laravel:web-automation-v2:admin:flow:get",
+  "laravel:web-automation-v2:admin:flow:update",
+  "laravel:web-automation-v2:admin:execution-logs:list",
+
   // ============================================================
   // Q&A・障害対応ナレッジ
   // ============================================================
@@ -321,6 +327,30 @@ function registerLaravelAuthHandlers(
   ipcMain.handle(
     "laravel:web-automation-v2:execution-log:finish",
     webAutomationV2.executionLogFinishHandler
+  );
+
+  // ============================================================
+  // Web自動化 V2 管理者用
+  // ============================================================
+
+  ipcMain.handle(
+    "laravel:web-automation-v2:admin:flows:list",
+    webAutomationV2.adminFlowsGetAllHandler
+  );
+
+  ipcMain.handle(
+    "laravel:web-automation-v2:admin:flow:get",
+    webAutomationV2.adminFlowGetHandler
+  );
+
+  ipcMain.handle(
+    "laravel:web-automation-v2:admin:flow:update",
+    webAutomationV2.adminFlowUpdateHandler
+  );
+
+  ipcMain.handle(
+    "laravel:web-automation-v2:admin:execution-logs:list",
+    webAutomationV2.adminExecutionLogsGetAllHandler
   );
 
   // ============================================================

@@ -5,13 +5,7 @@ import { ArrowPathIcon } from '@heroicons/react/24/outline'
 import { useAppState } from '@/AppStateContext'
 import { useToast } from '@/provider/ToastProvider/ToastContext'
 import { selectFacilityId } from '@/store/slices/appStateSlice'
-import { getActiveWebview } from '@/utils/webview/webviewState.js'
-
-import { fetchStaffData } from './fetchStaffData.js'
-import { fetchChildrenData } from './fetchChildrenData.js'
-
-import { buildPersonalRecordFetchScript } from './personalRecord'
-import { fetchPersonalRecordDetails } from './fetchPersonalRecordDetails'
+import { executeFlowV2 } from '@/components/WebAutomationV2'
 
 const PERSONAL_RECORD_ITEM_ID = 1
 const TOTAL_STEPS = 4
@@ -194,28 +188,14 @@ const AllSyncButton = forwardRef(function AllSyncButton({
     onProgress?.(step, text)
   }
 
-  const resolveWebview = () => {
-    if (webviewRef?.current) {
-      return webviewRef.current
-    }
-
-    const targetWebview =
-      typeof webview === 'function'
-        ? webview()
-        : webview
-
-    return targetWebview ?? getActiveWebview()
-  }
-
-  const syncStaffs = async (activeWebview) => {
+  const syncStaffs = async () => {
     updateProgress(1, '職員更新中...')
 
-    const result = await fetchStaffData(
-      (page, maxPage) => {
-        updateProgress(1, `職員取得 ${page}/${maxPage}`)
+    const result = await executeFlowV2(
+      'staff_fetch',
+      {
+        facilityId,
       },
-      facilityId,
-      activeWebview,
     )
 
     console.groupCollapsed(
@@ -242,19 +222,14 @@ const AllSyncButton = forwardRef(function AllSyncButton({
     }
   }
 
-  const syncChildren = async (activeWebview) => {
+  const syncChildren = async () => {
     updateProgress(2, '児童更新中...')
 
-    const now = new Date()
-    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
-
-    const result = await fetchChildrenData(
-      (page, maxPage) => {
-        updateProgress(2, `児童取得 ${page}/${maxPage}`)
+    const result = await executeFlowV2(
+      'children_fetch',
+      {
+        facilityId,
       },
-      facilityId,
-      today,
-      activeWebview,
     )
 
     console.groupCollapsed(
@@ -318,35 +293,37 @@ const AllSyncButton = forwardRef(function AllSyncButton({
     }
   }
 
-  const fetchPersonalRecords = async (activeWebview) => {
-    updateProgress(3, '個人記録取得中...')
+  const fetchPersonalRecords = async () => {
+    updateProgress(3, '個人記録一覧取得中...')
     setLoading?.(true)
     setSending?.(false)
     setError?.('')
     setSendError?.('')
     setSendResult?.(null)
 
-    const script = buildPersonalRecordFetchScript({
-      facilityId,
-      year,
-      month,
-    })
-
-    const listResult = await activeWebview.executeJavaScript(script, true)
-
-    if (listResult?.ok === false) {
-      throw new Error(
-        listResult.error || '個人記録一覧の取得に失敗しました。',
-      )
-    }
+    const listResult = await executeFlowV2(
+      'personal_record_list_fetch',
+      {
+        facilityId,
+        year,
+        month,
+      },
+    )
 
     const listRecords = Array.isArray(listResult?.records)
       ? listResult.records
       : []
 
-    const detailResult = await fetchPersonalRecordDetails(
-      activeWebview,
-      listRecords,
+    updateProgress(
+      3,
+      `個人記録詳細取得中... 0/${listRecords.length}`,
+    )
+
+    const detailResult = await executeFlowV2(
+      'personal_record_detail_fetch',
+      {
+        records: listRecords,
+      },
     )
 
     const fetchedRecords = Array.isArray(detailResult?.records)
@@ -356,16 +333,30 @@ const AllSyncButton = forwardRef(function AllSyncButton({
     const mergedData = {
       ...listResult,
       records: fetchedRecords,
-      detailCount: detailResult.detailCount ?? 0,
-      detailErrorCount: detailResult.errorCount ?? 0,
-      permissionErrorCount: detailResult.permissionErrorCount ?? 0,
-      detailFetchOk: detailResult.ok,
-      detailFetchError: detailResult.ok ? '' : detailResult.error,
+      detailCount: detailResult?.detailCount ?? 0,
+      detailErrorCount: detailResult?.errorCount ?? 0,
+      permissionErrorCount: detailResult?.permissionErrorCount ?? 0,
+      skippedCount: detailResult?.skippedCount ?? 0,
+      detailFetchOk: detailResult?.ok !== false,
+      detailFetchError:
+        detailResult?.ok === false
+          ? detailResult?.error || '個人記録詳細取得に失敗しました。'
+          : '',
+      webAutomation: {
+        staffFlowKey: 'staff_fetch',
+        staffFlowEngine: 'v2',
+        childrenFlowKey: 'children_fetch',
+        childrenFlowEngine: 'v2',
+        listFlowKey: 'personal_record_list_fetch',
+        listFlowEngine: 'v2',
+        detailFlowKey: 'personal_record_detail_fetch',
+        detailFlowEngine: 'v2',
+      },
     }
 
     setData?.(mergedData)
 
-    if (!detailResult.ok) {
+    if (detailResult?.ok === false) {
       throw new Error(
         `一覧は取得できましたが、本文取得でエラーが発生しました: ${detailResult.error}`,
       )
@@ -384,7 +375,7 @@ const AllSyncButton = forwardRef(function AllSyncButton({
       bulkRecords,
       fetchedCount: fetchedRecords.length,
       skippedCount,
-      detailErrorCount: detailResult.errorCount ?? 0,
+      detailErrorCount: detailResult?.errorCount ?? 0,
     }
   }
 
@@ -498,13 +489,7 @@ const AllSyncButton = forwardRef(function AllSyncButton({
       return false
     }
 
-    const activeWebview = resolveWebview()
-
-    if (
-      !webviewReady ||
-      !activeWebview ||
-      typeof activeWebview.executeJavaScript !== 'function'
-    ) {
+    if (!webviewReady) {
       const message =
         'HUGのWebViewがまだ準備できていません。HUG画面の読み込み完了後に、もう一度実行してください。'
       setError?.(message)
@@ -519,7 +504,7 @@ const AllSyncButton = forwardRef(function AllSyncButton({
     setSendResult?.(null)
 
     showInfoToast?.(
-      '職員→児童→個人記録取得→Laravel保存の順で実行します',
+      '職員(V2)→児童(V2)→個人記録一覧(V2)→詳細(V2)→Laravel保存の順で実行します',
       3000,
     )
 
@@ -527,17 +512,17 @@ const AllSyncButton = forwardRef(function AllSyncButton({
     let phase = '職員更新'
     try {
       // 1/4 職員更新
-      const staffResult = await syncStaffs(activeWebview)
+      const staffResult = await syncStaffs()
 
       // 2/4 児童更新
       currentStep = 2
       phase = '児童更新'
-      const childrenResult = await syncChildren(activeWebview)
+      const childrenResult = await syncChildren()
 
       // 3/4 個人記録の取得
       currentStep = 3
       phase = '個人記録の取得'
-      const personalRecordData = await fetchPersonalRecords(activeWebview)
+      const personalRecordData = await fetchPersonalRecords()
 
       // 4/4 個人記録のLaravel保存
       currentStep = 4
@@ -614,7 +599,7 @@ const AllSyncButton = forwardRef(function AllSyncButton({
         disabled:bg-gray-300
         ${className}
       `}
-      title="職員更新 → 児童更新 → 個人記録取得 → Laravel保存を順番に実行"
+      title="職員(V2) → 児童(V2) → 個人記録一覧(V2) → 詳細(V2) → Laravel保存を順番に実行"
     >
       <ArrowPathIcon
         className={`h-5 w-5 shrink-0 ${isRunning ? 'animate-spin' : ''}`}

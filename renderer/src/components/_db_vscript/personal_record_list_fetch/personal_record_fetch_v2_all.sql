@@ -1,0 +1,4100 @@
+SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci;
+SET collation_connection = 'utf8mb4_unicode_ci';
+
+START TRANSACTION;
+
+SET @app_key = CONVERT('hug-banso-navi' USING utf8mb4) COLLATE utf8mb4_unicode_ci;
+SET @flow_key = CONVERT('personal_record_list_fetch' USING utf8mb4) COLLATE utf8mb4_unicode_ci;
+SET @flow_version = 1;
+
+DELETE FROM web_automation_flows_v2
+WHERE app_key COLLATE utf8mb4_unicode_ci = @app_key
+  AND flow_key COLLATE utf8mb4_unicode_ci = @flow_key
+  AND version = @flow_version;
+
+INSERT INTO web_automation_flows_v2 (
+ app_key,flow_key,name,description,entry_file,entry_export,engine_version,
+ config_json,input_schema_json,output_schema_json,timeout_ms,version,status,published_at
+) VALUES (
+ @app_key,@flow_key,'個人記録 一覧取得','HUG contact_book.php へ指定施設・指定月の検索条件を設定し、全ページの個人記録一覧を取得するV2 Flow。','index.js','default',1,
+ '{"url":"https://www.hug-ayumu.link/hug/wm/contact_book.php","initialRequest":{"method":"GET","credentials":"include","cache":"no-store"},"searchRequest":{"method":"POST","contentType":"application/x-www-form-urlencoded;charset=UTF-8","credentials":"include","cache":"no-store"},"inputs":{"facilityId":"{{facilityId}}","year":"{{year}}","month":"{{month}}"},"postFields":{"mode":"search","search":null,"children":"0","state":null,"service1":"放課後等デイサービス","service2":"児童発達支援"},"postFieldNames":{"facility":"facility[{{facilityId}}]","startDate":"date","endDate":"date_end","service1":"s_ary[1]","service2":"s_ary[2]"},"childrenSelector":"#name_list option","facilitySelector":"input[name^=\\"facility[\\"]:checked, input[name^=\\"facility[\\"]","defaultDateSelector":"input[name=\\"date\\"]","tableSelector":"table.table","requiredHeadings":["日付","児童名","施設名","活動内容","記録者","最終更新"],"columns":{"date":0,"childName":1,"facilityName":2,"activity":3,"attendance":4,"status":5,"edit":7,"recorder":9,"updatedAt":10},"editSelector":"button[onclick], a[href]","recordKeySelector":".editing-status-badge","recordKeyAttribute":"data-record-id","statusLabelSelector":"span.label","paginationSelector":".pagination a","paginationParameter":"page","totalSelectors":[".ibox-title.sm h5",".ibox-title h5"],"totalPattern":"全部で(\\\\d+)件","paginationUsesSessionSearch":true,"deduplicateBy":"recordId"}','{"type":"object","required":["facilityId","year","month"],"properties":{"facilityId":{"type":["string","number"]},"year":{"type":["string","number"]},"month":{"type":["string","number"]}}}','{"type":"object","required":["facilityId","year","month","total","pageCount","recordCount","records"]}',120000,@flow_version,'published',NOW()
+);
+
+SET @flow_id = LAST_INSERT_ID();
+
+INSERT INTO web_automation_files_v2 (flow_id,file_path,file_type,source_text,module_type,config_json,content_hash,is_active) VALUES (
+ @flow_id,'index.js','javascript','const {
+  fetchPersonalRecordList,
+} = await require(''./fetch'');
+
+module.exports = async function executePersonalRecordListFetch({
+  input,
+  helpers,
+  config,
+}) {
+  return fetchPersonalRecordList({
+    input,
+    helpers,
+    config,
+  });
+};
+','commonjs',NULL,SHA2('const {
+  fetchPersonalRecordList,
+} = await require(''./fetch'');
+
+module.exports = async function executePersonalRecordListFetch({
+  input,
+  helpers,
+  config,
+}) {
+  return fetchPersonalRecordList({
+    input,
+    helpers,
+    config,
+  });
+};
+',256),1
+);
+
+INSERT INTO web_automation_files_v2 (flow_id,file_path,file_type,source_text,module_type,config_json,content_hash,is_active) VALUES (
+ @flow_id,'fetch.js','javascript','const URL_TARGET4 = ''https://www.hug-ayumu.link/hug/wm/contact_book.php''
+
+/**
+ * HUGの contact_book.php を通常GETし、#name_list から児童一覧を取得する。
+ * 個人記録一覧POSTの前準備確認、およびLaravel児童同期テストで利用する。
+ */
+const buildPersonalRecordChildrenFetchScript = ({ facilityId }) => {
+  const request = {
+    url: URL_TARGET4,
+    facilityId: String(facilityId ?? ''''),
+  }
+
+  return `
+    (async () => {
+      const request = ${JSON.stringify(request)};
+
+      const normalizeText = (value) =>
+        String(value ?? '''').replace(/\\\\s+/g, '' '').trim();
+
+      const response = await fetch(request.url, {
+        method: ''GET'',
+        credentials: ''include'',
+        cache: ''no-store'',
+      });
+
+      if (!response.ok) {
+        throw new Error(
+          ''サービス提供記録画面を取得できませんでした (HTTP '' +
+            response.status +
+            '')''
+        );
+      }
+
+      const html = await response.text();
+      const doc = new DOMParser().parseFromString(
+        html,
+        ''text/html''
+      );
+
+      const select = doc.querySelector(''#name_list'');
+
+      if (!select) {
+        throw new Error(
+          ''児童一覧 #name_list を取得できませんでした。''
+        );
+      }
+
+      const children = Array.from(
+        select.querySelectorAll(''option'')
+      )
+        .map((option) => {
+          const id = Number(
+            String(option.value ?? '''').trim()
+          );
+
+          const rawName = normalizeText(
+            option.textContent
+          );
+
+          if (
+            !Number.isInteger(id) ||
+            id <= 0 ||
+            !rawName ||
+            rawName === ''---''
+          ) {
+            return null;
+          }
+
+          return {
+            id,
+            name: rawName,
+            is_delete: rawName.startsWith(
+              ''[利用停止]''
+            )
+              ? 1
+              : 0,
+          };
+        })
+        .filter(Boolean);
+
+      const checkedFacility = doc.querySelector(
+        ''input[name^="facility["]:checked, input[name^="facility["]''
+      );
+
+      return {
+        requestedFacilityId: request.facilityId,
+        facilityId: String(
+          checkedFacility?.value ?? ''''
+        ).trim(),
+        children,
+        childCount: children.length,
+      };
+    })()
+  `
+}
+
+/**
+ * HUGのログイン済みWebViewセッション上で
+ * contact_book.php へ検索条件をPOSTし、
+ * 指定施設・指定月のサービス提供記録（個人記録）一覧を取得する。
+ *
+ * 重要:
+ * HUG側は検索条件やページ位置をセッションに保持するため、
+ * 検索POSTのレスポンスを「1ページ目」とは扱わない。
+ *
+ * 処理:
+ * 1. contact_book.php GET
+ * 2. 検索条件POST
+ * 3. contact_book.php?page=1 を明示GET
+ * 4. page=1から総件数・ページ数を取得
+ * 5. page=2～最終ページをGET
+ * 6. recordIdで重複排除
+ * 7. HUG総件数と取得件数を検証
+ */
+const buildPersonalRecordFetchScript = ({
+  facilityId,
+  year,
+  month,
+  config = {},
+}) => {
+  const request = {
+    url: config?.url || URL_TARGET4,
+    facilityId: String(facilityId ?? ''''),
+    year: String(year ?? ''''),
+    month: String(month ?? ''''),
+    config,
+  }
+
+  return `
+    (async () => {
+      const request = ${JSON.stringify(request)};
+      const CONFIG = request.config || {};
+
+      const normalizeText = (value) =>
+        String(value ?? '''')
+          .replace(/\\\\s+/g, '' '')
+          .trim();
+
+      const pad2 = (value) =>
+        String(value).padStart(2, ''0'');
+
+      const getLastDay = (year, month) =>
+        new Date(
+          Number(year),
+          Number(month),
+          0
+        ).getDate();
+
+      const toSlashDate = (
+        year,
+        month,
+        day
+      ) =>
+        String(year) +
+        ''/'' +
+        pad2(month) +
+        ''/'' +
+        pad2(day);
+
+      const normalizeDate = (value) => {
+        const match = String(
+          value ?? ''''
+        ).match(
+          /(\\\\d{4})[\\\\/-](\\\\d{1,2})[\\\\/-](\\\\d{1,2})/
+        );
+
+        if (!match) {
+          return normalizeText(value);
+        }
+
+        return (
+          match[1] +
+          ''-'' +
+          pad2(match[2]) +
+          ''-'' +
+          pad2(match[3])
+        );
+      };
+
+      /**
+       * ログイン画面へ飛ばされていないか確認する。
+       */
+      const assertNotLoginPage = (
+        doc,
+        html,
+        contextLabel
+      ) => {
+        const hasPasswordInput =
+          !!doc.querySelector(
+            ''input[type="password"]''
+          );
+
+        const title =
+          normalizeText(doc.title);
+
+        const looksLikeLogin =
+          hasPasswordInput ||
+          title.includes(''ログイン'') ||
+          String(html ?? '''').includes(
+            ''login.php''
+          );
+
+        if (looksLikeLogin) {
+          throw new Error(
+            contextLabel +
+              ''でHUGのログイン画面が返されました。''
+          );
+        }
+      };
+
+      /**
+       * 個人記録テーブルを解析する。
+       */
+      const parseRows = (doc) => {
+        const table = Array.from(
+          doc.querySelectorAll(
+            CONFIG.tableSelector ||
+              ''table.table''
+          )
+        ).find((candidate) => {
+          const headings = Array.from(
+            candidate.querySelectorAll(
+              ''thead th''
+            )
+          ).map((th) =>
+            normalizeText(th.textContent)
+          );
+
+          const requiredHeadings =
+            Array.isArray(
+              CONFIG.requiredHeadings
+            )
+              ? CONFIG.requiredHeadings
+              : [
+                  ''日付'',
+                  ''児童名'',
+                  ''施設名'',
+                  ''活動内容'',
+                  ''記録者'',
+                  ''最終更新'',
+                ];
+
+          return requiredHeadings.every(
+            (heading) =>
+              headings.includes(heading)
+          );
+        });
+
+        if (!table) {
+          return [];
+        }
+
+        return Array.from(
+          table.querySelectorAll(
+            ''tbody > tr''
+          )
+        )
+          .map((row) => {
+            const cells = Array.from(
+              row.querySelectorAll(
+                '':scope > td''
+              )
+            );
+
+            if (cells.length < 4) {
+              return null;
+            }
+
+            const columns =
+              CONFIG.columns || {};
+
+            const editIndex =
+              Number.isInteger(
+                columns.edit
+              )
+                ? columns.edit
+                : 7;
+
+            const editButton =
+              cells[
+                editIndex
+              ]?.querySelector(
+                CONFIG.editSelector ||
+                  ''button[onclick], a[href]''
+              );
+
+            const editSource =
+              editButton?.getAttribute(
+                ''onclick''
+              ) ??
+              editButton?.getAttribute(
+                ''href''
+              ) ??
+              '''';
+
+            const idMatch =
+              editSource.match(
+                /[?&]id=(\\\\d+)/
+              );
+
+            const childIdMatch =
+              editSource.match(
+                /[?&]c_id=(\\\\d+)/
+              );
+
+            const dateMatch =
+              editSource.match(
+                /[?&]cal_date=([0-9-]+)/
+              );
+
+            const recordKey =
+              row
+                .querySelector(
+                  CONFIG.recordKeySelector ||
+                    ''.editing-status-badge''
+                )
+                ?.getAttribute(
+                  CONFIG.recordKeyAttribute ||
+                    ''data-record-id''
+                ) ?? '''';
+
+            const childNameIndex =
+              Number.isInteger(
+                columns.childName
+              )
+                ? columns.childName
+                : 1;
+
+            const facilityNameIndex =
+              Number.isInteger(
+                columns.facilityName
+              )
+                ? columns.facilityName
+                : 2;
+
+            const activityIndex =
+              Number.isInteger(
+                columns.activity
+              )
+                ? columns.activity
+                : 3;
+
+            const attendanceIndex =
+              Number.isInteger(
+                columns.attendance
+              )
+                ? columns.attendance
+                : 4;
+
+            const statusIndex =
+              Number.isInteger(
+                columns.status
+              )
+                ? columns.status
+                : 5;
+
+            const recorderIndex =
+              Number.isInteger(
+                columns.recorder
+              )
+                ? columns.recorder
+                : 9;
+
+            const updatedAtIndex =
+              Number.isInteger(
+                columns.updatedAt
+              )
+                ? columns.updatedAt
+                : 10;
+
+            const dateIndex =
+              Number.isInteger(
+                columns.date
+              )
+                ? columns.date
+                : 0;
+
+            const childName =
+              normalizeText(
+                cells[
+                  childNameIndex
+                ]?.textContent
+              )
+                .replace(/さん$/, '''')
+                .trim();
+
+            const activity =
+              normalizeText(
+                cells[
+                  activityIndex
+                ]?.textContent
+              );
+
+            const attendance =
+              normalizeText(
+                cells[
+                  attendanceIndex
+                ]?.textContent
+              );
+
+            const statusCell =
+              cells[statusIndex];
+
+            const statusLabel =
+              statusCell?.querySelector(
+                ''span.label''
+              );
+
+            const status =
+              normalizeText(
+                statusLabel?.textContent ??
+                  statusCell?.textContent
+              );
+
+            const statusClass =
+              statusLabel
+                ? Array.from(
+                    statusLabel.classList
+                  )
+                    .filter(
+                      (className) =>
+                        className !==
+                        ''label''
+                    )
+                    .join('' '')
+                : '''';
+
+            const recorder =
+              normalizeText(
+                cells[
+                  recorderIndex
+                ]?.textContent
+              );
+
+            const updatedAt =
+              normalizeText(
+                cells[
+                  updatedAtIndex
+                ]?.textContent
+              );
+
+            return {
+              recordId:
+                idMatch?.[1] ?? '''',
+
+              childrenId:
+                childIdMatch?.[1] ??
+                '''',
+
+              recordKey,
+
+              date: normalizeDate(
+                dateMatch?.[1] ??
+                  cells[
+                    dateIndex
+                  ]?.textContent
+              ),
+
+              childName,
+
+              facilityName:
+                normalizeText(
+                  cells[
+                    facilityNameIndex
+                  ]?.textContent
+                ),
+
+              activity,
+              attendance,
+              status,
+              statusClass,
+              recorder,
+              updatedAt,
+              editSource,
+            };
+          })
+          .filter(
+            (record) =>
+              record &&
+              (
+                record.recordId ||
+                record.childrenId ||
+                record.childName
+              )
+          );
+      };
+
+      /**
+       * 「全部で263件」のような表示から
+       * HUG側の総件数を取得する。
+       */
+      const getTotalCount = (
+        doc,
+        fallback = 0
+      ) => {
+        const selectors =
+          Array.isArray(
+            CONFIG.totalSelectors
+          ) &&
+          CONFIG.totalSelectors.length >
+            0
+            ? CONFIG.totalSelectors
+            : [
+                ''.ibox-title.sm h5'',
+                ''.ibox-title h5'',
+              ];
+
+        const totalText =
+          normalizeText(
+            Array.from(
+              doc.querySelectorAll(
+                selectors.join('', '')
+              )
+            )
+              .map(
+                (node) =>
+                  node.textContent
+              )
+              .find((text) =>
+                /全部で\\\\s*\\\\d+\\\\s*件/.test(
+                  normalizeText(text)
+                )
+              ) ?? ''''
+          );
+
+        const totalMatch =
+          totalText.match(
+            /全部で\\\\s*(\\\\d+)\\\\s*件/
+          );
+
+        if (!totalMatch) {
+          return Number(fallback) || 0;
+        }
+
+        return Number(
+          totalMatch[1]
+        );
+      };
+
+      /**
+       * ページネーションHTMLから最大ページ番号を取得。
+       *
+       * HUGでは
+       * contact_book.php?page=1
+       * contact_book.php?page=2
+       * ...
+       * の形式。
+       */
+      const getPaginationPageNumbers = (
+        doc
+      ) => {
+        const selector =
+          CONFIG.paginationSelector ||
+          ''.pagination a'';
+
+        return Array.from(
+          doc.querySelectorAll(selector)
+        )
+          .map((anchor) => {
+            const href =
+              anchor.getAttribute(
+                ''href''
+              ) ?? '''';
+
+            const match =
+              href.match(
+                /[?&]page=(\\\\d+)/
+              );
+
+            if (!match) {
+              return null;
+            }
+
+            const page =
+              Number(match[1]);
+
+            return Number.isInteger(
+              page
+            ) && page > 0
+              ? page
+              : null;
+          })
+          .filter(
+            (page) =>
+              Number.isInteger(page)
+          );
+      };
+
+      const getMaxPageFromDocument = (
+        doc
+      ) => {
+        const pageNumbers =
+          getPaginationPageNumbers(
+            doc
+          );
+
+        return pageNumbers.length > 0
+          ? Math.max(
+              1,
+              ...pageNumbers
+            )
+          : 1;
+      };
+
+      /**
+       * 検索後の特定ページを明示的にGETする。
+       */
+      const fetchPage = async (
+        page
+      ) => {
+        const paginationParameter =
+          CONFIG.paginationParameter ||
+          ''page'';
+
+        const pageUrl =
+          new URL(request.url);
+
+        pageUrl.searchParams.set(
+          paginationParameter,
+          String(page)
+        );
+
+        const response =
+          await fetch(
+            pageUrl.toString(),
+            {
+              method: ''GET'',
+              credentials: ''include'',
+              cache: ''no-store'',
+            }
+          );
+
+        if (!response.ok) {
+          throw new Error(
+            ''個人記録の'' +
+              page +
+              ''ページ目を取得できませんでした (HTTP '' +
+              response.status +
+              '')''
+          );
+        }
+
+        const html =
+          await response.text();
+
+        const doc =
+          new DOMParser().parseFromString(
+            html,
+            ''text/html''
+          );
+
+        assertNotLoginPage(
+          doc,
+          html,
+          ''個人記録 '' +
+            page +
+            ''ページ目取得''
+        );
+
+        return {
+          page,
+          url: pageUrl.toString(),
+          html,
+          doc,
+          rows: parseRows(doc),
+        };
+      };
+
+      /*
+       * ========================================
+       * 1. 初期画面GET
+       * ========================================
+       */
+
+      const initialRequest =
+        CONFIG.initialRequest || {};
+
+      const initialResponse =
+        await fetch(request.url, {
+          method:
+            initialRequest.method ||
+            ''GET'',
+
+          credentials:
+            initialRequest.credentials ||
+            ''include'',
+
+          cache:
+            initialRequest.cache ||
+            ''no-store'',
+        });
+
+      if (!initialResponse.ok) {
+        throw new Error(
+          ''サービス提供記録画面を取得できませんでした (HTTP '' +
+            initialResponse.status +
+            '')''
+        );
+      }
+
+      const initialHtml =
+        await initialResponse.text();
+
+      const initialDoc =
+        new DOMParser().parseFromString(
+          initialHtml,
+          ''text/html''
+        );
+
+      assertNotLoginPage(
+        initialDoc,
+        initialHtml,
+        ''サービス提供記録初期画面取得''
+      );
+
+      /*
+       * ========================================
+       * 2. HUG児童一覧取得
+       * ========================================
+       */
+
+      const initialChildren =
+        Array.from(
+          initialDoc.querySelectorAll(
+            CONFIG.childrenSelector ||
+              ''#name_list option''
+          )
+        )
+          .map((option) => {
+            const id = Number(
+              String(
+                option.value ?? ''''
+              ).trim()
+            );
+
+            const name =
+              normalizeText(
+                option.textContent
+              );
+
+            if (
+              !Number.isInteger(id) ||
+              id <= 0 ||
+              !name ||
+              name === ''---''
+            ) {
+              return null;
+            }
+
+            return {
+              id,
+              name,
+
+              is_delete:
+                name.startsWith(
+                  ''[利用停止]''
+                )
+                  ? 1
+                  : 0,
+            };
+          })
+          .filter(Boolean);
+
+      /*
+       * ========================================
+       * 3. 施設ID補完
+       * ========================================
+       */
+
+      if (!request.facilityId) {
+        const checkedFacility =
+          initialDoc.querySelector(
+            CONFIG.facilitySelector ||
+              ''input[name^="facility["]:checked, input[name^="facility["]''
+          );
+
+        request.facilityId =
+          String(
+            checkedFacility?.value ??
+              ''''
+          ).trim();
+      }
+
+      /*
+       * ========================================
+       * 4. 年月補完
+       * ========================================
+       */
+
+      if (
+        !request.year ||
+        !request.month
+      ) {
+        const defaultDate =
+          String(
+            initialDoc.querySelector(
+              CONFIG.defaultDateSelector ||
+                ''input[name="date"]''
+            )?.value ?? ''''
+          );
+
+        const match =
+          defaultDate.match(
+            /(\\\\d{4})[\\\\/-](\\\\d{1,2})/
+          );
+
+        if (match) {
+          request.year =
+            match[1];
+
+          request.month =
+            match[2];
+        }
+      }
+
+      if (!request.facilityId) {
+        throw new Error(
+          ''個人記録取得対象の施設IDを取得できませんでした。''
+        );
+      }
+
+      if (
+        !request.year ||
+        !request.month
+      ) {
+        throw new Error(
+          ''個人記録取得対象の年月を取得できませんでした。''
+        );
+      }
+
+      /*
+       * ========================================
+       * 5. 検索期間作成
+       * ========================================
+       */
+
+      const lastDay =
+        getLastDay(
+          request.year,
+          request.month
+        );
+
+      const startDate =
+        toSlashDate(
+          request.year,
+          request.month,
+          1
+        );
+
+      const endDate =
+        toSlashDate(
+          request.year,
+          request.month,
+          lastDay
+        );
+
+      /*
+       * ========================================
+       * 6. 検索POSTデータ作成
+       * ========================================
+       */
+
+      const body =
+        new URLSearchParams();
+
+      const postFields =
+        CONFIG.postFields || {};
+
+      const fieldNames =
+        CONFIG.postFieldNames || {};
+
+      body.set(
+        ''mode'',
+        postFields.mode ??
+          ''search''
+      );
+
+      body.set(
+        ''search'',
+        postFields.search ?? ''''
+      );
+
+      body.set(
+        String(
+          fieldNames.facility ||
+            ''facility[{{facilityId}}]''
+        ).replace(
+          ''{{facilityId}}'',
+          request.facilityId
+        ),
+        request.facilityId
+      );
+
+      body.set(
+        ''children'',
+        postFields.children ?? ''0''
+      );
+
+      body.set(
+        fieldNames.startDate ||
+          ''date'',
+        startDate
+      );
+
+      body.set(
+        fieldNames.endDate ||
+          ''date_end'',
+        endDate
+      );
+
+      body.set(
+        fieldNames.service1 ||
+          ''s_ary[1]'',
+        postFields.service1 ??
+          ''放課後等デイサービス''
+      );
+
+      body.set(
+        fieldNames.service2 ||
+          ''s_ary[2]'',
+        postFields.service2 ??
+          ''児童発達支援''
+      );
+
+      body.set(
+        ''state'',
+        postFields.state ?? ''''
+      );
+
+      /*
+       * ========================================
+       * 7. 検索条件POST
+       *
+       * 重要:
+       * このレスポンスを1ページ目として使用しない。
+       *
+       * HUG側セッションへ検索条件を保存することだけが目的。
+       * ========================================
+       */
+
+      const searchRequest =
+        CONFIG.searchRequest || {};
+
+      const searchResponse =
+        await fetch(request.url, {
+          method:
+            searchRequest.method ||
+            ''POST'',
+
+          credentials:
+            searchRequest.credentials ||
+            ''include'',
+
+          cache:
+            searchRequest.cache ||
+            ''no-store'',
+
+          headers: {
+            ''Content-Type'':
+              searchRequest.contentType ||
+              ''application/x-www-form-urlencoded;charset=UTF-8'',
+          },
+
+          body: body.toString(),
+        });
+
+      if (!searchResponse.ok) {
+        throw new Error(
+          ''個人記録の検索条件設定に失敗しました (HTTP '' +
+            searchResponse.status +
+            '')''
+        );
+      }
+
+      /*
+       * bodyを消費しておく。
+       *
+       * 内容自体は一覧データとして使用しない。
+       */
+      const searchHtml =
+        await searchResponse.text();
+
+      const searchDoc =
+        new DOMParser().parseFromString(
+          searchHtml,
+          ''text/html''
+        );
+
+      assertNotLoginPage(
+        searchDoc,
+        searchHtml,
+        ''個人記録検索POST''
+      );
+
+      /*
+       * ========================================
+       * 8. 必ず page=1 をGET
+       * ========================================
+       */
+
+      const firstPage =
+        await fetchPage(1);
+
+      const firstPageRows =
+        firstPage.rows;
+
+      /*
+       * ========================================
+       * 9. 総件数取得
+       * ========================================
+       */
+
+      const total =
+        getTotalCount(
+          firstPage.doc,
+          firstPageRows.length
+        );
+
+      /*
+       * ========================================
+       * 10. 最大ページ数取得
+       *
+       * まずHTMLのpaginationを信用する。
+       *
+       * ただしページネーションが
+       * 1 2 3 4 5 のように一部しか出ないケースも
+       * 想定して、1ページあたり件数と総件数からも
+       * ページ数を補完する。
+       * ========================================
+       */
+
+      const firstPageSize =
+        firstPageRows.length;
+
+      const maxPageFromHtml =
+        getMaxPageFromDocument(
+          firstPage.doc
+        );
+
+      const pageCountFromTotal =
+        total > 0 &&
+        firstPageSize > 0
+          ? Math.ceil(
+              total /
+                firstPageSize
+            )
+          : 1;
+
+      const pageCount =
+        Math.max(
+          1,
+          maxPageFromHtml,
+          pageCountFromTotal
+        );
+
+      /*
+       * ========================================
+       * 11. page=1を起点に一覧を作成
+       * ========================================
+       */
+
+      const records = [
+        ...firstPageRows,
+      ];
+
+      const pageDebug = [
+        {
+          page: 1,
+          rowCount:
+            firstPageRows.length,
+          url: firstPage.url,
+        },
+      ];
+
+      /*
+       * ========================================
+       * 12. page=2 ～ 最終ページをGET
+       * ========================================
+       */
+
+      for (
+        let page = 2;
+        page <= pageCount;
+        page += 1
+      ) {
+        const pageResult =
+          await fetchPage(page);
+
+        pageDebug.push({
+          page,
+          rowCount:
+            pageResult.rows.length,
+          url: pageResult.url,
+        });
+
+        records.push(
+          ...pageResult.rows
+        );
+      }
+
+      /*
+       * ========================================
+       * 13. 重複排除
+       * ========================================
+       *
+       * 原則 recordId をキーにする。
+       *
+       * recordIdがない特殊行についてのみ、
+       * 児童ID・日付・施設・児童名・editSource
+       * を使ったfallbackキーを生成する。
+       *
+       * indexをfallbackキーへ含めると
+       * 同じデータでも重複排除できないため使用しない。
+       * ========================================
+       */
+
+      const uniqueMap =
+        new Map();
+
+      for (
+        const record of records
+      ) {
+        const key =
+          record.recordId
+            ? ''id:'' +
+              record.recordId
+            : [
+                ''fallback'',
+                record.childrenId,
+                record.date,
+                record.facilityName,
+                record.childName,
+                record.editSource,
+              ].join(''|'');
+
+        if (
+          !uniqueMap.has(key)
+        ) {
+          uniqueMap.set(
+            key,
+            record
+          );
+        }
+      }
+
+      const uniqueRecords =
+        Array.from(
+          uniqueMap.values()
+        );
+
+      /*
+       * ========================================
+       * 14. 件数整合性チェック
+       * ========================================
+       *
+       * HUGに「全部でN件」と出ている場合、
+       * 実取得件数が一致しなければ後続処理へ進めない。
+       * ========================================
+       */
+
+      if (
+        Number.isFinite(total) &&
+        total >= 0 &&
+        uniqueRecords.length !==
+          total
+      ) {
+        throw new Error(
+          ''個人記録一覧の取得件数が一致しません。'' +
+            '' HUG側='' +
+            total +
+            ''件'' +
+            '' / 実取得='' +
+            uniqueRecords.length +
+            ''件'' +
+            '' / 生データ='' +
+            records.length +
+            ''件'' +
+            '' / pageCount='' +
+            pageCount
+        );
+      }
+
+      /*
+       * ========================================
+       * 15. 完了
+       * ========================================
+       */
+
+      return {
+        facilityId:
+          request.facilityId,
+
+        year:
+          Number(
+            request.year
+          ),
+
+        month:
+          Number(
+            request.month
+          ),
+
+        startDate,
+        endDate,
+
+        total,
+
+        pageCount,
+
+        rawRecordCount:
+          records.length,
+
+        recordCount:
+          uniqueRecords.length,
+
+        pageDebug,
+
+        hugChildren:
+          initialChildren,
+
+        hugChildCount:
+          initialChildren.length,
+
+        records:
+          uniqueRecords,
+      };
+    })()
+  `
+}
+
+exports.fetchPersonalRecordList = async function fetchPersonalRecordList({
+  input,
+  helpers,
+  config,
+}) {
+  const facilityId = input?.facilityId;
+  const year = input?.year;
+  const month = input?.month;
+
+  if (!facilityId) {
+    throw new Error(''個人記録取得対象の施設IDが指定されていません。'');
+  }
+
+  if (!year || !month) {
+    throw new Error(''個人記録取得対象の年月が指定されていません。'');
+  }
+
+  const webview = helpers.getHugWebview();
+
+  if (!webview || typeof webview.executeJavaScript !== ''function'') {
+    throw new Error(''HUG WebViewを取得できませんでした。'');
+  }
+
+  const script = buildPersonalRecordFetchScript({
+    facilityId,
+    year,
+    month,
+    config: config || {},
+  });
+
+  const result = await webview.executeJavaScript(script, true);
+
+  if (result?.ok === false) {
+    throw new Error(
+      result?.error || ''個人記録一覧の取得に失敗しました。''
+    );
+  }
+
+  return result;
+};
+','commonjs',NULL,SHA2('const URL_TARGET4 = ''https://www.hug-ayumu.link/hug/wm/contact_book.php''
+
+/**
+ * HUGの contact_book.php を通常GETし、#name_list から児童一覧を取得する。
+ * 個人記録一覧POSTの前準備確認、およびLaravel児童同期テストで利用する。
+ */
+const buildPersonalRecordChildrenFetchScript = ({ facilityId }) => {
+  const request = {
+    url: URL_TARGET4,
+    facilityId: String(facilityId ?? ''''),
+  }
+
+  return `
+    (async () => {
+      const request = ${JSON.stringify(request)};
+
+      const normalizeText = (value) =>
+        String(value ?? '''').replace(/\\\\s+/g, '' '').trim();
+
+      const response = await fetch(request.url, {
+        method: ''GET'',
+        credentials: ''include'',
+        cache: ''no-store'',
+      });
+
+      if (!response.ok) {
+        throw new Error(
+          ''サービス提供記録画面を取得できませんでした (HTTP '' +
+            response.status +
+            '')''
+        );
+      }
+
+      const html = await response.text();
+      const doc = new DOMParser().parseFromString(
+        html,
+        ''text/html''
+      );
+
+      const select = doc.querySelector(''#name_list'');
+
+      if (!select) {
+        throw new Error(
+          ''児童一覧 #name_list を取得できませんでした。''
+        );
+      }
+
+      const children = Array.from(
+        select.querySelectorAll(''option'')
+      )
+        .map((option) => {
+          const id = Number(
+            String(option.value ?? '''').trim()
+          );
+
+          const rawName = normalizeText(
+            option.textContent
+          );
+
+          if (
+            !Number.isInteger(id) ||
+            id <= 0 ||
+            !rawName ||
+            rawName === ''---''
+          ) {
+            return null;
+          }
+
+          return {
+            id,
+            name: rawName,
+            is_delete: rawName.startsWith(
+              ''[利用停止]''
+            )
+              ? 1
+              : 0,
+          };
+        })
+        .filter(Boolean);
+
+      const checkedFacility = doc.querySelector(
+        ''input[name^="facility["]:checked, input[name^="facility["]''
+      );
+
+      return {
+        requestedFacilityId: request.facilityId,
+        facilityId: String(
+          checkedFacility?.value ?? ''''
+        ).trim(),
+        children,
+        childCount: children.length,
+      };
+    })()
+  `
+}
+
+/**
+ * HUGのログイン済みWebViewセッション上で
+ * contact_book.php へ検索条件をPOSTし、
+ * 指定施設・指定月のサービス提供記録（個人記録）一覧を取得する。
+ *
+ * 重要:
+ * HUG側は検索条件やページ位置をセッションに保持するため、
+ * 検索POSTのレスポンスを「1ページ目」とは扱わない。
+ *
+ * 処理:
+ * 1. contact_book.php GET
+ * 2. 検索条件POST
+ * 3. contact_book.php?page=1 を明示GET
+ * 4. page=1から総件数・ページ数を取得
+ * 5. page=2～最終ページをGET
+ * 6. recordIdで重複排除
+ * 7. HUG総件数と取得件数を検証
+ */
+const buildPersonalRecordFetchScript = ({
+  facilityId,
+  year,
+  month,
+  config = {},
+}) => {
+  const request = {
+    url: config?.url || URL_TARGET4,
+    facilityId: String(facilityId ?? ''''),
+    year: String(year ?? ''''),
+    month: String(month ?? ''''),
+    config,
+  }
+
+  return `
+    (async () => {
+      const request = ${JSON.stringify(request)};
+      const CONFIG = request.config || {};
+
+      const normalizeText = (value) =>
+        String(value ?? '''')
+          .replace(/\\\\s+/g, '' '')
+          .trim();
+
+      const pad2 = (value) =>
+        String(value).padStart(2, ''0'');
+
+      const getLastDay = (year, month) =>
+        new Date(
+          Number(year),
+          Number(month),
+          0
+        ).getDate();
+
+      const toSlashDate = (
+        year,
+        month,
+        day
+      ) =>
+        String(year) +
+        ''/'' +
+        pad2(month) +
+        ''/'' +
+        pad2(day);
+
+      const normalizeDate = (value) => {
+        const match = String(
+          value ?? ''''
+        ).match(
+          /(\\\\d{4})[\\\\/-](\\\\d{1,2})[\\\\/-](\\\\d{1,2})/
+        );
+
+        if (!match) {
+          return normalizeText(value);
+        }
+
+        return (
+          match[1] +
+          ''-'' +
+          pad2(match[2]) +
+          ''-'' +
+          pad2(match[3])
+        );
+      };
+
+      /**
+       * ログイン画面へ飛ばされていないか確認する。
+       */
+      const assertNotLoginPage = (
+        doc,
+        html,
+        contextLabel
+      ) => {
+        const hasPasswordInput =
+          !!doc.querySelector(
+            ''input[type="password"]''
+          );
+
+        const title =
+          normalizeText(doc.title);
+
+        const looksLikeLogin =
+          hasPasswordInput ||
+          title.includes(''ログイン'') ||
+          String(html ?? '''').includes(
+            ''login.php''
+          );
+
+        if (looksLikeLogin) {
+          throw new Error(
+            contextLabel +
+              ''でHUGのログイン画面が返されました。''
+          );
+        }
+      };
+
+      /**
+       * 個人記録テーブルを解析する。
+       */
+      const parseRows = (doc) => {
+        const table = Array.from(
+          doc.querySelectorAll(
+            CONFIG.tableSelector ||
+              ''table.table''
+          )
+        ).find((candidate) => {
+          const headings = Array.from(
+            candidate.querySelectorAll(
+              ''thead th''
+            )
+          ).map((th) =>
+            normalizeText(th.textContent)
+          );
+
+          const requiredHeadings =
+            Array.isArray(
+              CONFIG.requiredHeadings
+            )
+              ? CONFIG.requiredHeadings
+              : [
+                  ''日付'',
+                  ''児童名'',
+                  ''施設名'',
+                  ''活動内容'',
+                  ''記録者'',
+                  ''最終更新'',
+                ];
+
+          return requiredHeadings.every(
+            (heading) =>
+              headings.includes(heading)
+          );
+        });
+
+        if (!table) {
+          return [];
+        }
+
+        return Array.from(
+          table.querySelectorAll(
+            ''tbody > tr''
+          )
+        )
+          .map((row) => {
+            const cells = Array.from(
+              row.querySelectorAll(
+                '':scope > td''
+              )
+            );
+
+            if (cells.length < 4) {
+              return null;
+            }
+
+            const columns =
+              CONFIG.columns || {};
+
+            const editIndex =
+              Number.isInteger(
+                columns.edit
+              )
+                ? columns.edit
+                : 7;
+
+            const editButton =
+              cells[
+                editIndex
+              ]?.querySelector(
+                CONFIG.editSelector ||
+                  ''button[onclick], a[href]''
+              );
+
+            const editSource =
+              editButton?.getAttribute(
+                ''onclick''
+              ) ??
+              editButton?.getAttribute(
+                ''href''
+              ) ??
+              '''';
+
+            const idMatch =
+              editSource.match(
+                /[?&]id=(\\\\d+)/
+              );
+
+            const childIdMatch =
+              editSource.match(
+                /[?&]c_id=(\\\\d+)/
+              );
+
+            const dateMatch =
+              editSource.match(
+                /[?&]cal_date=([0-9-]+)/
+              );
+
+            const recordKey =
+              row
+                .querySelector(
+                  CONFIG.recordKeySelector ||
+                    ''.editing-status-badge''
+                )
+                ?.getAttribute(
+                  CONFIG.recordKeyAttribute ||
+                    ''data-record-id''
+                ) ?? '''';
+
+            const childNameIndex =
+              Number.isInteger(
+                columns.childName
+              )
+                ? columns.childName
+                : 1;
+
+            const facilityNameIndex =
+              Number.isInteger(
+                columns.facilityName
+              )
+                ? columns.facilityName
+                : 2;
+
+            const activityIndex =
+              Number.isInteger(
+                columns.activity
+              )
+                ? columns.activity
+                : 3;
+
+            const attendanceIndex =
+              Number.isInteger(
+                columns.attendance
+              )
+                ? columns.attendance
+                : 4;
+
+            const statusIndex =
+              Number.isInteger(
+                columns.status
+              )
+                ? columns.status
+                : 5;
+
+            const recorderIndex =
+              Number.isInteger(
+                columns.recorder
+              )
+                ? columns.recorder
+                : 9;
+
+            const updatedAtIndex =
+              Number.isInteger(
+                columns.updatedAt
+              )
+                ? columns.updatedAt
+                : 10;
+
+            const dateIndex =
+              Number.isInteger(
+                columns.date
+              )
+                ? columns.date
+                : 0;
+
+            const childName =
+              normalizeText(
+                cells[
+                  childNameIndex
+                ]?.textContent
+              )
+                .replace(/さん$/, '''')
+                .trim();
+
+            const activity =
+              normalizeText(
+                cells[
+                  activityIndex
+                ]?.textContent
+              );
+
+            const attendance =
+              normalizeText(
+                cells[
+                  attendanceIndex
+                ]?.textContent
+              );
+
+            const statusCell =
+              cells[statusIndex];
+
+            const statusLabel =
+              statusCell?.querySelector(
+                ''span.label''
+              );
+
+            const status =
+              normalizeText(
+                statusLabel?.textContent ??
+                  statusCell?.textContent
+              );
+
+            const statusClass =
+              statusLabel
+                ? Array.from(
+                    statusLabel.classList
+                  )
+                    .filter(
+                      (className) =>
+                        className !==
+                        ''label''
+                    )
+                    .join('' '')
+                : '''';
+
+            const recorder =
+              normalizeText(
+                cells[
+                  recorderIndex
+                ]?.textContent
+              );
+
+            const updatedAt =
+              normalizeText(
+                cells[
+                  updatedAtIndex
+                ]?.textContent
+              );
+
+            return {
+              recordId:
+                idMatch?.[1] ?? '''',
+
+              childrenId:
+                childIdMatch?.[1] ??
+                '''',
+
+              recordKey,
+
+              date: normalizeDate(
+                dateMatch?.[1] ??
+                  cells[
+                    dateIndex
+                  ]?.textContent
+              ),
+
+              childName,
+
+              facilityName:
+                normalizeText(
+                  cells[
+                    facilityNameIndex
+                  ]?.textContent
+                ),
+
+              activity,
+              attendance,
+              status,
+              statusClass,
+              recorder,
+              updatedAt,
+              editSource,
+            };
+          })
+          .filter(
+            (record) =>
+              record &&
+              (
+                record.recordId ||
+                record.childrenId ||
+                record.childName
+              )
+          );
+      };
+
+      /**
+       * 「全部で263件」のような表示から
+       * HUG側の総件数を取得する。
+       */
+      const getTotalCount = (
+        doc,
+        fallback = 0
+      ) => {
+        const selectors =
+          Array.isArray(
+            CONFIG.totalSelectors
+          ) &&
+          CONFIG.totalSelectors.length >
+            0
+            ? CONFIG.totalSelectors
+            : [
+                ''.ibox-title.sm h5'',
+                ''.ibox-title h5'',
+              ];
+
+        const totalText =
+          normalizeText(
+            Array.from(
+              doc.querySelectorAll(
+                selectors.join('', '')
+              )
+            )
+              .map(
+                (node) =>
+                  node.textContent
+              )
+              .find((text) =>
+                /全部で\\\\s*\\\\d+\\\\s*件/.test(
+                  normalizeText(text)
+                )
+              ) ?? ''''
+          );
+
+        const totalMatch =
+          totalText.match(
+            /全部で\\\\s*(\\\\d+)\\\\s*件/
+          );
+
+        if (!totalMatch) {
+          return Number(fallback) || 0;
+        }
+
+        return Number(
+          totalMatch[1]
+        );
+      };
+
+      /**
+       * ページネーションHTMLから最大ページ番号を取得。
+       *
+       * HUGでは
+       * contact_book.php?page=1
+       * contact_book.php?page=2
+       * ...
+       * の形式。
+       */
+      const getPaginationPageNumbers = (
+        doc
+      ) => {
+        const selector =
+          CONFIG.paginationSelector ||
+          ''.pagination a'';
+
+        return Array.from(
+          doc.querySelectorAll(selector)
+        )
+          .map((anchor) => {
+            const href =
+              anchor.getAttribute(
+                ''href''
+              ) ?? '''';
+
+            const match =
+              href.match(
+                /[?&]page=(\\\\d+)/
+              );
+
+            if (!match) {
+              return null;
+            }
+
+            const page =
+              Number(match[1]);
+
+            return Number.isInteger(
+              page
+            ) && page > 0
+              ? page
+              : null;
+          })
+          .filter(
+            (page) =>
+              Number.isInteger(page)
+          );
+      };
+
+      const getMaxPageFromDocument = (
+        doc
+      ) => {
+        const pageNumbers =
+          getPaginationPageNumbers(
+            doc
+          );
+
+        return pageNumbers.length > 0
+          ? Math.max(
+              1,
+              ...pageNumbers
+            )
+          : 1;
+      };
+
+      /**
+       * 検索後の特定ページを明示的にGETする。
+       */
+      const fetchPage = async (
+        page
+      ) => {
+        const paginationParameter =
+          CONFIG.paginationParameter ||
+          ''page'';
+
+        const pageUrl =
+          new URL(request.url);
+
+        pageUrl.searchParams.set(
+          paginationParameter,
+          String(page)
+        );
+
+        const response =
+          await fetch(
+            pageUrl.toString(),
+            {
+              method: ''GET'',
+              credentials: ''include'',
+              cache: ''no-store'',
+            }
+          );
+
+        if (!response.ok) {
+          throw new Error(
+            ''個人記録の'' +
+              page +
+              ''ページ目を取得できませんでした (HTTP '' +
+              response.status +
+              '')''
+          );
+        }
+
+        const html =
+          await response.text();
+
+        const doc =
+          new DOMParser().parseFromString(
+            html,
+            ''text/html''
+          );
+
+        assertNotLoginPage(
+          doc,
+          html,
+          ''個人記録 '' +
+            page +
+            ''ページ目取得''
+        );
+
+        return {
+          page,
+          url: pageUrl.toString(),
+          html,
+          doc,
+          rows: parseRows(doc),
+        };
+      };
+
+      /*
+       * ========================================
+       * 1. 初期画面GET
+       * ========================================
+       */
+
+      const initialRequest =
+        CONFIG.initialRequest || {};
+
+      const initialResponse =
+        await fetch(request.url, {
+          method:
+            initialRequest.method ||
+            ''GET'',
+
+          credentials:
+            initialRequest.credentials ||
+            ''include'',
+
+          cache:
+            initialRequest.cache ||
+            ''no-store'',
+        });
+
+      if (!initialResponse.ok) {
+        throw new Error(
+          ''サービス提供記録画面を取得できませんでした (HTTP '' +
+            initialResponse.status +
+            '')''
+        );
+      }
+
+      const initialHtml =
+        await initialResponse.text();
+
+      const initialDoc =
+        new DOMParser().parseFromString(
+          initialHtml,
+          ''text/html''
+        );
+
+      assertNotLoginPage(
+        initialDoc,
+        initialHtml,
+        ''サービス提供記録初期画面取得''
+      );
+
+      /*
+       * ========================================
+       * 2. HUG児童一覧取得
+       * ========================================
+       */
+
+      const initialChildren =
+        Array.from(
+          initialDoc.querySelectorAll(
+            CONFIG.childrenSelector ||
+              ''#name_list option''
+          )
+        )
+          .map((option) => {
+            const id = Number(
+              String(
+                option.value ?? ''''
+              ).trim()
+            );
+
+            const name =
+              normalizeText(
+                option.textContent
+              );
+
+            if (
+              !Number.isInteger(id) ||
+              id <= 0 ||
+              !name ||
+              name === ''---''
+            ) {
+              return null;
+            }
+
+            return {
+              id,
+              name,
+
+              is_delete:
+                name.startsWith(
+                  ''[利用停止]''
+                )
+                  ? 1
+                  : 0,
+            };
+          })
+          .filter(Boolean);
+
+      /*
+       * ========================================
+       * 3. 施設ID補完
+       * ========================================
+       */
+
+      if (!request.facilityId) {
+        const checkedFacility =
+          initialDoc.querySelector(
+            CONFIG.facilitySelector ||
+              ''input[name^="facility["]:checked, input[name^="facility["]''
+          );
+
+        request.facilityId =
+          String(
+            checkedFacility?.value ??
+              ''''
+          ).trim();
+      }
+
+      /*
+       * ========================================
+       * 4. 年月補完
+       * ========================================
+       */
+
+      if (
+        !request.year ||
+        !request.month
+      ) {
+        const defaultDate =
+          String(
+            initialDoc.querySelector(
+              CONFIG.defaultDateSelector ||
+                ''input[name="date"]''
+            )?.value ?? ''''
+          );
+
+        const match =
+          defaultDate.match(
+            /(\\\\d{4})[\\\\/-](\\\\d{1,2})/
+          );
+
+        if (match) {
+          request.year =
+            match[1];
+
+          request.month =
+            match[2];
+        }
+      }
+
+      if (!request.facilityId) {
+        throw new Error(
+          ''個人記録取得対象の施設IDを取得できませんでした。''
+        );
+      }
+
+      if (
+        !request.year ||
+        !request.month
+      ) {
+        throw new Error(
+          ''個人記録取得対象の年月を取得できませんでした。''
+        );
+      }
+
+      /*
+       * ========================================
+       * 5. 検索期間作成
+       * ========================================
+       */
+
+      const lastDay =
+        getLastDay(
+          request.year,
+          request.month
+        );
+
+      const startDate =
+        toSlashDate(
+          request.year,
+          request.month,
+          1
+        );
+
+      const endDate =
+        toSlashDate(
+          request.year,
+          request.month,
+          lastDay
+        );
+
+      /*
+       * ========================================
+       * 6. 検索POSTデータ作成
+       * ========================================
+       */
+
+      const body =
+        new URLSearchParams();
+
+      const postFields =
+        CONFIG.postFields || {};
+
+      const fieldNames =
+        CONFIG.postFieldNames || {};
+
+      body.set(
+        ''mode'',
+        postFields.mode ??
+          ''search''
+      );
+
+      body.set(
+        ''search'',
+        postFields.search ?? ''''
+      );
+
+      body.set(
+        String(
+          fieldNames.facility ||
+            ''facility[{{facilityId}}]''
+        ).replace(
+          ''{{facilityId}}'',
+          request.facilityId
+        ),
+        request.facilityId
+      );
+
+      body.set(
+        ''children'',
+        postFields.children ?? ''0''
+      );
+
+      body.set(
+        fieldNames.startDate ||
+          ''date'',
+        startDate
+      );
+
+      body.set(
+        fieldNames.endDate ||
+          ''date_end'',
+        endDate
+      );
+
+      body.set(
+        fieldNames.service1 ||
+          ''s_ary[1]'',
+        postFields.service1 ??
+          ''放課後等デイサービス''
+      );
+
+      body.set(
+        fieldNames.service2 ||
+          ''s_ary[2]'',
+        postFields.service2 ??
+          ''児童発達支援''
+      );
+
+      body.set(
+        ''state'',
+        postFields.state ?? ''''
+      );
+
+      /*
+       * ========================================
+       * 7. 検索条件POST
+       *
+       * 重要:
+       * このレスポンスを1ページ目として使用しない。
+       *
+       * HUG側セッションへ検索条件を保存することだけが目的。
+       * ========================================
+       */
+
+      const searchRequest =
+        CONFIG.searchRequest || {};
+
+      const searchResponse =
+        await fetch(request.url, {
+          method:
+            searchRequest.method ||
+            ''POST'',
+
+          credentials:
+            searchRequest.credentials ||
+            ''include'',
+
+          cache:
+            searchRequest.cache ||
+            ''no-store'',
+
+          headers: {
+            ''Content-Type'':
+              searchRequest.contentType ||
+              ''application/x-www-form-urlencoded;charset=UTF-8'',
+          },
+
+          body: body.toString(),
+        });
+
+      if (!searchResponse.ok) {
+        throw new Error(
+          ''個人記録の検索条件設定に失敗しました (HTTP '' +
+            searchResponse.status +
+            '')''
+        );
+      }
+
+      /*
+       * bodyを消費しておく。
+       *
+       * 内容自体は一覧データとして使用しない。
+       */
+      const searchHtml =
+        await searchResponse.text();
+
+      const searchDoc =
+        new DOMParser().parseFromString(
+          searchHtml,
+          ''text/html''
+        );
+
+      assertNotLoginPage(
+        searchDoc,
+        searchHtml,
+        ''個人記録検索POST''
+      );
+
+      /*
+       * ========================================
+       * 8. 必ず page=1 をGET
+       * ========================================
+       */
+
+      const firstPage =
+        await fetchPage(1);
+
+      const firstPageRows =
+        firstPage.rows;
+
+      /*
+       * ========================================
+       * 9. 総件数取得
+       * ========================================
+       */
+
+      const total =
+        getTotalCount(
+          firstPage.doc,
+          firstPageRows.length
+        );
+
+      /*
+       * ========================================
+       * 10. 最大ページ数取得
+       *
+       * まずHTMLのpaginationを信用する。
+       *
+       * ただしページネーションが
+       * 1 2 3 4 5 のように一部しか出ないケースも
+       * 想定して、1ページあたり件数と総件数からも
+       * ページ数を補完する。
+       * ========================================
+       */
+
+      const firstPageSize =
+        firstPageRows.length;
+
+      const maxPageFromHtml =
+        getMaxPageFromDocument(
+          firstPage.doc
+        );
+
+      const pageCountFromTotal =
+        total > 0 &&
+        firstPageSize > 0
+          ? Math.ceil(
+              total /
+                firstPageSize
+            )
+          : 1;
+
+      const pageCount =
+        Math.max(
+          1,
+          maxPageFromHtml,
+          pageCountFromTotal
+        );
+
+      /*
+       * ========================================
+       * 11. page=1を起点に一覧を作成
+       * ========================================
+       */
+
+      const records = [
+        ...firstPageRows,
+      ];
+
+      const pageDebug = [
+        {
+          page: 1,
+          rowCount:
+            firstPageRows.length,
+          url: firstPage.url,
+        },
+      ];
+
+      /*
+       * ========================================
+       * 12. page=2 ～ 最終ページをGET
+       * ========================================
+       */
+
+      for (
+        let page = 2;
+        page <= pageCount;
+        page += 1
+      ) {
+        const pageResult =
+          await fetchPage(page);
+
+        pageDebug.push({
+          page,
+          rowCount:
+            pageResult.rows.length,
+          url: pageResult.url,
+        });
+
+        records.push(
+          ...pageResult.rows
+        );
+      }
+
+      /*
+       * ========================================
+       * 13. 重複排除
+       * ========================================
+       *
+       * 原則 recordId をキーにする。
+       *
+       * recordIdがない特殊行についてのみ、
+       * 児童ID・日付・施設・児童名・editSource
+       * を使ったfallbackキーを生成する。
+       *
+       * indexをfallbackキーへ含めると
+       * 同じデータでも重複排除できないため使用しない。
+       * ========================================
+       */
+
+      const uniqueMap =
+        new Map();
+
+      for (
+        const record of records
+      ) {
+        const key =
+          record.recordId
+            ? ''id:'' +
+              record.recordId
+            : [
+                ''fallback'',
+                record.childrenId,
+                record.date,
+                record.facilityName,
+                record.childName,
+                record.editSource,
+              ].join(''|'');
+
+        if (
+          !uniqueMap.has(key)
+        ) {
+          uniqueMap.set(
+            key,
+            record
+          );
+        }
+      }
+
+      const uniqueRecords =
+        Array.from(
+          uniqueMap.values()
+        );
+
+      /*
+       * ========================================
+       * 14. 件数整合性チェック
+       * ========================================
+       *
+       * HUGに「全部でN件」と出ている場合、
+       * 実取得件数が一致しなければ後続処理へ進めない。
+       * ========================================
+       */
+
+      if (
+        Number.isFinite(total) &&
+        total >= 0 &&
+        uniqueRecords.length !==
+          total
+      ) {
+        throw new Error(
+          ''個人記録一覧の取得件数が一致しません。'' +
+            '' HUG側='' +
+            total +
+            ''件'' +
+            '' / 実取得='' +
+            uniqueRecords.length +
+            ''件'' +
+            '' / 生データ='' +
+            records.length +
+            ''件'' +
+            '' / pageCount='' +
+            pageCount
+        );
+      }
+
+      /*
+       * ========================================
+       * 15. 完了
+       * ========================================
+       */
+
+      return {
+        facilityId:
+          request.facilityId,
+
+        year:
+          Number(
+            request.year
+          ),
+
+        month:
+          Number(
+            request.month
+          ),
+
+        startDate,
+        endDate,
+
+        total,
+
+        pageCount,
+
+        rawRecordCount:
+          records.length,
+
+        recordCount:
+          uniqueRecords.length,
+
+        pageDebug,
+
+        hugChildren:
+          initialChildren,
+
+        hugChildCount:
+          initialChildren.length,
+
+        records:
+          uniqueRecords,
+      };
+    })()
+  `
+}
+
+exports.fetchPersonalRecordList = async function fetchPersonalRecordList({
+  input,
+  helpers,
+  config,
+}) {
+  const facilityId = input?.facilityId;
+  const year = input?.year;
+  const month = input?.month;
+
+  if (!facilityId) {
+    throw new Error(''個人記録取得対象の施設IDが指定されていません。'');
+  }
+
+  if (!year || !month) {
+    throw new Error(''個人記録取得対象の年月が指定されていません。'');
+  }
+
+  const webview = helpers.getHugWebview();
+
+  if (!webview || typeof webview.executeJavaScript !== ''function'') {
+    throw new Error(''HUG WebViewを取得できませんでした。'');
+  }
+
+  const script = buildPersonalRecordFetchScript({
+    facilityId,
+    year,
+    month,
+    config: config || {},
+  });
+
+  const result = await webview.executeJavaScript(script, true);
+
+  if (result?.ok === false) {
+    throw new Error(
+      result?.error || ''個人記録一覧の取得に失敗しました。''
+    );
+  }
+
+  return result;
+};
+',256),1
+);
+
+INSERT INTO web_automation_flow_memos_v2 (flow_id,memo,sort_order,is_active) VALUES
+  (@flow_id,'V1 all_sync の personal_record_list_fetch をV2独立Flowへ移行。',10,1),
+  (@flow_id,'検索POSTレスポンスを1ページ目として使用せず、セッションへ条件保存後に必ず page=1 をGETする。',20,1),
+  (@flow_id,'recordIdで重複排除し、HUG表示総件数と実取得件数が一致しない場合は停止する。',30,1);
+
+COMMIT;
+
+
+SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci;
+SET collation_connection = 'utf8mb4_unicode_ci';
+
+START TRANSACTION;
+
+SET @app_key = CONVERT('hug-banso-navi' USING utf8mb4) COLLATE utf8mb4_unicode_ci;
+SET @flow_key = CONVERT('personal_record_detail_fetch' USING utf8mb4) COLLATE utf8mb4_unicode_ci;
+SET @flow_version = 1;
+
+DELETE FROM web_automation_flows_v2
+WHERE app_key COLLATE utf8mb4_unicode_ci = @app_key
+  AND flow_key COLLATE utf8mb4_unicode_ci = @flow_key
+  AND version = @flow_version;
+
+INSERT INTO web_automation_flows_v2 (
+ app_key,flow_key,name,description,entry_file,entry_export,engine_version,
+ config_json,input_schema_json,output_schema_json,timeout_ms,version,status,published_at
+) VALUES (
+ @app_key,@flow_key,'個人記録 本文・記録者取得','個人記録一覧の編集URLを順番にGETし、本文と記録者を取得するV2 Flow。欠席・未作成はスキップし、権限エラーはレコード単位で保持する。','index.js','default',1,
+ '{"baseUrl":"https://www.hug-ayumu.link/hug/wm/","inputs":{"records":"{{records}}"},"request":{"method":"GET","credentials":"include","cache":"no-store"},"editUrl":{"sourceField":"editSource","locationHrefPattern":"location\\\\.href\\\\s*=\\\\s*[\\\\\\"\\\\'']([^\\\\\\"\\\\'']+)[\\\\\\"\\\\'']","requiredText":"contact_book.php"},"noteSelector":"textarea[name=\\"note\\"][data-field-key=\\"note\\"]","recordStaffSelector":"select[name=\\"record_staff\\"]","loginDetection":{"usernameSelector":"input[name=\\"username\\"]","titleContains":"ログイン","htmlContains":"login.php"},"permissionError":{"containerSelector":".caution-box.print","titleSelector":"h4.caution-title","keywords":["編集権限がありません","権限がありません","編集権限がない"]},"skipConditions":[{"field":"attendance","operator":"startsWith","value":"欠席"},{"field":"status","operator":"equals","value":"未作成"}],"outputFields":["editPath","editUrl","note","recordStaffId","recordStaffName","noteError","permissionError","detailSkipped","detailSkipReason"]}','{"type":"object","required":["records"],"properties":{"records":{"type":"array"}}}','{"type":"object","required":["ok","records","detailCount","errorCount","permissionErrorCount","skippedCount"]}',180000,@flow_version,'published',NOW()
+);
+
+SET @flow_id = LAST_INSERT_ID();
+
+INSERT INTO web_automation_files_v2 (flow_id,file_path,file_type,source_text,module_type,config_json,content_hash,is_active) VALUES (
+ @flow_id,'index.js','javascript','const {
+  fetchPersonalRecordDetails,
+} = await require(''./fetch'');
+
+module.exports = async function executePersonalRecordDetailFetch({
+  input,
+  helpers,
+  config,
+}) {
+  const result = await fetchPersonalRecordDetails({
+    input,
+    helpers,
+    config,
+  });
+
+  if (result?.ok === false) {
+    throw new Error(
+      result?.error || ''個人記録詳細の取得に失敗しました。''
+    );
+  }
+
+  return result;
+};
+','commonjs',NULL,SHA2('const {
+  fetchPersonalRecordDetails,
+} = await require(''./fetch'');
+
+module.exports = async function executePersonalRecordDetailFetch({
+  input,
+  helpers,
+  config,
+}) {
+  const result = await fetchPersonalRecordDetails({
+    input,
+    helpers,
+    config,
+  });
+
+  if (result?.ok === false) {
+    throw new Error(
+      result?.error || ''個人記録詳細の取得に失敗しました。''
+    );
+  }
+
+  return result;
+};
+',256),1
+);
+
+INSERT INTO web_automation_files_v2 (flow_id,file_path,file_type,source_text,module_type,config_json,content_hash,is_active) VALUES (
+ @flow_id,'fetch.js','javascript','/**
+ * 個人記録一覧の編集ボタン onclick から location.href を取り出し、
+ * HUG_WM_BASE_URL を基準に編集画面を GET して本文(note)と記録者を取得する。
+ *
+ * fetchPersonalRecordList.js の成功実装と同じく、HUG の Cookie/セッションを
+ * 引き継ぐため「1回の webview.executeJavaScript() の中」で詳細GETまで完結させる。
+ */
+async function fetchPersonalRecordDetailsLegacy(
+  webview,
+  records,
+  options = {},
+) {
+  const { config = {}, onProgress } = options
+  if (!webview) {
+    return {
+      ok: false,
+      error: ''webview がありません。'',
+      records: [],
+    }
+  }
+
+  if (!Array.isArray(records) || records.length === 0) {
+    return {
+      ok: true,
+      records: [],
+      detailCount: 0,
+      errorCount: 0,
+      permissionErrorCount: 0,
+      skippedCount: 0,
+    }
+  }
+
+  const normalizeConditionText = (value) =>
+    String(value ?? '''')
+      .replace(/\\s+/g, '''')
+      .trim()
+
+  const getSkipReason = (record) => {
+    const attendance = normalizeConditionText(
+      record?.attendance,
+    )
+    const status = normalizeConditionText(
+      record?.status,
+    )
+
+    if (
+      attendance === ''欠席'' ||
+      attendance.startsWith(''欠席('')
+    ) {
+      return attendance.includes(
+        ''欠席時対応加算を取らない'',
+      )
+        ? ''欠席（欠席時対応加算を取らない）''
+        : ''欠席''
+    }
+
+    if (status === ''未作成'') {
+      return ''状態が未作成''
+    }
+
+    return ''''
+  }
+
+  const skipConditions = Array.isArray(config?.skipConditions)
+    ? config.skipConditions
+    : []
+
+  const getConfiguredSkipReason = (record) => {
+    for (const condition of skipConditions) {
+      const fieldValue = normalizeConditionText(record?.[condition?.field])
+      const expected = normalizeConditionText(condition?.value)
+      if (condition?.operator === ''startsWith'' && fieldValue.startsWith(expected)) {
+        return `DB設定: ${condition.field} startsWith ${condition.value}`
+      }
+      if (condition?.operator === ''equals'' && fieldValue === expected) {
+        return `DB設定: ${condition.field} = ${condition.value}`
+      }
+    }
+    return getSkipReason(record)
+  }
+
+  const targets = records.map(
+    (record, index) => ({
+      index,
+
+      // 一覧POST結果から取得した button.edit の onclick を最優先する。
+      // 例:
+      // location.href=''contact_book.php?mode=edit&id=46961&cal_date=2026-09-30&c_id=541''
+      editSource:
+        record?.editSource ??
+        record?.editOnclick ??
+        record?.editPath ??
+        record?.editUrl ??
+        '''',
+
+      skipReason: getConfiguredSkipReason(record),
+    }),
+  )
+
+  const script = `
+    (async () => {
+      const TARGETS = ${JSON.stringify(targets)};
+      const CONFIG = ${JSON.stringify(config)};
+      const HUG_WM_BASE_URL =
+        CONFIG.baseUrl || "https://www.hug-ayumu.link/hug/wm/";
+
+      const parseEditPath = (onclick) => {
+        const source = String(
+          onclick || ""
+        ).trim();
+
+        if (!source) {
+          return "";
+        }
+
+        const match = source.match(
+          /location\\\\.href\\\\s*=\\\\s*[''"]([^''"]+)[''"]/i
+        );
+
+        if (match?.[1]) {
+          return match[1];
+        }
+
+        if (
+          source.includes(
+            "contact_book.php"
+          )
+        ) {
+          return source;
+        }
+
+        return "";
+      };
+
+      const isLoginPage = (
+        doc,
+        html
+      ) =>
+        doc.querySelector(
+          ''input[name="username"]''
+        ) !== null ||
+        (doc.title || "").includes(
+          "ログイン"
+        ) ||
+        String(
+          html || ""
+        ).includes(
+          "login.php"
+        );
+
+      const getPermissionErrorMessage = (
+        doc
+      ) => {
+        const cautionBox =
+          doc.querySelector(
+            ".caution-box.print"
+          );
+
+        if (!cautionBox) {
+          return null;
+        }
+
+        const cautionTitle =
+          cautionBox.querySelector(
+            "h4.caution-title"
+          );
+
+        const text = (
+          cautionTitle?.textContent ||
+          cautionBox.textContent ||
+          ""
+        ).trim();
+
+        if (
+          text.includes(
+            "編集権限がありません"
+          ) ||
+          text.includes(
+            "権限がありません"
+          ) ||
+          text.includes(
+            "編集権限がない"
+          )
+        ) {
+          return (
+            text ||
+            "編集権限がありません"
+          );
+        }
+
+        return null;
+      };
+
+      const isPermissionErrorMessage = (
+        message
+      ) => {
+        const text = String(
+          message || ""
+        );
+
+        return (
+          text.includes(
+            "編集権限"
+          ) ||
+          text.includes(
+            "権限がありません"
+          ) ||
+          text.includes(
+            "編集権限がない"
+          )
+        );
+      };
+
+      const fetchContactBookDetail =
+        async (
+          editSource
+        ) => {
+          const editPath =
+            parseEditPath(
+              editSource
+            );
+
+          if (!editPath) {
+            throw new Error(
+              "編集ボタンのonclickから編集URLを取得できませんでした"
+            );
+          }
+
+          const editUrl =
+            new URL(
+              editPath,
+              HUG_WM_BASE_URL
+            ).href;
+
+          console.log(
+            "[HUG WM] 個人記録 編集画面fetch開始:",
+            editUrl
+          );
+
+          const response =
+            await fetch(
+              editUrl,
+              {
+                method: "GET",
+                credentials:
+                  "include",
+                cache:
+                  "no-store"
+              }
+            );
+
+          if (!response.ok) {
+            throw new Error(
+              "編集HTML取得エラー: " +
+                response.status
+            );
+          }
+
+          const html =
+            await response.text();
+
+          const editDoc =
+            new DOMParser()
+              .parseFromString(
+                html,
+                "text/html"
+              );
+
+          if (
+            isLoginPage(
+              editDoc,
+              html
+            )
+          ) {
+            throw new Error(
+              "ログインページが返されました。HUGへのログイン状態を確認してください"
+            );
+          }
+
+          const permissionErrorMessage =
+            getPermissionErrorMessage(
+              editDoc
+            );
+
+          if (
+            permissionErrorMessage
+          ) {
+            throw new Error(
+              permissionErrorMessage
+            );
+          }
+
+          // -------------------------
+          // 個人記録本文
+          // -------------------------
+          const textarea =
+            editDoc.querySelector(
+              CONFIG.noteSelector || ''textarea[name="note"][data-field-key="note"]''
+            );
+
+          if (!textarea) {
+            throw new Error(
+              "note の textarea が見つかりませんでした"
+            );
+          }
+
+          const note = (
+            textarea.value || ""
+          ).trim();
+
+          // -------------------------
+          // 記録者
+          // -------------------------
+          const recordStaffSelect =
+            editDoc.querySelector(
+              CONFIG.recordStaffSelector || ''select[name="record_staff"]''
+            );
+
+          let recordStaffId = null;
+          let recordStaffName = "";
+
+          if (
+            recordStaffSelect
+          ) {
+            const rawStaffId =
+              String(
+                recordStaffSelect.value ??
+                  ""
+              ).trim();
+
+            if (
+              rawStaffId !== ""
+            ) {
+              const parsedStaffId =
+                Number(
+                  rawStaffId
+                );
+
+              recordStaffId =
+                Number.isNaN(
+                  parsedStaffId
+                )
+                  ? rawStaffId
+                  : parsedStaffId;
+            }
+
+            const selectedOption =
+              recordStaffSelect
+                .options[
+                  recordStaffSelect
+                    .selectedIndex
+                ];
+
+            recordStaffName =
+              (
+                selectedOption
+                  ?.textContent ||
+                ""
+              ).trim();
+          }
+
+          console.log(
+            "[HUG WM] 個人記録 詳細取得:",
+            {
+              editUrl,
+              recordStaffId,
+              recordStaffName,
+              note
+            }
+          );
+
+          return {
+            editPath,
+            editUrl,
+            note,
+            recordStaffId,
+            recordStaffName
+          };
+        };
+
+      const results = [];
+
+      for (
+        const target of TARGETS
+      ) {
+        if (
+          target.skipReason
+        ) {
+          results.push({
+            index:
+              target.index,
+
+            editPath: "",
+            editUrl: "",
+
+            note: null,
+
+            recordStaffId:
+              null,
+
+            recordStaffName:
+              "",
+
+            noteError: null,
+
+            permissionError:
+              false,
+
+            detailSkipped:
+              true,
+
+            detailSkipReason:
+              target.skipReason
+          });
+
+          continue;
+        }
+
+        try {
+          const detail =
+            await fetchContactBookDetail(
+              target.editSource
+            );
+
+          results.push({
+            index:
+              target.index,
+
+            editPath:
+              detail.editPath,
+
+            editUrl:
+              detail.editUrl,
+
+            note:
+              detail.note,
+
+            recordStaffId:
+              detail.recordStaffId,
+
+            recordStaffName:
+              detail.recordStaffName,
+
+            noteError: null,
+
+            permissionError:
+              false,
+
+            detailSkipped:
+              false,
+
+            detailSkipReason:
+              ""
+          });
+
+          console.log(
+            "[HUG WM] 個人記録 詳細取得成功:",
+            {
+              index:
+                target.index,
+
+              editUrl:
+                detail.editUrl,
+
+              recordStaffId:
+                detail.recordStaffId,
+
+              recordStaffName:
+                detail.recordStaffName,
+
+              note:
+                detail.note
+            }
+          );
+        } catch (
+          noteErr
+        ) {
+          const noteError =
+            noteErr &&
+            noteErr.message
+              ? String(
+                  noteErr.message
+                )
+              : String(
+                  noteErr
+                );
+
+          const permissionError =
+            isPermissionErrorMessage(
+              noteError
+            );
+
+          results.push({
+            index:
+              target.index,
+
+            editPath: "",
+            editUrl: "",
+
+            note: null,
+
+            recordStaffId:
+              null,
+
+            recordStaffName:
+              "",
+
+            noteError,
+
+            permissionError,
+
+            detailSkipped:
+              false,
+
+            detailSkipReason:
+              ""
+          });
+
+          console.warn(
+            "[HUG WM] 個人記録 詳細取得エラー:",
+            {
+              index:
+                target.index,
+
+              error:
+                noteError
+            }
+          );
+        }
+      }
+
+      return {
+        ok: true,
+
+        results,
+
+        detailCount:
+          results.filter(
+            (row) =>
+              row.note !== null
+          ).length,
+
+        errorCount:
+          results.filter(
+            (row) =>
+              Boolean(
+                row.noteError
+              )
+          ).length,
+
+        permissionErrorCount:
+          results.filter(
+            (row) =>
+              row.permissionError
+          ).length,
+
+        skippedCount:
+          results.filter(
+            (row) =>
+              row.detailSkipped
+          ).length
+      };
+    })()
+  `
+
+  try {
+    const detailResult =
+      await webview.executeJavaScript(
+        script,
+        true,
+      )
+
+    onProgress?.(records.length, records.length)
+
+    if (!detailResult?.ok) {
+      return {
+        ok: false,
+        error:
+          detailResult?.error ??
+          ''個人記録本文の取得に失敗しました。'',
+        records,
+      }
+    }
+
+    const detailsByIndex = new Map(
+      (
+        detailResult.results ?? []
+      ).map((row) => [
+        Number(row.index),
+        row,
+      ]),
+    )
+
+    const mergedRecords =
+      records.map(
+        (record, index) => {
+          const detail =
+            detailsByIndex.get(
+              index,
+            )
+
+          if (!detail) {
+            return record
+          }
+
+          return {
+            ...record,
+
+            editPath:
+              detail.editPath ??
+              record.editPath ??
+              '''',
+
+            editUrl:
+              detail.editUrl ??
+              record.editUrl ??
+              '''',
+
+            note:
+              detail.note,
+
+            // 記録者ID
+            recordStaffId:
+              detail.recordStaffId ??
+              record.recordStaffId ??
+              null,
+
+            // 記録者名
+            recordStaffName:
+              detail.recordStaffName ??
+              record.recordStaffName ??
+              '''',
+
+            noteError:
+              detail.noteError ??
+              '''',
+
+            permissionError:
+              Boolean(
+                detail.permissionError,
+              ),
+
+            detailSkipped:
+              Boolean(
+                detail.detailSkipped,
+              ),
+
+            detailSkipReason:
+              detail.detailSkipReason ??
+              '''',
+          }
+        },
+      )
+
+    console.log(
+      ''[HUG WM] 個人記録 詳細取得後 records:'',
+      mergedRecords,
+    )
+
+    return {
+      ...detailResult,
+      records:
+        mergedRecords,
+    }
+  } catch (error) {
+    console.error(
+      ''[ProfessionalSupportWindow] 個人記録本文 executeJavaScript エラー:'',
+      error,
+    )
+
+    return {
+      ok: false,
+      error:
+        error?.message ??
+        String(error),
+      records,
+    }
+  }
+}
+
+exports.fetchPersonalRecordDetails = async function fetchPersonalRecordDetails({
+  input,
+  helpers,
+  config,
+}) {
+  const records = Array.isArray(input?.records)
+    ? input.records
+    : [];
+
+  const webview = helpers.getHugWebview();
+
+  if (!webview || typeof webview.executeJavaScript !== ''function'') {
+    throw new Error(''HUG WebViewを取得できませんでした。'');
+  }
+
+  return fetchPersonalRecordDetailsLegacy(
+    webview,
+    records,
+    {
+      config: config || {},
+    },
+  );
+};
+','commonjs',NULL,SHA2('/**
+ * 個人記録一覧の編集ボタン onclick から location.href を取り出し、
+ * HUG_WM_BASE_URL を基準に編集画面を GET して本文(note)と記録者を取得する。
+ *
+ * fetchPersonalRecordList.js の成功実装と同じく、HUG の Cookie/セッションを
+ * 引き継ぐため「1回の webview.executeJavaScript() の中」で詳細GETまで完結させる。
+ */
+async function fetchPersonalRecordDetailsLegacy(
+  webview,
+  records,
+  options = {},
+) {
+  const { config = {}, onProgress } = options
+  if (!webview) {
+    return {
+      ok: false,
+      error: ''webview がありません。'',
+      records: [],
+    }
+  }
+
+  if (!Array.isArray(records) || records.length === 0) {
+    return {
+      ok: true,
+      records: [],
+      detailCount: 0,
+      errorCount: 0,
+      permissionErrorCount: 0,
+      skippedCount: 0,
+    }
+  }
+
+  const normalizeConditionText = (value) =>
+    String(value ?? '''')
+      .replace(/\\s+/g, '''')
+      .trim()
+
+  const getSkipReason = (record) => {
+    const attendance = normalizeConditionText(
+      record?.attendance,
+    )
+    const status = normalizeConditionText(
+      record?.status,
+    )
+
+    if (
+      attendance === ''欠席'' ||
+      attendance.startsWith(''欠席('')
+    ) {
+      return attendance.includes(
+        ''欠席時対応加算を取らない'',
+      )
+        ? ''欠席（欠席時対応加算を取らない）''
+        : ''欠席''
+    }
+
+    if (status === ''未作成'') {
+      return ''状態が未作成''
+    }
+
+    return ''''
+  }
+
+  const skipConditions = Array.isArray(config?.skipConditions)
+    ? config.skipConditions
+    : []
+
+  const getConfiguredSkipReason = (record) => {
+    for (const condition of skipConditions) {
+      const fieldValue = normalizeConditionText(record?.[condition?.field])
+      const expected = normalizeConditionText(condition?.value)
+      if (condition?.operator === ''startsWith'' && fieldValue.startsWith(expected)) {
+        return `DB設定: ${condition.field} startsWith ${condition.value}`
+      }
+      if (condition?.operator === ''equals'' && fieldValue === expected) {
+        return `DB設定: ${condition.field} = ${condition.value}`
+      }
+    }
+    return getSkipReason(record)
+  }
+
+  const targets = records.map(
+    (record, index) => ({
+      index,
+
+      // 一覧POST結果から取得した button.edit の onclick を最優先する。
+      // 例:
+      // location.href=''contact_book.php?mode=edit&id=46961&cal_date=2026-09-30&c_id=541''
+      editSource:
+        record?.editSource ??
+        record?.editOnclick ??
+        record?.editPath ??
+        record?.editUrl ??
+        '''',
+
+      skipReason: getConfiguredSkipReason(record),
+    }),
+  )
+
+  const script = `
+    (async () => {
+      const TARGETS = ${JSON.stringify(targets)};
+      const CONFIG = ${JSON.stringify(config)};
+      const HUG_WM_BASE_URL =
+        CONFIG.baseUrl || "https://www.hug-ayumu.link/hug/wm/";
+
+      const parseEditPath = (onclick) => {
+        const source = String(
+          onclick || ""
+        ).trim();
+
+        if (!source) {
+          return "";
+        }
+
+        const match = source.match(
+          /location\\\\.href\\\\s*=\\\\s*[''"]([^''"]+)[''"]/i
+        );
+
+        if (match?.[1]) {
+          return match[1];
+        }
+
+        if (
+          source.includes(
+            "contact_book.php"
+          )
+        ) {
+          return source;
+        }
+
+        return "";
+      };
+
+      const isLoginPage = (
+        doc,
+        html
+      ) =>
+        doc.querySelector(
+          ''input[name="username"]''
+        ) !== null ||
+        (doc.title || "").includes(
+          "ログイン"
+        ) ||
+        String(
+          html || ""
+        ).includes(
+          "login.php"
+        );
+
+      const getPermissionErrorMessage = (
+        doc
+      ) => {
+        const cautionBox =
+          doc.querySelector(
+            ".caution-box.print"
+          );
+
+        if (!cautionBox) {
+          return null;
+        }
+
+        const cautionTitle =
+          cautionBox.querySelector(
+            "h4.caution-title"
+          );
+
+        const text = (
+          cautionTitle?.textContent ||
+          cautionBox.textContent ||
+          ""
+        ).trim();
+
+        if (
+          text.includes(
+            "編集権限がありません"
+          ) ||
+          text.includes(
+            "権限がありません"
+          ) ||
+          text.includes(
+            "編集権限がない"
+          )
+        ) {
+          return (
+            text ||
+            "編集権限がありません"
+          );
+        }
+
+        return null;
+      };
+
+      const isPermissionErrorMessage = (
+        message
+      ) => {
+        const text = String(
+          message || ""
+        );
+
+        return (
+          text.includes(
+            "編集権限"
+          ) ||
+          text.includes(
+            "権限がありません"
+          ) ||
+          text.includes(
+            "編集権限がない"
+          )
+        );
+      };
+
+      const fetchContactBookDetail =
+        async (
+          editSource
+        ) => {
+          const editPath =
+            parseEditPath(
+              editSource
+            );
+
+          if (!editPath) {
+            throw new Error(
+              "編集ボタンのonclickから編集URLを取得できませんでした"
+            );
+          }
+
+          const editUrl =
+            new URL(
+              editPath,
+              HUG_WM_BASE_URL
+            ).href;
+
+          console.log(
+            "[HUG WM] 個人記録 編集画面fetch開始:",
+            editUrl
+          );
+
+          const response =
+            await fetch(
+              editUrl,
+              {
+                method: "GET",
+                credentials:
+                  "include",
+                cache:
+                  "no-store"
+              }
+            );
+
+          if (!response.ok) {
+            throw new Error(
+              "編集HTML取得エラー: " +
+                response.status
+            );
+          }
+
+          const html =
+            await response.text();
+
+          const editDoc =
+            new DOMParser()
+              .parseFromString(
+                html,
+                "text/html"
+              );
+
+          if (
+            isLoginPage(
+              editDoc,
+              html
+            )
+          ) {
+            throw new Error(
+              "ログインページが返されました。HUGへのログイン状態を確認してください"
+            );
+          }
+
+          const permissionErrorMessage =
+            getPermissionErrorMessage(
+              editDoc
+            );
+
+          if (
+            permissionErrorMessage
+          ) {
+            throw new Error(
+              permissionErrorMessage
+            );
+          }
+
+          // -------------------------
+          // 個人記録本文
+          // -------------------------
+          const textarea =
+            editDoc.querySelector(
+              CONFIG.noteSelector || ''textarea[name="note"][data-field-key="note"]''
+            );
+
+          if (!textarea) {
+            throw new Error(
+              "note の textarea が見つかりませんでした"
+            );
+          }
+
+          const note = (
+            textarea.value || ""
+          ).trim();
+
+          // -------------------------
+          // 記録者
+          // -------------------------
+          const recordStaffSelect =
+            editDoc.querySelector(
+              CONFIG.recordStaffSelector || ''select[name="record_staff"]''
+            );
+
+          let recordStaffId = null;
+          let recordStaffName = "";
+
+          if (
+            recordStaffSelect
+          ) {
+            const rawStaffId =
+              String(
+                recordStaffSelect.value ??
+                  ""
+              ).trim();
+
+            if (
+              rawStaffId !== ""
+            ) {
+              const parsedStaffId =
+                Number(
+                  rawStaffId
+                );
+
+              recordStaffId =
+                Number.isNaN(
+                  parsedStaffId
+                )
+                  ? rawStaffId
+                  : parsedStaffId;
+            }
+
+            const selectedOption =
+              recordStaffSelect
+                .options[
+                  recordStaffSelect
+                    .selectedIndex
+                ];
+
+            recordStaffName =
+              (
+                selectedOption
+                  ?.textContent ||
+                ""
+              ).trim();
+          }
+
+          console.log(
+            "[HUG WM] 個人記録 詳細取得:",
+            {
+              editUrl,
+              recordStaffId,
+              recordStaffName,
+              note
+            }
+          );
+
+          return {
+            editPath,
+            editUrl,
+            note,
+            recordStaffId,
+            recordStaffName
+          };
+        };
+
+      const results = [];
+
+      for (
+        const target of TARGETS
+      ) {
+        if (
+          target.skipReason
+        ) {
+          results.push({
+            index:
+              target.index,
+
+            editPath: "",
+            editUrl: "",
+
+            note: null,
+
+            recordStaffId:
+              null,
+
+            recordStaffName:
+              "",
+
+            noteError: null,
+
+            permissionError:
+              false,
+
+            detailSkipped:
+              true,
+
+            detailSkipReason:
+              target.skipReason
+          });
+
+          continue;
+        }
+
+        try {
+          const detail =
+            await fetchContactBookDetail(
+              target.editSource
+            );
+
+          results.push({
+            index:
+              target.index,
+
+            editPath:
+              detail.editPath,
+
+            editUrl:
+              detail.editUrl,
+
+            note:
+              detail.note,
+
+            recordStaffId:
+              detail.recordStaffId,
+
+            recordStaffName:
+              detail.recordStaffName,
+
+            noteError: null,
+
+            permissionError:
+              false,
+
+            detailSkipped:
+              false,
+
+            detailSkipReason:
+              ""
+          });
+
+          console.log(
+            "[HUG WM] 個人記録 詳細取得成功:",
+            {
+              index:
+                target.index,
+
+              editUrl:
+                detail.editUrl,
+
+              recordStaffId:
+                detail.recordStaffId,
+
+              recordStaffName:
+                detail.recordStaffName,
+
+              note:
+                detail.note
+            }
+          );
+        } catch (
+          noteErr
+        ) {
+          const noteError =
+            noteErr &&
+            noteErr.message
+              ? String(
+                  noteErr.message
+                )
+              : String(
+                  noteErr
+                );
+
+          const permissionError =
+            isPermissionErrorMessage(
+              noteError
+            );
+
+          results.push({
+            index:
+              target.index,
+
+            editPath: "",
+            editUrl: "",
+
+            note: null,
+
+            recordStaffId:
+              null,
+
+            recordStaffName:
+              "",
+
+            noteError,
+
+            permissionError,
+
+            detailSkipped:
+              false,
+
+            detailSkipReason:
+              ""
+          });
+
+          console.warn(
+            "[HUG WM] 個人記録 詳細取得エラー:",
+            {
+              index:
+                target.index,
+
+              error:
+                noteError
+            }
+          );
+        }
+      }
+
+      return {
+        ok: true,
+
+        results,
+
+        detailCount:
+          results.filter(
+            (row) =>
+              row.note !== null
+          ).length,
+
+        errorCount:
+          results.filter(
+            (row) =>
+              Boolean(
+                row.noteError
+              )
+          ).length,
+
+        permissionErrorCount:
+          results.filter(
+            (row) =>
+              row.permissionError
+          ).length,
+
+        skippedCount:
+          results.filter(
+            (row) =>
+              row.detailSkipped
+          ).length
+      };
+    })()
+  `
+
+  try {
+    const detailResult =
+      await webview.executeJavaScript(
+        script,
+        true,
+      )
+
+    onProgress?.(records.length, records.length)
+
+    if (!detailResult?.ok) {
+      return {
+        ok: false,
+        error:
+          detailResult?.error ??
+          ''個人記録本文の取得に失敗しました。'',
+        records,
+      }
+    }
+
+    const detailsByIndex = new Map(
+      (
+        detailResult.results ?? []
+      ).map((row) => [
+        Number(row.index),
+        row,
+      ]),
+    )
+
+    const mergedRecords =
+      records.map(
+        (record, index) => {
+          const detail =
+            detailsByIndex.get(
+              index,
+            )
+
+          if (!detail) {
+            return record
+          }
+
+          return {
+            ...record,
+
+            editPath:
+              detail.editPath ??
+              record.editPath ??
+              '''',
+
+            editUrl:
+              detail.editUrl ??
+              record.editUrl ??
+              '''',
+
+            note:
+              detail.note,
+
+            // 記録者ID
+            recordStaffId:
+              detail.recordStaffId ??
+              record.recordStaffId ??
+              null,
+
+            // 記録者名
+            recordStaffName:
+              detail.recordStaffName ??
+              record.recordStaffName ??
+              '''',
+
+            noteError:
+              detail.noteError ??
+              '''',
+
+            permissionError:
+              Boolean(
+                detail.permissionError,
+              ),
+
+            detailSkipped:
+              Boolean(
+                detail.detailSkipped,
+              ),
+
+            detailSkipReason:
+              detail.detailSkipReason ??
+              '''',
+          }
+        },
+      )
+
+    console.log(
+      ''[HUG WM] 個人記録 詳細取得後 records:'',
+      mergedRecords,
+    )
+
+    return {
+      ...detailResult,
+      records:
+        mergedRecords,
+    }
+  } catch (error) {
+    console.error(
+      ''[ProfessionalSupportWindow] 個人記録本文 executeJavaScript エラー:'',
+      error,
+    )
+
+    return {
+      ok: false,
+      error:
+        error?.message ??
+        String(error),
+      records,
+    }
+  }
+}
+
+exports.fetchPersonalRecordDetails = async function fetchPersonalRecordDetails({
+  input,
+  helpers,
+  config,
+}) {
+  const records = Array.isArray(input?.records)
+    ? input.records
+    : [];
+
+  const webview = helpers.getHugWebview();
+
+  if (!webview || typeof webview.executeJavaScript !== ''function'') {
+    throw new Error(''HUG WebViewを取得できませんでした。'');
+  }
+
+  return fetchPersonalRecordDetailsLegacy(
+    webview,
+    records,
+    {
+      config: config || {},
+    },
+  );
+};
+',256),1
+);
+
+INSERT INTO web_automation_flow_memos_v2 (flow_id,memo,sort_order,is_active) VALUES
+  (@flow_id,'V1 all_sync の personal_record_detail_fetch をV2独立Flowへ移行。',10,1),
+  (@flow_id,'欠席および未作成は詳細GETを行わずdetailSkippedとして返す。',20,1),
+  (@flow_id,'編集権限エラーは処理全体を停止せず、noteError / permissionErrorとしてレコード単位で保持する。',30,1);
+
+COMMIT;

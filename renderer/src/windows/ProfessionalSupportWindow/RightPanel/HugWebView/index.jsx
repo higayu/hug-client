@@ -10,6 +10,7 @@ import { URL_TARGET1 } from '../../constants'
 export default function HugWebView({ webviewRef }) {
   return (
     <webview
+      id="hug-automation-webview"
       ref={webviewRef}
       src={URL_TARGET1}
       allowpopups="true"

@@ -1,265 +1,50 @@
-# Electron WebView処理 DB駆動化 指示書
+# Electron WebAutomation V2 DB駆動化 指示書
 
 ## 1. この依頼の目的
 
-現在 renderer 内にハードコードされている WebView 操作処理を、既存の `web_automation_*` テーブルを使用したDB駆動方式へ変更してください。
+現在 renderer 内にハードコードされている WebView 操作・HTML解析・業務処理を、
+`web_automation_*_v2` テーブルを使用した **WebAutomation V2方式** へ移行してください。
 
-目的は、今後以下の内容をソースコードを変更せずDB側から変更できるようにすることです。
+目的は、今後のサイト仕様変更や業務ロジック変更に対して、
 
-- 対象URL
-- CSSセレクタ
-- 実行方式
-- fetch / POST 設定
-- DOM操作設定
-- parser設定
-- タイムアウト
-- 実行順序
-- 各種オプション
-- サイト側JavaScript関数名
+- Electronアプリを再ビルドしない
+- exeを再配布しない
+- DB側のFlow / 仮想JSファイルを更新するだけで全アプリへ反映する
 
-ただし、DBへJavaScriptコード全文を保存して `eval` するような構成にはしないでください。
+ことです。
 
-既存アプリに存在する共通executorを使用し、
-
-**DB = 処理定義**
-**renderer = 汎用実行エンジン**
-
-という構成を維持してください。
-
-
-# 2. 既存DB構成
-
-このプロジェクトでは、WebView自動処理を基本的に次の3テーブルで管理しています。
-
-## web_automation_flows
-
-処理全体を定義します。
-
-主な項目：
-
-- `app_key`
-- `webview_key`
-- `flow_key`
-- `name`
-- `description`
-- `trigger_type`
-- `target_url_pattern`
-- `config_json`
-- `is_active`
-- `version`
-
-`flow_key` が renderer から処理を呼び出す際の基本的な識別子です。
-
-
-## web_automation_flow_steps
-
-1つのflowに含まれる処理の実行順序を定義します。
-
-主な項目：
-
-- `flow_id`
-- `rule_id`
-- `step_order`
-- `step_key`
-- `step_type`
-- `input_json`
-- `config_json`
-- `continue_on_error`
-- `is_active`
-
-実行時にrendererから渡された値は、
+V2では、DBに「処理順」や「Rule」を細かく分割して保存する方式ではなく、
 
 ```text
-{{childId}}
-{{facilityId}}
-{{date}}
-{{textValue}}
+1 Flow
+  └─ 複数のJavaScriptファイル
 ```
 
-などのテンプレート変数として `input_json` や rule の設定へ引き渡します。
+をDBへ保存し、実行時にメモリ上の仮想モジュールとして復元して実行します。
 
-
-## web_automation_rules
-
-実際にWebView上で何をするかを定義します。
-
-主な項目：
-
-- `rule_key`
-- `name`
-- `category`
-- `action_type`
-- `target_url_pattern`
-- `target_selector`
-- `parser_type`
-- `function_name`
-- `config_json`
-- `is_active`
-- `sort_order`
-- `version`
-
-例えば、
+基本構成は、
 
 ```text
-action_type = fetch
-action_type = click
-action_type = post
-action_type = webview-fetch
+DB = 業務処理本体・変更されやすい処理
+Renderer = 共通実行基盤
+WebView = サイト側処理実行環境
 ```
 
-など、既存executorが対応している実行方式を使用します。
+です。
 
 
-# 3. 最初に確認すること
+# 2. 現在のV2 DB構成
 
-コードを変更する前に、添付されたファイルを解析して以下を整理してください。
-
-### A. 現在ハードコードされている処理
-
-以下を具体的に抽出してください。
-
-- 処理開始関数
-- rendererから渡されている引数
-- 使用しているWebView
-- 対象ドメイン
-- 対象URL
-- editor/inputのselector
-- buttonのselector
-- fetch URL
-- POST URL
-- HTTP method
-- request body
-- CSRF処理
-- DOM操作
-- MutationObserver
-- retry処理
-- timeout処理
-- 成功判定
-- エラー判定
-- 戻り値
-
-特に `executeJavaScript()` 内に直接書かれている値を確認してください。
-
-
-### B. 既存DB駆動処理
-
-添付した正常動作中のDB駆動処理を参考にしてください。
-
-最低でも以下を確認してください。
+現在のWebAutomation V2は、主に以下の4テーブルを使用します。
 
 ```text
-renderer
- ↓
-flow_key指定
- ↓
-flow取得
- ↓
-flow_steps取得
- ↓
-rule取得
- ↓
-input_jsonのテンプレート展開
- ↓
-action_typeに対応したexecutor
- ↓
-WebView操作
- ↓
-result
- ↓
-rendererへ返却
+web_automation_flows_v2
+web_automation_files_v2
+web_automation_flow_memos_v2
+web_automation_execution_logs_v2
 ```
 
-新しい独自方式を作るのではなく、可能な限り既存方式へ合わせてください。
-
-
-# 4. DBへ移すもの / rendererへ残すもの
-
-## DBへ移すもの
-
-原則として変更可能性のある設定値はDBへ移してください。
-
-例：
-
-```text
-対象ドメイン
-対象URL
-CSS selector
-selector候補
-functionName
-timeout
-pollInterval
-MutationObserver設定
-入力フィールド
-送信ボタンselector
-fallback selector
-response解析設定
-```
-
-例えば現在rendererに、
-
-```javascript
-const EDITOR_SELECTORS = [
-  'textarea[name="search"]',
-  'textarea[placeholder*="DeepSeek"]',
-  'textarea',
-  '[contenteditable="true"][role="textbox"]'
-];
-```
-
-と書かれている場合、可能ならruleの `config_json` へ移します。
-
-例：
-
-```json
-{
-  "editorSelectors": [
-    "textarea[name=\"search\"]",
-    "textarea[placeholder*=\"DeepSeek\"]",
-    "textarea",
-    "[contenteditable=\"true\"][role=\"textbox\"]"
-  ]
-}
-```
-
-
-## rendererへ残すもの
-
-以下のような汎用ロジックはrenderer側に残してください。
-
-- WebView取得
-- DBからflow/ruleを取得
-- `{{variable}}` 展開
-- executeJavaScript実行
-- textareaへの値設定
-- contenteditableへの値設定
-- click処理
-- MutationObserver処理
-- fetch実行
-- POST実行
-- retry
-- timeout
-- 標準エラー処理
-- 実行ログ保存
-
-つまり、
-
-```text
-何を操作するか → DB
-
-どう操作するか → 共通executor
-```
-
-にしてください。
-
-
-# 5. 今回ChatGPTへ渡す必要があるファイル
-
-DB駆動化を依頼するときは、原則として以下を添付します。
-
-
-## 必須1：DB定義
-
-現在の以下のテーブルを含むSQLを渡してください。
+旧V1の
 
 ```text
 web_automation_flows
@@ -268,595 +53,242 @@ web_automation_rules
 web_automation_execution_logs
 ```
 
-できれば既存データも含めてください。
+は既存処理用として残っている場合があります。
 
-CREATE TABLEだけではなく、
-
-**正常に動いている既存flow/rule/stepのINSERTデータも必要です。**
+V2へ移行する処理では、原則としてV2テーブルを使用してください。
 
 
-## 必須2：今回DB化するrendererコード
+## 2-1. web_automation_flows_v2
 
-例えば、
+1つの業務処理全体を表します。
 
-```text
-sendPromptToDeepSeek.js
-sendPromptToChatGPT.js
-sendPromptToGemini.js
-```
-
-など、現在実際に処理しているコードをすべて渡してください。
-
-呼び出し元も必要です。
-
-例えば、
+主な項目：
 
 ```text
-DeepSeekContent/index.jsx
-PromptPanel
-ProfessionalPrompt1
-ProfessionalPrompt2
-```
-
-などです。
-
-
-## 必須3：正常動作しているDB駆動処理
-
-今回の実装方式の見本として、
-
-```text
-AttendanceAction
-```
-
-など、すでにDB駆動化済みで正常に動作しているものを渡してください。
-
-これは非常に重要です。
-
-ChatGPTが独自の設計を新しく作るのではなく、
-
-**「このプロジェクトではどのようにDB駆動処理を書くのか」**
-
-を判断するために使用します。
-
-
-## 必須4：Web Automation共通実行処理
-
-以下に該当するファイルも渡してください。
-
-名称は実際のプロジェクトに合わせてください。
-
-- flow取得処理
-- rule取得処理
-- flow step取得処理
-- flow executor
-- rule executor
-- template変数展開処理
-- executeJavaScript共通処理
-- execution log保存処理
-
-
-## 必須5：preload
-
-DB情報をrendererへ公開しているpreload処理を渡してください。
-
-例えば、
-
-```javascript
-contextBridge.exposeInMainWorld(...)
-```
-
-で
-
-```text
-web-automation-rules:list
-web-automation-rules:get
-web-automation-flows:list
-web-automation-flows:get
-```
-
-などを公開している部分です。
-
-
-## 必須6：main側IPC
-
-DBアクセスを登録しているmain側処理を渡してください。
-
-例えば、
-
-```text
-ipcMain.handle(...)
-```
-
-で、
-
-```text
-web-automation-rules:list
-web-automation-rules:get
-web-automation-flows:list
-web-automation-flows:get
-execution-logs:create
-execution-logs:update
-```
-
-などを処理している箇所です。
-
-
-# 6. ChatGPTに最初にやらせる解析
-
-いきなりコードを書き換えないでください。
-
-最初に、
-
-## 現行処理
-
-```text
-UI
- ↓
-renderer関数
- ↓
-WebView
- ↓
-対象サイト
-```
-
-## DB駆動化後
-
-```text
-UI
- ↓
+id
+app_key
 flow_key
- ↓
-DB flow
- ↓
-flow_steps
- ↓
-rule
- ↓
-共通executor
- ↓
-WebView
- ↓
-対象サイト
+name
+description
+entry_file
+entry_export
+engine_version
+config_json
+input_schema_json
+output_schema_json
+timeout_ms
+version
+status
+published_at
+created_at
+updated_at
 ```
 
-を比較して提示してください。
+重要項目：
 
-そして、
+### flow_key
 
-### DBへ移す値
+Rendererから処理を呼び出す一意キーです。
 
-### rendererへ残す処理
-
-### 新しく共通化する必要がある処理
-
-### 既存executorだけで対応できる処理
-
-を分類してください。
-
-
-# 7. SQL作成ルール
-
-DB登録SQLを作成してください。
-
-ただし、可能な限りDBの固定IDを直接指定しないでください。
-
-例えば、
-
-```sql
-flow_id = 25
-rule_id = 31
-```
-
-のような依存は避けます。
-
-基本的には、
-
-```sql
-SELECT id
-FROM web_automation_flows
-WHERE app_key = 'hug-banso-navi'
-  AND webview_key = '*'
-  AND flow_key = 'xxxx';
-```
-
-のようにキーからIDを取得してください。
-
-
-# 8. 推奨SQL形式
-
-以下のようにトランザクション化してください。
-
-```sql
-START TRANSACTION;
-```
-
-まずruleを登録します。
-
-```sql
-INSERT INTO web_automation_rules (
-    app_key,
-    webview_key,
-    rule_key,
-    name,
-    category,
-    action_type,
-    target_url_pattern,
-    target_selector,
-    parser_type,
-    function_name,
-    config_json,
-    is_active,
-    sort_order,
-    version
-)
-VALUES (
-    'hug-banso-navi',
-    '*',
-    'example_rule',
-    'サンプル処理',
-    'example',
-    'webview-execute',
-    'https://example.com/*',
-    NULL,
-    NULL,
-    NULL,
-    JSON_OBJECT(),
-    1,
-    100,
-    1
-)
-ON DUPLICATE KEY UPDATE
-    name = VALUES(name),
-    category = VALUES(category),
-    action_type = VALUES(action_type),
-    target_url_pattern = VALUES(target_url_pattern),
-    target_selector = VALUES(target_selector),
-    parser_type = VALUES(parser_type),
-    function_name = VALUES(function_name),
-    config_json = VALUES(config_json),
-    is_active = VALUES(is_active),
-    version = version + 1;
-```
-
-次にrule IDを取得します。
-
-```sql
-SET @rule_id = (
-    SELECT id
-    FROM web_automation_rules
-    WHERE app_key = 'hug-banso-navi'
-      AND webview_key = '*'
-      AND rule_key = 'example_rule'
-    LIMIT 1
-);
-```
-
-flowを登録します。
-
-```sql
-INSERT INTO web_automation_flows (
-    app_key,
-    webview_key,
-    flow_key,
-    name,
-    description,
-    trigger_type,
-    target_url_pattern,
-    config_json,
-    is_active,
-    version,
-    created_at,
-    updated_at
-)
-VALUES (
-    'hug-banso-navi',
-    '*',
-    'example_flow',
-    'サンプルフロー',
-    'DB駆動によるサンプル処理',
-    'manual',
-    'https://example.com/*',
-    JSON_OBJECT(),
-    1,
-    1,
-    NOW(),
-    NOW()
-)
-ON DUPLICATE KEY UPDATE
-    name = VALUES(name),
-    description = VALUES(description),
-    trigger_type = VALUES(trigger_type),
-    target_url_pattern = VALUES(target_url_pattern),
-    config_json = VALUES(config_json),
-    is_active = VALUES(is_active),
-    version = version + 1,
-    updated_at = NOW();
-```
-
-flow IDを取得します。
-
-```sql
-SET @flow_id = (
-    SELECT id
-    FROM web_automation_flows
-    WHERE app_key = 'hug-banso-navi'
-      AND webview_key = '*'
-      AND flow_key = 'example_flow'
-    LIMIT 1
-);
-```
-
-flow stepを登録します。
-
-```sql
-INSERT INTO web_automation_flow_steps (
-    flow_id,
-    rule_id,
-    step_order,
-    step_key,
-    name,
-    step_type,
-    input_json,
-    config_json,
-    continue_on_error,
-    is_active,
-    created_at,
-    updated_at
-)
-VALUES (
-    @flow_id,
-    @rule_id,
-    10,
-    'execute_example',
-    'サンプル処理実行',
-    'rule',
-    JSON_OBJECT(
-        'textValue', '{{textValue}}'
-    ),
-    JSON_OBJECT(),
-    0,
-    1,
-    NOW(),
-    NOW()
-)
-ON DUPLICATE KEY UPDATE
-    rule_id = VALUES(rule_id),
-    step_key = VALUES(step_key),
-    name = VALUES(name),
-    step_type = VALUES(step_type),
-    input_json = VALUES(input_json),
-    config_json = VALUES(config_json),
-    continue_on_error = VALUES(continue_on_error),
-    is_active = VALUES(is_active),
-    updated_at = NOW();
-```
-
-最後に、
-
-```sql
-COMMIT;
-```
-
-してください。
-
-
-# 9. SQL作成時の重要事項
-
-既存DBには、
+例：
 
 ```text
-UNIQUE(app_key, webview_key, flow_key)
+attendance_fetch_today_users
 ```
 
-```text
-UNIQUE(app_key, webview_key, rule_key)
-```
+Renderer側では、
 
-```text
-UNIQUE(flow_id, step_order)
-```
-
-があります。
-
-そのため、それを前提にSQLを作ってください。
-
-既存データがある場合に重複INSERTで失敗しないSQLにしてください。
-
-
-# 10. config_jsonの設計
-
-意味のある単位でJSONを構造化してください。
-
-悪い例：
-
-```json
-{
-  "selector1": "...",
-  "selector2": "...",
-  "selector3": "...",
-  "value1": "...",
-  "value2": "..."
-}
-```
-
-できるだけ、
-
-```json
-{
-  "editor": {
-    "selectors": [],
-    "type": "textarea-or-contenteditable"
-  },
-  "sendButton": {
-    "selectors": [],
-    "fallback": "svg-path"
-  },
-  "wait": {
-    "timeoutMs": 10000,
-    "intervalMs": 100
+```javascript
+await executeFlowV2(
+  "attendance_fetch_today_users",
+  {
+    facilityId,
+    dateStr,
   }
-}
+);
 ```
 
-のように役割ごとに整理してください。
+のように呼び出します。
 
 
-# 11. 実行時入力値
+### entry_file
 
-処理実行時にしか分からない値をDBへ固定しないでください。
+DBに保存されている複数JSファイルのうち、
+最初に実行するファイルです。
 
-例えば、
+例：
 
 ```text
-児童ID
-施設ID
-日付
-入力文章
-recordId
-sendMail
-year
-month
+index.js
 ```
 
-などです。
 
-これらはrendererから、
+### entry_export
+
+entry_fileから呼び出すexportです。
+
+通常は、
+
+```text
+default
+```
+
+を使用します。
+
+
+### status
+
+以下を使用します。
+
+```text
+draft
+published
+disabled
+```
+
+Electronアプリから通常実行する場合は、
+
+```text
+published
+```
+
+のみ取得してください。
+
+`draft` は管理者が編集・確認するための状態です。
+
+
+### version
+
+Flowのバージョンを管理します。
+
+例：
+
+```text
+attendance_fetch_today_users version 1
+attendance_fetch_today_users version 2
+```
+
+アプリ実行時は、原則として最新の `published` versionを使用します。
+
+
+# 2-2. web_automation_files_v2
+
+Flowに属する仮想JavaScriptファイルを保存します。
+
+主な項目：
+
+```text
+id
+flow_id
+file_path
+file_type
+source_text
+module_type
+config_json
+content_hash
+is_active
+created_at
+updated_at
+```
+
+例：
+
+```text
+attendance_fetch_today_users
+
+index.js
+fetch.js
+parse.js
+```
+
+DB上では3行に分けて保存します。
+
+実行時に物理ファイルへ書き出すのではなく、
+`moduleLoader.js` がメモリ上の仮想モジュールとして構築します。
+
+
+## source_text
+
+JavaScriptファイル全文を保存します。
+
+V2では、業務処理単位のJSファイルをDBへ保存することを許可します。
+
+ただし、アプリ本体のElectron固有処理や、認証情報・秘密情報を直接source_textへ埋め込まないでください。
+
+
+## module_type
+
+現在は原則として、
+
+```text
+commonjs
+```
+
+を使用します。
+
+仮想モジュール間では、
 
 ```javascript
-{
-  childId,
-  facilityId,
-  date,
-  textValue
-}
+const { fetchAttendanceHtml } = await require("./fetch");
+const { extractColumnData } = await require("./parse");
 ```
 
-のようにflowへ渡します。
-
-DB側では、
-
-```json
-{
-  "childId": "{{childId}}",
-  "facilityId": "{{facilityId}}",
-  "date": "{{date}}",
-  "textValue": "{{textValue}}"
-}
-```
-
-のように参照してください。
+のように参照します。
 
 
-# 12. flow / step / rule の設定優先順位
+# 2-3. web_automation_flow_memos_v2
 
-既存コードを調査し、
+Flowごとの運用メモを保存します。
+
+主な項目：
 
 ```text
-flow.config_json
-step.config_json
-rule.config_json
+id
+flow_id
+memo
+sort_order
+is_active
+created_at
+updated_at
 ```
 
-をマージしている場合は、その優先順位を必ず確認してください。
-
-勝手に優先順位を変更しないでください。
-
-例えば同じ
+用途例：
 
 ```text
-detectMailDialog
+HUGのHTML構造変更履歴
+selector変更理由
+仕様上の注意事項
+調査メモ
+一時対応内容
 ```
 
-が複数階層に存在する場合、
-
-実際のexecutorがどの値を採用するかを確認してからSQLを作ってください。
+Flowのversionごとに別メモを保持できます。
 
 
-# 13. renderer側の目標形
+# 2-4. web_automation_execution_logs_v2
 
-最終的に個別機能側では、できるだけ次の程度にしてください。
+V2 Flowの実行結果を保存します。
 
-```javascript
-export async function sendSomething({
-  textValue,
-}) {
-  return executeWebAutomationFlow({
-    flowKey: 'xxxx',
-    input: {
-      textValue,
-    },
-  });
-}
-```
-
-個別機能側へ、
-
-```javascript
-const selectors = [...]
-const timeout = 10000
-const targetUrl = ...
-```
-
-などを再度ハードコードしないでください。
-
-
-# 14. ただし無理にDB化しないこと
-
-既存executorでは表現できず、新しい汎用機能を追加する必要がある場合は、
-
-DBへ巨大なJavaScript文字列を保存するのではなく、
-
-renderer側の共通executorへ新しい実行タイプを追加してください。
-
-例えば、
+基本的に、
 
 ```text
-ai-prompt-send
-dom-input-and-click
-wait-for-element
-click
-fetch
-post
+1 executeFlowV2()
+=
+1 execution log
 ```
 
-のような汎用executorです。
+です。
 
-そしてDBから、
-
-```json
-{
-  "editorSelectors": [],
-  "sendButtonSelectors": []
-}
-```
-
-を渡してください。
-
-
-# 15. ログ
-
-DB駆動処理は既存の
-
-```text
-web_automation_execution_logs
-```
-
-へ実行結果を保存してください。
-
-最低限、
+主な項目：
 
 ```text
 execution_uuid
+app_key
 flow_id
 flow_key
-flow_step_id
-step_key
-rule_id
-rule_key
-webview_id
-target_url
-action_type
+flow_version
+entry_file
+entry_export
 input_json
 result_json
 debug_json
@@ -866,200 +298,1347 @@ error_message
 started_at
 finished_at
 duration_ms
+created_at
 ```
 
-を既存方式に合わせて保存してください。
+ログは14日以上前のものを定期削除します。
 
-既存ログ処理がある場合、新しい独自ログ方式は作らないでください。
+現在の定期削除対象は、
 
+```text
+web_automation_execution_logs_v2
+```
 
-# 16. 修正後の確認
-
-以下を確認してください。
-
-1. DBに必要なflow/rule/stepが存在する
-2. rendererからflow_keyで取得できる
-3. stepのrule_idが正しく紐付いている
-4. input変数が展開される
-5. 対象WebViewが正しい
-6. 対象URLチェックが機能する
-7. DOM selectorがDBから取得される
-8. 処理成功結果がrendererへ戻る
-9. 失敗時に理由が分かる
-10. execution_logsへ記録される
-11. DBのselectorを変更するとrendererを変更せず反映される
+です。
 
 
-# 17. 最終的に提出するもの
+# 3. V2共通実行基盤
 
-以下をすべて作成してください。
+Renderer側の共通実行基盤は以下です。
+
+```text
+renderer/
+└─ src/
+   └─ components/
+      └─ WebAutomationV2/
+         ├─ executeFlowV2.js
+         ├─ moduleLoader.js
+         ├─ helpers.js
+         ├─ index.js
+         └─ runtime/
+```
+
+`runtime/` は物理ファイル保存先ではありません。
+
+DB上の複数ファイルをメモリ上で仮想的に復元して実行するための概念上の領域です。
+
+
+# 4. executeFlowV2 の基本動作
+
+基本フロー：
+
+```text
+UI / 個別機能
+↓
+executeFlowV2(flowKey, input)
+↓
+Preload
+↓
+Main
+↓
+Laravel API
+↓
+最新published Flow取得
+↓
+Flowに属するfiles[]を一括取得
+↓
+Rendererへ返却
+↓
+moduleLoaderで仮想モジュール構築
+↓
+entry_file実行
+↓
+必要に応じてWebView処理
+↓
+Renderer側処理
+↓
+最終result
+↓
+個別機能へ返却
+↓
+Redux / AppState
+```
+
+個別機能側は、できる限り次の程度にしてください。
+
+```javascript
+const result =
+  await executeFlowV2(
+    "attendance_fetch_today_users",
+    {
+      facilityId,
+      dateStr,
+    }
+  );
+```
+
+個別機能側に、
+
+```text
+対象URL
+selector
+HTML解析ロジック
+fetch処理
+WebView操作
+```
+
+を再度ハードコードしないでください。
+
+
+# 5. DBへ移すもの
+
+V2では、対象業務に固有の処理は原則としてDBの仮想JSファイルへ移します。
+
+例：
+
+```text
+対象URL
+query parameter
+fetch設定
+POST設定
+selector
+DOM解析
+HTML解析
+サイト固有のJavaScript関数呼び出し
+MutationObserver
+retry
+timeout
+成功判定
+失敗判定
+レスポンス整形
+業務処理の実行順
+```
+
+例えば、
+
+```text
+index.js
+fetch.js
+parse.js
+```
+
+のように役割ごとに分割して保存して構いません。
+
+
+# 6. Renderer / exe側へ残すもの
+
+Electron固有の共通基盤はexe側に残します。
+
+例：
+
+```text
+executeFlowV2
+Flow Bundle取得
+moduleLoader
+仮想require解決
+WebView取得
+executeJavaScript
+Laravel API通信
+JWT認証
+execution log送信
+標準timeout
+標準エラー処理
+Redux / AppState更新
+```
+
+つまり、
+
+```text
+何をするか
+→ DB
+
+どうDBファイル群を読み込み・安全に実行するか
+→ WebAutomationV2共通基盤
+```
+
+です。
+
+
+# 7. helpers の利用
+
+DB側JavaScriptからElectron固有機能へ直接依存しすぎないよう、
+共通 `helpers` を使用します。
+
+例：
+
+```javascript
+helpers.getHugWebview()
+helpers.executeInWebview()
+helpers.executeFunctionInWebview()
+```
+
+DB側コードで、
+
+```javascript
+document.querySelector("webview")
+```
+
+などを直接行ってWebViewを探さないでください。
+
+WebView取得方法が変わっても、helpers側だけ変更すれば済む構成にします。
+
+
+# 8. 仮想モジュールの基本形式
+
+例：
+
+## index.js
+
+```javascript
+const {
+  fetchAttendanceHtml
+} = await require("./fetch");
+
+const {
+  extractColumnData
+} = await require("./parse");
+
+module.exports = async function execute({
+  input,
+  helpers,
+  config,
+  flow,
+}) {
+  const raw =
+    await fetchAttendanceHtml({
+      input,
+      helpers,
+      config,
+    });
+
+  const extracted =
+    await extractColumnData(
+      raw.html,
+      config
+    );
+
+  return {
+    ...raw,
+    extracted,
+  };
+};
+```
+
+
+## fetch.js
+
+WebView内で実行すべき処理を担当します。
+
+```javascript
+exports.fetchAttendanceHtml =
+  async function ({
+    input,
+    helpers,
+    config,
+  }) {
+
+    return helpers.executeFunctionInWebview({
+      functionText: "...",
+      args: [input, config],
+    });
+  };
+```
+
+
+## parse.js
+
+Renderer側でHTML解析などを行います。
+
+```javascript
+exports.extractColumnData =
+  async function (
+    html,
+    config
+  ) {
+    const parser =
+      new DOMParser();
+
+    const doc =
+      parser.parseFromString(
+        html,
+        "text/html"
+      );
+
+    // HTML解析
+
+    return {
+      success: true,
+      data: [],
+    };
+  };
+```
+
+
+# 9. ファイル間の実行順
+
+V2では、実行順をStepテーブルへ保存しません。
+
+JavaScript自身が処理順を持ちます。
+
+例えば、
+
+```javascript
+const raw =
+  await fetchAttendanceHtml(...);
+
+const parsed =
+  await extractColumnData(
+    raw.html
+  );
+
+return parsed;
+```
+
+と書けば、
+
+```text
+WebViewでHTML取得
+↓
+RendererでHTML解析
+↓
+完成データをreturn
+```
+
+という順番になります。
+
+つまり、
+
+```text
+web_automation_steps_v2
+web_automation_parsers_v2
+web_automation_scripts_v2
+```
+
+のような分割テーブルは現在のV2では使用しません。
+
+
+# 10. 今日の利用者取得の現在のV2例
+
+flow_key：
+
+```text
+attendance_fetch_today_users
+```
+
+仮想ファイル：
+
+```text
+attendance_fetch_today_users
+├─ index.js
+├─ fetch.js
+└─ parse.js
+```
+
+処理：
+
+```text
+GetTodayUsersChildren
+↓
+useAttendanceFetch
+↓
+executeFlowV2(
+  "attendance_fetch_today_users",
+  {
+    facilityId,
+    dateStr
+  }
+)
+↓
+DB Flow取得
+↓
+index.js / fetch.js / parse.js取得
+↓
+メモリ上で仮想モジュール構築
+↓
+index.js実行
+↓
+fetch.js
+  → HUG WebView
+  → attendance.php取得
+  → table HTML取得
+↓
+parse.js
+  → HTML解析
+  → 児童ID
+  → 氏名
+  → 入室
+  → 退室
+  → edit_id
+  → edit_s_id
+  → edit_url
+↓
+result
+↓
+Redux
+↓
+AppState
+```
+
+個別機能側は、HTML取得や解析処理を持たない状態を目標にしてください。
+
+
+# 11. Laravel API
+
+V2実行用API：
+
+```text
+GET   /api/web-automation-v2/flows
+GET   /api/web-automation-v2/flows/{flowKey}
+POST  /api/web-automation-v2/execution-logs
+PATCH /api/web-automation-v2/execution-logs/{id}
+```
+
+通常のFlow取得APIは、
+
+```text
+status = published
+```
+
+のみ返してください。
+
+一般ユーザーが `draft` を取得できる構成にしないでください。
+
+
+# 12. V2管理者API
+
+管理者用API：
+
+```text
+GET   /api/web-automation-v2/admin/flows
+GET   /api/web-automation-v2/admin/flows/{id}
+PATCH /api/web-automation-v2/admin/flows/{id}
+GET   /api/web-automation-v2/admin/execution-logs
+```
+
+管理者APIでは、
+
+```text
+Flow本体
+files[]
+deleted_file_ids[]
+memos[]
+deleted_memo_ids[]
+```
+
+を扱います。
+
+更新時はLaravel側でDBトランザクションを使用してください。
+
+途中で失敗した場合に、
+
+```text
+Flowだけ更新
+JSファイルだけ更新
+Memoだけ更新
+```
+
+のような不整合が起きないようにしてください。
+
+
+# 13. Laravel側の権限
+
+V2管理機能は管理者のみ編集可能にします。
+
+Laravel側でも必ず、
+
+```php
+$staff->isAdmin()
+```
+
+等で確認してください。
+
+Renderer側でボタンを非表示にするだけでは不十分です。
+
+以下は管理者以外から変更不可にしてください。
+
+```text
+Flow
+source_text
+Files
+Memos
+status
+version
+published / draft
+```
+
+
+# 14. HTTPS / 認証
+
+Electron → Laravel API通信はHTTPSを使用してください。
+
+Laravel APIはJWT等の既存認証経路を使用します。
+
+DBの `source_text` は実行可能コードなので、
+
+```text
+未認証アクセス
+一般ユーザーによる編集
+直接公開APIからの更新
+```
+
+を許可しないでください。
+
+
+# 15. published / draft 運用
+
+推奨運用：
+
+```text
+管理者がdraftを作成
+↓
+Filesを編集
+↓
+動作確認
+↓
+publishedへ変更
+↓
+全Electronアプリが次回取得時から新versionを使用
+```
+
+仕様変更時にexe更新は不要です。
+
+ただし、
+
+```text
+executeFlowV2
+moduleLoader
+helpers
+Preload API
+Main IPC
+Electron権限
+```
+
+など、共通実行基盤そのものを変更する場合はアプリ更新が必要です。
+
+
+# 16. version管理
+
+同じ `flow_key` でも複数versionを保持できます。
+
+例：
+
+```text
+attendance_fetch_today_users v1
+attendance_fetch_today_users v2
+```
+
+新versionを公開したあと問題が発生した場合、
+以前のversionを再度publishedへ戻せる運用を想定してください。
+
+
+# 17. content_hash
+
+`web_automation_files_v2.content_hash` には、
+可能であれば `source_text` のSHA-256を保存します。
+
+用途：
+
+```text
+改ざん・不整合確認
+キャッシュ判定
+変更確認
+デバッグ
+```
+
+Laravel側で保存時に自動算出する方式を推奨します。
+
+
+# 18. main / preload のV2実行API
+
+Rendererから使用するV2実行API：
+
+```javascript
+window.electronAPI.webAutomationV2_getFlowBundle(...)
+window.electronAPI.webAutomationV2_executionLogStart(...)
+window.electronAPI.webAutomationV2_executionLogFinish(...)
+```
+
+Main側ではLaravel APIへ接続します。
+
+V1 APIが残っているプロジェクトでは、
+V1を壊さずV2を並行して使用してください。
+
+
+# 19. main / preload のV2管理API
+
+設定モーダル管理者タブ用：
+
+```javascript
+window.electronAPI.laravel_webAutomationV2Flows_getAll(...)
+window.electronAPI.laravel_webAutomationV2Flow_get(...)
+window.electronAPI.laravel_webAutomationV2Flow_update(...)
+window.electronAPI.laravel_webAutomationV2ExecutionLogs_getAll(...)
+```
+
+互換API名が存在する場合：
+
+```javascript
+window.electronAPI.webAutomationV2_adminFlowsGetAll(...)
+window.electronAPI.webAutomationV2_adminFlowGet(...)
+window.electronAPI.webAutomationV2_adminFlowUpdate(...)
+window.electronAPI.webAutomationV2_adminExecutionLogsGetAll(...)
+```
+
+既に最新V2 IPCが存在する場合、
+同じ用途の別IPCを追加しないでください。
+
+
+# 20. 管理画面
+
+管理画面：
+
+```text
+renderer/src/components/SettingsModal/tabs/Admin/WebAutomation
+```
+
+現在のV2管理画面は以下を扱います。
+
+```text
+Flows
+Files
+Memos
+Logs
+```
+
+旧V2の、
+
+```text
+Rules
+Steps
+Parsers
+```
+
+前提の画面を残さないでください。
+
+
+# 21. SQL作成ルール
+
+V2登録SQLは原則としてトランザクション化してください。
+
+```sql
+START TRANSACTION;
+```
+
+完了時：
+
+```sql
+COMMIT;
+```
+
+固定AUTO_INCREMENT IDを根拠なく指定しないでください。
+
+Flow登録後、
+
+```sql
+SET @flow_id = LAST_INSERT_ID();
+```
+
+またはキー検索で `flow_id` を取得してください。
+
+
+# 22. 照合順序
+
+現在のDBでは、
+DB既定照合順序とV2テーブルの照合順序が異なる場合があります。
+
+V2登録SQLの冒頭では原則として、
+
+```sql
+SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci;
+SET collation_connection = 'utf8mb4_unicode_ci';
+```
+
+を指定してください。
+
+変数も必要に応じて、
+
+```sql
+SET @app_key =
+    CONVERT('hug-banso-navi' USING utf8mb4)
+    COLLATE utf8mb4_unicode_ci;
+
+SET @flow_key =
+    CONVERT('attendance_fetch_today_users' USING utf8mb4)
+    COLLATE utf8mb4_unicode_ci;
+```
+
+としてください。
+
+MariaDBで、
+
+```text
+Illegal mix of collations
+```
+
+を起こさないSQLにしてください。
+
+
+# 23. DB登録SQLの基本形
+
+例：
+
+```sql
+SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci;
+SET collation_connection = 'utf8mb4_unicode_ci';
+
+START TRANSACTION;
+
+SET @app_key =
+    CONVERT('hug-banso-navi' USING utf8mb4)
+    COLLATE utf8mb4_unicode_ci;
+
+SET @flow_key =
+    CONVERT('example_flow' USING utf8mb4)
+    COLLATE utf8mb4_unicode_ci;
+
+SET @flow_version = 1;
+
+INSERT INTO web_automation_flows_v2 (
+    app_key,
+    flow_key,
+    name,
+    description,
+    entry_file,
+    entry_export,
+    engine_version,
+    config_json,
+    timeout_ms,
+    version,
+    status,
+    published_at
+)
+VALUES (
+    @app_key,
+    @flow_key,
+    'サンプルFlow',
+    'サンプル',
+    'index.js',
+    'default',
+    1,
+    JSON_OBJECT(),
+    30000,
+    @flow_version,
+    'draft',
+    NULL
+);
+
+SET @flow_id = LAST_INSERT_ID();
+
+INSERT INTO web_automation_files_v2 (
+    flow_id,
+    file_path,
+    file_type,
+    source_text,
+    module_type,
+    content_hash,
+    is_active
+)
+VALUES (
+    @flow_id,
+    'index.js',
+    'javascript',
+    'module.exports = async function (...) { ... };',
+    'commonjs',
+    SHA2(
+      'module.exports = async function (...) { ... };',
+      256
+    ),
+    1
+);
+
+COMMIT;
+```
+
+初回登録とversion追加を混同しないでください。
+
+既存versionを消してよいのか、
+新versionとして追加するのかを必ず確認してください。
+
+
+# 24. 実行時入力値
+
+実行時にしか分からない値をDBへ固定しないでください。
+
+例：
+
+```text
+childId
+facilityId
+dateStr
+recordId
+sendMail
+year
+month
+textValue
+```
+
+Rendererから、
+
+```javascript
+await executeFlowV2(
+  flowKey,
+  {
+    childId,
+    facilityId,
+    dateStr,
+  }
+);
+```
+
+として渡します。
+
+DB側JSでは、
+
+```javascript
+input.childId
+input.facilityId
+input.dateStr
+```
+
+として参照します。
+
+
+# 25. DB側JSで避けるもの
+
+以下は原則として避けてください。
+
+```text
+@/ 形式のVite alias import
+ビルド時にしか存在しないimport
+Electron Main APIへの直接アクセス
+秘密鍵・API Keyの埋め込み
+物理ファイルへの一時書き出し
+renderer/srcへの実ファイル生成
+```
+
+DB側ファイル間参照は、
+
+```javascript
+await require("./fetch")
+await require("./parse")
+```
+
+のような仮想requireを使用します。
+
+
+# 26. DOMParserについて
+
+Renderer側のDB JavaScriptでHTML解析する場合、
+
+```javascript
+const parser = new DOMParser();
+```
+
+を使用できます。
+
+そのため、
+
+```text
+WebView
+→ HTML取得
+→ Renderer
+→ DOMParserで解析
+```
+
+という処理をDB側仮想JSのみで構成できます。
+
+
+# 27. WebView処理
+
+WebView内でサイトCookieやDOMが必要な処理は、
+`helpers.executeFunctionInWebview()` 等を使用します。
+
+例：
+
+```javascript
+const webviewFunction = async (config) => {
+  const response =
+    await fetch(
+      config.url,
+      {
+        credentials: "include",
+      }
+    );
+
+  return {
+    html:
+      await response.text(),
+  };
+};
+
+const result =
+  await helpers.executeFunctionInWebview({
+    functionText:
+      webviewFunction.toString(),
+    args: [config],
+  });
+```
+
+WebView処理とRenderer処理を別テーブルStepで管理する必要はありません。
+
+同じ仮想Flow内のJavaScriptが順番を管理します。
+
+
+# 28. ログ
+
+V2処理は、
+
+```text
+web_automation_execution_logs_v2
+```
+
+へ記録してください。
+
+最低限、
+
+```text
+execution_uuid
+flow_key
+flow_version
+entry_file
+entry_export
+input_json
+result_json
+status
+error_code
+error_message
+started_at
+finished_at
+duration_ms
+```
+
+を保存します。
+
+失敗時には、
+ユーザーが原因を追える `error_message` を必ず返してください。
+
+
+# 29. ログの定期削除
+
+Laravelでは、
+
+```text
+app:clean-web-automation-logs
+```
+
+で、
+
+```text
+web_automation_execution_logs_v2
+```
+
+の14日以上前のログを削除します。
+
+例：
+
+```php
+$deletedCount =
+    DB::table(
+        'web_automation_execution_logs_v2'
+    )
+    ->where(
+        'started_at',
+        '<=',
+        now()->subDays(14)
+    )
+    ->delete();
+```
+
+スケジュール例：
+
+```php
+Schedule::command(
+    'app:clean-web-automation-logs'
+)
+    ->dailyAt('03:30')
+    ->withoutOverlapping();
+```
+
+
+# 30. 修正前に必ず確認するもの
+
+V2移行を依頼されたら、コードを書き換える前に以下を確認してください。
+
+### A. 現行Rendererコード
+
+```text
+処理開始関数
+引数
+戻り値
+WebView
+URL
+fetch
+POST
+selector
+DOM解析
+HTML解析
+MutationObserver
+retry
+timeout
+成功判定
+失敗判定
+Redux更新
+AppState更新
+```
+
+### B. 既存WebAutomationV2
+
+```text
+renderer/src/components/WebAutomationV2
+executeFlowV2
+moduleLoader
+helpers
+```
+
+### C. Main / Preload
+
+```text
+webAutomationV2_getFlowBundle
+executionLogStart
+executionLogFinish
+```
+
+### D. Laravel V2
+
+```text
+Route
+Controller
+Model
+Filament
+Flow
+Files
+Memos
+Logs
+```
+
+### E. DB
+
+```text
+web_automation_flows_v2
+web_automation_files_v2
+web_automation_flow_memos_v2
+web_automation_execution_logs_v2
+```
+
+
+# 31. ChatGPTへ渡すファイル
+
+V2化を依頼するときは、可能な限り以下を渡してください。
+
+## 必須1：対象Rendererコード
+
+今回V2化する処理一式。
+
+呼び出し元も必要です。
+
+
+## 必須2：WebAutomationV2共通基盤
+
+```text
+renderer/src/components/WebAutomationV2
+```
+
+
+## 必須3：Main / Preload
+
+V2 IPC関連。
+
+
+## 必須4：Laravel V2
+
+```text
+Route
+Controller
+Models
+Filament Resources
+```
+
+
+## 必須5：DB SQL
+
+少なくとも、
+
+```text
+web_automation_flows_v2
+web_automation_files_v2
+web_automation_flow_memos_v2
+web_automation_execution_logs_v2
+```
+
+の構造が分かるSQL。
+
+
+## 必須6：既に正常動作しているV2 Flow
+
+可能であれば、
+`attendance_fetch_today_users` 等の正常動作中V2を参考として渡してください。
+
+
+# 32. ChatGPTに最初にやらせる解析
+
+いきなり修正しないでください。
+
+まず、
+
+```text
+現行処理
+↓
+V2化後
+```
+
+を比較してください。
+
+最低限、
+
+```text
+1. 現行処理
+2. DBへ移す処理
+3. exe側へ残す処理
+4. flow_key
+5. 仮想ファイル構成
+6. entry_file
+7. helpersで必要な機能
+8. Main/Preload変更の必要性
+9. Laravel変更の必要性
+10. SQLの概要
+```
+
+を整理してください。
+
+
+# 33. V2化後の目標形
+
+個別機能側：
+
+```javascript
+const result =
+  await executeFlowV2(
+    "example_flow",
+    input
+  );
+```
+
+DB：
+
+```text
+example_flow
+├─ index.js
+├─ fetch.js
+├─ parse.js
+└─ 必要に応じてその他.js
+```
+
+共通側：
+
+```text
+executeFlowV2
+↓
+Flow Bundle取得
+↓
+moduleLoader
+↓
+entry_file
+↓
+result
+```
+
+
+# 34. 禁止事項
+
+以下は行わないでください。
+
+- V2なのに新たにFlow → Step → Rule方式を作る
+- `web_automation_steps_v2` を追加する
+- `web_automation_parsers_v2` を復活させる
+- `web_automation_scripts_v2` を別途追加する
+- DB仮想JSを物理ファイルとしてrenderer/srcへ書き出す
+- app.asar内へ実行時ファイルを書き込む
+- DB側JSでVite alias importを前提にする
+- 同じselectorやURLをRendererとDBへ二重定義する
+- 既存V2 IPCがあるのに同じ用途の別IPCを作る
+- 管理者以外がsource_textを変更できるAPIを作る
+- 通常実行APIからdraft Flowを返す
+- V1処理を理由なく削除する
+- DB AUTO_INCREMENT IDを根拠なく決め打ちする
+- 本番DBの既存versionを確認せずDELETEする
+- 正常動作中の処理を推測だけで変更する
+
+
+# 35. 最終的に提出するもの
+
+V2化作業では、必要に応じて以下を提出してください。
 
 ### 1. 現状分析
 
-現在のハードコード処理がどのように動いているか。
+現在の処理フロー。
 
 
-### 2. DB駆動化設計
+### 2. V2設計
 
 ```text
 UI
-→ renderer
-→ flow
-→ flow_steps
-→ rule
-→ executor
-→ WebView
+→ executeFlowV2
+→ DB Flow Bundle
+→ moduleLoader
+→ entry_file
+→ WebView / Renderer処理
+→ result
 ```
-
-の流れ。
 
 
 ### 3. DB登録SQL
 
-そのまま実行できる完全なSQL。
+そのまま実行可能なSQL。
 
 
-### 4. renderer修正版
+### 4. DB仮想JSファイル
 
-今回変更が必要なファイルをすべて修正。
+例：
 
-
-### 5. main/preload修正版
-
-必要な場合のみ変更。
-
-既存IPCで足りる場合は変更しない。
-
-
-### 6. 新規共通executor
-
-既存executorでは対応できない場合のみ作成。
+```text
+index.js
+fetch.js
+parse.js
+```
 
 
-### 7. 変更ファイル一覧
+### 5. Renderer修正版
+
+個別機能を `executeFlowV2()` 呼び出しへ変更。
+
+
+### 6. Main / Preload修正版
+
+必要な場合のみ。
+
+
+### 7. Laravel修正版
+
+必要な場合のみ。
+
+
+### 8. 変更ファイル一覧
+
+例：
 
 ```text
 変更:
 - xxx.js
-- xxx.jsx
 
 新規:
 - xxx.js
 
 変更不要:
 - preload.js
-- main.js
 ```
 
-という形で提示。
 
-
-### 8. 動作確認方法
+### 9. 動作確認方法
 
 具体的な確認手順。
 
 
-# 18. 禁止事項
+# 36. 今回の具体的な依頼テンプレート
 
-以下は行わないでください。
-
-- 正常動作している既存DB駆動処理を全面的に作り直す
-- DBのAUTO_INCREMENT IDを根拠なく決め打ちする
-- DBへ巨大なJavaScriptコード全文を保存する
-- `eval` を前提にする
-- rendererとDBへ同じselectorを二重定義する
-- 既存IPCがあるのに別IPCを新設する
-- 既存executorがあるのに同じ処理を再実装する
-- DB化したはずの設定値をrendererへ残す
-- 現在正常に動作している処理を推測だけで変更する
-
-
-# 19. 今回の具体的な依頼
-
-今回DB駆動化したい対象は以下です。
-
-【ここに対象を書く】
-
-例：
+今回V2化したい対象：
 
 ```text
-DeepSeekへのプロンプト送信処理
+【ここに対象を書く】
 ```
 
 現在の実装：
 
-【対象ファイルを添付】
+```text
+【対象Rendererファイルを添付】
+```
 
-正常に動いているDB駆動実装：
+WebAutomationV2：
 
-【AttendanceActionなどを添付】
+```text
+【renderer/src/components/WebAutomationV2 を添付】
+```
+
+Main / Preload：
+
+```text
+【関連ファイルを添付】
+```
+
+Laravel：
+
+```text
+【Route / Controller / Model / Filamentを添付】
+```
 
 DB：
 
-【web_automation関連テーブルを含むSQLを添付】
+```text
+【V2関連テーブルを含むSQLを添付】
+```
 
-main/preload/共通executor：
+参考になる正常動作中V2：
 
-【関連コードを添付】
-
+```text
+【attendance_fetch_today_users等を添付】
+```
 
 まずコードを書き換える前に、
 
+```text
 1. 現行処理
-2. DBへ移す設定
-3. rendererへ残す処理
+2. DBへ移す処理
+3. exeへ残す処理
 4. 使用するflow_key
-5. 使用するrule_key
-6. 必要なaction_type
-7. 既存executorで対応可能か
-8. main/preload変更の必要性
-9. 作成するSQLの概要
+5. 仮想JSファイル構成
+6. entry_file / entry_export
+7. helpersで必要な機能
+8. Main / Preload変更の必要性
+9. Laravel変更の必要性
+10. 作成するSQLの概要
+```
 
-を整理して提示してください。
+を提示してください。
 
-その分析後、実際のSQLと修正版コードを作成してください。
+その分析後、
+SQL・DB仮想JS・Renderer修正版を作成してください。
 
-# 20. 管理画面の配置と renderer API
 
-## 管理画面の配置
+# 37. 重要な設計方針
 
-Web自動化の管理画面は以下に配置しています。
+WebAutomation V2の目的は、
 
 ```text
-renderer/src/components/SettingsModal/tabs/Admin/WebAutomation
+サイト仕様変更
+↓
+管理者がDB上のFlow / JSファイルを変更
+↓
+published
+↓
+各Electronアプリが次回実行時に取得
+↓
+アプリ再配布なしで反映
 ```
 
-この画面は、Web自動化設定の確認・編集と、ChatGPTへ渡すDB駆動化指示書のコピー／Markdown出力に使用します。
+です。
 
+したがって、
 
-## renderer から使用する electronAPI
+```text
+変更頻度が高い業務処理
+→ DB
 
-Web自動化のRule / Flowを取得・更新するときは、既存の以下のAPIを使用します。
-
-### Rule
-
-```javascript
-window.electronAPI.laravel_webAutomationRules_getAll(params)
-window.electronAPI.laravel_webAutomationRule_get(ruleKey, params)
-window.electronAPI.laravel_webAutomationRule_update(ruleKey, data, params)
+共通実行基盤
+→ Electronアプリ
 ```
 
-### Flow
-
-```javascript
-window.electronAPI.laravel_webAutomationFlows_getAll(params)
-window.electronAPI.laravel_webAutomationFlow_get(flowKey, params)
-```
-
-基本的なscopeは以下です。
-
-```javascript
-const params = {
-  app_key: 'hug-banso-navi',
-  webview_key: '*',
-}
-```
-
-既存APIで対応できる場合、新しいIPCや別APIを追加しないでください。
-
-main / preload を変更する前に、上記APIと既存のWeb自動化共通処理で対応できないか確認してください。
+という境界を崩さないでください。

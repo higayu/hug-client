@@ -1,0 +1,10 @@
+# 専門的支援 月次取得 WebAutomation V2移行
+
+V2 Flow:
+- professional_support_attendance_fetch
+- professional_support_addition_count_fetch
+- professional_support_record_list_fetch
+
+まとめて登録: DB/professional_support_fetch_v2_all.sql
+
+Rendererの月次同期は3 FlowをexecuteFlowV2で順に実行し、既存 buildProfessionalSupportSyncPayload() と laravel_procedure_syncProfessionalSupportMonth はそのまま使用します。

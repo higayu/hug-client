@@ -11,8 +11,8 @@ export const ADMIN_SECTIONS = [
   },
   {
     id: ADMIN_SECTION_IDS.WEB_AUTOMATION,
-    label: 'Web自動化',
+    label: 'Web自動化 V2',
     description:
-      'web_automation_rules / flows / flow_steps を確認・編集します。',
+      'web_automation_flows_v2 / files_v2 / flow_memos_v2 / execution_logs_v2 を確認・編集します。',
   },
 ]

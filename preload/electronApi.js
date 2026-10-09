@@ -180,6 +180,61 @@ function createElectronApi(ipcRenderer, isDebugMode) {
         data,
       ),
 
+    // ---- Web自動化 V2 管理者用 ----
+    // SettingsModal 管理者タブから利用する。
+    laravel_webAutomationV2Flows_getAll: (params = {}) =>
+      ipcRenderer.invoke(
+        "laravel:web-automation-v2:admin:flows:list",
+        params,
+      ),
+
+    laravel_webAutomationV2Flow_get: (flowIdOrKey, params = {}) =>
+      ipcRenderer.invoke(
+        "laravel:web-automation-v2:admin:flow:get",
+        flowIdOrKey,
+        params,
+      ),
+
+    laravel_webAutomationV2Flow_update: (flowId, data = {}) =>
+      ipcRenderer.invoke(
+        "laravel:web-automation-v2:admin:flow:update",
+        flowId,
+        data,
+      ),
+
+    laravel_webAutomationV2ExecutionLogs_getAll: (params = {}) =>
+      ipcRenderer.invoke(
+        "laravel:web-automation-v2:admin:execution-logs:list",
+        params,
+      ),
+
+    // SettingsModal側の互換名。
+    webAutomationV2_adminFlowsGetAll: (params = {}) =>
+      ipcRenderer.invoke(
+        "laravel:web-automation-v2:admin:flows:list",
+        params,
+      ),
+
+    webAutomationV2_adminFlowGet: (flowIdOrKey, params = {}) =>
+      ipcRenderer.invoke(
+        "laravel:web-automation-v2:admin:flow:get",
+        flowIdOrKey,
+        params,
+      ),
+
+    webAutomationV2_adminFlowUpdate: (flowId, data = {}) =>
+      ipcRenderer.invoke(
+        "laravel:web-automation-v2:admin:flow:update",
+        flowId,
+        data,
+      ),
+
+    webAutomationV2_adminExecutionLogsGetAll: (params = {}) =>
+      ipcRenderer.invoke(
+        "laravel:web-automation-v2:admin:execution-logs:list",
+        params,
+      ),
+
     // ---- Q&A・障害対応ナレッジ ----
     laravel_troubleshootingKnowledge_getAll: (params = {}) =>
       ipcRenderer.invoke(

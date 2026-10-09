@@ -13,13 +13,7 @@ import {
 } from '@/store/slices/appStateSlice';
 
 
-import {
-  getActiveWebview,
-} from '@/utils/webview/webviewState.js';
-
-import {
-  fetchStaffData,
-} from './fetchStaffData.js';
+import { executeFlowV2 } from '@/components/WebAutomationV2';
 
 export default function StaffUpdateButton({
   facilityId: facilityIdProp,
@@ -50,25 +44,6 @@ export default function StaffUpdateButton({
     isLoading ||
     !facilityId;
 
-  /**
-   * 実行時点のWebViewを取得する。
-   *
-   * webviewには以下のどちらが渡されても対応する。
-   * ・WebView要素
-   * ・WebViewを返す関数
-   */
-  const resolveWebview = () => {
-    const targetWebview =
-      typeof webview === 'function'
-        ? webview()
-        : webview;
-
-    return (
-      targetWebview ??
-      getActiveWebview()
-    );
-  };
-
   const handleClick = async () => {
     if (isDisabled) {
       return;
@@ -84,32 +59,11 @@ export default function StaffUpdateButton({
     );
 
     try {
-      const activeWebview =
-        resolveWebview();
-
-      if (!activeWebview) {
-        throw new Error(
-          'HUGのWebViewが見つかりません。HUGの画面を開いてから、もう一度実行してください。',
-        );
-      }
-
-      if (
-        typeof activeWebview.executeJavaScript !==
-        'function'
-      ) {
-        throw new Error(
-          '有効なHUGのWebViewを取得できませんでした。HUGの画面を開き直してから、もう一度実行してください。',
-        );
-      }
-
-      const result = await fetchStaffData(
-        (page, maxPage) => {
-          setLabel(
-            `職員取得 ${page}/${maxPage}`,
-          );
+      const result = await executeFlowV2(
+        'staff_fetch',
+        {
+          facilityId,
         },
-        facilityId,
-        activeWebview,
       );
 
       console.groupCollapsed(

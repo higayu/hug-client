@@ -86,10 +86,7 @@ export async function loadAllSyncAutomation() {
   }
 
   const requiredRuleKeys = [
-    'staff_fetch',
-    'children_fetch',
-    'personal_record_list_fetch',
-    'personal_record_detail_fetch',
+    // 全4取得処理はWebAutomation V2へ移行済み。
   ]
 
   const missing = requiredRuleKeys.filter(

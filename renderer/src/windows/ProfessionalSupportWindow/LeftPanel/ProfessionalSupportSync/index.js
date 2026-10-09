@@ -1,8 +1,6 @@
 import { useCallback, useState } from 'react'
 
-import { buildAttendanceFetchScript } from '../../attendance'
-import { buildAdditionCountFetchScript } from '../../additionCount'
-import { buildAdditionListFetchScript } from '../../additionList'
+import { executeFlowV2 } from '@/components/WebAutomationV2'
 import { buildProfessionalSupportSyncPayload } from '../../syncProfessionalSupport'
 
 export default function useProfessionalSupportSync({
@@ -27,13 +25,6 @@ export default function useProfessionalSupportSync({
       return false
     }
 
-    const webview = webviewRef?.current
-
-    if (!webview) {
-      const message = 'HUGセッション確認用WebViewを取得できません。'
-      setSyncError(message)
-      return false
-    }
 
     const syncApi =
       window.electronAPI?.laravel_procedure_syncProfessionalSupportMonth
@@ -51,33 +42,24 @@ export default function useProfessionalSupportSync({
     onFetchStart?.()
 
     try {
-      // 同じWebViewセッションを使用するため、HUGへのPOSTは順番に実行する。
-      const attendanceData = await webview.executeJavaScript(
-        buildAttendanceFetchScript({
-          facilityId,
-          targetDate,
-        }),
-        true,
+      // WebAutomation V2 Flowを順番に実行する。各Flowは同じHUGログイン済みWebViewセッションを使用する。
+      const attendanceData = await executeFlowV2(
+        'professional_support_attendance_fetch',
+        { facilityId, targetDate },
       )
 
       setProgressText('HUGから加算数データを取得中...')
 
-      const additionCountData = await webview.executeJavaScript(
-        buildAdditionCountFetchScript({
-          facilityId,
-          targetDate,
-        }),
-        true,
+      const additionCountData = await executeFlowV2(
+        'professional_support_addition_count_fetch',
+        { facilityId, targetDate },
       )
 
       setProgressText('HUGから加算一覧データを取得中...')
 
-      const additionListData = await webview.executeJavaScript(
-        buildAdditionListFetchScript({
-          facilityId,
-          targetDate,
-        }),
-        true,
+      const additionListData = await executeFlowV2(
+        'professional_support_record_list_fetch',
+        { facilityId, targetDate },
       )
 
       console.log('加算一覧のデータ一括取得結果',additionListData);

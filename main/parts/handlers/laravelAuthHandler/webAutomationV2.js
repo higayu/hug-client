@@ -264,6 +264,275 @@ async function finishExecutionLog(payload = {}) {
   };
 }
 
+
+// ============================================================
+// 管理者向け V2 API
+// ============================================================
+
+function normalizePositiveInt(value, fallback = null) {
+  const n = Number(value);
+  return Number.isInteger(n) && n > 0 ? n : fallback;
+}
+
+function normalizeAdminFlowId(value) {
+  const id = Number(value);
+
+  if (!Number.isInteger(id) || id <= 0) {
+    throw new Error("flowIdが正しくありません。");
+  }
+
+  return id;
+}
+
+/**
+ * 管理者向け Flow一覧。draft / published / disabled を含めて取得する。
+ *
+ * GET /api/web-automation-v2/admin/flows
+ */
+async function adminGetFlows(payload = {}) {
+  const normalized = normalizeObject(payload);
+  const appKey = normalizeAppKey(normalized.appKey ?? normalized.app_key);
+
+  const result = await executeAuthenticatedOperation(
+    () =>
+      laravelApiClient.get("/web-automation-v2/admin/flows", {
+        params: {
+          app_key: appKey,
+        },
+      }),
+    "WebAutomation V2管理用Flow一覧の取得に失敗しました。"
+  );
+
+  if (result?.success === false) {
+    return result;
+  }
+
+  const data = unwrapData(result);
+  const items = Array.isArray(data)
+    ? data
+    : Array.isArray(data?.items)
+      ? data.items
+      : Array.isArray(result?.data)
+        ? result.data
+        : [];
+
+  return {
+    success: true,
+    ok: true,
+    data: items,
+    items,
+    meta: {
+      ...(result?.meta ?? {}),
+      authenticated: true,
+      appKey,
+    },
+    error: null,
+  };
+}
+
+/**
+ * 管理者向け Flow詳細。files / memos を含めて取得する。
+ *
+ * GET /api/web-automation-v2/admin/flows/{id}
+ */
+async function adminGetFlow(flowIdOrKey, payload = {}) {
+  const normalized = normalizeObject(payload);
+  const appKey = normalizeAppKey(normalized.appKey ?? normalized.app_key);
+  const raw = String(flowIdOrKey ?? "").trim();
+
+  if (!raw) {
+    throw new Error("flowIdまたはflowKeyが指定されていません。");
+  }
+
+  const result = await executeAuthenticatedOperation(
+    () =>
+      laravelApiClient.get(
+        `/web-automation-v2/admin/flows/${encodeURIComponent(raw)}`,
+        {
+          params: {
+            app_key: appKey,
+            version:
+              normalizePositiveInt(normalized.version, null),
+            include_files:
+              normalized.include_files === false ? 0 : 1,
+            include_memos:
+              normalized.include_memos === false ? 0 : 1,
+          },
+        }
+      ),
+    "WebAutomation V2管理用Flow詳細の取得に失敗しました。"
+  );
+
+  if (result?.success === false) {
+    return result;
+  }
+
+  const data = unwrapData(result);
+
+  return {
+    success: true,
+    ok: true,
+    data,
+    flow: data,
+    meta: {
+      ...(result?.meta ?? {}),
+      authenticated: true,
+      appKey,
+    },
+    error: null,
+  };
+}
+
+/**
+ * 管理者向け Flow更新。Flow本体・files・memosを一括保存する。
+ *
+ * PATCH /api/web-automation-v2/admin/flows/{id}
+ */
+async function adminUpdateFlow(flowId, payload = {}) {
+  const id = normalizeAdminFlowId(flowId);
+  const normalized = normalizeObject(payload);
+
+  const result = await executeAuthenticatedOperation(
+    () =>
+      laravelApiClient.patch(
+        `/web-automation-v2/admin/flows/${id}`,
+        normalized
+      ),
+    "WebAutomation V2管理用Flowの保存に失敗しました。"
+  );
+
+  if (result?.success === false) {
+    return result;
+  }
+
+  const data = unwrapData(result);
+
+  return {
+    success: true,
+    ok: true,
+    data,
+    flow: data,
+    meta: {
+      ...(result?.meta ?? {}),
+      authenticated: true,
+    },
+    error: null,
+  };
+}
+
+/**
+ * 管理者向け V2 ExecutionLog一覧。
+ *
+ * GET /api/web-automation-v2/admin/execution-logs
+ */
+async function adminGetExecutionLogs(payload = {}) {
+  const normalized = normalizeObject(payload);
+  const appKey = normalizeAppKey(normalized.appKey ?? normalized.app_key);
+  const limit = Math.min(
+    500,
+    Math.max(1, normalizePositiveInt(normalized.limit, 100))
+  );
+
+  const params = {
+    app_key: appKey,
+    limit,
+  };
+
+  if (normalized.flowKey ?? normalized.flow_key) {
+    params.flow_key = normalizeFlowKey(
+      normalized.flowKey ?? normalized.flow_key
+    );
+  }
+
+  if (normalized.status) {
+    params.status = String(normalized.status).trim();
+  }
+
+  const result = await executeAuthenticatedOperation(
+    () =>
+      laravelApiClient.get(
+        "/web-automation-v2/admin/execution-logs",
+        { params }
+      ),
+    "WebAutomation V2管理用実行ログ一覧の取得に失敗しました。"
+  );
+
+  if (result?.success === false) {
+    return result;
+  }
+
+  const data = unwrapData(result);
+  const items = Array.isArray(data)
+    ? data
+    : Array.isArray(data?.items)
+      ? data.items
+      : Array.isArray(result?.data)
+        ? result.data
+        : [];
+
+  return {
+    success: true,
+    ok: true,
+    data: items,
+    items,
+    meta: {
+      ...(result?.meta ?? {}),
+      authenticated: true,
+      appKey,
+      limit,
+    },
+    error: null,
+  };
+}
+
+async function adminFlowsGetAllHandler(_event, payload = {}) {
+  try {
+    return await adminGetFlows(payload);
+  } catch (error) {
+    console.error("❌ [WebAutomationV2] adminGetFlows error:", error);
+    return formatError(
+      error,
+      "WebAutomation V2管理用Flow一覧の取得に失敗しました。"
+    );
+  }
+}
+
+async function adminFlowGetHandler(_event, flowIdOrKey, payload = {}) {
+  try {
+    return await adminGetFlow(flowIdOrKey, payload);
+  } catch (error) {
+    console.error("❌ [WebAutomationV2] adminGetFlow error:", error);
+    return formatError(
+      error,
+      "WebAutomation V2管理用Flow詳細の取得に失敗しました。"
+    );
+  }
+}
+
+async function adminFlowUpdateHandler(_event, flowId, payload = {}) {
+  try {
+    return await adminUpdateFlow(flowId, payload);
+  } catch (error) {
+    console.error("❌ [WebAutomationV2] adminUpdateFlow error:", error);
+    return formatError(
+      error,
+      "WebAutomation V2管理用Flowの保存に失敗しました。"
+    );
+  }
+}
+
+async function adminExecutionLogsGetAllHandler(_event, payload = {}) {
+  try {
+    return await adminGetExecutionLogs(payload);
+  } catch (error) {
+    console.error("❌ [WebAutomationV2] adminGetExecutionLogs error:", error);
+    return formatError(
+      error,
+      "WebAutomation V2管理用実行ログ一覧の取得に失敗しました。"
+    );
+  }
+}
+
 async function getFlowBundleHandler(_event, payload = {}) {
   try {
     return await getFlowBundle(payload);
@@ -304,7 +573,18 @@ module.exports = {
   getFlowBundle,
   startExecutionLog,
   finishExecutionLog,
+
+  adminGetFlows,
+  adminGetFlow,
+  adminUpdateFlow,
+  adminGetExecutionLogs,
+
   getFlowBundleHandler,
   executionLogStartHandler,
   executionLogFinishHandler,
+
+  adminFlowsGetAllHandler,
+  adminFlowGetHandler,
+  adminFlowUpdateHandler,
+  adminExecutionLogsGetAllHandler,
 };

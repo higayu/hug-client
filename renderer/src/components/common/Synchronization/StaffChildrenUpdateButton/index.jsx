@@ -4,10 +4,7 @@ import { ArrowPathIcon } from '@heroicons/react/24/outline';
 
 import { useToast } from '@/provider/ToastProvider/ToastContext.jsx';
 import { selectFacilityId } from '@/store/slices/appStateSlice';
-import { getActiveWebview } from '@/utils/webview/webviewState.js';
-
-import { fetchStaffData } from '../StaffUpdateButton/fetchStaffData.js';
-import { fetchChildrenData } from '../ChildrenUpdateButton/fetchChildrenData.js';
+import { executeFlowV2 } from '@/components/WebAutomationV2';
 
 export default function StaffChildrenUpdateButton({
   facilityId: facilityIdProp,
@@ -25,28 +22,15 @@ export default function StaffChildrenUpdateButton({
 
   const isDisabled = disabled || isLoading || !facilityId;
 
-  /**
-   * 実行時点のHUG WebViewを取得する。
-   * webviewにはWebView要素、またはWebViewを返す関数を渡せる。
-   */
-  const resolveWebview = () => {
-    const targetWebview =
-      typeof webview === 'function'
-        ? webview()
-        : webview;
 
-    return targetWebview ?? getActiveWebview();
-  };
-
-  const syncStaffs = async (activeWebview) => {
+  const syncStaffs = async () => {
     setLabel('職員取得中...');
 
-    const result = await fetchStaffData(
-      (page, maxPage) => {
-        setLabel(`職員取得 ${page}/${maxPage}`);
+    const result = await executeFlowV2(
+      'staff_fetch',
+      {
+        facilityId,
       },
-      facilityId,
-      activeWebview,
     );
 
     console.groupCollapsed(
@@ -95,19 +79,14 @@ export default function StaffChildrenUpdateButton({
     };
   };
 
-  const syncChildren = async (activeWebview) => {
+  const syncChildren = async () => {
     setLabel('児童取得中...');
 
-    const now = new Date();
-    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-
-    const result = await fetchChildrenData(
-      (page, maxPage) => {
-        setLabel(`児童取得 ${page}/${maxPage}`);
+    const result = await executeFlowV2(
+      'children_fetch',
+      {
+        facilityId,
       },
-      facilityId,
-      today,
-      activeWebview,
     );
 
     console.groupCollapsed(
@@ -206,31 +185,15 @@ export default function StaffChildrenUpdateButton({
     );
 
     try {
-      const activeWebview = resolveWebview();
-
-      if (!activeWebview) {
-        throw new Error(
-          'HUGのWebViewが見つかりません。HUGの画面を開いてから、もう一度実行してください。',
-        );
-      }
-
-      if (
-        typeof activeWebview.executeJavaScript !==
-        'function'
-      ) {
-        throw new Error(
-          '有効なHUGのWebViewを取得できませんでした。HUGの画面を開き直してから、もう一度実行してください。',
-        );
-      }
 
       // 1. 職員同期
       const staffResult =
-        await syncStaffs(activeWebview);
+        await syncStaffs();
 
       // 職員同期が成功した場合のみ児童同期へ進む
       // 2. 児童同期
       const childrenResult =
-        await syncChildren(activeWebview);
+        await syncChildren();
 
       setLabel('一括更新完了');
 
