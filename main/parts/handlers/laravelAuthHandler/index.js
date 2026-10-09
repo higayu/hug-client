@@ -7,9 +7,6 @@ const updateStaffLogin = require("./admin/updateStaffLogin");
 const managers2 = require("./managers2");
 const children = require("./children");
 const aiRecordEditer = require("./aiRecordEditer");
-const webAutomationRules = require("./webAutomationRules");
-const webAutomationFlows = require("./webAutomationFlows");
-const webAutomationExecutionLogs = require("./webAutomationExecutionLogs");
 const webAutomationV2 = require("./webAutomationV2");
 const troubleshootingKnowledge = require("./troubleshootingKnowledge");
 const personalRecordSyncs = require("./personalRecordSyncs");
@@ -33,20 +30,6 @@ const IPC_CHANNELS = [
   // ============================================================
 
   "laravel-fetch-table-all",
-
-  // ============================================================
-  // Web自動化ルール
-  // ============================================================
-
-  "laravel:web-automation-rules:list",
-  "laravel:web-automation-rules:get",
-  "laravel:web-automation-rules:update",
-
-  "laravel:web-automation-flows:list",
-  "laravel:web-automation-flows:get",
-
-  "laravel:web-automation-execution-logs:create",
-  "laravel:web-automation-execution-logs:update",
 
   // Web自動化 V2
   "laravel:web-automation-v2:flow-bundle:get",
@@ -265,49 +248,6 @@ function registerLaravelAuthHandlers(
   ipcMain.handle(
     "laravel-fetch-table-all",
     fetchTableAllHandler
-  );
-
-  // ============================================================
-  // Web自動化ルール
-  // ============================================================
-
-  ipcMain.handle(
-    "laravel:web-automation-rules:list",
-    webAutomationRules.listHandler
-  );
-
-  ipcMain.handle(
-    "laravel:web-automation-rules:get",
-    webAutomationRules.getHandler
-  );
-
-  ipcMain.handle(
-    "laravel:web-automation-rules:update",
-    webAutomationRules.updateHandler
-  );
-
-  ipcMain.handle(
-    "laravel:web-automation-flows:list",
-    webAutomationFlows.listHandler
-  );
-
-  ipcMain.handle(
-    "laravel:web-automation-flows:get",
-    webAutomationFlows.getHandler
-  );
-
-  // ============================================================
-  // Web自動化実行ログ
-  // ============================================================
-
-  ipcMain.handle(
-    "laravel:web-automation-execution-logs:create",
-    webAutomationExecutionLogs.createHandler
-  );
-
-  ipcMain.handle(
-    "laravel:web-automation-execution-logs:update",
-    webAutomationExecutionLogs.updateHandler
   );
 
   // ============================================================
