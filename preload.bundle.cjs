@@ -220,6 +220,25 @@ var require_electronApi = __commonJS({
           id,
           data
         ),
+        // ---- Web自動化 V2 ----
+        /**
+         * published Flow + DB上の仮想JSファイル群を一括取得する。
+         * executeFlowV2() から利用する。
+         */
+        webAutomationV2_getFlowBundle: (params = {}) => ipcRenderer2.invoke(
+          "laravel:web-automation-v2:flow-bundle:get",
+          params
+        ),
+        /** executeFlowV2() の実行開始ログを作成する。 */
+        webAutomationV2_executionLogStart: (data = {}) => ipcRenderer2.invoke(
+          "laravel:web-automation-v2:execution-log:start",
+          data
+        ),
+        /** executionUuidを使って実行ログを完了する。 */
+        webAutomationV2_executionLogFinish: (data = {}) => ipcRenderer2.invoke(
+          "laravel:web-automation-v2:execution-log:finish",
+          data
+        ),
         // ---- Q&A・障害対応ナレッジ ----
         laravel_troubleshootingKnowledge_getAll: (params = {}) => ipcRenderer2.invoke(
           "laravel:troubleshooting-knowledge:list",

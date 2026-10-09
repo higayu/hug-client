@@ -10,6 +10,7 @@ const aiRecordEditer = require("./aiRecordEditer");
 const webAutomationRules = require("./webAutomationRules");
 const webAutomationFlows = require("./webAutomationFlows");
 const webAutomationExecutionLogs = require("./webAutomationExecutionLogs");
+const webAutomationV2 = require("./webAutomationV2");
 const troubleshootingKnowledge = require("./troubleshootingKnowledge");
 const personalRecordSyncs = require("./personalRecordSyncs");
 const laravelApiClient = require("../../../../src/laravelApiClient");
@@ -46,6 +47,11 @@ const IPC_CHANNELS = [
 
   "laravel:web-automation-execution-logs:create",
   "laravel:web-automation-execution-logs:update",
+
+  // Web自動化 V2
+  "laravel:web-automation-v2:flow-bundle:get",
+  "laravel:web-automation-v2:execution-log:start",
+  "laravel:web-automation-v2:execution-log:finish",
 
   // ============================================================
   // Q&A・障害対応ナレッジ
@@ -296,6 +302,25 @@ function registerLaravelAuthHandlers(
   ipcMain.handle(
     "laravel:web-automation-execution-logs:update",
     webAutomationExecutionLogs.updateHandler
+  );
+
+  // ============================================================
+  // Web自動化 V2
+  // ============================================================
+
+  ipcMain.handle(
+    "laravel:web-automation-v2:flow-bundle:get",
+    webAutomationV2.getFlowBundleHandler
+  );
+
+  ipcMain.handle(
+    "laravel:web-automation-v2:execution-log:start",
+    webAutomationV2.executionLogStartHandler
+  );
+
+  ipcMain.handle(
+    "laravel:web-automation-v2:execution-log:finish",
+    webAutomationV2.executionLogFinishHandler
   );
 
   // ============================================================
