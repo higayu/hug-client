@@ -3,6 +3,7 @@ import React, {
   useState,
   useEffect,
   useCallback,
+  useId,
 } from "react";
 
 import { useToast } from "@/provider/ToastProvider/ToastContext.jsx";
@@ -10,7 +11,7 @@ import { useSelector } from "react-redux";
 import {
   selectSpaceChildId,
   selectSpaceChildName,
-} from "@/store/slices/chilledspaceSlice.js";
+} from "@/store/workSpaceSelectors.js";
 import { useNote } from "@/hooks/useNote";
 import { PersonalRecordButton } from '@/components/common/hug_function';
 import CopyButton from "@/components/ui/CopyButton";
@@ -20,6 +21,8 @@ export default function MemoInputBox({
   label,
   minHeight = 100,
   spaceId,
+  childId,
+  childName,
 }) {
   const textareaRef = useRef(null);
 
@@ -30,8 +33,11 @@ export default function MemoInputBox({
   const editingRef = useRef(false);
 
   const { showSuccessToast, showErrorToast } = useToast();
-  const selectedChildId = useSelector(selectSpaceChildId(spaceId));
-  const selectedChildName = useSelector(selectSpaceChildName(spaceId));
+  const spaceChildId = useSelector(selectSpaceChildId(spaceId));
+  const spaceChildName = useSelector(selectSpaceChildName(spaceId));
+  // 児童を直接渡す使い方と、作業スペースから参照する使い方に対応する。
+  const selectedChildId = String(childId ?? spaceChildId);
+  const selectedChildName = childName ?? spaceChildName;
   const { saveTemp1, saveTemp2, loadTemp } = useNote();
 
   const [value, setValue] = useState("");
@@ -66,7 +72,8 @@ export default function MemoInputBox({
     showErrorToastRef.current = showErrorToast;
   }, [showErrorToast]);
 
-  const textareaId = `memo-input-${memoType}`;
+  const instanceId = useId();
+  const textareaId = `memo-input-${memoType}-${instanceId}`;
 
   const log = useCallback(
     (...args) => {
@@ -479,7 +486,7 @@ export default function MemoInputBox({
 
         {(memoType === 1 || memoType === 2) && (
           <PersonalRecordButton
-            id={`kojin-kiroku-${memoType}`}
+            id={`kojin-kiroku-${memoType}-${instanceId}`}
             selectedChildId={selectedChildId}
             selectedChildName={selectedChildName}
             disabled={!selectedChildId}

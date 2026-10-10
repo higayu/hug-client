@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useAppState } from "@/AppStateContext";
 import { useDispatch, useSelector } from "react-redux";
-import { selectSpaceChildId } from "@/store/workSpaceSelectors.js";
+import { selectSpaceChildId, selectSpaceChildName } from "@/store/workSpaceSelectors.js";
 import {
   AI_CHAT_TEXT_KEYS,
   setAiChatText,
@@ -23,6 +23,7 @@ export default function ProfessionalPrompt2({
 }) {
   const { PROMPTS, CURRENT_YMD } = useAppState();
   const selectedChildId = useSelector(selectSpaceChildId(spaceId));
+  const selectedChildName = useSelector(selectSpaceChildName(spaceId));
   const dispatch = useDispatch();
 
   const [text1, setText1] = useState("");
@@ -167,6 +168,8 @@ export default function ProfessionalPrompt2({
       )}
 
       <MemoInputBox
+        childId={selectedChildId}
+        childName={selectedChildName}
         spaceId={spaceId}
         memoType={2}
         label="一時メモ２（編集可能）"

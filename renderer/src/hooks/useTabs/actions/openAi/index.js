@@ -8,8 +8,8 @@ import {
   activateTab,
   closeTab,
 } from '../../common/index.js'
-import { runEnableTemporaryChatAfterLoad } from './enableTemporaryChatInWebview';
 
+// 一時チャットは URL の指定で有効化する。
 const OPENAI_URL = 'https://chatgpt.com/?temporary-chat=true'
 const TAB_LABEL = 'OpenAI ChatGPT'
 
@@ -44,34 +44,6 @@ export function addOpenAiTabAction(appState) {
   tabsContainer.appendChild(tabButton)
 
   let tabClosed = false
-  let temporaryChatDone = false
-  let enablePending = false
-
-  const scheduleEnableTemporaryChat = () => {
-    if (
-      tabClosed ||
-      temporaryChatDone ||
-      enablePending ||
-      !newWebview.isConnected
-    ) {
-      return
-    }
-
-    enablePending = true
-
-    runEnableTemporaryChatAfterLoad(newWebview)
-      .then((ok) => {
-        if (!tabClosed && ok) temporaryChatDone = true
-      })
-      .catch((error) => {
-        if (!tabClosed) {
-          console.error('一時チャット有効化処理でエラー', error)
-        }
-      })
-      .finally(() => {
-        enablePending = false
-      })
-  }
 
   tabButton.addEventListener('click', () => {
     if (!tabClosed) activateTab(newId)
@@ -89,9 +61,6 @@ export function addOpenAiTabAction(appState) {
       closeTab(newId)
     })
   }
-
-  newWebview.addEventListener('did-finish-load', scheduleEnableTemporaryChat)
-  newWebview.addEventListener('dom-ready', scheduleEnableTemporaryChat)
 
   activateTab(newId)
 }

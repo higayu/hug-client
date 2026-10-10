@@ -6,7 +6,7 @@ import { useAppState } from "@/AppStateContext";
 import { useToast } from "@/provider/ToastProvider/ToastContext";
 
 import { useDispatch, useSelector } from "react-redux";
-import { selectSpaceChildId } from "@/store/workSpaceSelectors.js";
+import { selectSpaceChildId, selectSpaceChildName } from "@/store/workSpaceSelectors.js";
 
 import {
   sendStart,
@@ -42,6 +42,7 @@ export default function PersonalRecordPrompt({
   const appState = useAppState();
   const { PROMPTS, CURRENT_YMD } = appState;
   const selectedChildId = useSelector(selectSpaceChildId(spaceId));
+  const selectedChildName = useSelector(selectSpaceChildName(spaceId));
 
   // =============================================================
   // 個人記録プロンプト選択
@@ -453,6 +454,8 @@ export default function PersonalRecordPrompt({
         ================================================= */}
         <div className="mt-2">
           <MemoInputBox
+            childId={selectedChildId}
+            childName={selectedChildName}
             spaceId={spaceId}
             memoType={1}
             label="一時メモ１（編集可能）"
