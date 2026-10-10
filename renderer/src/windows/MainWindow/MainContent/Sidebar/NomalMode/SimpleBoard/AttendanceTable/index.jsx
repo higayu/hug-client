@@ -143,7 +143,7 @@ export default function AttendanceTable({ isExpanded, onExpandedChange }) {
         aria-controls="attendance-table-panel"
         aria-label={isExpanded ? '入退室一覧を閉じる' : '入退室一覧を開く'}
         title={isExpanded && selectedRowIds.length === 0 ? '児童を1〜2人選択してください' : isExpanded ? '入退室一覧を閉じる' : '入退室一覧を開く'}
-        className="flex w-9 shrink-0 items-center justify-center border-l border-slate-200 bg-slate-100 text-slate-700 transition-colors hover:bg-slate-200 disabled:cursor-not-allowed disabled:text-slate-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500"
+        className="flex w-9 shrink-0 items-center justify-center border-l border-sky-200 bg-sky-400 text-sky-700 transition-colors hover:bg-sky-200 disabled:cursor-not-allowed disabled:bg-sky-50 disabled:text-sky-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-sky-500"
       >
         <span className="text-xl font-bold" aria-hidden="true">
           {isExpanded ? '‹' : '›'}
