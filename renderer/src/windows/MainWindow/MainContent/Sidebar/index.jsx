@@ -1,6 +1,6 @@
 import { useRef } from "react";
 
-import Dashboard from "./Dashboard";
+import NormalMode from "./NomalMode";
 import AiInquiry from "./AiInquiry";
 
 import { useAppState } from "@/AppStateContext";
@@ -25,7 +25,7 @@ function Sidebar() {
       "
     >
       {IS_DASHBOARD_MODE && (
-        <Dashboard />
+        <NormalMode />
       )}
 
       {IS_AI_INQUIRY_MODE && (

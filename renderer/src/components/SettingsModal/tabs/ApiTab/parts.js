@@ -32,6 +32,10 @@ export const normalizeDatabaseType = (value) => {
   return 'laravel'
 }
 
+export const normalizeNormalModeView = (value) => {
+  return value === 'dashboard' ? 'dashboard' : 'simpleBoard'
+}
+
 export const createFormState = ({
   apiSettings,
   appState,
@@ -73,6 +77,8 @@ export const createFormState = ({
     ),
 
     autoSwitching: false,
+
+    normalModeView: normalizeNormalModeView(apiSettings?.normalModeView),
 
     professionalSupportSaveMode:
       apiSettings?.professionalSupportSaveMode === 'created'

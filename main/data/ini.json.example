@@ -47,5 +47,6 @@
     "autoSwitching": "true",
     "professionalSupportSaveMode": "draft",
     "debugFlg": "false"
+    "normalModeView": "simpleBoard"
   }
 }

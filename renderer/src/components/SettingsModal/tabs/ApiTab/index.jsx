@@ -10,6 +10,7 @@ import {
   createFormState,
   isNotDeleted,
   normalizeDatabaseType,
+  normalizeNormalModeView,
   toId,
 } from './parts'
 
@@ -364,6 +365,8 @@ function ApiTab() {
 
         autoSwitching: 'false',
 
+        normalModeView: normalizeNormalModeView(form.normalModeView),
+
         professionalSupportSaveMode:
           form.professionalSupportSaveMode,
 
@@ -684,6 +687,27 @@ function ApiTab() {
             <option value="openrouter">
               OpenRouter
             </option>
+          </select>
+        </div>
+
+        <div className="mb-3 flex items-center py-2">
+          <label
+            htmlFor="api-normal-mode-view"
+            className="min-w-[120px] font-medium text-gray-700"
+          >
+            通常モード表示:
+          </label>
+
+          <select
+            id="api-normal-mode-view"
+            name="normalModeView"
+            value={form.normalModeView}
+            onChange={handleInputChange}
+            disabled={isProcessing}
+            className="max-w-[300px] flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm transition-all"
+          >
+            <option value="simpleBoard">簡易版</option>
+            <option value="dashboard">通常版（ダッシュボード）</option>
           </select>
         </div>
 

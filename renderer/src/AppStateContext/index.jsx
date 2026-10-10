@@ -30,6 +30,8 @@ import {
 } from '@/store/slices/appStateSlice'
 
 import {
+  addChilledSpace as addChilledSpaceRedux,
+  deleteChilledSpace as deleteChilledSpaceRedux,
   setActiveSpaceId as setActiveSpaceIdRedux,
   setSpaceChild as setSpaceChildRedux,
   setSpacePcName as setSpacePcNameRedux,
@@ -789,6 +791,32 @@ export function AppStateProvider({ children }) {
     [dispatch]
   )
 
+  const addChilledSpace = useCallback(() => {
+    dispatch(addChilledSpaceRedux())
+  }, [dispatch])
+
+  const deleteChilledSpace = useCallback(
+    (spaceId) => {
+      dispatch(deleteChilledSpaceRedux(spaceId))
+    },
+    [dispatch]
+  )
+
+  const setDashboardScreen = useCallback(
+    (screen) => {
+      dispatch(setSelectedItemRedux({ mode: APP_MODES.DASHBOARD, itemId: screen }))
+    },
+    [dispatch]
+  )
+
+  const showAiInquiryScreen = useCallback(
+    (screen) => {
+      dispatch(setModeRedux(APP_MODES.AI_INQUIRY))
+      dispatch(setSelectedItemRedux({ mode: APP_MODES.AI_INQUIRY, itemId: screen }))
+    },
+    [dispatch]
+  )
+
   const setSpaceChild = useCallback(
     (spaceId, childId, childName) => {
       console.log('[AppStateContext/setSpaceChild wrapper]', {
@@ -1139,7 +1167,11 @@ export function AppStateProvider({ children }) {
   // ===== window bridge =====
   useWindowBridge({
     isInitialized,
-    appState: redux.appState,
+    appState: {
+      ...redux.appState,
+      ACTIVE_CHILLEDSPACE_ID: redux.activeSpaceId,
+      CHILLEDSPACES: redux.chilledSpaces,
+    },
     actions: {
       updateAppState,
       loadIni,
@@ -1156,6 +1188,8 @@ export function AppStateProvider({ children }) {
       setAppMode,
       setModeSelectedItem,
       setAiInquiryScreen,
+      setDashboardScreen,
+      showAiInquiryScreen,
       resetAppMode,
       resetAppModeSelection,
       resetAppModeState,
@@ -1172,6 +1206,8 @@ export function AppStateProvider({ children }) {
       setCurrentDate,
       setCurrentYmd,
       setActiveSpaceId,
+      addChilledSpace,
+      deleteChilledSpace,
       setSpaceChild,
       setSpacePcName,
       setSpaceChildColumns,
@@ -1220,6 +1256,7 @@ export function AppStateProvider({ children }) {
     <AppStateContext.Provider
       value={{
         ...redux,
+        SELECT_FACILITY_ID: redux.FACILITY_ID,
 
         isInitialized,
         setIsInitialized,
@@ -1253,6 +1290,8 @@ export function AppStateProvider({ children }) {
 
         // 児童作業スペース
         setActiveSpaceId,
+        addChilledSpace,
+        deleteChilledSpace,
         setSpaceChild,
         setSpacePcName,
         setSpaceChildColumns,
@@ -1272,6 +1311,8 @@ export function AppStateProvider({ children }) {
         setAppMode,
         setModeSelectedItem,
         setAiInquiryScreen,
+        setDashboardScreen,
+        showAiInquiryScreen,
         resetAppMode,
         resetAppModeSelection,
         resetAppModeState,

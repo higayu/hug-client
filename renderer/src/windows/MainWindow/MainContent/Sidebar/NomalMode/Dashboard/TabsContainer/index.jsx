@@ -3,7 +3,7 @@ import UpdateManager from './UpdateManager'
 import { useAppState } from '@/AppStateContext'
 import SpeechToText from './SpeechToText'
 import FanContent from './FanContent'
-import SimpleBoard from './SimpleBoard'
+import TodayTable from './TodayTable'
 
 function TabsContainer() {
   const {
@@ -40,7 +40,7 @@ function TabsContainer() {
 
         {activeTab === 'simpleBoard' && (
           <div className="h-full flex flex-col">
-            <SimpleBoard />
+            <TodayTable />
           </div>
         )}
       </div>

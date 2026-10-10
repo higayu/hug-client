@@ -49,6 +49,7 @@ const DEFAULT_INI = {
       autoAttendanceFetch: "false",
       autoSynchronization: "true",
       autoSwitching: "false",
+      normalModeView: "simpleBoard",
       professionalSupportSaveMode: "draft",
       debugFlg: "false"
     }
