@@ -209,7 +209,7 @@ export default function VerticaPanel({
         className={`
           group
           relative
-          z-20
+          z-0
           shrink-0
           touch-none
           cursor-row-resize

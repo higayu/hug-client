@@ -342,7 +342,7 @@ export default function HorizonPanel({
         className={`
           group
           relative
-          z-20
+          z-0
           shrink-0
           touch-none
           cursor-col-resize

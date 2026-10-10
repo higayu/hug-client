@@ -6,6 +6,7 @@ import * as simpleBoardBindings from '@/store/slices/simpleBoardSlice';
 import { useSimpleAttendanceRows } from '../AttendanceTable/hooks/useSimpleAttendance';
 import WorkingPanel from './WorkingPanel';
 import SelectChildren from './SelectChildren';
+import FanMenu from './FanMenu';
 
 function SelectedChildSpace({ row }) {
   const dispatch = useDispatch();
@@ -25,7 +26,14 @@ function SelectedChildSpace({ row }) {
         minRightWidth={300}
         resizeBarWidth={10}
         gripWidth={6}
-        left={childId === row.childId ? <SelectChildren spaceId={spaceId} /> : null}
+        left={(
+          <div className="relative h-full min-h-0 min-w-0 overflow-visible">
+            {childId === row.childId && <SelectChildren spaceId={spaceId} />}
+            <div className="pointer-events-none absolute bottom-0 left-0 z-0">
+              <FanMenu spaceId={spaceId} />
+            </div>
+          </div>
+        )}
         right={(
           <div className="h-full min-h-0 min-w-0 overflow-auto rounded-lg border border-gray-200 bg-white shadow-sm">
             {childId === row.childId && (
