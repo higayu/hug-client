@@ -243,26 +243,26 @@ export default function ChildAttendancePanel({ spaceId }) {
   // 表示に使う column 値
   // 重要:
   // - AppState側が "" の場合は無効扱い
-  // - attendanceItem側の columnHtml にフォールバックする
+  // - 最新の attendanceItem を最優先し、選択児童の保存値はフォールバックにする
   // =============================================================
   const column5 = pickValue(
-    selectedColumn5,
-    attendanceItem?.column5
+    attendanceItem?.column5,
+    selectedColumn5
   )
 
   const column5Html = pickValue(
-    selectedColumn5Html,
-    attendanceItem?.column5Html
+    attendanceItem?.column5Html,
+    selectedColumn5Html
   )
 
   const column6 = pickValue(
-    selectedColumn6,
-    attendanceItem?.column6
+    attendanceItem?.column6,
+    selectedColumn6
   )
 
   const column6Html = pickValue(
-    selectedColumn6Html,
-    attendanceItem?.column6Html
+    attendanceItem?.column6Html,
+    selectedColumn6Html
   )
 
   // =============================================================
