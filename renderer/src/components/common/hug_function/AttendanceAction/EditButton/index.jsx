@@ -41,7 +41,7 @@ export default function EditButton({
   onError = null,
 }) {
   const dispatch = useDispatch()
-  const { FACILITY_ID, CURRENT_YMD, updateAppState } = useAppState()
+  const { FACILITY_ID, CURRENT_YMD } = useAppState()
 
   const [isOpening, setIsOpening] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
@@ -171,7 +171,6 @@ export default function EditButton({
         facilityId: refreshFacilityId,
         dateStr: refreshDateStr,
         dispatch,
-        updateAppState,
         silent: false,
       })
 
@@ -206,7 +205,6 @@ export default function EditButton({
     FACILITY_ID,
     CURRENT_YMD,
     dispatch,
-    updateAppState,
     onSaved,
     onError,
   ])

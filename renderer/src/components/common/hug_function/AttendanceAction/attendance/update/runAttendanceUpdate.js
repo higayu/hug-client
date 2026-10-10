@@ -10,6 +10,10 @@ import {
   setExtractedData,
   setTableData,
 } from "@/store/slices/attendanceSlice.js";
+import {
+  setAttendanceData as setAttendanceDataRedux,
+} from "@/store/slices/appStateSlice";
+import store from "@/store/store.js";
 
 const sleep =
   (ms) =>
@@ -106,7 +110,6 @@ export async function runAttendanceUpdate({
   facilityId,
   dateStr,
   dispatch,
-  updateAppState,
   silent = true,
   targetChildrenId = null,
   action = "",
@@ -256,48 +259,62 @@ export async function runAttendanceUpdate({
       dateStr,
   };
 
-  dispatch(
+  const effectiveDispatch =
+    typeof dispatch === "function"
+      ? dispatch
+      : store.dispatch;
+
+  effectiveDispatch(
     setTableData(
       tableData
     )
   );
 
+  let attendanceData = null;
+
   if (
     extracted?.success
   ) {
-    dispatch(
+    effectiveDispatch(
       setExtractedData(
         extracted
       )
     );
 
+    attendanceData = {
+      facilityId,
+      dateStr,
+      extractedAt:
+        new Date()
+          .toISOString(),
+      rowCount:
+        extracted?.rowCount ??
+        extracted?.data?.length ??
+        0,
+      data:
+        Array.isArray(
+          extracted?.data
+        )
+          ? extracted.data
+          : [],
+    };
+
+    // AppStateContext の setAttendanceData() と同じ reducer を直接更新する。
+    // これにより上位コンポーネントから updateAppState / setAttendanceData が
+    // 渡されていなくても、Context の attendanceData が確実に更新される。
+    effectiveDispatch(
+      setAttendanceDataRedux(
+        attendanceData
+      )
+    );
+
     if (
-      updateAppState
+      typeof window !==
+        "undefined" &&
+      window.AppState
     ) {
-      const attendanceData = {
-        facilityId,
-        dateStr,
-        extractedAt:
-          new Date()
-            .toISOString(),
-        rowCount:
-          extracted.rowCount,
-        data:
-          extracted.data,
-      };
-
-      updateAppState({
-        attendanceData,
-      });
-
-      if (
-        typeof window !==
-          "undefined" &&
-        window.AppState
-      ) {
-        window.AppState.attendanceData =
-          attendanceData;
-      }
+      window.AppState.attendanceData =
+        attendanceData;
     }
   }
 
@@ -315,6 +332,7 @@ export async function runAttendanceUpdate({
   return {
     tableData,
     extracted,
+    attendanceData,
     reflected,
   };
 }
