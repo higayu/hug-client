@@ -93,7 +93,7 @@ export function AppStateProvider({ children }) {
   const authenticatedStaffId = useSelector(selectAuthenticatedStaffId)
 
   const [isInitialized, setIsInitialized] = useState(false)
-  const [activeSidebarTab, setActiveSidebarTab] = useState('simpleBoard')
+  const [activeSidebarTab, setActiveSidebarTab] = useState('todayTable')
 
   const [iniState, setIniState] = useState({
     appSettings: {},

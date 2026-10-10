@@ -15,7 +15,7 @@ const baseTabs = [
     label: '👥 担当編集',
   },
   {
-    id: 'simpleBoard',
+    id: 'todayTable',
     label: '今日の利用者',
   },
 ]

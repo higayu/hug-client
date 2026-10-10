@@ -9,7 +9,7 @@ function DashboardHeader() {
     activeSidebarTab,
   } = useAppState();
 
-  const isSimpleBoardActive = activeSidebarTab === "simpleBoard";
+  const isTodayTableActive = activeSidebarTab === "todayTable";
   const isFanContentActive = activeSidebarTab === "FanContent";
 
   return (
@@ -34,7 +34,7 @@ function DashboardHeader() {
         {/* 日付・利用者取得
             SimpleBoard表示中はAttendanceHeader側の共通GetTodayUsersChildrenを使う。
             それ以外のタブではDashboardHeader側で表示する。 */}
-        {!isSimpleBoardActive && (
+        {!isTodayTableActive && (
           <div
             className={`
               flex

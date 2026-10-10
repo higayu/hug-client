@@ -11,7 +11,7 @@ function NormalMode() {
 
   const normalModeView = iniState?.apiSettings?.normalModeView;
 
-  return normalModeView === 'dashboard' ? <Dashboard /> : <SimpleBoard />;
+  return normalModeView === 'simpleBoard' ? <SimpleBoard /> : <Dashboard />;
 }
 
 export default NormalMode;

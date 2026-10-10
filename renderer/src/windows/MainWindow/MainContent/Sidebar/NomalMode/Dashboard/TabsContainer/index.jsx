@@ -38,7 +38,7 @@ function TabsContainer() {
           </div>
         )}
 
-        {activeTab === 'simpleBoard' && (
+        {activeTab === 'todayTable' && (
           <div className="h-full flex flex-col">
             <TodayTable />
           </div>
