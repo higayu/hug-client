@@ -13,7 +13,7 @@ import {
 } from '@/components/common/hug_function';
 
 import { useAppState } from '@/AppStateContext';
-export default function AttendanceRow({ row, busy, onAction }) {
+export default function AttendanceRow({ row, busy, onAction, selected, onToggle, selectionDisabled }) {
   const { appState, CURRENT_YMD, FACILITY_ID } = useAppState();
   const canOpenPersonalRecord = Boolean(row.childId);
   const recordId = String(row.rId ?? '').startsWith('attendance-')
@@ -57,7 +57,25 @@ export default function AttendanceRow({ row, busy, onAction }) {
   );
 
   return (
-    <tr className="odd:bg-white even:bg-slate-50">
+    <tr
+      aria-selected={selected}
+      className={`cursor-pointer ${selected ? 'bg-sky-100' : 'odd:bg-white even:bg-slate-50 hover:bg-sky-50'}`}
+      onClick={(event) => {
+        if (selectionDisabled) return;
+        if (event.target.closest('button, a, input, select, textarea, label, [role="button"], [role="dialog"]')) return;
+        onToggle();
+      }}
+    >
+      <td className="border border-slate-300 p-3 text-center">
+        <input
+          type="checkbox"
+          checked={selected}
+          disabled={selectionDisabled}
+          onChange={onToggle}
+          aria-label={`${row.name}を選択`}
+          className="h-4 w-4 cursor-pointer accent-sky-600"
+        />
+      </td>
       <td className="border border-slate-300 p-1">
         {canOpenPersonalRecord ? (
           <PersonalRecordButton

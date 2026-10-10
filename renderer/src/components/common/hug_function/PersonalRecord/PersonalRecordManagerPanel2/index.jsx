@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { selectSpaceChildId } from "@/store/slices/chilledspaceSlice.js";
+import { selectSpaceChildId } from "@/store/workSpaceSelectors.js";
 
 import { useAppState } from "@/AppStateContext";
 import { useServiceRecord } from "@/hooks/useServiceRecord";

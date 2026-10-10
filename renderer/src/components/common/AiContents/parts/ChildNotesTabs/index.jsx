@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useAppState } from "@/AppStateContext";
 import { useSelector } from "react-redux";
-import { selectSpaceChildId } from "@/store/slices/chilledspaceSlice.js";
+import { selectSpaceChildId } from "@/store/workSpaceSelectors.js";
 import ChildNotes from "./ChildNotes";
 import { PersonSupportPlan } from "@/components/common/hug_function/Plan";
 

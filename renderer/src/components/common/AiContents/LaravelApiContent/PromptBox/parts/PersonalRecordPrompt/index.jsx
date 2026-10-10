@@ -6,7 +6,7 @@ import { useAppState } from "@/AppStateContext";
 import { useToast } from "@/provider/ToastProvider/ToastContext";
 
 import { useDispatch, useSelector } from "react-redux";
-import { selectSpaceChildId } from "@/store/slices/chilledspaceSlice.js";
+import { selectSpaceChildId } from "@/store/workSpaceSelectors.js";
 
 import {
   sendStart,

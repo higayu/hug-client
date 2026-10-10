@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useAppState } from "@/AppStateContext";
 import { useTabs } from "@/hooks/useTabs";
 import { useDispatch, useSelector } from "react-redux";
-import { selectSpaceChildId } from "@/store/slices/chilledspaceSlice.js";
+import { selectSpaceChildId, selectSpace } from "@/store/workSpaceSelectors.js";
 import {
   AI_CHAT_TEXT_KEYS,
   setAiChatText,
@@ -28,13 +28,13 @@ export default function ProfessionalPrompt1({
 }) {
   const appState = useAppState();
   const selectedChildId = useSelector(selectSpaceChildId(spaceId));
+  const selectedSpace = useSelector(selectSpace(spaceId));
 
   const {
     PROMPTS,
     CURRENT_YMD,
     FACILITY_ID,
     attendanceData,
-    chilledSpaces,
   } = appState;
 
   const { addProfessionalSupportListTab } = useTabs(spaceId);
@@ -53,7 +53,7 @@ export default function ProfessionalPrompt1({
   }, [attendanceData, selectedChildId]);
 
   const selectedChildName =
-    chilledSpaces?.[spaceId]?.childName ??
+    selectedSpace?.childName ??
     attendanceItem?.children_name ??
     attendanceItem?.name ??
     '';

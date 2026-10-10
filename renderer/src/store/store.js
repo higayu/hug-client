@@ -10,10 +10,12 @@ import modeReducer from './slices/modeSlice.js'
 import chilledspaceReducer from './slices/chilledspaceSlice.js'
 import webAutomationRuleReducer from './slices/webAutomationRuleSlice.js'
 import aiChatReducer from './slices/aiChatSlice.js'
+import simpleBoardReducer from './slices/simpleBoardSlice.js'
 
 export const store = configureStore({
   reducer: {
     attendance: attendanceReducer,
+    simpleBoard: simpleBoardReducer,
     auth: authReducer,
     appState: appStateReducer,
     chilledspace: chilledspaceReducer,

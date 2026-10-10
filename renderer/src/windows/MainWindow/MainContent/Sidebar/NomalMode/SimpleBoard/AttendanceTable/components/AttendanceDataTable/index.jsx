@@ -1,10 +1,13 @@
 import { useEffect } from 'react';
 import AttendanceRow from './AttendanceRow';
+import { MAX_SELECTED_CHILDREN } from '@/store/slices/simpleBoardSlice';
 
 export default function AttendanceDataTable({
   rows,
   actionRowId,
   onAction,
+  selectedRowIds,
+  onToggleRow,
 }) {
   useEffect(() => {
     const safeRows = Array.isArray(rows) ? rows : [];
@@ -48,6 +51,7 @@ export default function AttendanceDataTable({
       <table className="w-full border-collapse text-sm">
         <thead className="sticky top-0 bg-gray-100">
           <tr>
+            <th className="border border-slate-300 p-3">選択</th>
             <th className="border border-slate-300 p-3 text-left">児童名</th>
             <th className="border border-slate-300 p-3">入室</th>
             <th className="border border-slate-300 p-3">退室</th>
@@ -64,6 +68,9 @@ export default function AttendanceDataTable({
               row={row}
               busy={actionRowId === row.rId}
               onAction={onAction}
+              selected={selectedRowIds.includes(row.rId)}
+              selectionDisabled={!selectedRowIds.includes(row.rId) && selectedRowIds.length >= MAX_SELECTED_CHILDREN}
+              onToggle={() => onToggleRow(row.rId)}
             />
           ))}
         </tbody>

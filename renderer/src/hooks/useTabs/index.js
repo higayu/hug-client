@@ -6,7 +6,8 @@ import {
   useRef,
 } from 'react'
 import { useSelector } from 'react-redux'
-import { selectActiveSpaceId, selectSpace } from '@/store/slices/chilledspaceSlice.js'
+import { selectActiveSpaceId } from '@/store/slices/chilledspaceSlice.js'
+import { selectSpace } from '@/store/workSpaceSelectors.js'
 
 import {
   useAppState,

@@ -78,6 +78,18 @@ const isMailDialogCancelled = (error) =>
   error instanceof LeaveMailDialogCancelledError ||
   error?.name === 'MailDialogCancelledError';
 
+export function useSimpleAttendanceRows() {
+  const { attendanceData } = useAppState();
+
+  return useMemo(
+    () =>
+      Array.isArray(attendanceData?.data)
+        ? attendanceData.data.map(toAttendanceRow)
+        : [],
+    [attendanceData?.data],
+  );
+}
+
 /**
  * SimpleBoard 入退室管理。
  *
@@ -99,13 +111,7 @@ export function useSimpleAttendance() {
     attendanceData?.facilityId ??
     FACILITY_ID;
 
-  const rows = useMemo(
-    () =>
-      Array.isArray(attendanceData?.data)
-        ? attendanceData.data.map(toAttendanceRow)
-        : [],
-    [attendanceData?.data],
-  );
+  const rows = useSimpleAttendanceRows();
 
   const lastUpdatedAt = useMemo(() => {
     if (!attendanceData?.extractedAt) return '';

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useAppState } from "@/AppStateContext";
 import { useSelector } from "react-redux";
-import { selectSpaceChildId } from "@/store/slices/chilledspaceSlice.js";
+import { selectSpaceChildId } from "@/store/workSpaceSelectors.js";
 import { useDataBase } from "@/hooks/useDataBase";
 import { ArrowPathIcon } from "@heroicons/react/24/solid";
 import { fetchPersonSupportPlan } from "./function";

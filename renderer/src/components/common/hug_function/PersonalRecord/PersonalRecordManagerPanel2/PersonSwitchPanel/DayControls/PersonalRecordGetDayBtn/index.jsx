@@ -1,7 +1,7 @@
 import { useCallback, useRef, useState } from "react";
 import { useAppState } from "@/AppStateContext";
 import { useSelector } from "react-redux";
-import { selectSpaceChildId } from "@/store/slices/chilledspaceSlice.js";
+import { selectSpaceChildId } from "@/store/workSpaceSelectors.js";
 import { useToast } from '@/provider/ToastProvider/ToastContext'
 import { fetchPersonalRecordV2 } from "../../fetchPersonalRecordV2";
 import { postServiceRecordsToLocalApi } from "./postServiceRecordsToLocalApi";

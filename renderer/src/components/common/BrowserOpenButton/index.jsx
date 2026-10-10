@@ -1,7 +1,8 @@
 import { GlobeAltIcon } from '@heroicons/react/24/outline'
 import { useAppState } from '@/AppStateContext'
 import { useSelector } from 'react-redux'
-import { selectActiveSpaceId, selectSpaceChildId } from '@/store/slices/chilledspaceSlice.js'
+import { selectActiveSpaceId } from '@/store/slices/chilledspaceSlice.js'
+import { selectSpaceChildId } from '@/store/workSpaceSelectors.js'
 import { addWebManagerAction_OutWindow } from '@/hooks/useTabs/actions/WebManager.js'
 
 export default function BrowserOpenButton({

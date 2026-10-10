@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useSelector } from "react-redux";
 import { useAppState } from "@/AppStateContext";
-import { selectSpaceChildId } from "@/store/slices/chilledspaceSlice.js";
+import { selectSpaceChildId } from "@/store/workSpaceSelectors.js";
 import { selectServiceRecord } from "@/store/slices/databaseSlice.js";
 import { selectPersonalRecordNote } from "./selectPersonalRecordNote";
 import CopyButton from "@/components/ui/CopyButton";

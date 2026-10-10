@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useAppState } from "@/AppStateContext";
 import { useDispatch, useSelector } from "react-redux";
-import { selectSpaceChildId } from "@/store/slices/chilledspaceSlice.js";
+import { selectSpaceChildId } from "@/store/workSpaceSelectors.js";
 import {
   AI_CHAT_TEXT_KEYS,
   setAiChatText,

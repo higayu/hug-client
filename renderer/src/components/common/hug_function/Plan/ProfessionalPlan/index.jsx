@@ -2,7 +2,7 @@
 import React from "react";
 import { useAppState } from "@/AppStateContext";
 import { useSelector } from "react-redux";
-import { selectSpaceChildId } from "@/store/slices/chilledspaceSlice.js";
+import { selectSpaceChildId } from "@/store/workSpaceSelectors.js";
 import { useDataBase } from "@/hooks/useDataBase";
 import { getHugWebviewForCache } from "@/hooks/useHugCache/getHugCache.js";
 import { ArrowPathIcon } from "@heroicons/react/24/solid";
