@@ -55,8 +55,9 @@ export async function clickEnterButton(column5Html, targetChildrenId, opts = {})
         result,
       });
 
+      let refreshResult = null;
       if (!opts.skipRefresh) {
-        await runAttendanceUpdate({
+        refreshResult = await runAttendanceUpdate({
           facilityId: opts.facilityId || store.getState().appState?.FACILITY_ID || "1",
           dateStr: opts.dateStr || store.getState().appState?.CURRENT_YMD,
           dispatch: opts.dispatch,
@@ -70,7 +71,14 @@ export async function clickEnterButton(column5Html, targetChildrenId, opts = {})
         });
       }
 
-      return { success: true, ...result, mailDialogCompleted: true };
+      const attendanceItem = refreshResult?.attendanceItem ?? null;
+      return {
+        success: true,
+        ...result,
+        mailDialogCompleted: true,
+        refreshResult,
+        attendanceItem,
+      };
     }
 
     if (opts.mailDialogAction === "cancel") {
@@ -133,8 +141,9 @@ export async function clickEnterButton(column5Html, targetChildrenId, opts = {})
       !result?.mailDialogAutoSelected
     );
 
+    let refreshResult = null;
     if (!waitingForMailDialog && !opts.skipRefresh) {
-      await runAttendanceUpdate({
+      refreshResult = await runAttendanceUpdate({
         facilityId,
         dateStr,
         dispatch: opts.dispatch,
@@ -147,7 +156,13 @@ export async function clickEnterButton(column5Html, targetChildrenId, opts = {})
     }
 
     window.showSuccessToast?.(result.statusMessage, 3000);
-    return { success: true, ...result };
+    const attendanceItem = refreshResult?.attendanceItem ?? null;
+    return {
+      success: true,
+      ...result,
+      refreshResult,
+      attendanceItem,
+    };
   } catch (err) {
     if (err instanceof MailDialogCancelledError) {
       return { success: false, cancelled: true, error: err.message };
