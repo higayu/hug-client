@@ -207,12 +207,25 @@ export default function ProfessionalSupportManagerPanel({
   }, [isOpen, isExpandDown])
 
   const runStatusCheck = async () => {
-    if (checking) return
+    if (checking || registrationCheckLoading) return
+    if (!childId || !dateStr || !resolvedFacilityId) return
 
     try {
-      await runCheck()
+      const [statusResult, plusRegistrationResult] = await Promise.all([
+        runCheck(),
+        runProfessionalPlusRegistrationCheck({ force: true }),
+      ])
+
+      return {
+        statusResult,
+        plusRegistrationResult,
+      }
     } catch (error) {
-      console.error('[ProfessionalSupportManagerPanel] check error:', error)
+      console.error(
+        '[ProfessionalSupportManagerPanel] combined check error:',
+        error,
+      )
+      return null
     }
   }
 
@@ -308,7 +321,6 @@ export default function ProfessionalSupportManagerPanel({
       setPostModalOpen(false)
       setAction('success', '連動OK')
 
-      await runProfessionalPlusRegistrationCheck({ force: true })
       await runStatusCheck()
 
       return {
