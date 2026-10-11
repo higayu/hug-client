@@ -102,6 +102,11 @@ function createMainWindow() {
     mainWindow.webContents.openDevTools();
   }
 
+  // Rendererの状態に関係なく、ウィンドウを閉じる際は確認を表示する。
+  // main.js 側でも登録されている場合、登録関数内で二重登録を防止する。
+  const { registerCloseConfirmation } = require("./closeConfirmation");
+  registerCloseConfirmation(mainWindow);
+
   return mainWindow;
 }
 

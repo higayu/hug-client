@@ -40,7 +40,8 @@ var require_tables = __commonJS({
     ];
     var sqliteTables = [...sharedTables];
     var mariadbTables = [...sharedTables, ...aiPromptTables];
-    var laravelTables = [...sharedTables, ...aiPromptTables];
+    var roleTables = ["companies", "roles", "company_roles", "staff_company_roles"];
+    var laravelTables = [...sharedTables, ...aiPromptTables, ...roleTables];
     module2.exports = {
       sqliteTables,
       mariadbTables,
@@ -146,6 +147,8 @@ var require_electronApi = __commonJS({
         mariadb_fetchTableAll: () => ipcRenderer2.invoke("mariadb-fetch-table-all"),
         // ---- Laravel テーブル一括取得 ----
         laravel_fetchTableAll: (params = {}) => ipcRenderer2.invoke("laravel-fetch-table-all", params),
+        // Laravel会社別権限データ（読み取り専用）
+        laravel_fetchRoleTables: (params = {}) => ipcRenderer2.invoke("laravel-fetch-role-tables", params),
         // ---- Laravel 接続確認 ----
         checkLaravelConnection: () => ipcRenderer2.invoke("laravel:connection:check"),
         // ---- Laravel AI文章校正 ----
