@@ -61,6 +61,10 @@ function createElectronApi(ipcRenderer, isDebugMode) {
     laravel_fetchTableAll: (params = {}) =>
       ipcRenderer.invoke("laravel-fetch-table-all", params),
 
+    // Laravel会社別権限データ（読み取り専用）
+    laravel_fetchRoleTables: (params = {}) =>
+      ipcRenderer.invoke("laravel-fetch-role-tables", params),
+
     // ---- Laravel 接続確認 ----
     checkLaravelConnection: () =>
       ipcRenderer.invoke("laravel:connection:check"),

@@ -30,6 +30,7 @@ const IPC_CHANNELS = [
   // ============================================================
 
   "laravel-fetch-table-all",
+  "laravel-fetch-role-tables",
 
   // Web自動化 V2
   "laravel:web-automation-v2:flow-bundle:get",
@@ -249,6 +250,32 @@ function registerLaravelAuthHandlers(
     "laravel-fetch-table-all",
     fetchTableAllHandler
   );
+
+  // 会社別権限マスタを読み取り専用で返す。
+  // 認証・会社単位のデータ制限はLaravel /api/__all 側に委ねる。
+  ipcMain.handle("laravel-fetch-role-tables", async (_event, params = {}) => {
+    const result = await fetchTableAllHandler(_event, params);
+    if (result?.success !== true) return result;
+
+    const roleTables = ["companies", "roles", "company_roles", "staff_company_roles"];
+    const missing = roleTables.filter((key) => !Array.isArray(result.data?.[key]));
+    if (missing.length > 0) {
+      return {
+        success: false,
+        connected: true,
+        message: `Laravel APIの権限データが不足しています: ${missing.join(", ")}`,
+        data: null,
+        meta: { authenticated: true },
+        error: { code: "MISSING_ROLE_TABLES", missingTables: missing },
+      };
+    }
+
+    return {
+      ...result,
+      data: Object.fromEntries(roleTables.map((key) => [key, result.data[key]])),
+      meta: { ...(result.meta ?? {}), tableCount: roleTables.length },
+    };
+  });
 
   // ============================================================
   // Web自動化 V2
