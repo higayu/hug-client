@@ -14,6 +14,10 @@ const tableKeys = [
   'pronunciation',
   'staffs',
   'facilitys',
+  'companies',
+  'roles',
+  'company_roles',
+  'staff_company_roles',
 
   // 関連テーブル
   'facility_children',
@@ -79,6 +83,10 @@ const initialState = {
   pronunciation: [],
   staffs: [],
   facilitys: [],
+  companies: [],
+  roles: [],
+  company_roles: [],
+  staff_company_roles: [],
 
   // 関連テーブル
   facility_children: [],
@@ -199,6 +207,10 @@ export const selectChildrenType = (state) =>
 export const selectPronunciation = (state) =>
   state.database?.pronunciation ?? []
 export const selectStaffs = (state) => state.database?.staffs ?? []
+export const selectCompanies = (state) => state.database?.companies ?? []
+export const selectRoles = (state) => state.database?.roles ?? []
+export const selectCompanyRoles = (state) => state.database?.company_roles ?? []
+export const selectStaffCompanyRoles = (state) => state.database?.staff_company_roles ?? []
 export const selectFacilitys = (state) => state.database?.facilitys ?? []
 
 // 関連テーブル

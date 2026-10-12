@@ -1,0 +1,140 @@
+/* === 動的に生成される要素用スタイル === */
+/* タブコンポーネントはすべてTailwindに置き換え済み */
+
+/* === 設定モーダル内のデフォルトテキスト色 === */
+/* 設定モーダル全体のテキスト色を強制的にダークにする */
+.settings-modal-container {
+  color: #111827 !important;
+  color-scheme: light !important;
+}
+
+.settings-modal-container p,
+.settings-modal-container span:not(.text-white),
+.settings-modal-container div:not(.text-white),
+.settings-modal-container label,
+.settings-modal-container h3,
+.settings-modal-container h4,
+.settings-modal-container input[type="text"],
+.settings-modal-container input[type="number"],
+.settings-modal-container select,
+.settings-modal-container option {
+  color: #111827 !important;
+}
+
+/* Tailwindのテキスト色クラスを上書き */
+.settings-modal-container .text-gray-700,
+.settings-modal-container .text-gray-600,
+.settings-modal-container .text-gray-900 {
+  color: #111827 !important;
+}
+
+/* ボタンや明示的に色が指定されている要素は除外 */
+.settings-modal-container .text-white,
+.settings-modal-container button.text-white,
+.settings-modal-container .bg-gradient-to-r.text-white {
+  color: #ffffff !important;
+}
+
+/* === 設定項目（動的生成要素で使用） === */
+.setting-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+  padding: 8px 0;
+}
+
+.setting-item label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  color: #374151 !important;
+  min-width: 120px;
+}
+
+.setting-item input[type="text"],
+.setting-item input[type="number"],
+.setting-item input[type="color"],
+.setting-item select {
+  padding: 8px 12px;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  flex: 1;
+  max-width: 200px;
+}
+
+.setting-item input[type="text"]:focus,
+.setting-item input[type="number"]:focus,
+.setting-item select:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+.setting-item input[type="color"] {
+  width: 50px;
+  height: 40px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+/* === ボタンスタイル（動的生成要素で使用） === */
+.btn-danger {
+  background: linear-gradient(135deg, #dc3545, #c82333);
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.btn-danger:hover {
+  background: linear-gradient(135deg, #c82333, #bd2130);
+  transform: translateY(-1px);
+}
+
+/* === ログアイテム（動的生成） === */
+.log-item {
+  margin: 2px 0;
+  padding: 2px 0;
+}
+
+.log-item.info {
+  color: #4fc3f7;
+}
+
+.log-item.success {
+  color: #81c784;
+}
+
+.log-item.warning {
+  color: #ffb74d;
+}
+
+.log-item.error {
+  color: #e57373;
+}
+
+/* === スクロールバーのスタイリング（update-log-container用） === */
+#update-log-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+#update-log-container::-webkit-scrollbar-track {
+  background: #2d2d2d;
+  border-radius: 4px;
+}
+
+#update-log-container::-webkit-scrollbar-thumb {
+  background: #555;
+  border-radius: 4px;
+}
+
+#update-log-container::-webkit-scrollbar-thumb:hover {
+  background: #898888;
+}

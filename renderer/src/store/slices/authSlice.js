@@ -22,7 +22,7 @@ export const fetchLaravelAuthState = createAsyncThunk(
         );
       }
 
-      return { user };
+      return { user: sanitizeUser(user) };
     } catch (error) {
       return rejectWithValue(
         error?.message || "Laravel authentication failed.",
@@ -30,6 +30,12 @@ export const fetchLaravelAuthState = createAsyncThunk(
     }
   },
 );
+
+const sanitizeUser = (user) => {
+  if (!user) return null;
+  const { role_id: _oldRoleId, ...safe } = user;
+  return safe;
+};
 
 const initialState = {
   user: null,
@@ -47,7 +53,7 @@ const authSlice = createSlice({
       const user = action.payload?.user ?? null;
       const authenticated = Boolean(user) && action.payload?.authenticated !== false;
 
-      state.user = user;
+      state.user = sanitizeUser(user);
       state.authenticated = authenticated;
       state.hasAccessToken = authenticated;
       state.status = authenticated ? "authenticated" : "unauthenticated";
@@ -65,7 +71,7 @@ const authSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchLaravelAuthState.fulfilled, (state, action) => {
-        state.user = action.payload.user;
+        state.user = sanitizeUser(action.payload.user);
         state.authenticated = true;
         state.hasAccessToken = true;
         state.status = "authenticated";
