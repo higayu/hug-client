@@ -128,9 +128,9 @@ export default function FanMenu({ spaceId }) {
       className="
         pointer-events-none
         absolute
-        bottom-2
-        left-2
-        z-50
+        bottom-0
+        left-0
+        z-0
         h-[250px]
         w-[260px]
       "

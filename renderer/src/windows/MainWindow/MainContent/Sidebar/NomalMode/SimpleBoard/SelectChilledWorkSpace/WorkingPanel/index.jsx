@@ -3,10 +3,12 @@ import { useSelector } from 'react-redux'
 import { FAN_CONTENT_PANELS, useAppState } from '@/AppStateContext'
 import {
   selectSpaceActiveFanContentPanel,
+  selectSpace,
 } from '@/store/slices/simpleBoardSlice'
 import {PersonalRecordManagerPanel2} from '@/components/common/hug_function'
 import AiContents from '@/components/common/AiContents'
 import ChildKadai from './ChildKadai'
+import FanMenu from './FanMenu'
 
 const INITIAL_PROMPT_TABS = [
   {
@@ -31,6 +33,7 @@ const INITIAL_PROMPT_TABS = [
 
 export default function MainPanel({ spaceId }) {
   const { USE_AI } = useAppState()
+  const space = useSelector(selectSpace(spaceId))
 
   const activeFanContentPanel = useSelector(
     selectSpaceActiveFanContentPanel(spaceId)
@@ -79,12 +82,15 @@ export default function MainPanel({ spaceId }) {
 
   return (
     <section
-      className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden"
+      className="relative flex h-full min-h-0 min-w-0 flex-col overflow-hidden"
       aria-label="メインパネル"
     >
       <header className="shrink-0 border-b border-gray-200 bg-gray-50 px-2 py-1">
         <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
+          <div className="flex min-w-0 items-center gap-3">
+            <h2 className="min-w-0 truncate text-lg font-bold text-slate-900">
+              {space?.childId || '未取得'}: {space?.childName}
+            </h2>
             <span className="text-xs font-semibold tracking-wide text-gray-500">
               モード
             </span>
@@ -131,7 +137,7 @@ export default function MainPanel({ spaceId }) {
       {activeFanContentPanel === FAN_CONTENT_PANELS.AI_SUPPORT &&
         promptTabs.length > 0 && (
           <footer className="shrink-0 border-t border-gray-600 bg-gray-700">
-            <div className="flex flex-wrap">
+            <div className="flex flex-wrap pl-20">
               {promptTabs.map(
                 ({
                   key,
@@ -142,10 +148,8 @@ export default function MainPanel({ spaceId }) {
                   <button
                     key={key}
                     type="button"
-                    className={`min-w-[100px] px-3 py-2 text-sm font-medium transition-colors ${
-                      activePromptKey === key
-                        ? activeClass
-                        : inactiveClass
+                    className={`min-w-[100px] px-3 py-3 text-sm font-medium transition-colors ${
+                      activePromptKey === key ? activeClass : inactiveClass
                     }`}
                     onClick={() => setActivePromptKey(key)}
                   >
@@ -156,6 +160,9 @@ export default function MainPanel({ spaceId }) {
             </div>
           </footer>
         )}
+      <div className="pointer-events-none absolute bottom-2 left-2 z-30">
+        <FanMenu spaceId={spaceId} />
+      </div>
     </section>
   )
 }

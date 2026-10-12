@@ -1,12 +1,9 @@
 import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import VerticaPanel from '@/components/ui/ResizableSplitPane/VerticaPanel';
-import HorizonPanel from '@/components/ui/ResizableSplitPane/HorizonPanel';
 import * as simpleBoardBindings from '@/store/slices/simpleBoardSlice';
 import { useSimpleAttendanceRows } from '../AttendanceTable/hooks/useSimpleAttendance';
 import WorkingPanel from './WorkingPanel';
-import SelectChildren from './SelectChildren';
-import FanMenu from './FanMenu';
 
 function SelectedChildSpace({ row }) {
   const dispatch = useDispatch();
@@ -20,31 +17,14 @@ function SelectedChildSpace({ row }) {
       onFocusCapture={() => dispatch(simpleBoardBindings.setActiveSpaceId(spaceId))}
       onPointerDownCapture={() => dispatch(simpleBoardBindings.setActiveSpaceId(spaceId))}
     >
-      <HorizonPanel
-        defaultLeftPercent={30}
-        minLeftWidth={280}
-        minRightWidth={300}
-        resizeBarWidth={10}
-        gripWidth={6}
-        left={(
-          <div className="relative h-full min-h-0 min-w-0 overflow-visible">
-            {childId === row.childId && <SelectChildren spaceId={spaceId} />}
-            <div className="pointer-events-none absolute bottom-0 left-0 z-0">
-              <FanMenu spaceId={spaceId} />
-            </div>
-          </div>
+      <div className="h-full min-h-0 min-w-0 rounded-lg border border-gray-200 bg-white shadow-sm">
+        {childId === row.childId && (
+          <WorkingPanel
+            key={row.childId}
+            spaceId={spaceId}
+          />
         )}
-        right={(
-          <div className="h-full min-h-0 min-w-0 overflow-auto rounded-lg border border-gray-200 bg-white shadow-sm">
-            {childId === row.childId && (
-              <WorkingPanel
-                key={row.childId}
-                spaceId={spaceId}
-              />
-            )}
-          </div>
-        )}
-      />
+      </div>
     </section>
   );
 }
