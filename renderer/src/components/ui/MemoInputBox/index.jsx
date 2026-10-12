@@ -14,7 +14,6 @@ import {
 } from "@/store/workSpaceSelectors.js";
 import { useAppState } from "@/AppStateContext";
 import { useNote } from "@/hooks/useNote";
-import { PersonalRecordButton } from '@/components/common/hug_function';
 import CopyButton from "@/components/ui/CopyButton";
 
 export default function MemoInputBox({
@@ -497,23 +496,6 @@ export default function MemoInputBox({
         >
           このメモを保存
         </button>
-
-        {(memoType === 1 || memoType === 2) && (
-          <PersonalRecordButton
-            id={`kojin-kiroku-${memoType}-${instanceId}`}
-            selectedChildId={selectedChildId}
-            selectedChildName={selectedChildName}
-            disabled={!selectedChildId}
-            label="個人記録"
-            className={[
-              "px-2 py-2 rounded-md text-white bg-[#00a405] cursor-pointer transition-all whitespace-nowrap hover:bg-[#006305] hover:scale-105 active:bg-[#005004] active:scale-[0.97]",
-              "flex h-full items-center justify-center rounded-none border-0 px-2",
-              "text-xs font-bold whitespace-nowrap",
-              "focus:outline-none focus:ring-1 focus:ring-inset focus:ring-green-400",
-              "disabled:cursor-not-allowed disabled:opacity-40",
-            ].join(" ")}
-          />
-        )}
       </div>
     </div>
   );

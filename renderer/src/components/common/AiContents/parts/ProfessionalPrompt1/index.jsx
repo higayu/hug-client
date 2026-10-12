@@ -11,8 +11,6 @@ import {
 } from "@/store/slices/aiChatSlice.js";
 
 import { ProfessionalPlan } from "@/components/common/hug_function/Plan";
-import {ProfessionalSupportManagerPanel} from "@/components/common/hug_function";
-
 import ChildNotesTabs from "../ChildNotesTabs";
 
 const DBG = "ProfessionalPrompt1";
@@ -244,27 +242,6 @@ export default function ProfessionalPrompt1({
             {aiName}実行
           </button>
 
-          {showSupportCheck && (
-            <div className="w-[30%]">
-              <ProfessionalSupportManagerPanel
-                facilityId={FACILITY_ID}
-                currentYmd={CURRENT_YMD}
-                selectedChildId={selectedChildId}
-                selectedChildName={selectedChildName}
-                enterTime={attendanceEnterText}
-                leaveTime={attendanceLeaveText}
-                onOpenProfessionalSupportList={addProfessionalSupportListTab}
-                isAbsent={isAbsent}
-                hasEntered={hasEntered}
-                hasExited={hasExited}
-                isUIEnabled={isUIEnabled}
-                isStop={false}
-                loadingAction={null}
-                logTag="ProfessionalPrompt1"
-                className="w-full"
-              />
-            </div>
-          )}
         </div>
 
         {renderResultArea && (

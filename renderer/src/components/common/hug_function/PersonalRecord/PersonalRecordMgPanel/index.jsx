@@ -1,10 +1,4 @@
-import {
-  CheckCircleIcon,
-  ChevronDownIcon,
-  ChevronUpIcon,
-} from "@heroicons/react/24/outline";
-import { useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
+import { CheckCircleIcon } from "@heroicons/react/24/outline";
 import { useSelector } from "react-redux";
 
 import PersonalRecordButton from "../PersonalRecordButton";
@@ -80,28 +74,16 @@ export function PersonalRecordRegisteredStatus({
 }
 
 /**
- * 個人記録チェックパネル
- *
- * 親ボタンには現在状態のみを表示し、操作は子ボタンへまとめる。
- *
- * @param {string} className
- * @param {"up" | "down"} expandDirection
+ * 個人記録チェックパネル（展開メニューなし）
+ * 閉じた状態の個人記録ボタンと登録状態の確認操作を維持する。
  */
 export default function PersonalRecordMgPanel({
   className = "",
-  expandDirection = "up",
   selectedChildId = "",
   selectedChildName = "",
 }) {
-  const [isOpen, setIsOpen] = useState(false);
-  const panelRef = useRef(null);
-  const popupRef = useRef(null);
-  const [popupStyle, setPopupStyle] = useState(null);
-
   const { checking, runCheck } = usePersonRecordCheck(selectedChildId);
-
   const currentYmd = useSelector(selectCurrentYmd);
-
   const personalRecordStatus = useSelector((state) =>
     selectPersonalRecordStatus(state, currentYmd, selectedChildId)
   );
@@ -109,207 +91,49 @@ export default function PersonalRecordMgPanel({
   const todayPersonalRecordRegistered = personalRecordStatus.registered;
   const todayPersonalRecordCount = personalRecordStatus.recordCount;
 
-  const expandUp = expandDirection !== "down";
-
-  useEffect(() => {
-    const handlePointerDown = (event) => {
-      const clickedPanel = panelRef.current?.contains(event.target);
-      const clickedPopup = popupRef.current?.contains(event.target);
-
-      if (!clickedPanel && !clickedPopup) {
-        setIsOpen(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handlePointerDown);
-    return () => document.removeEventListener("mousedown", handlePointerDown);
-  }, []);
-
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const updatePopupPosition = () => {
-      const trigger = panelRef.current;
-      if (!trigger) return;
-
-      const rect = trigger.getBoundingClientRect();
-      const gap = 4;
-      const viewportPadding = 6;
-      const popupWidth = popupRef.current?.offsetWidth || rect.width;
-      const width = Math.max(rect.width, popupWidth);
-      const safeWidth = Math.min(
-        width,
-        Math.max(180, window.innerWidth - viewportPadding * 2)
-      );
-      const left = Math.min(
-        Math.max(viewportPadding, rect.left),
-        Math.max(
-          viewportPadding,
-          window.innerWidth - safeWidth - viewportPadding
-        )
-      );
-
-      if (expandUp) {
-        const popupHeight = popupRef.current?.offsetHeight || 40;
-        setPopupStyle({
-          position: "fixed",
-          top: Math.max(viewportPadding, rect.top - popupHeight - gap),
-          left,
-          minWidth: rect.width,
-          zIndex: 10000,
-        });
-      } else {
-        setPopupStyle({
-          position: "fixed",
-          top: rect.bottom + gap,
-          left,
-          minWidth: rect.width,
-          zIndex: 10000,
-        });
-      }
-    };
-
-    updatePopupPosition();
-    const rafId = requestAnimationFrame(updatePopupPosition);
-
-    window.addEventListener("resize", updatePopupPosition);
-    window.addEventListener("scroll", updatePopupPosition, true);
-
-    return () => {
-      cancelAnimationFrame(rafId);
-      window.removeEventListener("resize", updatePopupPosition);
-      window.removeEventListener("scroll", updatePopupPosition, true);
-    };
-  }, [isOpen, expandUp]);
-
-  const handleCheck = async () => {
-    await runCheck();
-  };
-
   return (
     <div
-      ref={panelRef}
-      className={`relative inline-flex h-9 items-center ${className}`}
+      className={`inline-flex h-9 max-w-full min-w-0 items-stretch overflow-hidden rounded-md border border-gray-600 bg-gray-800 text-xs text-gray-200 ${className}`}
     >
-      {/* 展開メニュー: body直下へPortal表示し、他パネルの下に潜らせない */}
-      {isOpen && popupStyle
-        ? createPortal(
-            <div
-              ref={popupRef}
-              style={popupStyle}
-              className={[
-                "flex items-center gap-1 rounded-md",
-                "border border-gray-600 bg-gray-800 p-1 shadow-lg",
-              ].join(" ")}
-            >
-              <button
-                type="button"
-                onClick={handleCheck}
-                disabled={checking || !selectedChildId}
-                className={[
-                  "inline-flex h-8 shrink-0 items-center justify-center rounded px-3",
-                  "text-xs font-bold whitespace-nowrap",
-                  "border border-green-500/40 bg-green-500/20 text-green-200",
-                  "hover:bg-green-500/30",
-                  "disabled:cursor-not-allowed disabled:opacity-40",
-                ].join(" ")}
-                title="本日の個人記録登録状態を確認"
-              >
-                {checking ? "確認中…" : "確認"}
-              </button>
+      <PersonalRecordButton
+        selectedChildId={selectedChildId}
+        selectedChildName={selectedChildName}
+        currentYmd={currentYmd}
+        disabled={!selectedChildId}
+        label="個人記録"
+        className="flex h-full shrink-0 items-center justify-center rounded-none border-0 border-r border-gray-600 bg-[#00a405] px-2 text-xs font-bold whitespace-nowrap text-white transition-all hover:bg-[#006305] active:bg-[#005004] disabled:cursor-not-allowed disabled:opacity-40"
+      />
 
-              <PersonalRecordButton
-                selectedChildId={selectedChildId}
-                selectedChildName={selectedChildName}
-                currentYmd={currentYmd}
-                disabled={!selectedChildId}
-                label="個人記録"
-                className="text-white bg-[#00a405] cursor-pointer transition-all whitespace-nowrap hover:bg-[#006305] hover:scale-105 active:bg-[#005004] active:scale-[0.97] flex h-8 shrink-0 items-center justify-center rounded px-3 text-xs font-bold"
-              />
-            </div>,
-            document.body
-          )
-        : null}
-
-      {/* 親ボタン */}
-      <div
-        className={[
-          "inline-flex h-9 min-w-0 items-stretch overflow-hidden rounded-md",
-          "border border-gray-600 bg-gray-800 text-xs text-gray-200",
-        ].join(" ")}
+      <button
+        type="button"
+        onClick={runCheck}
+        disabled={checking || !selectedChildId}
+        title="本日の個人記録登録状態を確認"
+        aria-label="本日の個人記録登録状態を再確認"
+        className="inline-flex min-w-0 items-center gap-2 bg-transparent px-2 text-xs text-gray-200 hover:bg-gray-700 focus:outline-none focus:ring-1 focus:ring-inset focus:ring-green-400 disabled:cursor-not-allowed disabled:opacity-50"
       >
-        {/*
-          左側は展開メニュー内の「個人記録」と同じ PersonalRecordButton を利用する。
-          そのため、閉じた状態でもここをクリックすれば同じ処理を実行できる。
-        */}
-        <div
-          className="flex shrink-0 items-stretch border-r border-gray-600"
-          onClick={() => setIsOpen(false)}
-        >
-          <PersonalRecordButton
-            selectedChildId={selectedChildId}
-            selectedChildName={selectedChildName}
-            currentYmd={currentYmd}
-            disabled={!selectedChildId}
-            label="個人記録"
-            className={[
-              "text-white bg-[#00a405] cursor-pointer transition-all whitespace-nowrap hover:bg-[#006305] hover:scale-105 active:bg-[#005004] active:scale-[0.97]",
-              "flex h-full items-center justify-center rounded-none border-0 px-2",
-              "text-xs font-bold whitespace-nowrap",
-              "focus:outline-none focus:ring-1 focus:ring-inset focus:ring-green-400",
-              "disabled:cursor-not-allowed disabled:opacity-40",
-            ].join(" ")}
+        <span className="inline-flex min-w-0 items-center gap-1 whitespace-nowrap">
+          <span className="text-gray-400">本日</span>
+          <PersonalRecordRegisteredStatus
+            registered={todayPersonalRecordRegistered}
+            checking={checking}
+            recordCount={todayPersonalRecordCount}
           />
-        </div>
-
-        {/* 右側は状態表示とメニュー開閉専用 */}
-        <button
-          type="button"
-          onClick={() => setIsOpen((prev) => !prev)}
-          className={[
-            "inline-flex h-full min-w-0 items-center gap-2 px-2",
-            "bg-transparent text-xs text-gray-200 hover:bg-gray-700",
-            "focus:outline-none focus:ring-1 focus:ring-inset focus:ring-green-400",
-          ].join(" ")}
-          aria-expanded={isOpen}
-          title="個人記録メニューを開く"
-        >
-          <span className="inline-flex min-w-0 items-center gap-1 whitespace-nowrap">
-            <span className="text-gray-400">本日</span>
-            <PersonalRecordRegisteredStatus
-              registered={todayPersonalRecordRegistered}
-              checking={checking}
-              recordCount={todayPersonalRecordCount}
+          {todayPersonalRecordRegistered === true && (
+            <CheckCircleIcon
+              className="h-4 w-4 shrink-0 text-green-400"
+              title="本日の個人記録登録済み"
+              aria-label="本日の個人記録登録済み"
             />
-
-            {todayPersonalRecordRegistered === true && (
-              <CheckCircleIcon
-                className="h-4 w-4 shrink-0 text-green-400"
-                title="本日の個人記録登録済み"
-                aria-label="本日の個人記録登録済み"
-              />
-            )}
+          )}
+        </span>
+        {todayPersonalRecordCount != null && (
+          <span className="shrink-0 whitespace-nowrap text-gray-400">
+            {todayPersonalRecordCount}件
           </span>
+        )}
+      </button>
 
-          {todayPersonalRecordCount != null && (
-            <span className="shrink-0 whitespace-nowrap text-gray-400">
-              {todayPersonalRecordCount}件
-            </span>
-          )}
-
-          {expandUp ? (
-            isOpen ? (
-              <ChevronDownIcon className="h-4 w-4 shrink-0" />
-            ) : (
-              <ChevronUpIcon className="h-4 w-4 shrink-0" />
-            )
-          ) : isOpen ? (
-            <ChevronUpIcon className="h-4 w-4 shrink-0" />
-          ) : (
-            <ChevronDownIcon className="h-4 w-4 shrink-0" />
-          )}
-        </button>
-      </div>
     </div>
   );
 }
