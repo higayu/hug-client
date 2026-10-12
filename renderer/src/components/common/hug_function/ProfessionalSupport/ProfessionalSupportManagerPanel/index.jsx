@@ -385,7 +385,7 @@ export default function ProfessionalSupportManagerPanel({
   return (
     <div
       ref={menuRef}
-      className={`relative mt-1 flex w-full flex-col ${isOpen ? 'z-[120]' : 'z-0'} ${className}`.trim()}
+      className={`relative flex flex-col ${isOpen ? 'z-[120]' : 'z-0'} ${className}`.trim()}
     >
       {/* 展開エリア: body直下に浮かせるため、閉じても余白を確保しない */}
       {isOpen && overlayStyle

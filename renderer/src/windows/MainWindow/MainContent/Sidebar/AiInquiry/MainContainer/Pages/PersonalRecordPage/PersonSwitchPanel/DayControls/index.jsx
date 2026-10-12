@@ -1,4 +1,4 @@
-// PersonalRecordManagerPanel2/DayControls.jsx
+// SavedPersonalRecord/DayControls.jsx
 
 import PersonalRecordGetDayBtn from "./PersonalRecordGetDayBtn";
 

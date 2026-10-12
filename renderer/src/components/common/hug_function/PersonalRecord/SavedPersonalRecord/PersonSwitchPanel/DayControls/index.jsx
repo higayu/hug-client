@@ -1,26 +1,27 @@
-// PersonalRecordManagerPanel2/PersonalRecordMonthControls.jsx
-import PersonalRecordGetMonthBtn from "./PersonalRecordGetMonthBtn";
+// SavedPersonalRecord/DayControls.jsx
 
-export default function MonthControls({
+import PersonalRecordGetDayBtn from "./PersonalRecordGetDayBtn";
+
+export default function DayControls({
   spaceId,
-  month,
-  onMonthChange,
+  date,
+  onDateChange,
   disabled = false,
   onServiceRecordsUpdated,
   onDebugResult,
 }) {
-  const handleMonthChange = (event) => {
-    onMonthChange(event.target.value);
+  const handleDateChange = (event) => {
+    onDateChange(event.target.value);
   };
 
   return (
     <div className="flex flex-wrap items-center gap-3">
       <div className="flex items-center gap-2">
         <input
-          type="month"
-          id="personal-record-target-month"
-          value={month}
-          onChange={handleMonthChange}
+          type="date"
+          id="personal-record-target-date"
+          value={date}
+          onChange={handleDateChange}
           className="
             rounded border border-gray-300
             px-3 py-1.5 bg-white
@@ -30,9 +31,9 @@ export default function MonthControls({
         />
       </div>
 
-      <PersonalRecordGetMonthBtn
+      <PersonalRecordGetDayBtn
         spaceId={spaceId}
-        monthStr={month}
+        dateStr={date}
         disabled={disabled}
         onServiceRecordsUpdated={onServiceRecordsUpdated}
         onDebugResult={onDebugResult}

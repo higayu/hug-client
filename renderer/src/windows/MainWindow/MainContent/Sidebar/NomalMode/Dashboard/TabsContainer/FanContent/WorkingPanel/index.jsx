@@ -4,7 +4,7 @@ import { FAN_CONTENT_PANELS, useAppState } from '@/AppStateContext'
 import {
   selectSpaceActiveFanContentPanel,
 } from '@/store/slices/chilledspaceSlice'
-import {PersonalRecordManagerPanel2} from '@/components/common/hug_function'
+import {SavedPersonalRecord} from '@/components/common/hug_function'
 import AiContents from '@/components/common/AiContents'
 import ChildKadai from './ChildKadai'
 import DeleteChilledSpaceBtn from './DeleteChilledSpaceBtn'
@@ -126,7 +126,7 @@ export default function MainPanel({ spaceId }) {
         )}
 
         {activeFanContentPanel === FAN_CONTENT_PANELS.PERSONAL_RECORD && (
-          <PersonalRecordManagerPanel2 spaceId={spaceId} />
+          <SavedPersonalRecord spaceId={spaceId} />
         )}
       </div>
 

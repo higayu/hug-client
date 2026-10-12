@@ -63,7 +63,7 @@ rg "react-redux|@/store|store/store" renderer/src/components/common/hug_function
 
 ## 優先度B：チェックパネルとチェック用 hook
 
-### `PersonalRecord/PersonalRecordCheckPanel/index.jsx`
+### `PersonalRecord/PersonalRecordMgPanel/index.jsx`
 
 現状：以下を内部で Redux から取得している。
 
@@ -84,7 +84,7 @@ rg "react-redux|@/store|store/store" renderer/src/components/common/hug_function
 
 上記を props で受け取る表示コンポーネントにする。呼び出し元の FanContent `CheckPanels` を Redux 接続コンテナにする。
 
-### `PersonalRecord/PersonalRecordCheckPanel/usePersonRecordCheck/index.js`
+### `PersonalRecord/PersonalRecordMgPanel/usePersonRecordCheck/index.js`
 
 現状：児童ID、施設ID、対象日を selector で取得し、結果を `recordStatusSlice` へ dispatch している。
 
@@ -135,7 +135,7 @@ rg "react-redux|@/store|store/store" renderer/src/components/common/hug_function
 
 ## 優先度C：個人記録管理パネル
 
-### `PersonalRecord/PersonalRecordManagerPanel2/index.jsx`
+### `PersonalRecord/SavedPersonalRecord/index.jsx`
 
 現状：対象児童IDを selector で取得し、読み込んだサービス記録を `databaseSlice` へ dispatch している。
 
@@ -155,21 +155,21 @@ rg "react-redux|@/store|store/store" renderer/src/components/common/hug_function
 - `onLoaded(records)` prop を追加する。
 - データ取得だけを担当し、保存先を Redux に限定しない。
 
-### `PersonalRecord/PersonalRecordManagerPanel2/ListBox_Text/index.jsx`
+### `PersonalRecord/SavedPersonalRecord/ListBox_Text/index.jsx`
 
 現状：児童IDとサービス記録を内部で selector から取得している。
 
 候補：
 
 - `selectedChildId` と `serviceRecords` を props で受け取る。
-- 親の `PersonalRecordManagerPanel2` から引き渡す。
+- 親の `SavedPersonalRecord` から引き渡す。
 
 ### `PersonalRecordGetDayBtn/index.jsx`
 
 対象：
 
 ```text
-PersonalRecordManagerPanel2/PersonSwitchPanel/DayControls/
+SavedPersonalRecord/PersonSwitchPanel/DayControls/
 PersonalRecordGetDayBtn/index.jsx
 ```
 
@@ -185,7 +185,7 @@ PersonalRecordGetDayBtn/index.jsx
 対象：
 
 ```text
-PersonalRecordManagerPanel2/PersonSwitchPanel/MonthControls/
+SavedPersonalRecord/PersonSwitchPanel/MonthControls/
 PersonalRecordGetMonthBtn/index.jsx
 ```
 
@@ -236,7 +236,7 @@ AttendanceAction/attendance/update/runAttendanceUpdate.js
 
 1. `ProfessionalPlan`、`PersonSupportPlan`、`ProfessionalSupportSearch`
 2. PersonalRecord / ProfessionalSupport のチェックパネル
-3. `PersonalRecordManagerPanel2` と子コンポーネント
+3. `SavedPersonalRecord` と子コンポーネント
 4. `GetTodayUsersChildren/useAttendanceFetch`
 5. AttendanceAction の store 直接参照
 6. 全呼び出し元の動作確認後、`hug_function` 配下の Redux import が0件か確認

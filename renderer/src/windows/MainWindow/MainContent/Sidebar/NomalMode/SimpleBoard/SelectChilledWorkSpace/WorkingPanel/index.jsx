@@ -5,7 +5,13 @@ import {
   selectSpaceActiveFanContentPanel,
   selectSpace,
 } from '@/store/slices/simpleBoardSlice'
-import {PersonalRecordManagerPanel2} from '@/components/common/hug_function'
+import {
+  SavedPersonalRecord,
+  PersonalRecordMgPanel,
+  ProfessionalSupportManagerPanel,
+  addProfessionalSupportListAction,
+} from '@/components/common/hug_function'
+import { useSimpleAttendanceRows } from '../../AttendanceTable/hooks/useSimpleAttendance'
 import AiContents from '@/components/common/AiContents'
 import ChildKadai from './ChildKadai'
 import FanMenu from './FanMenu'
@@ -32,8 +38,12 @@ const INITIAL_PROMPT_TABS = [
 ]
 
 export default function MainPanel({ spaceId }) {
-  const { USE_AI } = useAppState()
+  const { USE_AI, appState, CURRENT_YMD, FACILITY_ID } = useAppState()
   const space = useSelector(selectSpace(spaceId))
+  const attendanceRows = useSimpleAttendanceRows()
+  const attendance = attendanceRows.find(
+    (row) => String(row.childId) === String(space?.childId)
+  )
 
   const activeFanContentPanel = useSelector(
     selectSpaceActiveFanContentPanel(spaceId)
@@ -51,15 +61,6 @@ export default function MainPanel({ spaceId }) {
   }
 
   const aiName = aiNameMap[USE_AI] || '未選択'
-
-  const modeName =
-    activeFanContentPanel === FAN_CONTENT_PANELS.AI_SUPPORT
-      ? 'AI支援'
-      : activeFanContentPanel === FAN_CONTENT_PANELS.CHILD_KADAI
-        ? '児童課題'
-        : activeFanContentPanel === FAN_CONTENT_PANELS.PERSONAL_RECORD
-          ? '個人記録'
-          : '未選択'
 
   const handlePromptTabsChange = useCallback((tabs) => {
     const mergedTabs = tabs.map((tab) => {
@@ -86,17 +87,35 @@ export default function MainPanel({ spaceId }) {
       aria-label="メインパネル"
     >
       <header className="shrink-0 border-b border-gray-200 bg-gray-50 px-2 py-1">
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex min-w-0 items-center gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex min-w-0 flex-wrap items-center gap-3">
             <h2 className="min-w-0 truncate text-lg font-bold text-slate-900">
               {space?.childId || '未取得'}: {space?.childName}
             </h2>
-            <span className="text-xs font-semibold tracking-wide text-gray-500">
-              モード
-            </span>
-            <span className="text-lg font-bold text-gray-900">
-              {modeName}
-            </span>
+            <div className="flex shrink-0 flex-nowrap items-center gap-2">
+              <PersonalRecordMgPanel
+              selectedChildId={space?.childId}
+              selectedChildName={space?.childName}
+              expandDirection="down"
+            />
+              <ProfessionalSupportManagerPanel
+                className="shrink-0"
+              facilityId={FACILITY_ID}
+              currentYmd={CURRENT_YMD}
+              selectedChildId={space?.childId}
+              selectedChildName={space?.childName}
+              enterTime={attendance?.enterTime}
+              leaveTime={attendance?.leaveTime}
+              isAbsent={attendance?.isAbsent}
+              hasEntered={Boolean(attendance?.enterTime)}
+              hasExited={Boolean(attendance?.leaveTime)}
+              isUIEnabled={Boolean(space?.childId)}
+              onOpenProfessionalSupportList={() =>
+                addProfessionalSupportListAction(appState, space?.childId, space?.childName)
+              }
+              expandDirection="down"
+              />
+            </div>
           </div>
 
           {activeFanContentPanel === FAN_CONTENT_PANELS.AI_SUPPORT && (
@@ -130,7 +149,7 @@ export default function MainPanel({ spaceId }) {
         )}
 
         {activeFanContentPanel === FAN_CONTENT_PANELS.PERSONAL_RECORD && (
-          <PersonalRecordManagerPanel2 spaceId={spaceId} />
+          <SavedPersonalRecord spaceId={spaceId} />
         )}
       </div>
 
@@ -160,7 +179,7 @@ export default function MainPanel({ spaceId }) {
             </div>
           </footer>
         )}
-      <div className="pointer-events-none absolute bottom-2 left-2 z-30">
+      <div className="pointer-events-none absolute bottom-2 left-2 z-0">
         <FanMenu spaceId={spaceId} />
       </div>
     </section>

@@ -3,10 +3,10 @@
 ## V2へ統一した取得経路
 - PersonalRecordGetDayBtn
 - PersonalRecordGetMonthBtn
-- PersonalRecordCheckPanel / usePersonRecordCheck
+- PersonalRecordMgPanel / usePersonRecordCheck
 
 ## 共通取得処理
-`PersonalRecord/PersonalRecordManagerPanel2/PersonSwitchPanel/fetchPersonalRecordV2.js`
+`PersonalRecord/SavedPersonalRecord/PersonSwitchPanel/fetchPersonalRecordV2.js`
 
 実行順:
 1. `personal_record_list_fetch`

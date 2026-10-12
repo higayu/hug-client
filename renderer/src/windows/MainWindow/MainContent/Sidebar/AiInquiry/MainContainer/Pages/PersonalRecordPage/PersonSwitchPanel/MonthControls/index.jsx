@@ -1,4 +1,4 @@
-// PersonalRecordManagerPanel2/PersonalRecordMonthControls.jsx
+// SavedPersonalRecord/PersonalRecordMonthControls.jsx
 import PersonalRecordGetMonthBtn from "./PersonalRecordGetMonthBtn";
 
 export default function MonthControls({

@@ -1,4 +1,4 @@
-// PersonalRecordManagerPanel2/index.jsx
+// SavedPersonalRecord/index.jsx
 
 import { useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -46,7 +46,7 @@ const toDateStr = (value) => {
   return "";
 };
 
-export default function PersonalRecordManagerPanel2({ spaceId }) {
+export default function SavedPersonalRecord({ spaceId }) {
   const {
     CURRENT_YMD,
     FACILITY_ID,

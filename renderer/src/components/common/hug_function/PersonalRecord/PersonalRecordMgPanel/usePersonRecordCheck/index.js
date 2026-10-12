@@ -9,7 +9,7 @@ import {
   setPersonalRecordStatus,
   setRecordStatusError,
 } from "@/store/slices/recordStatusSlice.js";
-import { fetchPersonalRecordV2 } from "../../PersonalRecordManagerPanel2/PersonSwitchPanel/fetchPersonalRecordV2";
+import { fetchPersonalRecordV2 } from "../../SavedPersonalRecord/PersonSwitchPanel/fetchPersonalRecordV2";
 import { parseTodayPersonalRecordStatus } from "./parseTodayPersonalRecordStatus";
 
 /**

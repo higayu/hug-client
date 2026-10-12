@@ -21,7 +21,7 @@ export default function OverlayPanel({
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
 
   return (
-    <div className={`relative min-h-0 flex-1 overflow-hidden bg-white ${isExpanded ? 'z-30' : 'z-auto'} ${className}`}>
+    <div className={`relative min-h-0 flex-1 overflow-hidden bg-white ${isExpanded ? 'z-50' : 'z-auto'} ${className}`}>
       <div
         className={`h-full overflow-auto ${contentClassName}`}
         inert={isExpanded ? '' : undefined}

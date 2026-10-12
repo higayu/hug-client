@@ -1,6 +1,6 @@
 import { useTabs } from '@/hooks/useTabs'
 import {
-  PersonalRecordCheckPanel,
+  PersonalRecordMgPanel,
   ProfessionalSupportManagerPanel,
 } from '@/components/common/hug_function'
 
@@ -23,7 +23,7 @@ export default function CheckPanels({
 
   return (
     <div className="mt-2 flex w-full items-center gap-1">
-      <PersonalRecordCheckPanel
+      <PersonalRecordMgPanel
         selectedChildId={selectedChildId}
         selectedChildName={selectedChildName}
         className="min-w-0 flex-1"

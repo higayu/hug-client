@@ -87,7 +87,7 @@ export function PersonalRecordRegisteredStatus({
  * @param {string} className
  * @param {"up" | "down"} expandDirection
  */
-export default function PersonalRecordCheckPanel({
+export default function PersonalRecordMgPanel({
   className = "",
   expandDirection = "up",
   selectedChildId = "",

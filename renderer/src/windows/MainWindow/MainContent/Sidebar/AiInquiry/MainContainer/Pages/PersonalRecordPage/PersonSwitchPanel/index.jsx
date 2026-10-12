@@ -1,4 +1,4 @@
-// @/common/hug_function/PersonalRecordManagerPanel2/SwitchPanel/index.jsx
+// @/common/hug_function/SavedPersonalRecord/SwitchPanel/index.jsx
 import MonthControls from "./MonthControls";
 import DayControls from "./DayControls";
 
