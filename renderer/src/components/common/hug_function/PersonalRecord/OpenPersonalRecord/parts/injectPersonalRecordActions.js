@@ -1,4 +1,4 @@
-// renderer/src/hooks/useTabs/actions/personalRecord/parts/injectPersonalRecordActions.js
+// renderer/src/components/common/hug_function/PersonalRecord/OpenPersonalRecord/parts/injectPersonalRecordActions.js
 
 import { getSharedHelpersScript } from './sharedHelpersScript.js'
 import { getClipboardScript } from './clipboardScript.js'

@@ -1,6 +1,6 @@
-// renderer/src/hooks/useTabs/actions/professionalNew.js
+// renderer/src/components/common/hug_function/ProfessionalSupport/OpenDetail/index.js
 
-import { createWebview, createTabButton, activateTab, closeTab } from '../common/index.js'
+import { createWebview, createTabButton, activateTab, closeTab } from '@/hooks/useTabs/common/index.js'
 import { confirmDialog } from '@/utils/dialog/confirmDialog.js'
 
 export function addProfessionalSupportNewAction(appState, space) {

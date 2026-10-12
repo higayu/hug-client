@@ -1,4 +1,4 @@
-// renderer/src/hooks/useTabs/actions/personalRecord/parts/openPersonalRecordEdit.js
+// renderer/src/components/common/hug_function/PersonalRecord/OpenPersonalRecord/parts/openPersonalRecordEdit.js
 
 export async function openPersonalRecordEdit(webview) {
   return webview.executeJavaScript(`

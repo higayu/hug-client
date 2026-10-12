@@ -1,4 +1,4 @@
-// renderer/src/hooks/useTabs/actions/personalRecord/parts/setupRecordStaff.js
+// renderer/src/components/common/hug_function/PersonalRecord/OpenPersonalRecord/parts/setupRecordStaff.js
 
 export async function setupRecordStaff(webview, staffId) {
   const staffValue = JSON.stringify(String(staffId ?? ''))

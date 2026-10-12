@@ -1,4 +1,4 @@
-import { addPersonalRecordTabAction4 } from '@/hooks/useTabs/actions/personalRecord';
+import { addPersonalRecordTabAction4 } from '@/components/common/hug_function/PersonalRecord/OpenPersonalRecord';
 
 export function openPersonalRecordTab({
   appState,

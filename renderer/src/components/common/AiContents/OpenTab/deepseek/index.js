@@ -1,4 +1,4 @@
-// renderer/src/hooks/useTabs/actions/deepseek.js
+// renderer/src/components/common/AiContents/OpenTab/deepseek/index.js
 // DeepSeek タブを、個人記録などと同じ共通タブ領域へ追加する。
 
 import { confirmDialog } from '@/utils/dialog/confirmDialog.js'
@@ -7,7 +7,7 @@ import {
   createTabButton,
   activateTab,
   closeTab,
-} from '../../common/index.js'
+} from '@/hooks/useTabs/common/index.js'
 
 const DEEPSEEK_URL = 'https://chat.deepseek.com/'
 const TAB_LABEL = 'DeepSeek'

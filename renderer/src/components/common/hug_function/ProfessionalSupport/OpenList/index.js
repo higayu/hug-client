@@ -1,11 +1,11 @@
-// renderer/src/hooks/useTabs/actions/professionalList.js
+// renderer/src/components/common/hug_function/ProfessionalSupport/OpenList/index.js
 
 import {
   createWebview,
   createTabButton,
   activateTab,
   closeTab,
-} from '../common/index.js'
+} from '@/hooks/useTabs/common/index.js'
 
 import { getDateString } from '@/utils/date/dateUtils.js'
 import { confirmDialog } from '@/utils/dialog/confirmDialog.js'

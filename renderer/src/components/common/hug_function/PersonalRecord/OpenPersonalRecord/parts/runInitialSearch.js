@@ -1,4 +1,4 @@
-// renderer/src/hooks/useTabs/actions/personalRecord/parts/runInitialSearch.js
+// renderer/src/components/common/hug_function/PersonalRecord/OpenPersonalRecord/parts/runInitialSearch.js
 
 export async function runInitialSearch(webview, currentYmd) {
   const dateValue = JSON.stringify(String(currentYmd ?? ''))

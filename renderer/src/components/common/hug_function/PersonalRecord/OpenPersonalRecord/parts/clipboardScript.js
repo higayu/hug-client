@@ -1,4 +1,4 @@
-// renderer/src/hooks/useTabs/actions/personalRecord/parts/clipboardScript.js
+// renderer/src/components/common/hug_function/PersonalRecord/OpenPersonalRecord/parts/clipboardScript.js
 
 export function getClipboardScript() {
   return String.raw`

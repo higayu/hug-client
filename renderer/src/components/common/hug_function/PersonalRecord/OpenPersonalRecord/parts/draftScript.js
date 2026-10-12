@@ -1,4 +1,4 @@
-// renderer/src/hooks/useTabs/actions/personalRecord/parts/draftScript.js
+// renderer/src/components/common/hug_function/PersonalRecord/OpenPersonalRecord/parts/draftScript.js
 
 export function getDraftScript() {
   return String.raw`

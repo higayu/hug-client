@@ -1,4 +1,4 @@
-// renderer/src/hooks/useTabs/actions/personalRecord/parts/sharedHelpersScript.js
+// renderer/src/components/common/hug_function/PersonalRecord/OpenPersonalRecord/parts/sharedHelpersScript.js
 
 export function getSharedHelpersScript() {
   return String.raw`

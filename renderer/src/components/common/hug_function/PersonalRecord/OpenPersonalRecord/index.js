@@ -1,4 +1,4 @@
-// renderer/src/hooks/useTabs/actions/personalRecord/index.js
+// renderer/src/components/common/hug_function/PersonalRecord/OpenPersonalRecord/index.js
 
 import { confirmDialog } from '@/utils/dialog/confirmDialog.js'
 import {
@@ -6,7 +6,7 @@ import {
   createTabButton,
   activateTab,
   closeTab,
-} from '../../common/index.js'
+} from '@/hooks/useTabs/common/index.js'
 
 import { runInitialSearch } from './parts/runInitialSearch.js'
 import { openPersonalRecordEdit } from './parts/openPersonalRecordEdit.js'

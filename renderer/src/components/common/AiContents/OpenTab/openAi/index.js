@@ -1,4 +1,4 @@
-// renderer/src/hooks/useTabs/actions/openAi.js
+// renderer/src/components/common/AiContents/OpenTab/openAi/index.js
 // OpenAI タブを、個人記録などと同じ共通タブ領域へ追加する。
 
 import { confirmDialog } from '@/utils/dialog/confirmDialog.js'
@@ -7,7 +7,7 @@ import {
   createTabButton,
   activateTab,
   closeTab,
-} from '../../common/index.js'
+} from '@/hooks/useTabs/common/index.js'
 
 // 一時チャットは URL の指定で有効化する。
 const OPENAI_URL = 'https://chatgpt.com/?temporary-chat=true'

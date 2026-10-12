@@ -29,7 +29,7 @@ import {
 
 import {
   addPersonalRecordTabAction4,
-} from './actions/personalRecord'
+} from '@/components/common/hug_function/PersonalRecord/OpenPersonalRecord'
 
 import {
   addMonitoringTabAction,
@@ -37,15 +37,15 @@ import {
 
 import {
   addProfessionalSupportListAction,
-} from './actions/professionalList.js'
+} from '@/components/common/hug_function/ProfessionalSupport/OpenList'
 
 import {
   addProfessionalSupportNewAction3,
   addProfessionalSupportCheckAction,
-} from './actions/professionalNew.js'
+} from '@/components/common/hug_function/ProfessionalSupport/OpenDetail'
 
-import { addOpenAiTabAction,} from './actions/openAi';
-import { addDeepseekTabAction,} from './actions/deepseek';
+import { addOpenAiTabAction,} from '@/components/common/AiContents/OpenTab/openAi';
+import { addDeepseekTabAction,} from '@/components/common/AiContents/OpenTab/deepseek';
 
 // useTabs() は複数コンポーネントから呼ばれるため、
 // 初期化はアプリ全体で1回だけ行う
