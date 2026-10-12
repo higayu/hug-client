@@ -1,4 +1,5 @@
 import GetTodayUsersChildren from '@/components/common/hug_function/GetTodayUsersChildren';
+import SelectedDateWeekday from './SelectedDateWeekday';
 
 const SIMPLE_BOARD_FILTER_OPTIONS = [
   { value: 0, label: '全件' },
@@ -17,7 +18,8 @@ export default function AttendanceHeader({
 }) {
   return (
     <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-      <div className="min-w-[320px] flex-1">
+      <div className="flex min-w-[320px] flex-1 items-center gap-3">
+        <div className="min-w-0 flex-1">
         <GetTodayUsersChildren
           expandDirection="down"
           filterOptions={SIMPLE_BOARD_FILTER_OPTIONS}
@@ -25,6 +27,8 @@ export default function AttendanceHeader({
           onFilterModeChange={onFilterModeChange}
           variant="simpleBoard"
         />
+        </div>
+        <SelectedDateWeekday />
       </div>
 
       <div

@@ -12,6 +12,7 @@ import {
   selectSpaceChildId,
   selectSpaceChildName,
 } from "@/store/workSpaceSelectors.js";
+import { useAppState } from "@/AppStateContext";
 import { useNote } from "@/hooks/useNote";
 import { PersonalRecordButton } from '@/components/common/hug_function';
 import CopyButton from "@/components/ui/CopyButton";
@@ -39,6 +40,8 @@ export default function MemoInputBox({
   const selectedChildId = String(childId ?? spaceChildId);
   const selectedChildName = childName ?? spaceChildName;
   const { saveTemp1, saveTemp2, loadTemp } = useNote();
+  const { STAFF_ID, CURRENT_DAY_OF_WEEK, DATABASE_TYPE } = useAppState();
+  const weekdayId = CURRENT_DAY_OF_WEEK?.weekdayId;
 
   const [value, setValue] = useState("");
 
@@ -90,15 +93,22 @@ export default function MemoInputBox({
     [label, memoType, selectedChildId],
   );
 
-  /*
-   * 児童またはメモ種別が変わったときだけDBから読み込む。
-   */
+  // 認証情報の更新では入力中フラグを解除しない。
   useEffect(() => {
     editingRef.current = false;
+    setValue("");
+  }, [selectedChildId, memoType]);
+
+  // 初期化後にスタッフIDが揃った場合も読み込む。
+  useEffect(() => {
 
     if (!selectedChildId) {
       loadSeqRef.current += 1;
       setValue("");
+      return undefined;
+    }
+
+    if (!STAFF_ID || weekdayId == null || weekdayId === "") {
       return undefined;
     }
 
@@ -156,6 +166,7 @@ export default function MemoInputBox({
         await currentLoadTemp(
           selectedChildId,
           proxy,
+          { throwOnError: true },
         );
       } catch (error) {
         if (seq !== loadSeqRef.current) {
@@ -194,6 +205,9 @@ export default function MemoInputBox({
     memoType,
     label,
     log,
+    STAFF_ID,
+    weekdayId,
+    DATABASE_TYPE,
   ]);
 
   /*

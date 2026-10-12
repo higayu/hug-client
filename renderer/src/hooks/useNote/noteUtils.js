@@ -1,13 +1,13 @@
 // \renderer\src\hooks\useNote\noteUtils.js
 
 const WEEKDAY_MAP = {
-  日: 7,
-  月: 1,
-  火: 2,
-  水: 3,
-  木: 4,
-  金: 5,
-  土: 6,
+  日: 1,
+  月: 2,
+  火: 3,
+  水: 4,
+  木: 5,
+  金: 6,
+  土: 7,
 };
 
 function normalizeDatabaseType(value) {
@@ -257,7 +257,7 @@ export async function saveTempNote2(childId, memo2, appState) {
 /**
  * 一時メモを読み込む
  */
-export async function loadTempNote(childId, proxy, appState) {
+export async function loadTempNote(childId, proxy, appState, { throwOnError = false } = {}) {
   console.group("📄 loadTempNote() 呼び出し");
 
   try {
@@ -297,6 +297,10 @@ export async function loadTempNote(childId, proxy, appState) {
 
     console.log("📥 受信結果(getTempNote):", result);
 
+    if (result?.success !== true) {
+      throw new Error(getTempNoteErrorMessage(result, "一時メモの取得に失敗しました。"));
+    }
+
     if (result?.success && result?.data) {
       proxy.value = {
         memo1: result.data.memo1 ?? "",
@@ -311,6 +315,7 @@ export async function loadTempNote(childId, proxy, appState) {
     return false;
   } catch (error) {
     console.error("❌ TEMP_NOTE 読込失敗:", error);
+    if (throwOnError) throw error;
     proxy.value = { memo1: "", memo2: "" };
     return false;
   } finally {

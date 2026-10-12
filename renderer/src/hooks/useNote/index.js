@@ -72,12 +72,12 @@ export function useNote() {
   );
 
   const loadTemp = useCallback(
-    async (childId, proxy) => {
+    async (childId, proxy, options) => {
       return await loadFn(childId, proxy, {
         STAFF_ID: appState.STAFF_ID,
         CURRENT_DAY_OF_WEEK: appState.CURRENT_DAY_OF_WEEK,
         DATABASE_TYPE: appState.DATABASE_TYPE,
-      });
+      }, options);
     },
     [
       appState.STAFF_ID,
