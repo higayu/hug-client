@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react'
 export function useStaffSelection({
   staffs,
   authenticatedStaffId,
+  canManageStaff,
 }) {
   const [selectedStaffId, setSelectedStaffId] = useState('')
 
@@ -11,9 +12,10 @@ export function useStaffSelection({
 
     return source.filter(
       (staff) =>
-        String(staff?.id) !== String(authenticatedStaffId),
+        String(staff?.id) !== String(authenticatedStaffId) &&
+        typeof canManageStaff === 'function' && canManageStaff(staff),
     )
-  }, [staffs, authenticatedStaffId])
+  }, [staffs, authenticatedStaffId, canManageStaff])
 
   useEffect(() => {
     if (

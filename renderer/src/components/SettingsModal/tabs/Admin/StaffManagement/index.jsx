@@ -13,6 +13,7 @@ import { useStaffSelection } from './hooks/useStaffSelection'
 export default function StaffManagement({
   staffs,
   authenticatedStaffId,
+  canManageStaff,
 }) {
   const [activeStaffSection, setActiveStaffSection] = useState(
     STAFF_SECTION_IDS.BASE,
@@ -26,6 +27,7 @@ export default function StaffManagement({
   } = useStaffSelection({
     staffs,
     authenticatedStaffId,
+    canManageStaff,
   })
 
   return (

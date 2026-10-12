@@ -1,6 +1,7 @@
 import { useSelector } from 'react-redux'
 
 import { selectLaravelAuth } from '@/store/slices/authSlice'
+import { useSettingsRoleAccess } from '../../useSettingsRoleAccess'
 
 function formatValue(value) {
   if (value === null) return 'null'
@@ -11,8 +12,9 @@ function formatValue(value) {
 
 export default function DebugTab() {
   const auth = useSelector(selectLaravelAuth)
+  const { isAdmin } = useSettingsRoleAccess()
 
-  if (Number(auth.user?.role_id ?? 0) < 100) {
+  if (!isAdmin) {
     return null
   }
 

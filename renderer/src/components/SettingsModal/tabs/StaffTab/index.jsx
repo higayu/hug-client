@@ -10,6 +10,7 @@ import { useDataBase } from '@/hooks/useDataBase'
 import { useStaff } from './useStaff'
 import { useToast } from '@/provider/ToastProvider/ToastContext'
 import { selectLaravelAuth } from '@/store/slices/authSlice'
+import { useSettingsRoleAccess } from '../../useSettingsRoleAccess'
 
 const initialForm = {
   id: '',
@@ -17,7 +18,6 @@ const initialForm = {
   work_style: '',
   notes: '',
   is_delete: 0,
-  role_id: 0,
   display_order: '',
   entered_at: '',
   leaving_at: '',
@@ -72,9 +72,7 @@ export default function StaffTab({
   title = '職員情報',
 }) {
   const auth = useSelector(selectLaravelAuth)
-  const roleId = Number(auth.user?.role_id ?? 0)
-  const isMentorOrAbove = roleId >= 50
-  const isAdmin = roleId >= 100
+  const { canManageCurrentCompanyStaff, canManageStaff, staffId: authenticatedStaffId } = useSettingsRoleAccess()
 
   const {
     STAFF_ID,
@@ -82,6 +80,7 @@ export default function StaffTab({
   } = useAppState()
 
   const targetStaffId = staffId ?? STAFF_ID
+  const canEditTarget = String(targetStaffId) === String(authenticatedStaffId) || canManageStaff({ id: targetStaffId, ...(databaseState?.staffs ?? []).find((item) => String(item.id) === String(targetStaffId)) })
 
   const {
     reloadData,
@@ -188,11 +187,6 @@ export default function StaffTab({
       is_delete:
         Number(
           currentStaff.is_delete ?? 0,
-        ),
-
-      role_id:
-        Number(
-          currentStaff.role_id ?? 0,
         ),
 
       display_order:
@@ -399,19 +393,16 @@ export default function StaffTab({
               : 0
             : null,
 
-        ...(isMentorOrAbove
+        ...(canManageCurrentCompanyStaff
           ? {
               is_delete:
                 Number(form.is_delete) === 1 ? 1 : 0,
             }
           : {}),
+      }
 
-        ...(isAdmin
-          ? {
-              role_id:
-                Number(form.role_id),
-            }
-          : {}),
+      if (!canEditTarget) {
+        throw new Error("この職員を編集する権限がありません。")
       }
 
       const payload = {
@@ -663,23 +654,8 @@ export default function StaffTab({
       </div>
 
       {/* 権限・削除状態 */}
-      {isMentorOrAbove && (
+      {canManageCurrentCompanyStaff && (
         <div className="mt-5 flex flex-wrap items-end gap-6">
-          {isAdmin && (
-            <label className="flex min-w-56 flex-col gap-1 text-sm font-medium text-gray-700">
-              権限
-              <select
-                name="role_id"
-                value={Number(form.role_id ?? 0)}
-                onChange={handleChange}
-                className="rounded-md border border-gray-300 bg-white px-3 py-2 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-200"
-              >
-                <option value={0}>user</option>
-                <option value={50}>mentor</option>
-                <option value={100}>admin</option>
-              </select>
-            </label>
-          )}
 
           <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
             <input

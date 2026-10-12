@@ -1,15 +1,17 @@
+
 import {
   useEffect,
+  useMemo,
   useState,
 } from 'react'
-import { useSelector } from 'react-redux'
+
 import {
   LockClosedIcon,
 } from '@heroicons/react/24/outline'
 
 import './index.css'
 
-import { useSettingsModal } from './useSettingsModal';
+import { useSettingsModal } from './useSettingsModal'
 
 import {
   ApiTab,
@@ -22,11 +24,11 @@ import {
   StaffTab,
   AdminTab,
   DebugTab,
-} from "./tabs";
+} from './tabs'
 
-import { useAppState } from '@/AppStateContext';
-import { ModalPortal } from '@/components/modals/ModalPortal';
-import { selectLaravelAuth } from '@/store/slices/authSlice';
+import { useAppState } from '@/AppStateContext'
+import { ModalPortal } from '@/components/modals/ModalPortal'
+import { useSettingsRoleAccess } from './useSettingsRoleAccess'
 
 const DEFAULT_TAB_ID = 'api'
 
@@ -59,6 +61,7 @@ const BASE_TABS = [
   },
 ]
 
+// 管理権限を持つユーザー用
 const ADMIN_TABS = [
   {
     id: 'admin',
@@ -68,7 +71,7 @@ const ADMIN_TABS = [
   },
 ]
 
-// デバッグモード用のタブ
+// デバッグモード用
 const DEBUG_TABS = [
   {
     id: 'debug',
@@ -98,36 +101,65 @@ export default function SettingsModal({
 }) {
   const [activeTab, setActiveTab] = useState(DEFAULT_TAB_ID)
 
-  const auth = useSelector(selectLaravelAuth)
-  const roleId = Number(auth.user?.role_id ?? 0)
-  const isMentorOrAbove = roleId >= 50
-  const isAdmin = roleId >= 100
+  /*
+   * 新しい会社別権限
+   *
+   * isAdmin:
+   *   グローバルadmin
+   *
+   * canManageCurrentCompanyStaff:
+   *   選択中の会社に対して職員管理権限を持つ
+   */
+  const {
+    isAdmin,
+    canManageCurrentCompanyStaff,
+  } = useSettingsRoleAccess()
 
   /*
-   * モーダルを開いた際に、
-   * ini.json・config.json・カスタムボタンなどを読み込む。
+   * グローバルadminは会社別roleがなくても
+   * 管理設定を表示できる。
+   */
+  const canShowAdminTab =
+    isAdmin || canManageCurrentCompanyStaff
+
+  /*
+   * モーダルを開いた際に設定を読み込む。
    */
   const { isLoading } = useSettingsModal(isOpen)
 
   const {
     DEBUG_FLG,
-  } = useAppState();
-
-  // DEBUG_FLG に基づいて表示するタブを決定
-  const visibleDebugTabs = isAdmin
-    ? DEBUG_TABS
-    : DEBUG_TABS.filter((tab) => tab.id !== 'debug')
-
-  const baseTabs = isMentorOrAbove
-    ? [...BASE_TABS, ...ADMIN_TABS]
-    : BASE_TABS
-
-  const tabs = DEBUG_FLG
-    ? [...baseTabs, ...visibleDebugTabs]
-    : baseTabs
+  } = useAppState()
 
   /*
-   * モーダルを開くたびにAPI設定タブへ戻す。
+   * 表示するタブ一覧を作成する。
+   *
+   * 管理設定:
+   *   admin または会社別管理権限
+   *
+   * 認証状態:
+   *   DEBUG_FLGが有効かつadminのみ
+   */
+  const tabs = useMemo(() => {
+    const result = [...BASE_TABS]
+
+    if (canShowAdminTab) {
+      result.push(...ADMIN_TABS)
+    }
+
+    if (DEBUG_FLG) {
+      const visibleDebugTabs = isAdmin
+        ? DEBUG_TABS
+        : DEBUG_TABS.filter((tab) => tab.id !== 'debug')
+
+      result.push(...visibleDebugTabs)
+    }
+
+    return result
+  }, [canShowAdminTab, isAdmin, DEBUG_FLG])
+
+  /*
+   * モーダルを開くたびにAPI設定へ戻す。
    */
   useEffect(() => {
     if (!isOpen) {
@@ -135,10 +167,10 @@ export default function SettingsModal({
     }
 
     setActiveTab(DEFAULT_TAB_ID)
-  }, [isOpen, auth.user, roleId])
+  }, [isOpen])
 
   /*
-   * ESCキーで閉じる。
+   * ESCキーでモーダルを閉じる。
    */
   useEffect(() => {
     if (!isOpen) {
@@ -153,15 +185,21 @@ export default function SettingsModal({
       onClose()
     }
 
-    document.addEventListener('keydown', handleEscapeKey)
+    document.addEventListener(
+      'keydown',
+      handleEscapeKey
+    )
 
     return () => {
-      document.removeEventListener('keydown', handleEscapeKey)
+      document.removeEventListener(
+        'keydown',
+        handleEscapeKey
+      )
     }
   }, [isOpen, onClose])
 
   /*
-   * モーダル背景をクリックした場合だけ閉じる。
+   * モーダル背景をクリックした場合のみ閉じる。
    */
   const handleBackdropClick = (event) => {
     if (event.target !== event.currentTarget) {
@@ -172,21 +210,17 @@ export default function SettingsModal({
   }
 
   /*
-   * 現在アクティブなタブが存在しない場合は、
-   * 最初のタブに切り替える。
+   * 権限変更などによって現在のタブが
+   * 非表示になった場合、API設定へ戻す。
    */
   useEffect(() => {
-    if (tabs.length <= 0) {
-      return
+    const existsActiveTab = tabs.some(
+      (tab) => tab.id === activeTab
+    )
+
+    if (!existsActiveTab) {
+      setActiveTab(DEFAULT_TAB_ID)
     }
-
-    const existsActiveTab = tabs.some((tab) => tab.id === activeTab)
-
-    if (existsActiveTab) {
-      return
-    }
-
-    setActiveTab(tabs[0].id)
   }, [tabs, activeTab])
 
   if (!isOpen) {
@@ -208,9 +242,11 @@ export default function SettingsModal({
             event.stopPropagation()
           }}
         >
+          {/* ヘッダー */}
           <header className="flex shrink-0 items-center justify-between bg-gradient-to-r from-[#667eea] to-[#764ba2] p-5 text-white">
             <h2 className="m-0 text-2xl font-semibold">
               ⚙️ 設定編集
+
               {DEBUG_FLG && (
                 <span className="ml-2 rounded bg-yellow-400 px-2 py-0.5 text-sm font-normal text-black">
                   DEBUG
@@ -228,6 +264,7 @@ export default function SettingsModal({
             </button>
           </header>
 
+          {/* メインコンテンツ */}
           <main className="relative min-h-0 flex-1 overflow-y-auto p-5 text-gray-900">
             {isLoading && (
               <div className="absolute inset-0 z-20 flex items-center justify-center bg-white/80">
@@ -237,6 +274,7 @@ export default function SettingsModal({
               </div>
             )}
 
+            {/* タブ一覧 */}
             <div
               role="tablist"
               aria-label="設定カテゴリ"
@@ -273,16 +311,17 @@ export default function SettingsModal({
                         />
                       )}
 
-                      <span>
-                        {tab.label}
-                      </span>
+                      <span>{tab.label}</span>
                     </span>
 
-                    {DEBUG_FLG && DEBUG_TABS.some((debugTab) => debugTab.id === tab.id) && (
-                      <span className="ml-1.5 rounded bg-purple-500 px-1.5 py-0.5 text-[10px] text-white">
-                        DEV
-                      </span>
-                    )}
+                    {DEBUG_FLG &&
+                      DEBUG_TABS.some(
+                        (debugTab) => debugTab.id === tab.id
+                      ) && (
+                        <span className="ml-1.5 rounded bg-purple-500 px-1.5 py-0.5 text-[10px] text-white">
+                          DEV
+                        </span>
+                      )}
                   </button>
                 )
               })}
@@ -290,7 +329,7 @@ export default function SettingsModal({
 
             {/*
              * 各タブのローカル入力状態を維持するため、
-             * アンマウントせずhiddenで表示を切り替える。
+             * アンマウントせずhiddenで切り替える。
              */}
             {tabs.map((tab) => {
               const TabComponent = tab.component
@@ -311,6 +350,7 @@ export default function SettingsModal({
             })}
           </main>
 
+          {/* フッター */}
           <footer className="flex shrink-0 justify-end border-t border-gray-200 bg-gray-100 p-4">
             <button
               id="close-settings"
