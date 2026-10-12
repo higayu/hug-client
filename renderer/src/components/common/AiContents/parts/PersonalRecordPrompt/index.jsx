@@ -420,7 +420,7 @@ export default function PersonalRecordPrompt({
           {/* 右側：実行 */}
           <button
             type="button"
-            className="w-[70%] min-w-[120px] bg-green-500 hover:bg-green-600 p-2 rounded text-white disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-[70%] bg-green-500 hover:bg-green-600 p-2 rounded text-white disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={
               clickEnterButton
             }
