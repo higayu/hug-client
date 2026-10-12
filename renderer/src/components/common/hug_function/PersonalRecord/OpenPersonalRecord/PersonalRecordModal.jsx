@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import store from '@/store/store.js'
-import { AI_CHAT_TEXT_KEYS, selectAiChatText } from '@/store/slices/aiChatSlice.js'
+import { loadTempNote } from '@/hooks/useNote/noteUtils.js'
 import {
   isPersonalRecordEditPage,
   readPersonalRecord,
@@ -19,32 +19,35 @@ function combinePersonalRecordAndAiText(existingText, aiText) {
   return `${original}\n\n${addition}`
 }
 
-function PersonalRecordControls({ webview, childName, childId, date, initialOpen }) {
+function PersonalRecordControls({ webview, childName, childId, date, initialOpen, memoContext }) {
   const [open, setOpen] = useState(false)
   const [value, setValue] = useState('')
   const [original, setOriginal] = useState('')
   const [aiValue, setAiValue] = useState('')
+  const [aiInitiallyPresent, setAiInitiallyPresent] = useState(false)
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
 
   async function showModal() {
     if (busy) return
+    setBusy(true)
     setMessage('')
     try {
       if (!isPersonalRecordEditPage(webview)) throw new Error('個人記録の編集画面ではありません')
       const result = await readPersonalRecord(webview)
       if (!result?.found) throw new Error('個人記録の入力欄が見つかりません')
-      const aiText = selectAiChatText(
-        date,
-        childId,
-        AI_CHAT_TEXT_KEYS.PERSONAL
-      )(store.getState())
+      const note = { value: { memo1: '', memo2: '' } }
+      await loadTempNote(childId, note, memoContext, { throwOnError: true })
+      const aiText = note.value.memo1 ?? ''
       setValue(result.value)
       setAiValue(aiText ?? '')
+      setAiInitiallyPresent(Boolean(String(aiText ?? '').trim()))
       setOriginal(result.value)
       setOpen(true)
     } catch (error) {
       setMessage(error.message || '記録の取得に失敗しました')
+    } finally {
+      setBusy(false)
     }
   }
 
@@ -105,6 +108,9 @@ function PersonalRecordControls({ webview, childName, childId, date, initialOpen
     }
   }, [webview, busy])
 
+  const hasInitialRecord = Boolean(String(original ?? '').trim())
+  const showAiTextarea = aiInitiallyPresent || !hasInitialRecord
+
   return (
     <>
       <div className="fixed right-5 bottom-5 z-[9000] flex flex-col items-end gap-2 pointer-events-none">
@@ -121,9 +127,9 @@ function PersonalRecordControls({ webview, childName, childId, date, initialOpen
               <h2 className="text-lg font-bold text-slate-900">個人記録の入力 {childName ? `- ${childName}` : ''}</h2>
               <button type="button" onClick={() => setOpen(false)} disabled={busy} aria-label="閉じる" className="text-slate-600 hover:text-black">✕</button>
             </header>
-            <p className="text-sm text-slate-600">上段はWebViewから読み込んだ既存の個人記録、下段はAI入力欄の一時テキストです。反映時に両方を改行2つで結合します。</p>
+            <p className="text-sm text-slate-600">既存記録と保存済みの一時メモ１がある場合はそれぞれ表示します。反映時には改行2つで結合します。</p>
             <div className="flex min-h-0 flex-1 flex-col gap-3">
-              <div className="flex min-h-0 flex-1 flex-col gap-1">
+              {hasInitialRecord && <div className="flex min-h-0 flex-1 flex-col gap-1">
                 <label htmlFor="personal-record-existing" className="text-sm font-semibold text-slate-800">個人記録（既存の入力内容）</label>
                 <textarea
                   id="personal-record-existing"
@@ -133,22 +139,23 @@ function PersonalRecordControls({ webview, childName, childId, date, initialOpen
                   className="min-h-0 w-full flex-1 resize-none overflow-y-auto rounded-lg border border-slate-300 bg-white p-3 text-sm text-slate-900"
                   placeholder="WebView内の記録本文を入力してください"
                 />
-              </div>
-              <div className="flex min-h-0 flex-1 flex-col gap-1">
+              </div>}
+              {showAiTextarea && <div className="flex min-h-0 flex-1 flex-col gap-1">
                 <div className="flex items-center justify-between gap-2">
-                  <label htmlFor="personal-record-ai" className="text-sm font-semibold text-slate-800">AI個人記録の一時テキスト</label>
+                  <label htmlFor="personal-record-ai" className="text-sm font-semibold text-slate-800">一時メモ１（編集可能）</label>
                   <span className="text-xs text-slate-500">日付: {date || '未指定'} / 児童ID: {childId || '未指定'}</span>
                 </div>
                 <textarea
                   id="personal-record-ai"
+                  autoFocus={!hasInitialRecord}
                   value={aiValue}
                   onChange={e => setAiValue(e.target.value)}
                   className="min-h-0 w-full flex-1 resize-none overflow-y-auto rounded-lg border border-slate-300 bg-white p-3 text-sm text-slate-900"
-                  placeholder="この日付・児童IDのAI一時テキストは空です"
+                  placeholder="保存済みの一時メモ１は空です"
                 />
-              </div>
+              </div>}
             </div>
-            {(value !== original || aiValue !== '') && <p className="text-xs text-amber-700">「入力欄に反映」で、上段の下に下段を改行2つで追記します。モーダルを閉じるとここでの未反映編集は破棄されます。</p>}
+            {(value !== original || aiValue !== '') && <p className="text-xs text-amber-700">「入力欄に反映」で既存記録と一時メモ１を結合します（両方ある場合は改行2つ）。モーダルを閉じると未反映編集は破棄されます。</p>}
             {message && <p role="alert" className="text-sm text-red-700">{message}</p>}
             <footer className="flex flex-wrap justify-end gap-2">
               <button type="button" onClick={() => setOpen(false)} disabled={busy} className="rounded-lg border px-4 py-2 text-slate-800">キャンセル</button>
@@ -163,7 +170,7 @@ function PersonalRecordControls({ webview, childName, childId, date, initialOpen
 }
 
 // renderer側に単一タブ専用のReactルートを作成します。
-export function mountPersonalRecordControls(webview, childName, childId, date, initialOpen = true) {
+export function mountPersonalRecordControls(webview, childName, childId, date, initialOpen = true, memoContext = store.getState().appState) {
   const host = document.createElement('div')
   host.dataset.personalRecordControls = webview.id
   document.body.appendChild(host)
@@ -180,6 +187,6 @@ export function mountPersonalRecordControls(webview, childName, childId, date, i
     if (!webview.isConnected) destroy()
   })
   observer.observe(document.body, { childList: true, subtree: true })
-  root.render(<PersonalRecordControls webview={webview} childName={childName} childId={childId} date={date} initialOpen={initialOpen} />)
+  root.render(<PersonalRecordControls webview={webview} childName={childName} childId={childId} date={date} initialOpen={initialOpen} memoContext={memoContext} />)
   return { destroy, open: () => webview.dispatchEvent(new Event('personal-record-open-modal')) }
 }

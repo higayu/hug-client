@@ -19,6 +19,13 @@ export function addPersonalRecordTabAction4(appState, space) {
     return
   }
 
+  const memoContext = {
+    STAFF_ID: appState.STAFF_ID,
+    CURRENT_DAY_OF_WEEK: { ...appState.CURRENT_DAY_OF_WEEK },
+    DATABASE_TYPE: appState.DATABASE_TYPE,
+  }
+  const recordDate = appState.CURRENT_YMD
+
   const tabsContainer = document.getElementById('tabs')
   const webviewContainer = document.getElementById('webview-panel-content')
 
@@ -78,7 +85,7 @@ export function addPersonalRecordTabAction4(appState, space) {
 
       phase = 'SEARCHING'
 
-      await runInitialSearch(newWebview, appState.CURRENT_YMD)
+      await runInitialSearch(newWebview, recordDate)
 
       phase = 'SEARCHED'
     },
@@ -132,7 +139,7 @@ export function addPersonalRecordTabAction4(appState, space) {
     }
 
     // rendererで操作UIを表示（WebViewのDOMへボタンは挿入しない）
-    if (!controls) controls = mountPersonalRecordControls(newWebview, space?.childName, space?.childId, appState.CURRENT_YMD)
+    if (!controls) controls = mountPersonalRecordControls(newWebview, space?.childName, space?.childId, recordDate, true, memoContext)
     // 初回モーダルはmount後に自動表示
   })
 
