@@ -132,7 +132,7 @@ export function addPersonalRecordTabAction4(appState, space) {
     }
 
     // rendererで操作UIを表示（WebViewのDOMへボタンは挿入しない）
-    if (!controls) controls = mountPersonalRecordControls(newWebview, space?.childName)
+    if (!controls) controls = mountPersonalRecordControls(newWebview, space?.childName, space?.childId, appState.CURRENT_YMD)
     // 初回モーダルはmount後に自動表示
   })
 

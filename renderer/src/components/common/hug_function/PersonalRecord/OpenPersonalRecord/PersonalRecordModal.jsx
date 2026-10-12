@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { createRoot } from 'react-dom/client'
+import store from '@/store/store.js'
+import { AI_CHAT_TEXT_KEYS, selectAiChatText } from '@/store/slices/aiChatSlice.js'
 import {
   isPersonalRecordEditPage,
   readPersonalRecord,
@@ -7,10 +9,21 @@ import {
   clickPersonalRecordDraft,
 } from './parts/personalRecordWebview.js'
 
-function PersonalRecordControls({ webview, childName, initialOpen }) {
+function combinePersonalRecordAndAiText(existingText, aiText) {
+  const original = typeof existingText === 'string' ? existingText : ''
+  const addition = typeof aiText === 'string' ? aiText : ''
+  if (!addition) return original
+  if (!original) return addition
+  // 既に同一のAIメモを末尾に反映済みなら二重追記しない。
+  if (original === addition || original.endsWith(`\n\n${addition}`)) return original
+  return `${original}\n\n${addition}`
+}
+
+function PersonalRecordControls({ webview, childName, childId, date, initialOpen }) {
   const [open, setOpen] = useState(false)
   const [value, setValue] = useState('')
   const [original, setOriginal] = useState('')
+  const [aiValue, setAiValue] = useState('')
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
 
@@ -21,7 +34,13 @@ function PersonalRecordControls({ webview, childName, initialOpen }) {
       if (!isPersonalRecordEditPage(webview)) throw new Error('個人記録の編集画面ではありません')
       const result = await readPersonalRecord(webview)
       if (!result?.found) throw new Error('個人記録の入力欄が見つかりません')
+      const aiText = selectAiChatText(
+        date,
+        childId,
+        AI_CHAT_TEXT_KEYS.PERSONAL
+      )(store.getState())
       setValue(result.value)
+      setAiValue(aiText ?? '')
       setOriginal(result.value)
       setOpen(true)
     } catch (error) {
@@ -34,9 +53,10 @@ function PersonalRecordControls({ webview, childName, initialOpen }) {
     setMessage('')
     try {
       if (!isPersonalRecordEditPage(webview)) throw new Error('編集画面が切り替わっています')
-      const result = await writePersonalRecord(webview, value)
+      const finalText = combinePersonalRecordAndAiText(value, aiValue)
+      const result = await writePersonalRecord(webview, finalText)
       if (!result?.ok) throw new Error(result?.message || '入力に失敗しました')
-      setOriginal(value)
+      setOriginal(finalText)
       setOpen(false)
       setMessage('記録を入力しました（まだ保存されていません）')
       return true
@@ -54,9 +74,10 @@ function PersonalRecordControls({ webview, childName, initialOpen }) {
     try {
       if (!isPersonalRecordEditPage(webview)) throw new Error('編集画面が切り替わっています')
       if (open) {
-        const result = await writePersonalRecord(webview, value)
+        const finalText = combinePersonalRecordAndAiText(value, aiValue)
+        const result = await writePersonalRecord(webview, finalText)
         if (!result?.ok) throw new Error(result?.message || '入力に失敗しました')
-        setOriginal(value)
+        setOriginal(finalText)
       }
       const result = await clickPersonalRecordDraft(webview)
       if (!result?.ok) throw new Error(result?.message || '保存ボタンを押せませんでした')
@@ -100,13 +121,34 @@ function PersonalRecordControls({ webview, childName, initialOpen }) {
               <h2 className="text-lg font-bold text-slate-900">個人記録の入力 {childName ? `- ${childName}` : ''}</h2>
               <button type="button" onClick={() => setOpen(false)} disabled={busy} aria-label="閉じる" className="text-slate-600 hover:text-black">✕</button>
             </header>
-            <p className="text-sm text-slate-600">現在の記録を読み込んでいます。入力内容を反映した後、下書き保存できます。</p>
-            <textarea 
-             aria-label="個人記録本文" autoFocus value={value} onChange={e => setValue(e.target.value)}
-             className="min-h-0 w-full flex-1 resize-none overflow-y-auto rounded-lg border border-slate-300 bg-white p-3 text-sm text-slate-900"
-             placeholder="記録本文を入力してください"
-            />
-            {value !== original && <p className="text-xs text-amber-700">未反映の変更があります。閉じるとこのモーダルでの変更は破棄されます。</p>}
+            <p className="text-sm text-slate-600">上段はWebViewから読み込んだ既存の個人記録、下段はAI入力欄の一時テキストです。反映時に両方を改行2つで結合します。</p>
+            <div className="flex min-h-0 flex-1 flex-col gap-3">
+              <div className="flex min-h-0 flex-1 flex-col gap-1">
+                <label htmlFor="personal-record-existing" className="text-sm font-semibold text-slate-800">個人記録（既存の入力内容）</label>
+                <textarea
+                  id="personal-record-existing"
+                  autoFocus
+                  value={value}
+                  onChange={e => setValue(e.target.value)}
+                  className="min-h-0 w-full flex-1 resize-none overflow-y-auto rounded-lg border border-slate-300 bg-white p-3 text-sm text-slate-900"
+                  placeholder="WebView内の記録本文を入力してください"
+                />
+              </div>
+              <div className="flex min-h-0 flex-1 flex-col gap-1">
+                <div className="flex items-center justify-between gap-2">
+                  <label htmlFor="personal-record-ai" className="text-sm font-semibold text-slate-800">AI個人記録の一時テキスト</label>
+                  <span className="text-xs text-slate-500">日付: {date || '未指定'} / 児童ID: {childId || '未指定'}</span>
+                </div>
+                <textarea
+                  id="personal-record-ai"
+                  value={aiValue}
+                  onChange={e => setAiValue(e.target.value)}
+                  className="min-h-0 w-full flex-1 resize-none overflow-y-auto rounded-lg border border-slate-300 bg-white p-3 text-sm text-slate-900"
+                  placeholder="この日付・児童IDのAI一時テキストは空です"
+                />
+              </div>
+            </div>
+            {(value !== original || aiValue !== '') && <p className="text-xs text-amber-700">「入力欄に反映」で、上段の下に下段を改行2つで追記します。モーダルを閉じるとここでの未反映編集は破棄されます。</p>}
             {message && <p role="alert" className="text-sm text-red-700">{message}</p>}
             <footer className="flex flex-wrap justify-end gap-2">
               <button type="button" onClick={() => setOpen(false)} disabled={busy} className="rounded-lg border px-4 py-2 text-slate-800">キャンセル</button>
@@ -121,7 +163,7 @@ function PersonalRecordControls({ webview, childName, initialOpen }) {
 }
 
 // renderer側に単一タブ専用のReactルートを作成します。
-export function mountPersonalRecordControls(webview, childName, initialOpen = true) {
+export function mountPersonalRecordControls(webview, childName, childId, date, initialOpen = true) {
   const host = document.createElement('div')
   host.dataset.personalRecordControls = webview.id
   document.body.appendChild(host)
@@ -138,6 +180,6 @@ export function mountPersonalRecordControls(webview, childName, initialOpen = tr
     if (!webview.isConnected) destroy()
   })
   observer.observe(document.body, { childList: true, subtree: true })
-  root.render(<PersonalRecordControls webview={webview} childName={childName} initialOpen={initialOpen} />)
+  root.render(<PersonalRecordControls webview={webview} childName={childName} childId={childId} date={date} initialOpen={initialOpen} />)
   return { destroy, open: () => webview.dispatchEvent(new Event('personal-record-open-modal')) }
 }
