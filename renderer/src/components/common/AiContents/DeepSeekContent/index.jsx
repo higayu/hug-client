@@ -1,6 +1,6 @@
 import React, { useEffect } from "react"
 import { useAppState } from "@/AppStateContext";
-import PromptPanel from "@/components/common/PromptPanel"
+import PromptPanel from "../parts/PromptPanel"
 import AccountInfoPanel from "@/components/ui/AccountInfoPanel";
 import { AI_PROMPT_COMPONENT_MAP } from "./PromptBox"
 import { sendPromptToDeepSeek } from "./send/sendPromptToDeepSeek";

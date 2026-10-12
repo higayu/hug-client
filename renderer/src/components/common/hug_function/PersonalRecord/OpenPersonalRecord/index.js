@@ -11,7 +11,7 @@ import {
 import { runInitialSearch } from './parts/runInitialSearch.js'
 import { openPersonalRecordEdit } from './parts/openPersonalRecordEdit.js'
 import { setupRecordStaff } from './parts/setupRecordStaff.js'
-import { injectPersonalRecordActions } from './parts/injectPersonalRecordActions.js'
+import { mountPersonalRecordControls } from './PersonalRecordModal.jsx'
 
 export function addPersonalRecordTabAction4(appState, space) {
   if (!space?.childId) {
@@ -61,10 +61,12 @@ export function addPersonalRecordTabAction4(appState, space) {
         return
       }
 
+      controls?.destroy()
       closeTab(newId)
     })
   }
 
+  let controls = null
   let phase = 'INIT'
   let newPersonalFlg = false
 
@@ -129,7 +131,9 @@ export function addPersonalRecordTabAction4(appState, space) {
       console.log('⏩ 既存データのため record_staff 設定スキップ')
     }
 
-    await injectPersonalRecordActions(newWebview)
+    // rendererで操作UIを表示（WebViewのDOMへボタンは挿入しない）
+    if (!controls) controls = mountPersonalRecordControls(newWebview, space?.childName)
+    // 初回モーダルはmount後に自動表示
   })
 
   activateTab(newId)
