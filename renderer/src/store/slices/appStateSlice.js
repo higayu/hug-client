@@ -51,7 +51,7 @@ const initialState = {
 
   VITE_API_BASE_URL: "",
   USE_AI: "chatGPT",
-  DATABASE_TYPE: "mariadb",
+  DATABASE_TYPE: "laravel",
 
   // ini.json apiSettings 自動設定
   AUTO_SYNCHRONIZATION: true,
@@ -199,7 +199,7 @@ const appStateSlice = createSlice({
 
     // DB種別を設定
     setDatabaseType: (state, action) => {
-      state.DATABASE_TYPE = action.payload || "mariadb"
+      state.DATABASE_TYPE = "laravel"
     },
 
     // 自動同期を設定
@@ -402,7 +402,7 @@ const appStateSlice = createSlice({
       }
 
       if (updates.DATABASE_TYPE !== undefined) {
-        state.DATABASE_TYPE = updates.DATABASE_TYPE
+        state.DATABASE_TYPE = "laravel"
       }
 
       // 自動同期 / 自動切替

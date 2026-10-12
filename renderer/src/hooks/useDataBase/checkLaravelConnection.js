@@ -1,3 +1,4 @@
+import { LARAVEL_ONLY_MODE } from "./databaseMode";
 import { switchDatabaseType } from "./checkMariaDbConnection";
 
 /**
@@ -24,7 +25,7 @@ export async function checkLaravelConnection(
       await window.electronAPI.checkLaravelConnection();
 
     if (!connectionResult?.connected) {
-      if (autoFallbackToSqlite) {
+      if (autoFallbackToSqlite && !LARAVEL_ONLY_MODE) {
         const switched = await switchDatabaseType({
           dispatch,
           databaseType: "sqlite",

@@ -7,6 +7,10 @@
  * 同じテーブル名に揃える。
  */
 const TABLE_NAMES = [
+  "companies",
+  "roles",
+  "company_roles",
+  "staff_company_roles",
   "children",
   "children_type",
   "day_of_week",

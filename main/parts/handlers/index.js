@@ -5,14 +5,6 @@ const path = require("path");
 const { app } = require("electron");
 
 const {
-  registerSqliteHandlers,
-} = require("./sqliteHandler");
-
-const {
-  registerMariadbHandlers,
-} = require("./mariadbHandler");
-
-const {
   registerLaravelAuthHandlers,
 } = require("./laravelAuthHandler");
 
@@ -37,53 +29,12 @@ function resolveIniPath() {
 /**
  * DB種別を正規化する。
  */
-function normalizeDatabaseType(value) {
-  const databaseType = String(value ?? "")
-    .trim()
-    .toLowerCase();
-
-  if (
-    databaseType === "sqlite" ||
-    databaseType === "mariadb" ||
-    databaseType === "laravel"
-  ) {
-    return databaseType;
-  }
-
-  return "mariadb";
+function normalizeDatabaseType() {
+  return "laravel";
 }
 
-/**
- * 現在使用するDB種別を取得する。
- */
 function getDatabaseType() {
-  try {
-    const iniPath = resolveIniPath();
-
-    if (!fs.existsSync(iniPath)) {
-      console.warn(
-        "⚠️ [getDatabaseType] ini.jsonが見つかりません:",
-        iniPath,
-      );
-
-      return "sqlite";
-    }
-
-    const iniData = JSON.parse(
-      fs.readFileSync(iniPath, "utf8"),
-    );
-
-    return normalizeDatabaseType(
-      iniData?.apiSettings?.databaseType ?? "mariadb",
-    );
-  } catch (error) {
-    console.error(
-      "❌ [getDatabaseType] ini.jsonの読み込みに失敗しました:",
-      error,
-    );
-
-    return "sqlite";
-  }
+  return "laravel";
 }
 
 /**
@@ -121,6 +72,9 @@ function registerDatabaseSwitchHandler(ipcMain) {
 
   ipcMain.handle(channel, async (_event, newMode) => {
     try {
+      if (String(newMode ?? "").trim().toLowerCase() !== "laravel") {
+        throw new Error("現在はLaravel専用モードです。SQLite・MariaDBには切り替えできません。");
+      }
       const iniPath = resolveIniPath();
 
       if (!fs.existsSync(iniPath)) {
@@ -184,8 +138,6 @@ function handleApiCalls(ipcMain) {
   }
 
   const registrars = [
-    registerMariadbHandlers,
-    registerSqliteHandlers,
     registerLaravelAuthHandlers,
   ];
 

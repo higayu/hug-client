@@ -1,47 +1,28 @@
 // preload/electronApi.js
 const { createTableApis } = require("./tableApis");
 
-/**
- * get-database-type の戻り値を吸収する
- *
- * 想定:
- * - "sqlite"
- * - "mariadb"
- * - "laravel"
- * - { type: "sqlite" }
- * - { type: "mariadb" }
- * - { type: "laravel" }
- * - { databaseType: "sqlite" }
- * - { databaseType: "mariadb" }
- * - { databaseType: "laravel" }
- */
-function normalizeDatabaseType(value) {
-  if (typeof value === "string") {
-    return value;
-  }
-
-  if (value && typeof value === "object") {
-    return value.type || value.databaseType || value.dbType || "mariadb";
-  }
-
-  return "sqlite";
-}
-
-/**
- * 現在のDB種別から IPC prefix を返す
- */
-async function getDbPrefix(ipcRenderer) {
-  const result = await ipcRenderer.invoke("get-database-type");
-  const dbType = normalizeDatabaseType(result);
-
-  if (dbType === "mariadb" || dbType === "laravel") {
-    return dbType;
-  }
-
-  return "sqlite";
+// 現在の仕様では共通APIもLaravelへ固定する。
+async function getDbPrefix() {
+  return "laravel";
 }
 
 function createElectronApi(ipcRenderer, isDebugMode) {
+  // 旧API名の直接呼び出しも、IPC送信前に拒否する。
+  const invoke = ipcRenderer.invoke.bind(ipcRenderer);
+  ipcRenderer = new Proxy(ipcRenderer, {
+    get(target, property) {
+      if (property === "invoke") {
+        return (channel, ...args) => {
+          if (/^(sqlite|mariadb)(:|-)/.test(channel)) {
+            return Promise.reject(new Error("現在はLaravel専用モードです。SQLite・MariaDBは利用できません。"));
+          }
+          return invoke(channel, ...args);
+        };
+      }
+      const value = target[property];
+      return typeof value === "function" ? value.bind(target) : value;
+    },
+  });
   return {
     // ---- デバッグ ----
     isDebugMode: () => isDebugMode,

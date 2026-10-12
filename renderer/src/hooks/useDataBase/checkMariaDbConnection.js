@@ -1,3 +1,4 @@
+import { LARAVEL_ONLY_MODE } from "./databaseMode";
 // renderer/src/hooks/useDataBase/checkMariaDbConnection.js
 
 import {
@@ -286,6 +287,9 @@ function getAutoSwitchingEnabled() {
  * @returns {Promise<Object>} 接続確認結果
  */
 export async function checkMariaDbConnection(dispatch, options = {}) {
+  if (LARAVEL_ONLY_MODE) {
+    return { success: false, connected: false, databaseType: "laravel", message: "MariaDB接続確認はLaravel専用モードで無効です。" };
+  }
   const {
     autoFallbackToSqlite = true,
     switchToMariaDbOnSuccess = false,
@@ -620,6 +624,9 @@ export async function switchDatabaseType({
   const checkedAt = new Date().toISOString();
 
   const resolvedDatabaseType = normalizeDatabaseType(databaseType);
+  if (LARAVEL_ONLY_MODE && resolvedDatabaseType !== "laravel") {
+    return { success: false, connected: false, databaseType: "laravel", message: "Laravel専用モードのためDB種別を変更できません。" };
+  }
 
   const resolvedMessage =
     message ||

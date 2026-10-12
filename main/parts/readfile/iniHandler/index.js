@@ -46,6 +46,7 @@ function handleIniAccess(ipcMain) {
 
       // バージョンにかかわらず不足キーを補完し、未知の既存キーは保持する
       const normalizedData = mergeDeep(DEFAULT_INI, jsonData);
+      normalizedData.apiSettings.databaseType = "laravel";
       normalizedData.version = DEFAULT_INI.version;
 
       if (!jsonData.version || jsonData.version !== DEFAULT_INI.version) {
@@ -92,6 +93,7 @@ function handleIniAccess(ipcMain) {
         mergeDeep(DEFAULT_INI, currentData),
         data || {}
       );
+      saveData.apiSettings.databaseType = "laravel";
       saveData.version = data?.version || DEFAULT_INI.version;
 
       const jsonString = JSON.stringify(saveData, null, 2);
@@ -161,6 +163,8 @@ function handleIniAccess(ipcMain) {
       }
 
       obj[keys[keys.length - 1]] = value;
+
+      data.apiSettings = { ...data.apiSettings, databaseType: "laravel" };
 
       // 原子的書き込み
       fs.writeFileSync(filePath, JSON.stringify(data, null, 2), "utf8");

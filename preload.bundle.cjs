@@ -118,24 +118,25 @@ var require_tableApis = __commonJS({
 var require_electronApi = __commonJS({
   "preload/electronApi.js"(exports2, module2) {
     var { createTableApis } = require_tableApis();
-    function normalizeDatabaseType(value) {
-      if (typeof value === "string") {
-        return value;
-      }
-      if (value && typeof value === "object") {
-        return value.type || value.databaseType || value.dbType || "mariadb";
-      }
-      return "sqlite";
-    }
-    async function getDbPrefix(ipcRenderer2) {
-      const result = await ipcRenderer2.invoke("get-database-type");
-      const dbType = normalizeDatabaseType(result);
-      if (dbType === "mariadb" || dbType === "laravel") {
-        return dbType;
-      }
-      return "sqlite";
+    async function getDbPrefix() {
+      return "laravel";
     }
     function createElectronApi2(ipcRenderer2, isDebugMode2) {
+      const invoke = ipcRenderer2.invoke.bind(ipcRenderer2);
+      ipcRenderer2 = new Proxy(ipcRenderer2, {
+        get(target, property) {
+          if (property === "invoke") {
+            return (channel, ...args) => {
+              if (/^(sqlite|mariadb)(:|-)/.test(channel)) {
+                return Promise.reject(new Error("\u73FE\u5728\u306FLaravel\u5C02\u7528\u30E2\u30FC\u30C9\u3067\u3059\u3002SQLite\u30FBMariaDB\u306F\u5229\u7528\u3067\u304D\u307E\u305B\u3093\u3002"));
+              }
+              return invoke(channel, ...args);
+            };
+          }
+          const value = target[property];
+          return typeof value === "function" ? value.bind(target) : value;
+        }
+      });
       return {
         // ---- デバッグ ----
         isDebugMode: () => isDebugMode2,

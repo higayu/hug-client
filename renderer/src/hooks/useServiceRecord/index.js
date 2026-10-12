@@ -1,16 +1,5 @@
 import { useCallback } from "react";
 import { getServiceRecordMonthly as getFromLaravel } from "./parts/laravel";
-import { getServiceRecordMonthly as getFromMariadb } from "./parts/mariadb";
-import { getServiceRecordMonthly as getFromSqlite } from "./parts/sqlite";
-
-function normalizeDatabaseType(value) {
-  if (typeof value === "string") return value.toLowerCase();
-
-  return String(
-    value?.type ?? value?.databaseType ?? value?.dbType ?? "sqlite",
-  ).toLowerCase();
-}
-
 function unwrapRows(result) {
   if (result?.success === false) {
     throw new Error(result.message || result.error || "月次サービス記録の取得に失敗しました。");
@@ -26,23 +15,7 @@ function unwrapRows(result) {
 }
 
 export async function getServiceRecordMonthly(payload) {
-  const databaseType = normalizeDatabaseType(
-    await window.electronAPI.getDatabaseType(),
-  );
-
-  const loaders = {
-    laravel: getFromLaravel,
-    mariadb: getFromMariadb,
-    sqlite: getFromSqlite,
-  };
-
-  const loader = loaders[databaseType];
-
-  if (!loader) {
-    throw new Error(`未対応のデータベース種別です: ${databaseType}`);
-  }
-
-  return unwrapRows(await loader(payload));
+  return unwrapRows(await getFromLaravel(payload));
 }
 
 export function useServiceRecord() {

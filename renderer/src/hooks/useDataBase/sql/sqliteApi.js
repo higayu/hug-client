@@ -1,7 +1,9 @@
+import { assertDatabaseEnabled } from "../databaseMode";
 // src/sql/sqliteApi.js
 
 export const sqliteApi = {
   async getAllTables() {
+    assertDatabaseEnabled("sqlite");
     try {
       const uid = Math.random().toString(36).slice(2, 8);
       console.group(`🧩 [sqliteApi] getAllTables [${uid}]`);
