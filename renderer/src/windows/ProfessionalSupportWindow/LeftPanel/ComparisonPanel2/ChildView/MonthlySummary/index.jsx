@@ -21,6 +21,36 @@ const SORT_OPTIONS = [
   { value: 'personalRecordCount', label: '個人記録数' },
 ]
 
+// JavaScript Date.getDay(): 日=0, 月=1, ..., 土=6
+const WEEKDAY_OPTIONS = [
+  { value: 1, label: '月' },
+  { value: 2, label: '火' },
+  { value: 3, label: '水' },
+  { value: 4, label: '木' },
+  { value: 5, label: '金' },
+  { value: 6, label: '土' },
+  { value: 0, label: '日' },
+]
+
+const ALL_WEEKDAYS = WEEKDAY_OPTIONS.map((option) => option.value)
+
+const getWeekday = (dateText) => {
+  const match = String(dateText ?? '').match(/^(\d{4})-(\d{2})-(\d{2})$/)
+  if (!match) return null
+
+  const year = Number(match[1])
+  const month = Number(match[2])
+  const day = Number(match[3])
+  const date = new Date(year, month - 1, day)
+  if (
+    date.getFullYear() !== year ||
+    date.getMonth() !== month - 1 ||
+    date.getDate() !== day
+  ) return null
+
+  return date.getDay()
+}
+
 const normalizeSearchText = (value) =>
   String(value || '')
     .replace(/[\s　]+/g, '')
@@ -39,6 +69,7 @@ export default function MonthlySummary({
   const [filterType, setFilterType] = useState('all')
   const [sortKey, setSortKey] = useState('childName')
   const [sortDirection, setSortDirection] = useState('asc')
+  const [selectedWeekdays, setSelectedWeekdays] = useState(ALL_WEEKDAYS)
 
   const sourceItems = Array.isArray(items) ? items : []
 
@@ -52,6 +83,16 @@ export default function MonthlySummary({
       ) {
         return false
       }
+
+      // 曜日フィルターは出席した日付だけを見る（児童ごとにOR判定）。
+      const hasSelectedAttendanceDay = (Array.isArray(item?.rows) ? item.rows : [])
+        .some((row) => {
+          if (Number(row?.is_attended) !== 1) return false
+          const weekday = getWeekday(row?.target_date)
+          return weekday !== null && selectedWeekdays.includes(weekday)
+        })
+
+      if (!hasSelectedAttendanceDay) return false
 
       const {
         isAdditionWarning,
@@ -96,20 +137,30 @@ export default function MonthlySummary({
 
       return sortDirection === 'desc' ? -result : result
     })
-  }, [sourceItems, searchText, filterType, sortKey, sortDirection])
+  }, [sourceItems, searchText, filterType, sortKey, sortDirection, selectedWeekdays])
+
+  const toggleWeekday = (weekday) => {
+    setSelectedWeekdays((current) =>
+      current.includes(weekday)
+        ? current.filter((value) => value !== weekday)
+        : [...current, weekday],
+    )
+  }
 
   const resetFilters = () => {
     setSearchText('')
     setFilterType('all')
     setSortKey('childName')
     setSortDirection('asc')
+    setSelectedWeekdays(ALL_WEEKDAYS)
   }
 
   const hasActiveConditions =
     searchText ||
     filterType !== 'all' ||
     sortKey !== 'childName' ||
-    sortDirection !== 'asc'
+    sortDirection !== 'asc' ||
+    selectedWeekdays.length !== ALL_WEEKDAYS.length
 
   return (
     <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
@@ -210,6 +261,35 @@ export default function MonthlySummary({
           <div className="ml-auto pb-2 text-xs text-gray-500">
             {displayedItems.length} / {sourceItems.length}件表示
           </div>
+        </div>
+
+        <div className="mt-3 flex flex-wrap items-center gap-2" role="group" aria-label="出席曜日で絞り込み">
+          <span className="mr-1 text-xs font-medium text-gray-600">出席曜日</span>
+          {WEEKDAY_OPTIONS.map(({ value, label }) => {
+            const active = selectedWeekdays.includes(value)
+            return (
+              <button
+                key={value}
+                type="button"
+                aria-pressed={active}
+                onClick={() => toggleWeekday(value)}
+                className={`rounded-md border px-3 py-1.5 text-xs font-semibold transition ${
+                  active
+                    ? 'border-blue-600 bg-blue-600 text-white'
+                    : 'border-gray-300 bg-white text-gray-500 hover:bg-gray-100'
+                }`}
+              >
+                {label}
+              </button>
+            )
+          })}
+          <button
+            type="button"
+            onClick={() => setSelectedWeekdays(ALL_WEEKDAYS)}
+            className="ml-1 rounded-md border border-gray-300 bg-white px-2 py-1.5 text-xs text-gray-600 hover:bg-gray-50"
+          >
+            全曜日
+          </button>
         </div>
       </div>
 
