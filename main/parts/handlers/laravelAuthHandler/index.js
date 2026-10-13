@@ -10,6 +10,7 @@ const aiRecordEditer = require("./aiRecordEditer");
 const webAutomationV2 = require("./webAutomationV2");
 const troubleshootingKnowledge = require("./troubleshootingKnowledge");
 const personalRecordSyncs = require("./personalRecordSyncs");
+const recordTypes = require("./recordTypes");
 const laravelApiClient = require("../../../../src/laravelApiClient");
 
 /**
@@ -30,6 +31,7 @@ const IPC_CHANNELS = [
   // ============================================================
 
   "laravel-fetch-table-all",
+  "laravel:record-types:list",
   "laravel-fetch-role-tables",
 
   // Web自動化 V2
@@ -250,6 +252,9 @@ function registerLaravelAuthHandlers(
     "laravel-fetch-table-all",
     fetchTableAllHandler
   );
+
+  // 児童課題タイプは施設別専用APIから取得する。
+  ipcMain.handle("laravel:record-types:list", recordTypes.handler);
 
   // 会社別権限マスタを読み取り専用で返す。
   // 認証・会社単位のデータ制限はLaravel /api/__all 側に委ねる。

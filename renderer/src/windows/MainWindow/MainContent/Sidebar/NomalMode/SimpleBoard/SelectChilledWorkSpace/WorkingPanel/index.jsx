@@ -13,7 +13,7 @@ import {
 } from '@/components/common/hug_function'
 import { useSimpleAttendanceRows } from '../../AttendanceTable/hooks/useSimpleAttendance'
 import AiContents from '@/components/common/AiContents'
-import ChildKadai from './ChildKadai'
+import ChildKadai from '@/components/common/ChildKadai'
 import FanMenu from './FanMenu'
 
 const INITIAL_PROMPT_TABS = [

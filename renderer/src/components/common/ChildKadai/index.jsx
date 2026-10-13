@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useState } from 'react'
 
-import { useSelector } from 'react-redux'
-import { selectSpaceChildId } from '@/store/slices/simpleBoardSlice.js'
+import { useDispatch, useSelector } from 'react-redux'
+import { useAppState } from '@/AppStateContext'
+import { setRecordTypes } from '@/store/slices/databaseSlice'
+import { laravelApi } from '@/hooks/useDataBase/sql/laravelApi'
+import { selectSpaceChildId } from '@/store/slices/chilledspaceSlice.js'
 
 import ChildKadaiTable from './ChildKadaiTable'
 import CreateKadai from './ChildKadaiTable/TableRow/CreateKadai'
@@ -12,6 +15,10 @@ import deleteChildKadai from './ChildKadaiTable/TableRow/function/DeleteChildKad
 
 function ChildKadai({ spaceId }) {
   const selectedChildId = useSelector(selectSpaceChildId(spaceId))
+  const { FACILITY_ID } = useAppState()
+  const dispatch = useDispatch()
+  const [recordTypesLoading, setRecordTypesLoading] = useState(false)
+  const [recordTypesError, setRecordTypesError] = useState('')
 
   const [records, setRecords] = useState([])
   const [loading, setLoading] = useState(false)
@@ -57,6 +64,45 @@ function ChildKadai({ spaceId }) {
     setRecordTypeId('')
     setError('')
   }, [selectedChildId])
+
+  // ChildKadaiを開いたとき、および施設ID変更時に課題タイプを個別取得する。
+  useEffect(() => {
+    let active = true
+    const facilityId = Number(FACILITY_ID)
+
+    // 別施設の課題タイプ・選択状態を引き継がない。
+    dispatch(setRecordTypes([]))
+    setRecordTypeId('')
+    setRecords([])
+    setGraphTarget(null)
+    setEditTarget(null)
+    setCreating(false)
+    setRecordTypesError('')
+
+    if (!Number.isInteger(facilityId) || facilityId <= 0) {
+      setRecordTypesLoading(false)
+      setRecordTypesError('施設IDが設定されていません。')
+      return () => { active = false }
+    }
+
+    setRecordTypesLoading(true)
+    const fetchTypes = async () => {
+      try {
+        const types = await laravelApi.getRecordTypes(facilityId)
+        if (!active) return
+        dispatch(setRecordTypes(types.filter((type) => Number(type.facility_id) === facilityId)))
+      } catch (fetchError) {
+        if (!active) return
+        console.error('[ChildKadai] record types load failed:', fetchError)
+        dispatch(setRecordTypes([]))
+        setRecordTypesError(fetchError?.message || '課題タイプの取得に失敗しました。')
+      } finally {
+        if (active) setRecordTypesLoading(false)
+      }
+    }
+    void fetchTypes()
+    return () => { active = false }
+  }, [FACILITY_ID, dispatch])
 
   const showTable = useCallback(() => {
     setGraphTarget(null)
@@ -115,6 +161,8 @@ function ChildKadai({ spaceId }) {
       spaceId={spaceId}
       childRecords={records}
       recordsLoading={loading}
+      recordTypesLoading={recordTypesLoading}
+      recordTypesError={recordTypesError}
       recordsError={error}
       recordTypeId={recordTypeId}
       onRecordTypeChange={(value) => {

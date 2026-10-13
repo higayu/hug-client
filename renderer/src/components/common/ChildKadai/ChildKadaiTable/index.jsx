@@ -4,7 +4,7 @@ import { AgGridReact } from 'ag-grid-react'
 
 import { useAppState } from '@/AppStateContext'
 import { useSelector } from 'react-redux'
-import { selectSpaceChildId } from '@/store/slices/simpleBoardSlice.js'
+import { selectSpaceChildId } from '@/store/slices/chilledspaceSlice.js'
 
 import ChildKadaiFilter from './common/ChildKadaiFilter'
 import TableRow from './TableRow'
@@ -27,6 +27,8 @@ function ChildKadaiTable({
   childRecords,
   recordsLoading,
   recordsError,
+  recordTypesLoading = false,
+  recordTypesError = '',
   recordTypeId,
   onRecordTypeChange,
   onLoad,
@@ -185,7 +187,7 @@ function ChildKadaiTable({
         filterRecordTypeId={recordTypeId}
         setFilterRecordTypeId={onRecordTypeChange}
         recordTypes={recordTypes}
-        loading={recordsLoading}
+        loading={recordsLoading || recordTypesLoading}
         onLoad={onLoad}
       />
 
@@ -197,11 +199,17 @@ function ChildKadaiTable({
           pagination
           paginationPageSize={20}
           paginationPageSizeSelector={[20, 50, 100]}
-          loading={recordsLoading}
+          loading={recordsLoading || recordTypesLoading}
           overlayNoRowsTemplate="表示できる課題記録がありません。"
           theme={themeQuartz}
         />
       </div>
+      {recordTypesLoading && (
+        <p className="mt-2 text-sm text-gray-600">課題タイプを取得中...</p>
+      )}
+      {recordTypesError && (
+        <p className="mt-2 text-sm text-red-600">{recordTypesError}</p>
+      )}
       {recordsError && (
         <p className="mt-2 text-sm text-red-600">{recordsError}</p>
       )}

@@ -25,7 +25,6 @@ const TABLE_NAMES = [
   "staffs",
   "service_record",
   "temp_notes",
-  "record_types",
   "child_records",
   "m_service_items",
   "staff_facility_roles",
@@ -119,6 +118,7 @@ const normalizeTables = (data) => {
     tableData,
   ] of Object.entries(data)) {
     if (
+      tableName !== "record_types" &&
       !Object.prototype.hasOwnProperty.call(
         normalized,
         tableName,
@@ -150,6 +150,36 @@ const createTableCounts = (tables) =>
   );
 
 export const laravelApi = {
+  /**
+   * 指定施設の児童課題タイプだけ取得する。
+   * 成功: 配列、失敗: Errorをthrow（ChildKadaiのエラー表示へ伝える）。
+   */
+  async getRecordTypes(facilityId) {
+    const id = Number(facilityId);
+    if (!Number.isSafeInteger(id) || id <= 0) {
+      throw new Error("有効な施設IDを指定してください。");
+    }
+
+    const bridge = window.electronAPI;
+    const fetchRecordTypes =
+      bridge?.laravel_recordTypes_getAll ??
+      bridge?.laravel_record_types_getAll;
+    if (typeof fetchRecordTypes !== "function") {
+      throw new Error("児童課題タイプの取得APIがPreloadに公開されていません。");
+    }
+
+    const result = await fetchRecordTypes({ facility_id: id });
+    if (result?.success === false) {
+      throw new Error(result.message || result.error?.message || "課題タイプの取得に失敗しました。");
+    }
+
+    const data = unwrapTableData(result);
+    if (!Array.isArray(data)) {
+      throw new Error("児童課題タイプの取得結果が配列ではありません。");
+    }
+    return data.filter((type) => Number(type?.facility_id) === id);
+  },
+
   /**
    * Laravel APIから全テーブルを取得する。
    *

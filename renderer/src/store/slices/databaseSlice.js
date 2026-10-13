@@ -30,7 +30,6 @@ const tableKeys = [
   // 記録系
   'service_record',
   'child_records',
-  'record_types',
   'm_service_items',
 
   // メモ・テキスト系
@@ -138,6 +137,11 @@ const databaseSlice = createSlice({
       state.error = null
     },
 
+    // 課題タイプは指定施設の専用APIからのみ更新する。
+    setRecordTypes: (state, action) => {
+      state.record_types = Array.isArray(action.payload) ? action.payload : []
+    },
+
     setServiceRecord: (state, action) => {
       state.service_record = Array.isArray(action.payload)
         ? action.payload
@@ -148,6 +152,7 @@ const databaseSlice = createSlice({
       tableKeys.forEach((key) => {
         state[key] = []
       })
+      state.record_types = []
 
       state.error = null
       state.metadata = {
@@ -189,6 +194,7 @@ const databaseSlice = createSlice({
 export const {
   setAllTables,
   setServiceRecord,
+  setRecordTypes,
   clearDatabaseData,
   clearError,
 } = databaseSlice.actions

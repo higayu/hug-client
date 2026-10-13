@@ -6,7 +6,7 @@ import {
 } from '@/store/slices/chilledspaceSlice'
 import {SavedPersonalRecord} from '@/components/common/hug_function'
 import AiContents from '@/components/common/AiContents'
-import ChildKadai from './ChildKadai'
+import ChildKadai from '@/components/common/ChildKadai'
 import DeleteChilledSpaceBtn from './DeleteChilledSpaceBtn'
 
 const INITIAL_PROMPT_TABS = [
