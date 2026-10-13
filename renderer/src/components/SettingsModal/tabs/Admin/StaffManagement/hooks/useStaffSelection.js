@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useSelector } from 'react-redux'
+import { selectCanManageTargetStaff } from '@/store/roleSelectors'
 
 export function useStaffSelection({
   staffs,
   authenticatedStaffId,
-  canManageStaff,
 }) {
   const [selectedStaffId, setSelectedStaffId] = useState('')
+  const state = useSelector(s => s)
 
   const editableStaffs = useMemo(() => {
     const source = Array.isArray(staffs) ? staffs : []
@@ -13,9 +15,9 @@ export function useStaffSelection({
     return source.filter(
       (staff) =>
         String(staff?.id) !== String(authenticatedStaffId) &&
-        typeof canManageStaff === 'function' && canManageStaff(staff),
+        selectCanManageTargetStaff(state, staff?.id),
     )
-  }, [staffs, authenticatedStaffId, canManageStaff])
+  }, [staffs, authenticatedStaffId, state])
 
   useEffect(() => {
     if (

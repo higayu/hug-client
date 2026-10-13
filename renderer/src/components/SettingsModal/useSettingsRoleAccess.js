@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux'
 import { useAppState } from '@/AppStateContext'
 import { selectLaravelAuth } from '@/store/slices/authSlice'
 
-const elevated = new Set(['mentor', 'franchise_admin'])
+const elevated = new Set(['mentor', 'franchise_mentor'])
 const str = (value) => String(value ?? '')
 
 // The authenticated role is authoritative. Never infer privileges from legacy role_id.
@@ -15,7 +15,7 @@ export function useSettingsRoleAccess() {
   const isAdmin = globalRole === 'admin'
   const companies = databaseState?.companies ?? []
   const facilities = databaseState?.facilitys ?? []
-  const companyRoles = databaseState?.staff_company_roles ?? []
+  const companyRoles = databaseState?.company_staff ?? []
   const facilityStaff = databaseState?.facility_staff ?? []
 
   const authorizedCompanyIds = useMemo(() => {
@@ -40,7 +40,7 @@ export function useSettingsRoleAccess() {
     if (str(staff.id) === str(staffId)) return false
     if (isAdmin) return true
     if (!canManageCurrentCompanyStaff) return false
-    if (str(staff.role_code) === 'admin') return false
+    if (companyRoles.some((item) => str(item.staff_id) === str(staff.id) && str(item.company_id) === '1' && str(item.role_code) === 'admin')) return false
     const memberships = facilityStaff.filter((item) => str(item.staff_id) === str(staff.id))
     if (!memberships.length) return false
     const targetCompanyIds = new Set(memberships.map((item) => facilities.find((f) => str(f.id) === str(item.facility_id))?.company_id).filter((id) => id != null).map(str))

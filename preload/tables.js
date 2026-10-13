@@ -33,7 +33,7 @@ const aiPromptTables = [
 const sqliteTables = [...sharedTables];
 const mariadbTables = [...sharedTables, ...aiPromptTables];
 // Laravelの会社別権限は取得専用。SQLite・MariaDBのスキーマは変更しない。
-const roleTables = ["companies", "roles", "company_roles", "staff_company_roles"];
+const roleTables = ["companies", "roles", "company_roles", "company_staff"];
 const laravelTables = [...sharedTables, ...aiPromptTables, ...roleTables];
 
 module.exports = {

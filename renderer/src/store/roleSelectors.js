@@ -1,37 +1,84 @@
-// Laravel認証と会社別roleの権限判定。旧role_idへのフォールバックは禁止。
-export const selectAuthRoleCode = (state) => String(state.auth?.user?.role_code ?? '').toLowerCase()
-export const selectIsGlobalAdmin = (state) => Boolean(state.auth?.authenticated && selectAuthRoleCode(state) === 'admin')
-const rows = (value) => Array.isArray(value) ? value : []
-const equals = (a, b) => a != null && b != null && String(a) === String(b)
-export const selectManagedCompanyIds = (state) => {
-  if (!state.auth?.authenticated) return []
-  const staffId = state.auth?.user?.staff_id
-  if (staffId == null) return []
-  return [...new Set(rows(state.database?.staff_company_roles)
-    .filter((r) => equals(r.staff_id, staffId) && ['mentor', 'franchise_admin'].includes(r.role_code))
-    .map((r) => String(r.company_id)))]
-}
-export const selectCanManageStaff = (state) => selectIsGlobalAdmin(state) || selectManagedCompanyIds(state).length > 0
+// 会社別role: role_idの数値比較は使用しません。
+// 権限の最終的な可否はLaravel APIでも必ず検証してください。
+import { selectAuthenticatedStaffId, selectLaravelAuth } from './slices/authSlice.js';
+import {
+  selectCompanies, selectCompanyRoles, selectFacilityStaff, selectFacilitys,
+  selectRoles, selectStaffCompanyRoles,
+} from './slices/databaseSlice.js';
+
+const sameId = (a, b) => a != null && b != null && String(a) === String(b);
+const active = (row) => row?.is_active == null || Number(row.is_active) === 1;
+
+export const selectIsGlobalAdmin = (state) =>
+  selectLaravelAuth(state)?.user?.role_code === 'admin';
+
+export const selectCurrentStaffCompanies = (state) => {
+  const staffId = selectAuthenticatedStaffId(state);
+  if (!staffId) return [];
+  const companyIds = new Set(selectStaffCompanyRoles(state)
+    .filter((row) => sameId(row.staff_id, staffId))
+    .map((row) => String(row.company_id)));
+  return selectCompanies(state).filter((company) =>
+    companyIds.has(String(company.id)) && active(company)
+  );
+};
+
+export const selectCurrentCompanyRole = (state, companyId) => {
+  const staffId = selectAuthenticatedStaffId(state);
+  if (!staffId || companyId == null) return null;
+  const company = selectCurrentStaffCompanies(state).find((item) => sameId(item.id, companyId));
+  if (!company) return null;
+  const assignment = selectStaffCompanyRoles(state).find(
+    (row) => sameId(row.staff_id, staffId) && sameId(row.company_id, companyId)
+  );
+  if (!assignment) return null;
+  const enabled = selectCompanyRoles(state).some(
+    (row) => sameId(row.company_id, companyId) && row.role_code === assignment.role_code
+  );
+  const role = selectRoles(state).find((row) => row.code === assignment.role_code);
+  return enabled && role && role.scope === 'company' && active(role) ? assignment.role_code : null;
+};
+
+export const selectCanManageCompanyStaff = (state, companyId) => {
+  if (selectIsGlobalAdmin(state)) return true;
+  return ['mentor', 'franchise_mentor'].includes(selectCurrentCompanyRole(state, companyId));
+};
+
+export const selectCanManageStaff = (state) =>
+  selectIsGlobalAdmin(state) ||
+  selectCurrentStaffCompanies(state).some((company) =>
+    selectCanManageCompanyStaff(state, company.id)
+  );
+
 export const selectCanManageTargetStaff = (state, targetStaffId) => {
-  if (!state.auth?.authenticated || targetStaffId == null) return false
-  if (equals(targetStaffId, state.auth?.user?.staff_id)) return false
-  if (selectIsGlobalAdmin(state)) return true
-  const target = rows(state.database?.staffs).find(s => equals(s.id, targetStaffId))
-  if (!target || ['admin', 'mentor', 'franchise_admin'].includes(String(target.role_code ?? ''))) return false
-  const targetCompanyRoles = rows(state.database?.staff_company_roles).filter(r => equals(r.staff_id, targetStaffId))
-  if (targetCompanyRoles.some(r => ['mentor', 'franchise_admin'].includes(r.role_code))) return false
-  const managed = selectManagedCompanyIds(state)
-  if (!managed.length) return false
-  const facilityIds = rows(state.database?.facility_staff)
-    .filter(r => equals(r.staff_id, targetStaffId)).map(r => r.facility_id)
-  const assigned = rows(state.database?.facilitys)
-    .filter(f => facilityIds.some(id => equals(id, f.id)))
-  // 未所属や複数会社所属の職員は、安全側で管理不可とする。
-  return assigned.length > 0 && assigned.every(f => f.company_id != null && managed.includes(String(f.company_id)))
-}
-export const selectCanManageFacility = (state, facilityId) => {
-  if (!state.auth?.authenticated) return false
-  if (selectIsGlobalAdmin(state)) return true
-  const managed = selectManagedCompanyIds(state)
-  return rows(state.database?.facilitys).some(f => equals(f.id, facilityId) && managed.includes(String(f.company_id)))
-}
+  if (selectIsGlobalAdmin(state)) return true;
+  if (targetStaffId == null) return false;
+
+  return selectStaffCompanyRoles(state).some((membership) =>
+    sameId(membership.staff_id, targetStaffId) &&
+    selectCanManageCompanyStaff(state, membership.company_id)
+  );
+};
+
+export const selectAssignableCompanyRoles = (state, companyId) => {
+  const company = selectCompanies(state).find((row) => sameId(row.id, companyId) && active(row));
+  if (!company) return [];
+  const ownRole = selectCurrentCompanyRole(state, companyId);
+  const allowed = selectIsGlobalAdmin(state)
+    ? ['mentor', 'staff', 'franchise_mentor', 'franchise_staff']
+    : ownRole === 'mentor' ? ['mentor', 'staff']
+    : ownRole === 'franchise_mentor' ? ['franchise_staff'] : [];
+  const permitted = new Set(selectCompanyRoles(state)
+    .filter((row) => sameId(row.company_id, companyId)).map((row) => row.role_code));
+  return selectRoles(state).filter((role) =>
+    role.scope === 'company' && active(role) && allowed.includes(role.code) && permitted.has(role.code)
+  );
+};
+
+export const selectCanAccessFacility = (state, facilityId) => {
+  if (selectIsGlobalAdmin(state)) return true;
+  const staffId = selectAuthenticatedStaffId(state);
+  return Boolean(staffId) && selectFacilityStaff(state).some(
+    (row) => sameId(row.staff_id, staffId) && sameId(row.facility_id, facilityId)
+  );
+};

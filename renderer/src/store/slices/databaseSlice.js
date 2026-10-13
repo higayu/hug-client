@@ -1,5 +1,5 @@
 // src/store/slices/databaseSlice.js
-// SQLite / MariaDB テーブルデータの状態管理
+// Laravel API テーブルデータの状態管理
 
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 
@@ -17,7 +17,7 @@ const tableKeys = [
   'companies',
   'roles',
   'company_roles',
-  'staff_company_roles',
+  'company_staff',
 
   // 関連テーブル
   'facility_children',
@@ -41,7 +41,6 @@ const tableKeys = [
   'staff_facility_roles',
 
   // 認証系
-  // ローカルSQLiteへ保存してよいか要注意
   'users',
   'refresh_tokens',
 ]
@@ -69,7 +68,7 @@ const applyPayloadToState = (state, payload = {}) => {
 // ※ 現状は payload をそのまま fulfilled に渡すだけ
 // =============================================================
 export const fetchAllTables = createAsyncThunk(
-  'sqlite/fetchAllTables',
+  'laravel/fetchAllTables',
   async (payload) => payload
 )
 
@@ -86,7 +85,7 @@ const initialState = {
   companies: [],
   roles: [],
   company_roles: [],
-  staff_company_roles: [],
+  company_staff: [],
 
   // 関連テーブル
   facility_children: [],
@@ -126,7 +125,7 @@ const initialState = {
 // Slice
 // =============================================================
 const databaseSlice = createSlice({
-  name: 'sqlite',
+  name: 'laravel',
   initialState,
 
   reducers: {
@@ -145,7 +144,7 @@ const databaseSlice = createSlice({
         : []
     },
 
-    clearSqliteData: (state) => {
+    clearDatabaseData: (state) => {
       tableKeys.forEach((key) => {
         state[key] = []
       })
@@ -190,7 +189,7 @@ const databaseSlice = createSlice({
 export const {
   setAllTables,
   setServiceRecord,
-  clearSqliteData,
+  clearDatabaseData,
   clearError,
 } = databaseSlice.actions
 
@@ -207,11 +206,12 @@ export const selectChildrenType = (state) =>
 export const selectPronunciation = (state) =>
   state.database?.pronunciation ?? []
 export const selectStaffs = (state) => state.database?.staffs ?? []
+export const selectFacilitys = (state) => state.database?.facilitys ?? []
 export const selectCompanies = (state) => state.database?.companies ?? []
 export const selectRoles = (state) => state.database?.roles ?? []
 export const selectCompanyRoles = (state) => state.database?.company_roles ?? []
-export const selectStaffCompanyRoles = (state) => state.database?.staff_company_roles ?? []
-export const selectFacilitys = (state) => state.database?.facilitys ?? []
+export const selectStaffCompanyRoles = (state) =>
+  state.database?.company_staff ?? []
 
 // 関連テーブル
 export const selectFacilityChildren = (state) =>

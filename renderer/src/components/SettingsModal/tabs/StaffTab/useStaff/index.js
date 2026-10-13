@@ -39,7 +39,6 @@ function unwrapResult(result) {
  *     work_style,
  *     notes,
  *     is_delete,
- *     role_id,
  *     display_order,
  *     entered_at,
  *     leaving_at,

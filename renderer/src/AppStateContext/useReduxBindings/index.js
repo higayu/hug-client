@@ -16,6 +16,8 @@ import {
   selectChildren,
   selectChildrenType,
   selectChildRecords,
+  selectCompanies,
+  selectCompanyRoles,
   selectDatabaseError,
   selectDatabaseLoading,
   selectDatabaseMetadata,
@@ -32,8 +34,10 @@ import {
   selectPronunciation,
   selectRecordTypes,
   selectRefreshTokens,
+  selectRoles,
   selectServiceRecord,
   selectStaffFacilityRoles,
+  selectStaffCompanyRoles,
   selectStaffs,
   selectTempNotes,
   selectTextData,
@@ -122,6 +126,26 @@ export function useReduxBindings() {
 
   const dbFacilitys = useSelector(
     selectFacilitys,
+    shallowEqual
+  )
+
+  const dbCompanies = useSelector(
+    selectCompanies,
+    shallowEqual
+  )
+
+  const dbRoles = useSelector(
+    selectRoles,
+    shallowEqual
+  )
+
+  const dbCompanyRoles = useSelector(
+    selectCompanyRoles,
+    shallowEqual
+  )
+
+  const dbStaffCompanyRoles = useSelector(
+    selectStaffCompanyRoles,
     shallowEqual
   )
 
@@ -490,32 +514,65 @@ export function useReduxBindings() {
       pronunciation: dbPronunciation,
       staffs: dbStaffs,
       facilitys: dbFacilitys,
+      companies: dbCompanies,
+      roles: dbRoles,
+      company_roles: dbCompanyRoles,
+      company_staff: dbStaffCompanyRoles,
 
       // 関連テーブル
-      facility_children: dbFacilityChildren,
-      facility_staff: dbFacilityStaff,
-      managers2: dbManagers2,
-      pc: dbPc,
-      pc_to_children: dbPcToChildren,
-      day_of_week: dbDayOfWeek,
+      facility_children:
+        dbFacilityChildren,
+
+      facility_staff:
+        dbFacilityStaff,
+
+      managers2:
+        dbManagers2,
+
+      pc:
+        dbPc,
+
+      pc_to_children:
+        dbPcToChildren,
+
+      day_of_week:
+        dbDayOfWeek,
 
       // 記録系
-      service_record: dbServiceRecord,
-      child_records: dbChildRecords,
-      record_types: dbRecordTypes,
-      m_service_items: dbMServiceItems,
+      service_record:
+        dbServiceRecord,
+
+      child_records:
+        dbChildRecords,
+
+      record_types:
+        dbRecordTypes,
+
+      m_service_items:
+        dbMServiceItems,
 
       // メモ・テキスト系
-      temp_notes: dbTempNotes,
-      memo: dbMemo,
-      text_data: dbTextData,
-      toolbox: dbToolbox,
+      temp_notes:
+        dbTempNotes,
+
+      memo:
+        dbMemo,
+
+      text_data:
+        dbTextData,
+
+      toolbox:
+        dbToolbox,
+
       staff_facility_roles:
         dbStaffFacilityRoles,
 
       // 認証系
-      users: dbUsers,
-      refresh_tokens: dbRefreshTokens,
+      users:
+        dbUsers,
+
+      refresh_tokens:
+        dbRefreshTokens,
     }),
     [
       dbChildren,
@@ -523,6 +580,10 @@ export function useReduxBindings() {
       dbPronunciation,
       dbStaffs,
       dbFacilitys,
+      dbCompanies,
+      dbRoles,
+      dbCompanyRoles,
+      dbStaffCompanyRoles,
       dbFacilityChildren,
       dbFacilityStaff,
       dbManagers2,
@@ -542,6 +603,7 @@ export function useReduxBindings() {
       dbRefreshTokens,
     ]
   )
+
 
   // ============================================================
   // databaseSliceから児童データを抽出
@@ -745,6 +807,10 @@ export function useReduxBindings() {
     dbPronunciation,
     dbStaffs,
     dbFacilitys,
+    dbCompanies,
+    dbRoles,
+    dbCompanyRoles,
+    dbStaffCompanyRoles,
 
     // 関連テーブル
     dbFacilityChildren,

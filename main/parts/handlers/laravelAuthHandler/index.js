@@ -257,7 +257,7 @@ function registerLaravelAuthHandlers(
     const result = await fetchTableAllHandler(_event, params);
     if (result?.success !== true) return result;
 
-    const roleTables = ["companies", "roles", "company_roles", "staff_company_roles"];
+    const roleTables = ["companies", "roles", "company_roles", "company_staff"];
     const missing = roleTables.filter((key) => !Array.isArray(result.data?.[key]));
     if (missing.length > 0) {
       return {

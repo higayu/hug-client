@@ -1,7 +1,9 @@
 import { useState } from 'react'
+import { useSelector } from 'react-redux'
 
 import { useAppState } from '@/AppStateContext'
-import { useSettingsRoleAccess } from '../../useSettingsRoleAccess'
+import { selectLaravelAuth } from '@/store/slices/authSlice'
+import { selectCanManageStaff, selectIsGlobalAdmin } from '@/store/roleSelectors'
 
 import AdminHeader from './components/AdminHeader'
 import AdminSectionCards from './components/AdminSectionCards'
@@ -13,7 +15,10 @@ import StaffManagement from './StaffManagement'
 import WebAutomation from './WebAutomation'
 
 export default function AdminTab() {
-  const { isAdmin, staffId: authenticatedStaffId, canManageCurrentCompanyStaff, canManageStaff } = useSettingsRoleAccess()
+  const auth = useSelector(selectLaravelAuth)
+  const isMentorOrAbove = useSelector(selectCanManageStaff)
+  const isAdmin = useSelector(selectIsGlobalAdmin)
+  const authenticatedStaffId = auth.user?.staff_id
   const {
     databaseState,
     DEBUG_FLG,
@@ -36,7 +41,7 @@ export default function AdminTab() {
     ? activeAdminSection
     : ADMIN_SECTION_IDS.STAFF_MANAGEMENT
 
-  if (!canManageCurrentCompanyStaff) {
+  if (!isMentorOrAbove) {
     return null
   }
 
@@ -54,7 +59,6 @@ export default function AdminTab() {
         <StaffManagement
           staffs={databaseState?.staffs}
           authenticatedStaffId={authenticatedStaffId}
-          canManageStaff={canManageStaff}
         />
       )}
 

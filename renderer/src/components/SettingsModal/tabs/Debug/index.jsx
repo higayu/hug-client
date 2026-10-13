@@ -1,7 +1,7 @@
 import { useSelector } from 'react-redux'
 
 import { selectLaravelAuth } from '@/store/slices/authSlice'
-import { useSettingsRoleAccess } from '../../useSettingsRoleAccess'
+import { selectIsGlobalAdmin } from '@/store/roleSelectors'
 
 function formatValue(value) {
   if (value === null) return 'null'
@@ -12,7 +12,8 @@ function formatValue(value) {
 
 export default function DebugTab() {
   const auth = useSelector(selectLaravelAuth)
-  const { isAdmin } = useSettingsRoleAccess()
+
+  const isAdmin = useSelector(selectIsGlobalAdmin)
 
   if (!isAdmin) {
     return null

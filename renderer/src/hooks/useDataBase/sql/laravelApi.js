@@ -10,7 +10,7 @@ const TABLE_NAMES = [
   "companies",
   "roles",
   "company_roles",
-  "staff_company_roles",
+  "company_staff",
   "children",
   "children_type",
   "day_of_week",

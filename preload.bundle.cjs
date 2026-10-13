@@ -40,7 +40,7 @@ var require_tables = __commonJS({
     ];
     var sqliteTables = [...sharedTables];
     var mariadbTables = [...sharedTables, ...aiPromptTables];
-    var roleTables = ["companies", "roles", "company_roles", "staff_company_roles"];
+    var roleTables = ["companies", "roles", "company_roles", "company_staff"];
     var laravelTables = [...sharedTables, ...aiPromptTables, ...roleTables];
     module2.exports = {
       sqliteTables,
