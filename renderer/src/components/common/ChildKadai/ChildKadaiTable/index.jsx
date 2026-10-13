@@ -4,7 +4,7 @@ import { AgGridReact } from 'ag-grid-react'
 
 import { useAppState } from '@/AppStateContext'
 import { useSelector } from 'react-redux'
-import { selectSpaceChildId } from '@/store/slices/chilledspaceSlice.js'
+import { selectSpaceChildId } from '@/store/workSpaceSelectors.js'
 
 import ChildKadaiFilter from './common/ChildKadaiFilter'
 import TableRow from './TableRow'

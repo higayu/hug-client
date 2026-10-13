@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { useAppState } from '@/AppStateContext'
 import { setRecordTypes } from '@/store/slices/databaseSlice'
 import { laravelApi } from '@/hooks/useDataBase/sql/laravelApi'
-import { selectSpaceChildId } from '@/store/slices/chilledspaceSlice.js'
+import { selectSpaceChildId } from '@/store/workSpaceSelectors.js'
 
 import ChildKadaiTable from './ChildKadaiTable'
 import CreateKadai from './ChildKadaiTable/TableRow/CreateKadai'

@@ -42,6 +42,14 @@ function createElectronApi(ipcRenderer, isDebugMode) {
     laravel_fetchTableAll: (params = {}) =>
       ipcRenderer.invoke("laravel-fetch-table-all", params),
 
+    // ---- 施設別児童課題タイプ取得 ----
+    laravel_recordTypes_getAll: (params = {}) =>
+      ipcRenderer.invoke("laravel:record-types:list", params),
+
+    // 互換名（従来のテーブルAPI命名規則）
+    laravel_record_types_getAll: (params = {}) =>
+      ipcRenderer.invoke("laravel:record-types:list", params),
+
     // Laravel会社別権限データ（読み取り専用）
     laravel_fetchRoleTables: (params = {}) =>
       ipcRenderer.invoke("laravel-fetch-role-tables", params),

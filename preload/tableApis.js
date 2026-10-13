@@ -103,6 +103,10 @@ function createTableApis(ipcRenderer) {
     };
   }
 
+  // record_typesは全テーブル取得ではなく専用IPCから取得する。
+  tableAPIs.laravel_record_types_getAll = (params = {}) =>
+    ipcRenderer.invoke("laravel:record-types:list", params);
+
   // Laravel側で実際に登録されている書き込みIPCのみを公開する。
   tableAPIs.laravel_managers2_delete = (data) =>
     ipcRenderer.invoke("laravel:managers2:delete", data);

@@ -41,7 +41,7 @@ var require_tables = __commonJS({
     var sqliteTables = [...sharedTables];
     var mariadbTables = [...sharedTables, ...aiPromptTables];
     var roleTables = ["companies", "roles", "company_roles", "company_staff"];
-    var laravelTables = [...sharedTables, ...aiPromptTables, ...roleTables];
+    var laravelTables = [...sharedTables.filter((name) => name !== "record_types"), ...aiPromptTables, ...roleTables];
     module2.exports = {
       sqliteTables,
       mariadbTables,
@@ -103,6 +103,7 @@ var require_tableApis = __commonJS({
           return Array.isArray(tables?.[table]) ? tables[table] : [];
         };
       }
+      tableAPIs.laravel_record_types_getAll = (params = {}) => ipcRenderer2.invoke("laravel:record-types:list", params);
       tableAPIs.laravel_managers2_delete = (data) => ipcRenderer2.invoke("laravel:managers2:delete", data);
       tableAPIs.laravel_children_update = (data) => ipcRenderer2.invoke("laravel:children:update", data);
       tableAPIs.laravel_temp_notes_getByPk = (data) => ipcRenderer2.invoke("laravel:getTempNote", data);
@@ -148,6 +149,10 @@ var require_electronApi = __commonJS({
         mariadb_fetchTableAll: () => ipcRenderer2.invoke("mariadb-fetch-table-all"),
         // ---- Laravel テーブル一括取得 ----
         laravel_fetchTableAll: (params = {}) => ipcRenderer2.invoke("laravel-fetch-table-all", params),
+        // ---- 施設別児童課題タイプ取得 ----
+        laravel_recordTypes_getAll: (params = {}) => ipcRenderer2.invoke("laravel:record-types:list", params),
+        // 互換名（従来のテーブルAPI命名規則）
+        laravel_record_types_getAll: (params = {}) => ipcRenderer2.invoke("laravel:record-types:list", params),
         // Laravel会社別権限データ（読み取り専用）
         laravel_fetchRoleTables: (params = {}) => ipcRenderer2.invoke("laravel-fetch-role-tables", params),
         // ---- Laravel 接続確認 ----
