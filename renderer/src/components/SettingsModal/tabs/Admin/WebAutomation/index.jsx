@@ -1,5 +1,6 @@
 import WebAutomationInstruction from './components/WebAutomationInstruction'
 import AutomationRulesTab from './AutomationRulesTab'
+import BackEndButton from './BackEndButton'
 
 export default function WebAutomation() {
   const openPhpMyAdmin = async () => {
@@ -26,6 +27,8 @@ export default function WebAutomation() {
         >
           phpMyAdminを開く
         </button>
+
+        <BackEndButton />
       </div>
 
       <WebAutomationInstruction />
