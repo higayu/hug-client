@@ -10,8 +10,8 @@ function resolveIniPath() {
   if (app.isPackaged) {
     return path.join(app.getPath("userData"), "data", "ini.json");
   } else {
-    // dev path is main/data/ini.json
-    return path.join(__dirname, "..", "main", "data", "ini.json");
+    // dev path is electron/data/ini.json
+    return path.join(__dirname, "..", "electron", "data", "ini.json");
   }
 }
 
@@ -22,7 +22,7 @@ function resolveIniPath() {
 function getDefaultIni() {
   // ini.json.example を優先して読み込む
   try {
-    const examplePath = path.join(__dirname, "..", "main", "data", "ini.json.example");
+    const examplePath = path.join(__dirname, "..", "electron", "data", "ini.json.example");
     if (fs.existsSync(examplePath)) {
       return JSON.parse(fs.readFileSync(examplePath, "utf8"));
     }

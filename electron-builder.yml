@@ -7,17 +7,14 @@ directories:
 files:
   - build/**/*
   - assets/**
-  - data/**
-  - main/**
+  - electron/main/**
+  - electron/preload/**
   - renderer/**
   - package.json
 
   # Electron が実行時に読む preload
-  - preload.bundle.cjs
 
   # 開発用ソース。実行時には不要だが、残してもOK
-  - preload.js
-  - preload/**/*
 
 win:
   target: nsis

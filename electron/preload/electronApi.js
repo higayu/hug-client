@@ -1,0 +1,643 @@
+// preload/electronApi.js
+const { createTableApis } = require("./tableApis");
+
+// 現在の仕様では共通APIもLaravelへ固定する。
+async function getDbPrefix() {
+  return "laravel";
+}
+
+function createElectronApi(ipcRenderer, isDebugMode) {
+  // 既存のpreloadエントリーポイントからcreateElectronApi()が呼ばれた際に、
+  // window.electronWindow.openExternal()も独立したAPIとして公開する。
+  // contextIsolation: true の環境でrendererから安全に呼び出せる。
+  const { contextBridge } = require("electron");
+  contextBridge.exposeInMainWorld("electronWindow", {
+    openExternal: (url) => ipcRenderer.invoke("window:open-external", url),
+  });
+  // 旧API名の直接呼び出しも、IPC送信前に拒否する。
+  const invoke = ipcRenderer.invoke.bind(ipcRenderer);
+  ipcRenderer = new Proxy(ipcRenderer, {
+    get(target, property) {
+      if (property === "invoke") {
+        return (channel, ...args) => {
+          if (/^(sqlite|mariadb)(:|-)/.test(channel)) {
+            return Promise.reject(new Error("現在はLaravel専用モードです。SQLite・MariaDBは利用できません。"));
+          }
+          return invoke(channel, ...args);
+        };
+      }
+      const value = target[property];
+      return typeof value === "function" ? value.bind(target) : value;
+    },
+  });
+  return {
+    // ---- デバッグ ----
+    isDebugMode: () => isDebugMode,
+
+    // ---- DB 種別 ----
+    getDatabaseType: () => ipcRenderer.invoke("get-database-type"),
+
+    // ---- MariaDB 接続確認 ----
+    checkMariaDbConnection: () =>
+      ipcRenderer.invoke("mariadb:connection:check"),
+
+    // ---- テーブル一括取得 ----
+    mariadb_fetchTableAll: () =>
+      ipcRenderer.invoke("mariadb-fetch-table-all"),
+
+    // ---- Laravel テーブル一括取得 ----
+    laravel_fetchTableAll: (params = {}) =>
+      ipcRenderer.invoke("laravel-fetch-table-all", params),
+
+    // ---- 施設別児童課題タイプ取得 ----
+    laravel_recordTypes_getAll: (params = {}) =>
+      ipcRenderer.invoke("laravel:record-types:list", params),
+
+    // 互換名（従来のテーブルAPI命名規則）
+    laravel_record_types_getAll: (params = {}) =>
+      ipcRenderer.invoke("laravel:record-types:list", params),
+
+    // Laravel会社別権限データ（読み取り専用）
+    laravel_fetchRoleTables: (params = {}) =>
+      ipcRenderer.invoke("laravel-fetch-role-tables", params),
+
+    // ---- Laravel 接続確認 ----
+    checkLaravelConnection: () =>
+      ipcRenderer.invoke("laravel:connection:check"),
+
+    // ---- Laravel AI文章校正 ----
+    laravel_aiRecordEditer_correctPersonalRecord: (data = {}) =>
+      ipcRenderer.invoke(
+        "laravel:ai-record-editer:personal-record:correct",
+        data,
+      ),
+
+    laravel_aiRecordEditer_correctProfessionalSupport: (data = {}) =>
+      ipcRenderer.invoke(
+        "laravel:ai-record-editer:professional-support:correct",
+        data,
+      ),
+
+    // ---- Web自動化 V2 ----
+    /**
+     * published Flow + DB上の仮想JSファイル群を一括取得する。
+     * executeFlowV2() から利用する。
+     */
+    webAutomationV2_getFlowBundle: (params = {}) =>
+      ipcRenderer.invoke(
+        "laravel:web-automation-v2:flow-bundle:get",
+        params,
+      ),
+
+    /** executeFlowV2() の実行開始ログを作成する。 */
+    webAutomationV2_executionLogStart: (data = {}) =>
+      ipcRenderer.invoke(
+        "laravel:web-automation-v2:execution-log:start",
+        data,
+      ),
+
+    /** executionUuidを使って実行ログを完了する。 */
+    webAutomationV2_executionLogFinish: (data = {}) =>
+      ipcRenderer.invoke(
+        "laravel:web-automation-v2:execution-log:finish",
+        data,
+      ),
+
+    // ---- Web自動化 V2 管理者用 ----
+    // SettingsModal 管理者タブから利用する。
+    laravel_webAutomationV2Flows_getAll: (params = {}) =>
+      ipcRenderer.invoke(
+        "laravel:web-automation-v2:admin:flows:list",
+        params,
+      ),
+
+    laravel_webAutomationV2Flow_get: (flowIdOrKey, params = {}) =>
+      ipcRenderer.invoke(
+        "laravel:web-automation-v2:admin:flow:get",
+        flowIdOrKey,
+        params,
+      ),
+
+    laravel_webAutomationV2Flow_update: (flowId, data = {}) =>
+      ipcRenderer.invoke(
+        "laravel:web-automation-v2:admin:flow:update",
+        flowId,
+        data,
+      ),
+
+    laravel_webAutomationV2ExecutionLogs_getAll: (params = {}) =>
+      ipcRenderer.invoke(
+        "laravel:web-automation-v2:admin:execution-logs:list",
+        params,
+      ),
+
+    // SettingsModal側の互換名。
+    webAutomationV2_adminFlowsGetAll: (params = {}) =>
+      ipcRenderer.invoke(
+        "laravel:web-automation-v2:admin:flows:list",
+        params,
+      ),
+
+    webAutomationV2_adminFlowGet: (flowIdOrKey, params = {}) =>
+      ipcRenderer.invoke(
+        "laravel:web-automation-v2:admin:flow:get",
+        flowIdOrKey,
+        params,
+      ),
+
+    webAutomationV2_adminFlowUpdate: (flowId, data = {}) =>
+      ipcRenderer.invoke(
+        "laravel:web-automation-v2:admin:flow:update",
+        flowId,
+        data,
+      ),
+
+    webAutomationV2_adminExecutionLogsGetAll: (params = {}) =>
+      ipcRenderer.invoke(
+        "laravel:web-automation-v2:admin:execution-logs:list",
+        params,
+      ),
+
+    // ---- Q&A・障害対応ナレッジ ----
+    laravel_troubleshootingKnowledge_getAll: (params = {}) =>
+      ipcRenderer.invoke(
+        "laravel:troubleshooting-knowledge:list",
+        params,
+      ),
+
+    laravel_troubleshootingKnowledge_get: (id) =>
+      ipcRenderer.invoke(
+        "laravel:troubleshooting-knowledge:get",
+        id,
+      ),
+
+    laravel_troubleshootingKnowledge_update: (id, data = {}) =>
+      ipcRenderer.invoke(
+        "laravel:troubleshooting-knowledge:update",
+        id,
+        data,
+      ),
+
+    // ---- 個人記録一括同期履歴 ----
+    laravel_personalRecordSync_getMonth: (params = {}) =>
+      ipcRenderer.invoke(
+        "laravel:personal-record-syncs:get-month",
+        params,
+      ),
+
+    // snake_caseを使用しているrendererとの互換用。
+    laravel_personal_record_syncs_getMonth: (params = {}) =>
+      ipcRenderer.invoke(
+        "laravel:personal-record-syncs:get-month",
+        params,
+      ),
+
+    // 既存の取得名との互換用。年月・施設IDをparamsで渡す。
+    laravel_personal_record_syncs_getAll: (params = {}) =>
+      ipcRenderer.invoke(
+        "laravel:personal-record-syncs:get-month",
+        params,
+      ),
+
+    // ---- Laravel 認証 ----
+    /**
+     * config.jsonの
+     * HUG_USERNAME / HUG_PASSWORDでログインする。
+     */
+    jwtAutoLogin: () =>
+      ipcRenderer.invoke("laravel-auth-login"),
+
+    laravel_auth_login: () =>
+      ipcRenderer.invoke("laravel-auth-login"),
+
+    laravel_auth_me: () =>
+      ipcRenderer.invoke("laravel-auth-me"),
+
+    laravel_auth_logout: () =>
+      ipcRenderer.invoke("laravel-auth-logout"),
+
+    // ---- Laravel managers2 ----
+    laravel_procedure_upsertManagers2: (data) =>
+      ipcRenderer.invoke("laravel:procedure:upsert-managers2", data),
+
+    laravel_procedure_registerManagerAssignment: (data) =>
+      ipcRenderer.invoke(
+        "laravel:procedure:register-manager-assignment",
+        data,
+      ),
+
+    laravel_procedure_call: (procedureName, params = []) =>
+      ipcRenderer.invoke(
+        "laravel:procedure:call",
+        procedureName,
+        params,
+      ),
+
+    laravel_procedure_registerFacilityChildren: (data) =>
+      ipcRenderer.invoke(
+        "laravel:procedure:register-facility-children",
+        data,
+      ),
+
+    laravel_procedure_syncHugStaffs: (data) =>
+      ipcRenderer.invoke("laravel:procedure:sync-hug-staffs", data),
+
+    laravel_staff_update: (data = {}) => {
+      const staff = data?.staff ?? {};
+      const hasUseMyPrompt = Object.prototype.hasOwnProperty.call(
+        staff,
+        "use_my_prompt",
+      );
+
+      const payload = {
+        ...data,
+        staff: {
+          ...staff,
+          use_my_prompt:
+            !hasUseMyPrompt || staff.use_my_prompt == null
+              ? null
+              : [true, 1, "1"].includes(staff.use_my_prompt)
+                ? 1
+                : 0,
+        },
+      };
+
+      return ipcRenderer.invoke("laravel:procedure:update-staff", payload);
+    },
+
+    laravel_admin_update_staff_login: (data) =>
+      ipcRenderer.invoke("laravel:admin:update-staff-login", data),
+    
+    laravel_procedure_upsertServiceRecord: (data) =>
+      ipcRenderer.invoke("laravel:procedure:upsert-service-record", data),
+
+    laravel_procedure_upsertServiceRecordsBulk: (data = {}) =>
+      ipcRenderer.invoke(
+        "laravel:procedure:upsert-service-records-bulk",
+        {
+          ...data,
+          save_sync_history: [true, 1, "1"].includes(
+            data?.save_sync_history,
+          )
+            ? 1
+            : 0,
+        },
+      ),
+
+    // ---- Professional Support 月次同期 ----
+    laravel_procedure_syncProfessionalSupportMonth: (data) =>
+      ipcRenderer.invoke(
+        "laravel:procedure:sync-professional-support-month",
+        data,
+      ),
+
+    // ---- Professional Support 月次比較取得 ----
+    laravel_procedure_getProfessionalSupportMonth: (data) =>
+      ipcRenderer.invoke(
+        "laravel:procedure:get-professional-support-month",
+        data,
+      ),
+
+    laravel_procedure_getServiceRecordMonthly: (data) =>
+      ipcRenderer.invoke(
+        "laravel:procedure:get-service-record-monthly",
+        data,
+      ),
+
+    laravel_procedure_getChildKadaiGraph: (data) =>
+      ipcRenderer.invoke(
+        "laravel:procedure:get-child-kadai-graph",
+        data,
+      ),
+
+    laravel_procedure_upsertChildKadaiGraph: (data) =>
+      ipcRenderer.invoke("laravel:procedure:upsert-child-kadai-graph", data),
+
+    laravel_childRecord_delete: (id) =>
+      ipcRenderer.invoke("laravel:child-record:delete", id),
+
+    laravel_procedure_getActiveAiPrompt: (data) =>
+      ipcRenderer.invoke("laravel:procedure:get-active-ai-prompt", data),
+
+    laravel_procedure_upsertAiPrompt: (data) =>
+      ipcRenderer.invoke("laravel:procedure:upsert-ai-prompt", data),
+
+    mariadb_procedure_getActiveAiPrompt: (data) =>
+      ipcRenderer.invoke("mariadb:procedure:get-active-ai-prompt", data),
+
+    mariadb_procedure_upsertAiPrompt: (data) =>
+      ipcRenderer.invoke("mariadb:procedure:upsert-ai-prompt", data),
+
+    sqlite_procedure_getActiveAiPrompt: (data) =>
+      ipcRenderer.invoke("sqlite:procedure:get-active-ai-prompt", data),
+
+    sqlite_procedure_upsertAiPrompt: (data) =>
+      ipcRenderer.invoke("sqlite:procedure:upsert-ai-prompt", data),
+
+    mariadb_procedure_getServiceRecordMonthly: (data) =>
+      ipcRenderer.invoke("mariadb:service_record:get-monthly", data),
+
+    sqlite_getServiceRecordMonthly: (data) =>
+      ipcRenderer.invoke("sqlite:service_record:get-monthly", data),
+
+    // ---- テーブル一括同期処理 ----
+    // renderer から databaseState を渡さない。
+    // main 側の sqlite:database:sync 内で apiClient.fetchTableAll() を呼び、
+    // その戻り値を SQLite に同期する。
+    syncDatabaseStateToSqlite: () =>
+      ipcRenderer.invoke("sqlite:database:sync"),
+
+    // ============================================================
+    // 一時メモ
+    //
+    // 以前:
+    //   sqlite:saveTempNote 固定
+    //
+    // 修正後:
+    //   DB種別が mariadb なら mariadb:saveTempNote
+    //   それ以外なら sqlite:saveTempNote
+    // ============================================================
+
+    saveTempNote: async (data) => {
+      const prefix = await getDbPrefix(ipcRenderer);
+
+      if (prefix === "laravel") {
+        return ipcRenderer.invoke(
+          "laravel:procedure:upsert-temp-notes-all",
+          data,
+        );
+      }
+
+      return ipcRenderer.invoke(`${prefix}:saveTempNote`, data);
+    },
+
+    saveTempNote1: async (data) => {
+      const prefix = await getDbPrefix(ipcRenderer);
+
+      if (prefix === "laravel") {
+        return ipcRenderer.invoke(
+          "laravel:procedure:upsert-temp-notes-memo1",
+          data,
+        );
+      }
+
+      return ipcRenderer.invoke(`${prefix}:saveTempNote1`, data);
+    },
+
+    saveTempNote2: async (data) => {
+      const prefix = await getDbPrefix(ipcRenderer);
+
+      if (prefix === "laravel") {
+        return ipcRenderer.invoke(
+          "laravel:procedure:upsert-temp-notes-memo2",
+          data,
+        );
+      }
+
+      return ipcRenderer.invoke(`${prefix}:saveTempNote2`, data);
+    },
+
+    getTempNote: async ({ children_id, staff_id, day_of_week_id }) => {
+      const prefix = await getDbPrefix(ipcRenderer);
+
+      if (prefix === "laravel") {
+        return ipcRenderer.invoke("laravel:getTempNote", {
+          children_id,
+          staff_id,
+          day_of_week_id,
+        });
+      }
+
+      return ipcRenderer.invoke(`${prefix}:getTempNote`, {
+        children_id,
+        staff_id,
+        day_of_week_id,
+      });
+    },
+
+    // ---- 一時メモ: 明示的に SQLite を呼びたい場合 ----
+    sqlite_saveTempNote: (data) =>
+      ipcRenderer.invoke("sqlite:saveTempNote", data),
+
+    sqlite_saveTempNote1: (data) =>
+      ipcRenderer.invoke("sqlite:saveTempNote1", data),
+
+    sqlite_saveTempNote2: (data) =>
+      ipcRenderer.invoke("sqlite:saveTempNote2", data),
+
+    sqlite_getTempNote: ({ children_id, staff_id, day_of_week_id }) =>
+      ipcRenderer.invoke("sqlite:getTempNote", {
+        children_id,
+        staff_id,
+        day_of_week_id,
+      }),
+
+    // ---- 一時メモ: 明示的に MariaDB を呼びたい場合 ----
+    mariadb_saveTempNote: (data) =>
+      ipcRenderer.invoke("mariadb:saveTempNote", data),
+
+    mariadb_saveTempNote1: (data) =>
+      ipcRenderer.invoke("mariadb:saveTempNote1", data),
+
+    mariadb_saveTempNote2: (data) =>
+      ipcRenderer.invoke("mariadb:saveTempNote2", data),
+
+    mariadb_getTempNote: ({ children_id, staff_id, day_of_week_id }) =>
+      ipcRenderer.invoke("mariadb:getTempNote", {
+        children_id,
+        staff_id,
+        day_of_week_id,
+      }),
+
+    // ---- 一時メモ: 明示的に Laravel を呼びたい場合 ----
+    laravel_saveTempNote: (data) =>
+      ipcRenderer.invoke("laravel:procedure:upsert-temp-notes-all", data),
+
+    laravel_saveTempNote1: (data) =>
+      ipcRenderer.invoke("laravel:procedure:upsert-temp-notes-memo1", data),
+
+    laravel_saveTempNote2: (data) =>
+      ipcRenderer.invoke("laravel:procedure:upsert-temp-notes-memo2", data),
+
+    laravel_getTempNote: ({ children_id, staff_id, day_of_week_id }) =>
+      ipcRenderer.invoke("laravel:getTempNote", {
+        children_id,
+        staff_id,
+        day_of_week_id,
+      }),
+
+    // ---- UI / Window ----
+    openInformationWindow: () =>
+      ipcRenderer.invoke("open-information-window"),
+
+    openPhpMyAdminWindow: () =>
+      ipcRenderer.invoke("open-php-my-admin-window"),
+
+    respondToPhpMyAdminAuth: (response) =>
+      ipcRenderer.invoke("respond-php-my-admin-auth", response),
+
+    onPhpMyAdminAuthRequest: (callback) => {
+      const listener = (_event, details) => callback(details);
+      ipcRenderer.on("php-my-admin-auth-request", listener);
+
+      return () => {
+        ipcRenderer.removeListener("php-my-admin-auth-request", listener);
+      };
+    },
+
+    clearWebviewCache: (wcId) =>
+      ipcRenderer.invoke("clear-webview-cache", wcId),
+
+    // ✅ 対策: window.confirm() の代わりに使う非ブロッキングな確認ダイアログ
+    //          (renderer側JSスレッドを止めず、常にmainWindowの前面に表示される)
+    confirmDialog: (message) =>
+      ipcRenderer.invoke("confirm-dialog", message),
+
+    openIndividualSupportPlan: (childId, facilityId) =>
+      ipcRenderer.send("open-individual-support-plan", { childId, facilityId }),
+
+    openSpecializedSupportPlan: (childId, facilityId) =>
+      ipcRenderer.send("open-specialized-support-plan", { childId, facilityId }),
+
+    Open_NowDayPage: (args) =>
+      ipcRenderer.send("Open_NowDayPage", args),
+
+    openWebManagerPage: (args) =>
+      ipcRenderer.send("open-web-manager-page", args),
+
+    handleProfessionalSupportSearch: (
+      facility_id,
+      targetFacility,
+      date_str
+    ) =>
+      ipcRenderer.send("handle-professional-support-search", {
+        facility_id,
+        targetFacility,
+        date_str,
+      }),
+
+    // ---- 設定 ----
+    readConfig: () =>
+      ipcRenderer.invoke("read-config"),
+
+    saveConfig: (data) =>
+      ipcRenderer.invoke("save-config", data),
+
+    readIni: () =>
+      ipcRenderer.invoke("read-ini"),
+
+    saveIni: (data) =>
+      ipcRenderer.invoke("save-ini", data),
+
+    resetIni: () =>
+      ipcRenderer.invoke("reset-ini"),
+
+    updateIniSetting: (path, value) =>
+      ipcRenderer.invoke("update-ini-setting", path, value),
+
+    importConfigFile: () =>
+      ipcRenderer.invoke("import-config-file"),
+
+    openConfigFolder: () =>
+      ipcRenderer.invoke("open-config-folder"),
+
+    // ---- Update ----
+    getUpdateDebugInfo: () =>
+      ipcRenderer.invoke("get-update-debug-info"),
+
+    checkForUpdates: () =>
+      ipcRenderer.invoke("check-for-updates"),
+
+    // ---- Close ----
+    onConfirmCloseRequest: (callback) => {
+      const listener = () => callback();
+      ipcRenderer.on("confirm-close-request", listener);
+
+      return () => {
+        ipcRenderer.removeListener("confirm-close-request", listener);
+      };
+    },
+
+    sendConfirmCloseResponse: (shouldClose) =>
+      ipcRenderer.send("confirm-close-response", shouldClose),
+
+    // ---- webview ----
+    getPreloadPath: () =>
+      ipcRenderer.invoke("get-preload-path"),
+
+    // ---- Clipboard ----
+    copyText: (text) =>
+      ipcRenderer.invoke("clipboard:writeText", text),
+
+    // ---- Attendance ----
+    saveAttendanceColumnData: (data) => ipcRenderer.invoke("saveAttendanceColumnData", data),
+
+    // ---- MariaDB service_record ----
+    mariadb_service_record_insert: (data) => ipcRenderer.invoke("mariadb:service_record:insert", data),
+    mariadb_service_record_upsert: (data) => ipcRenderer.invoke("mariadb:service_record:upsert", data),
+
+    // ---- Laravel service_record ----
+    // Laravel側は登録・更新ともupsertプロシージャを使用する。
+    laravel_service_record_insert: (data) =>
+      ipcRenderer.invoke("laravel:procedure:upsert-service-record", data),
+
+    laravel_service_record_upsert: (data) =>
+      ipcRenderer.invoke("laravel:procedure:upsert-service-record", data),
+
+    laravel_service_record_bulk_upsert: (data = {}) =>
+      ipcRenderer.invoke(
+        "laravel:procedure:upsert-service-records-bulk",
+        {
+          ...data,
+          save_sync_history: [true, 1, "1"].includes(
+            data?.save_sync_history,
+          )
+            ? 1
+            : 0,
+        },
+      ),
+
+    laravel_service_record_monthly: (data) =>
+      ipcRenderer.invoke(
+        "laravel:procedure:get-service-record-monthly",
+        data,
+      ),
+
+    // ---- HUG staffs ----
+    syncHugStaffs: async (data) => {
+      const prefix = await getDbPrefix(ipcRenderer);
+
+      return prefix === "laravel"
+        ? ipcRenderer.invoke("laravel:procedure:sync-hug-staffs", data)
+        : ipcRenderer.invoke("mariadb:hug_staffs:sync", data);
+    },
+
+    laravel_hug_staffs_sync: (data) =>
+      ipcRenderer.invoke("laravel:procedure:sync-hug-staffs", data),
+
+    // ---- HUG childrens ----
+    syncHugChildrens: async (data) => {
+      const prefix = await getDbPrefix(ipcRenderer);
+
+      return prefix === "laravel"
+        ? ipcRenderer.invoke(
+            "laravel:procedure:register-facility-children",
+            data,
+          )
+        : ipcRenderer.invoke("mariadb:hug_childrens:sync", data);
+    },
+
+    laravel_hug_childrens_sync: (data) =>
+      ipcRenderer.invoke(
+        "laravel:procedure:register-facility-children",
+        data,
+      ),
+
+    // ---- CRUD API 展開 ----
+    ...createTableApis(ipcRenderer),
+  };
+}
+
+module.exports = {
+  createElectronApi,
+};

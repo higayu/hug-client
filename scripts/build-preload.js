@@ -4,8 +4,8 @@ const path = require("path");
 
 esbuild
   .build({
-    entryPoints: [path.join(__dirname, "../preload.js")],
-    outfile: path.join(__dirname, "../preload.bundle.cjs"),
+    entryPoints: [path.join(__dirname, "../electron/preload/index.js")],
+    outfile: path.join(__dirname, "../electron/preload/preload.bundle.cjs"),
     bundle: true,
     platform: "node",
     format: "cjs",
@@ -13,7 +13,7 @@ esbuild
     external: ["electron"],
   })
   .then(() => {
-    console.log("✅ preload bundle created: preload.bundle.cjs");
+    console.log("✅ preload bundle created: electron/preload/preload.bundle.cjs");
   })
   .catch((error) => {
     console.error("❌ preload bundle failed:", error);

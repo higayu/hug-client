@@ -12,6 +12,8 @@ import {
 } from './updateManager.js'
 
 import DownloadProgressRow from '@/components/ui/DownloadProgressRow'
+import ReleaseButton from './ReleaseButton'
+
 
 function UpdateTab() {
   const [updateInfo, setUpdateInfo] =
@@ -413,14 +415,7 @@ function UpdateTab() {
       </div>
 
       <div className="mb-6">
-        <a
-          href="https://github.com/higayu/hug-client/releases"
-          target="_blank"
-          rel="noreferrer"
-          className="text-blue-600 underline hover:text-blue-800"
-        >
-          リリースバージョンのリンク
-        </a>
+        <ReleaseButton />
       </div>
 
       <div className="mb-6">

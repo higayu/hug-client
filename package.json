@@ -2,7 +2,7 @@
   "name": "hug-client",
   "version": "5.3.3",
   "description": "FCC Hug Client",
-  "main": "main.js",
+  "main": "electron/main/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build:preload": "node scripts/build-preload.js",
@@ -64,11 +64,8 @@
       "buildResources": "assets"
     },
     "files": [
-      "main.js",
-      "main/**/*",
-      "preload.bundle.cjs",
-      "preload.js",
-      "preload/**/*",
+      "electron/main/**/*",
+      "electron/preload/**/*",
       "renderer/dist/**/*",
       "renderer/src/windows/**/*",
       "puppeteer/**/*",
@@ -91,7 +88,7 @@
     "linux": {},
     "extraResources": [
       {
-        "from": "main/data",
+        "from": "electron/data",
         "to": "data",
         "filter": [
           "**/*",

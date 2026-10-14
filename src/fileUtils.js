@@ -13,7 +13,7 @@ function getDataPath(...paths) {
     return path.join(app.getPath("userData"), "data", ...paths);
   } else {
     // 開発時: プロジェクト直下の data/...
-    return path.join(__dirname, "..", "data", ...paths);
+    return path.join(__dirname, "..", "electron", "data", ...paths);
   }
 }
 
