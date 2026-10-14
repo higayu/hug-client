@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import AttendancePostButton from '../AttendancePostButton'
 import MailNotificationModal from '../MailNotificationModal'
 import { handleEnterClick } from './function/handleEnterClick'
@@ -29,6 +29,8 @@ export default function EnterButton({
 }) {
   const [mailModalOpen, setMailModalOpen] = useState(false)
   const [mailModalLoading, setMailModalLoading] = useState(false)
+  const [directLoading, setDirectLoading] = useState(false)
+  const inFlightRef = useRef(false)
 
   const executeEnter = useCallback(async (mailFlg = 0) => {
     console.log('[EnterButton] 入室処理を実行', {
@@ -65,6 +67,8 @@ export default function EnterButton({
       loading,
     })
 
+    if (inFlightRef.current || disabled || loading || mailModalOpen) return undefined
+
     // メール通知対象の場合はRenderer側モーダルを先に表示する。
     // 選択後にHUG側の実ボタンをclickし、HUGモーダルをMutationObserverで検知して自動選択する。
     if (hasMail) {
@@ -72,11 +76,19 @@ export default function EnterButton({
       return undefined
     }
 
-    return executeEnter(0)
-  }, [executeEnter, childId, childName, recordId, rowSelector, dateStr, hasMail, disabled, loading])
+    inFlightRef.current = true
+    setDirectLoading(true)
+    return Promise.resolve()
+      .then(() => executeEnter(0))
+      .finally(() => {
+        inFlightRef.current = false
+        setDirectLoading(false)
+      })
+  }, [executeEnter, childId, childName, recordId, rowSelector, dateStr, hasMail, disabled, loading, mailModalOpen])
 
   const handleMailSelect = useCallback(async (sendMail) => {
-    if (typeof onEnter !== 'function') return
+    if (inFlightRef.current || typeof onEnter !== 'function') return
+    inFlightRef.current = true
 
     const mailFlg = Number(sendMail) === 1 ? 1 : 0
 
@@ -96,12 +108,14 @@ export default function EnterButton({
         setMailModalOpen(false)
       }
     } finally {
+      inFlightRef.current = false
       setMailModalLoading(false)
     }
   }, [onEnter, executeEnter, childId, recordId])
 
   const handleMailCancel = useCallback(() => {
     // HUG側ボタンはまだ押していないため、Rendererモーダルを閉じるだけでよい。
+    if (inFlightRef.current) return
     setMailModalOpen(false)
   }, [])
 
@@ -118,8 +132,8 @@ export default function EnterButton({
       <AttendancePostButton
         action="enter"
         hasMail={hasMail}
-        disabled={disabled || mailModalOpen || mailModalLoading}
-        loading={loading || mailModalLoading}
+        disabled={disabled || mailModalOpen || mailModalLoading || directLoading}
+        loading={loading || mailModalLoading || directLoading}
         title={debugTitle}
         onClick={onClick}
       />
@@ -130,6 +144,7 @@ export default function EnterButton({
         actionLabel="入室"
         onSelect={handleMailSelect}
         onCancel={handleMailCancel}
+        loading={mailModalLoading}
       />
     </>
   )

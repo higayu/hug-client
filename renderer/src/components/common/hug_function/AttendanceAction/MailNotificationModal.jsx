@@ -13,6 +13,7 @@ export default function MailNotificationModal({
   actionLabel = "入室",
   onSelect,
   onCancel,
+  loading = false,
 }) {
   const yesButtonRef = useRef(null)
 
@@ -20,7 +21,7 @@ export default function MailNotificationModal({
     if (!open) return undefined
 
     const handleKeyDown = (event) => {
-      if (event.key === "Escape") {
+      if (event.key === "Escape" && !loading) {
         event.preventDefault()
         onCancel?.()
       }
@@ -36,7 +37,7 @@ export default function MailNotificationModal({
       window.cancelAnimationFrame(animationFrameId)
       document.removeEventListener("keydown", handleKeyDown)
     }
-  }, [open, onCancel])
+  }, [open, onCancel, loading])
 
   if (!open) return null
 
@@ -56,7 +57,7 @@ export default function MailNotificationModal({
         aria-modal="true"
         aria-labelledby="hug-mail-dialog-title"
         onMouseDown={(event) => {
-          if (event.target === event.currentTarget) {
+          if (!loading && event.target === event.currentTarget) {
             onCancel?.()
           }
         }}
@@ -73,11 +74,19 @@ export default function MailNotificationModal({
             {subText}
           </p>
 
+          {loading && (
+            <p className="hug-mail-dialog-progress" role="status" aria-live="polite">
+              <span className="hug-mail-dialog-spinner" aria-hidden="true" />
+              入退室処理・利用者情報の更新中です…
+            </p>
+          )}
+
           <div className="hug-mail-dialog-actions">
             <button
               ref={yesButtonRef}
               type="button"
               className="hug-mail-send-yes"
+              disabled={loading}
               onClick={() => onSelect?.(1)}
             >
               通知する
@@ -86,6 +95,7 @@ export default function MailNotificationModal({
             <button
               type="button"
               className="hug-mail-send-no"
+              disabled={loading}
               onClick={() => onSelect?.(0)}
             >
               通知しない
@@ -94,6 +104,7 @@ export default function MailNotificationModal({
             <button
               type="button"
               className="hug-mail-cancel"
+              disabled={loading}
               onClick={() => onCancel?.()}
             >
               キャンセル

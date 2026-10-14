@@ -405,3 +405,28 @@
   opacity: 0.55;
   cursor: not-allowed;
 }
+
+/* メール通知選択後の二重操作防止・待機表示 */
+.hug-mail-dialog-progress {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  margin: 12px 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+.hug-mail-dialog-spinner {
+  width: 16px;
+  height: 16px;
+  display: inline-block;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: hug-mail-dialog-spin 0.8s linear infinite;
+}
+@keyframes hug-mail-dialog-spin { to { transform: rotate(360deg); } }
+.hug-mail-dialog-actions button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
