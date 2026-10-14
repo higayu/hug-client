@@ -1,6 +1,6 @@
 {
   "name": "hug-client",
-  "version": "5.3.3",
+  "version": "5.3.4",
   "description": "FCC Hug Client",
   "main": "electron/main/index.js",
   "scripts": {
