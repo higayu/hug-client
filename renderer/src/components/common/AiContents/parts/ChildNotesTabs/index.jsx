@@ -5,7 +5,7 @@ import { useAppState } from "@/AppStateContext";
 import { useSelector } from "react-redux";
 import { selectSpaceChildId } from "@/store/workSpaceSelectors.js";
 import ChildNotes from "./ChildNotes";
-import { PersonSupportPlan } from "@/components/common/hug_function/Plan";
+import PlanNotesPanel from "@/components/common/AiContents/parts/PlanNotesPanel";
 
 const DBG = "ChildNotesTabs";
 
@@ -198,7 +198,6 @@ export default function ChildNotesTabs({
         </h4>
 
         <div className="flex items-center gap-2">
-          {activeTab === "notes2" && <PersonSupportPlan spaceId={spaceId} />}
           {children}
         </div>
       </div>
@@ -241,10 +240,16 @@ export default function ChildNotesTabs({
       {/* =====================================================
           メモ表示
       ===================================================== */}
-      <ChildNotes
-        notes={activeNotes}
-        emptyText={emptyText}
-      />
+      {activeTab === "notes2" || activeTab === "notes" ? (
+        <PlanNotesPanel
+          spaceId={spaceId}
+          type={activeTab === "notes2" ? "individual" : "professional"}
+          notes={activeNotes}
+          emptyText={emptyText}
+        />
+      ) : (
+        <ChildNotes notes={activeNotes} emptyText={emptyText} />
+      )}
 
     </div>
   );

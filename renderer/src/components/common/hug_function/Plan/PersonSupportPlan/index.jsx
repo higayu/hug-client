@@ -6,6 +6,7 @@ import { useDataBase } from "@/hooks/useDataBase";
 import { ArrowPathIcon } from "@heroicons/react/24/solid";
 import { fetchPersonSupportPlan } from "./function";
 
+//個別支援計画を取得するボタンコンポーネント
 export default function PersonSupportPlan({ spaceId }) {
   const { FACILITY_ID: facilityId } = useAppState();
   const selectedChildId = useSelector(selectSpaceChildId(spaceId));

@@ -10,7 +10,6 @@ import {
   selectAiChatText,
 } from "@/store/slices/aiChatSlice.js";
 
-import { ProfessionalPlan } from "@/components/common/hug_function/Plan";
 import ChildNotesTabs from "../ChildNotesTabs";
 
 const DBG = "ProfessionalPrompt1";
@@ -157,11 +156,7 @@ export default function ProfessionalPrompt1({
 
           setDbNote(notes ?? "");
         }}
-      >
-        <div className="flex flex-row gap-2">
-          <ProfessionalPlan spaceId={spaceId} />
-        </div>
-      </ChildNotesTabs>
+      />
 
       {/* =====================================================
           プロンプト

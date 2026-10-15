@@ -10,6 +10,8 @@ import { ArrowPathIcon } from "@heroicons/react/24/solid";
  * hugview の Cookie 付きセッションで URL の HTML を取得する
  * （renderer 上の fetch では webview のログイン Cookie が付かないため）
  */
+
+// 専門的支援計画を取得するボタンコンポーネント
 async function fetchHtmlInWebview(webview, url) {
   const script = `
     (async () => {
