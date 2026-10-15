@@ -85,7 +85,7 @@ export default function AttendanceRow({ row, busy, onAction, selected, onToggle,
             selectedChildName={row.name}
             currentYmd={CURRENT_YMD}
             label={nameContent}
-            className="block w-full rounded px-1 py-0.5 text-left text-slate-900 bg-transparent hover:bg-sky-50 hover:text-sky-700 hover:scale-100 focus:outline-none focus:ring-2 focus:ring-sky-400"
+            className="block w-full border border-green-500 rounded px-1 py-0.5 text-left text-slate-900 bg-transparent hover:bg-sky-50 hover:text-sky-700 hover:scale-100 focus:outline-none focus:ring-2 focus:ring-sky-400"
           />
         ) : (
           nameContent

@@ -18,6 +18,7 @@ export default function PlanNotesPanel({
   emptyText = "メモがありません",
   className = "",
   onUpdated,
+  updateControl,
 }) {
   const individual = type === "individual";
 
@@ -27,7 +28,7 @@ export default function PlanNotesPanel({
         <span className="text-xs font-medium text-gray-700">
           {individual ? "個別支援計画" : "専門的支援計画"}
         </span>
-        {individual ? (
+        {updateControl !== undefined ? updateControl : individual ? (
           <PersonSupportPlan spaceId={spaceId} />
         ) : (
           <ProfessionalPlan spaceId={spaceId} childId={childId} onUpdated={onUpdated} />

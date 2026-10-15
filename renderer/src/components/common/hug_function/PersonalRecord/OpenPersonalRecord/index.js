@@ -21,6 +21,7 @@ export function addPersonalRecordTabAction4(appState, space) {
 
   const memoContext = {
     STAFF_ID: appState.STAFF_ID,
+    FACILITY_ID: appState.FACILITY_ID,
     CURRENT_DAY_OF_WEEK: { ...appState.CURRENT_DAY_OF_WEEK },
     DATABASE_TYPE: appState.DATABASE_TYPE,
   }
