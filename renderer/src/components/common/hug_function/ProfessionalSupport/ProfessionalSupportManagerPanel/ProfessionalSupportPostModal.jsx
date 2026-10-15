@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react'
 
 import { ModalPortal } from '@/components/modals/ModalPortal.jsx'
+import { PlanNotesPanel } from '@/components/common/hug_function/Plan'
+import ToggleContainer from '@/components/ui/ToggleContainer'
 
 export default function ProfessionalSupportPostModal({
   open,
   submitting = false,
   childName = '',
   childId = '',
+  professionalPlanNotes = '',
   facilityId = '',
   initialDate = '',
   initialStartTime = '',
@@ -22,6 +25,7 @@ export default function ProfessionalSupportPostModal({
   const [endTime, setEndTime] = useState(initialEndTime)
   const [title, setTitle] = useState('記録')
   const [contents, setContents] = useState(initialContents)
+  const [updatedPlan, setUpdatedPlan] = useState(null)
 
   useEffect(() => {
     if (!open) return
@@ -31,6 +35,7 @@ export default function ProfessionalSupportPostModal({
     setEndTime(initialEndTime || '')
     setTitle('記録')
     setContents(initialContents || '')
+    setUpdatedPlan(null)
   }, [
     open,
     initialDate,
@@ -108,7 +113,7 @@ export default function ProfessionalSupportPostModal({
       >
         <form
           onSubmit={handleSubmit}
-          className="w-full max-w-lg rounded-lg border border-gray-700 bg-gray-900 p-4 text-white shadow-2xl"
+          className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-lg border border-gray-700 bg-gray-900 p-4 text-white shadow-2xl"
         >
           <div className="mb-3 flex items-center justify-between gap-3">
             <div>
@@ -155,6 +160,21 @@ export default function ProfessionalSupportPostModal({
                 {facilityId || '-'}
               </div>
             </div>
+          </div>
+
+          <div className="mb-3">
+            <ToggleContainer
+              buttonLabel="専門的支援計画を表示・更新"
+              defaultOpen={false}
+            >
+              <PlanNotesPanel
+                type="professional"
+                childId={childId}
+                notes={updatedPlan ?? professionalPlanNotes}
+                onUpdated={setUpdatedPlan}
+                emptyText="専門的支援計画はまだ保存されていません"
+              />
+            </ToggleContainer>
           </div>
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">

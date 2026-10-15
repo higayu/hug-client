@@ -244,6 +244,8 @@ export default function PersonalRecordPrompt({
         <ChildNotesTabs
           spaceId={spaceId}
           defaultTab={"notes2"}
+          displayMode="single"
+          noteKey="notes2"
           onNotesChange={(
             notes,
             noteNo,

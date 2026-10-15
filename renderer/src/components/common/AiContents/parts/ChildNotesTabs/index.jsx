@@ -5,7 +5,7 @@ import { useAppState } from "@/AppStateContext";
 import { useSelector } from "react-redux";
 import { selectSpaceChildId } from "@/store/workSpaceSelectors.js";
 import ChildNotes from "./ChildNotes";
-import PlanNotesPanel from "@/components/common/AiContents/parts/PlanNotesPanel";
+import { PlanNotesPanel } from "@/components/common/hug_function/Plan";
 
 const DBG = "ChildNotesTabs";
 
@@ -31,6 +31,8 @@ export default function ChildNotesTabs({
   onNotesChange = null,
   children = null,
   defaultTab = "notes",
+  displayMode = "tabs", // "single" | "tabs"
+  noteKey, // single時: "notes" | "notes2" | "notes3"
 }) {
   const appState = useAppState();
 
@@ -42,7 +44,18 @@ export default function ChildNotesTabs({
     Experience_childrenData,
   } = appState;
 
-  const [activeTab, setActiveTab] = useState(defaultTab);
+  const validKeys = ["notes", "notes2", "notes3"];
+  const normalizeKey = (key) => validKeys.includes(key) ? key : "notes";
+  const [selectedTab, setSelectedTab] = useState(() => normalizeKey(defaultTab));
+  const isSingle = displayMode === "single";
+  const activeTab = isSingle
+    ? normalizeKey(noteKey ?? defaultTab)
+    : selectedTab;
+
+  // タブ表示で defaultTab を親から変更した場合にも追従する。
+  useEffect(() => {
+    setSelectedTab(normalizeKey(defaultTab));
+  }, [defaultTab]);
 
   // =============================================================
   // databaseState.children
@@ -205,7 +218,7 @@ export default function ChildNotesTabs({
       {/* =====================================================
           タブ
       ===================================================== */}
-      <div className="flex flex-row gap-1 mb-2">
+      {!isSingle && <div className="flex flex-row gap-1 mb-2">
         {NOTE_TABS.map((tab) => {
           const isActive =
             activeTab === tab.key;
@@ -215,7 +228,7 @@ export default function ChildNotesTabs({
               key={tab.key}
               type="button"
               onClick={() => {
-                setActiveTab(tab.key);
+                setSelectedTab(tab.key);
               }}
               className={`
                 px-3
@@ -235,7 +248,7 @@ export default function ChildNotesTabs({
             </button>
           );
         })}
-      </div>
+      </div>}
 
       {/* =====================================================
           メモ表示

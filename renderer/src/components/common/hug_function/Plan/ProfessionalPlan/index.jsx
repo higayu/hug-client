@@ -31,9 +31,10 @@ async function fetchHtmlInWebview(webview, url) {
   return webview.executeJavaScript(script);
 }
 
-export default function ProfessionalPlan({ spaceId }) {
+export default function ProfessionalPlan({ spaceId, childId, onUpdated }) {
   const { DATABASE_TYPE } = useAppState();
-  const selectedChildId = useSelector(selectSpaceChildId(spaceId));
+  const workspaceChildId = useSelector(selectSpaceChildId(spaceId));
+  const selectedChildId = childId ?? workspaceChildId;
   const { loadDataBase } = useDataBase();
 
   const handleGetProfessionalPlan = async () => {
@@ -326,6 +327,7 @@ export default function ProfessionalPlan({ spaceId }) {
       await loadDataBase({
         reason: "manual/ProfessionalPlan",
       });
+      onUpdated?.(markdown);
 
       if (window.showInfoToast) {
         window.showInfoToast("専門支援計画を取得し、メモ（notes）を保存しました", 2500);

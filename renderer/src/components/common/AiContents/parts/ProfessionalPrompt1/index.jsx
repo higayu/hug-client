@@ -143,6 +143,8 @@ export default function ProfessionalPrompt1({
       <ChildNotesTabs
         spaceId={spaceId}
         defaultTab="notes"
+        displayMode="single"
+        noteKey="notes"
         onNotesChange={(notes, noteNo, column) => {
           logDbg(
             "dbNote",

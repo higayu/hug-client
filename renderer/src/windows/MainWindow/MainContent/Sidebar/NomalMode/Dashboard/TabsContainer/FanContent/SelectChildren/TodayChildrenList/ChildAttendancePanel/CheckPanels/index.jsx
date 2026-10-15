@@ -1,3 +1,4 @@
+import { useProfessionalSupportPanelData } from '@/hooks/useProfessionalSupportPanelData'
 import { useTabs } from '@/hooks/useTabs'
 import {
   PersonalRecordMgPanel,
@@ -20,6 +21,7 @@ export default function CheckPanels({
   loadingAction,
 }) {
   const { addProfessionalSupportListTab } = useTabs(spaceId)
+  const supportPanelData = useProfessionalSupportPanelData(selectedChildId)
 
   return (
     <div className="mt-2 flex w-full items-center gap-1">
@@ -31,6 +33,7 @@ export default function CheckPanels({
       />
 
       <ProfessionalSupportManagerPanel
+        {...supportPanelData}
         facilityId={facilityId}
         currentYmd={currentYmd}
         selectedChildId={selectedChildId}

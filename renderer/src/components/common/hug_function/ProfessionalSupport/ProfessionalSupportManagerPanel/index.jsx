@@ -1,7 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useSelector } from 'react-redux'
-import { useAppState } from '@/AppStateContext'
 import { useNote } from '@/hooks/useNote'
 import { selectProfessionalSupportStatus } from '@/store/slices/recordStatusSlice.js'
 import { useProfessionalSupportStatusCheck } from './useProfessionalSupportStatusCheck'
@@ -16,6 +15,7 @@ import {
 
 /**
  * 専門的支援 統合パネル
+ * 計画本文・職員ID・保存方式は呼び出し側から props で受け取る。
  *
  * 閉じた状態:
  * - 専門的支援（下書き保存成功 → 専門＋自動登録）
@@ -36,6 +36,9 @@ export default function ProfessionalSupportManagerPanel({
   currentYmd,
   selectedChildId,
   selectedChildName = '',
+  professionalPlanNotes = '',
+  staffId,
+  saveMode = 'draft',
   enterTime = '',
   leaveTime = '',
   onOpenProfessionalSupportList = null,
@@ -70,17 +73,12 @@ export default function ProfessionalSupportManagerPanel({
       ? 'rotate-0'
       : 'rotate-180'
 
-  const { appState, iniState } = useAppState()
-  const professionalSupportSaveMode =
-    iniState?.apiSettings?.professionalSupportSaveMode === 'created'
-      ? 'created'
-      : 'draft'
+  const professionalSupportSaveMode = saveMode === 'created' ? 'created' : 'draft'
 
   const childId = selectedChildId ? String(selectedChildId) : ''
   const dateStr = currentYmd || ''
   const resolvedFacilityId = facilityId ?? ''
   const { loadTemp } = useNote()
-
   const professionalSupportStatus = useSelector((state) =>
     selectProfessionalSupportStatus(state, dateStr, childId),
   )
@@ -298,7 +296,7 @@ export default function ProfessionalSupportManagerPanel({
         dateStr: modalDateStr || dateStr,
         startTime,
         endTime,
-        staffId: appState?.STAFF_ID,
+        staffId,
         title,
         contents,
         saveMode,
@@ -535,6 +533,7 @@ export default function ProfessionalSupportManagerPanel({
         submitting={linkedLoading}
         childName={selectedChildName || ''}
         childId={childId}
+        professionalPlanNotes={professionalPlanNotes}
         facilityId={resolvedFacilityId}
         initialDate={dateStr}
         initialStartTime={enterTime || ''}

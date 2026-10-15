@@ -1,3 +1,4 @@
+import { useProfessionalSupportPanelData } from '@/hooks/useProfessionalSupportPanelData'
 import { useCallback, useState } from 'react'
 import { useSelector } from 'react-redux'
 import { FAN_CONTENT_PANELS, useAppState } from '@/AppStateContext'
@@ -40,6 +41,7 @@ const INITIAL_PROMPT_TABS = [
 export default function MainPanel({ spaceId }) {
   const { USE_AI, appState, CURRENT_YMD, FACILITY_ID } = useAppState()
   const space = useSelector(selectSpace(spaceId))
+  const supportPanelData = useProfessionalSupportPanelData(space?.childId)
   const attendanceRows = useSimpleAttendanceRows()
   const attendance = attendanceRows.find(
     (row) => String(row.childId) === String(space?.childId)
@@ -99,6 +101,7 @@ export default function MainPanel({ spaceId }) {
               expandDirection="down"
             />
               <ProfessionalSupportManagerPanel
+                {...supportPanelData}
                 className="shrink-0"
               facilityId={FACILITY_ID}
               currentYmd={CURRENT_YMD}
