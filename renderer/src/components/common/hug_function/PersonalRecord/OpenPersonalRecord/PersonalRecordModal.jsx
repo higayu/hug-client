@@ -31,7 +31,7 @@ function findIndividualPlan(childId) {
   const child = selectChildren(store.getState())
     .find(row => String(row?.id ?? row?.children_id ?? '') === id)
   // 空に更新された計画も最新値として扱う。
-  return typeof child?.notes2 === 'string' ? child.notes2 : ''
+  return typeof child?.notes === 'string' ? child.notes : ''
 }
 
 function PersonalRecordControls({ webview, childName, childId, date, initialOpen, memoContext }) {

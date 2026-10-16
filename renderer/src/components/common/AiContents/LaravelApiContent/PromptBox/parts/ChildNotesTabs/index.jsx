@@ -11,12 +11,12 @@ const DBG = "ChildNotesTabs";
 
 const NOTE_TABS = [
   {
-    key: "notes2",
+    key: "notes",
     label: "個別支援計画",
   },
   {
-    key: "notes",
-    label: "専門支援内容",
+    key: "notes2",
+    label: "専門的支援計画",
   },
   {
     key: "notes3",
@@ -256,7 +256,7 @@ export default function ChildNotesTabs({
       {activeTab === "notes2" || activeTab === "notes" ? (
         <PlanNotesPanel
           spaceId={spaceId}
-          type={activeTab === "notes2" ? "individual" : "professional"}
+          type={activeTab === "notes" ? "individual" : "professional"}
           notes={activeNotes}
           emptyText={emptyText}
         />

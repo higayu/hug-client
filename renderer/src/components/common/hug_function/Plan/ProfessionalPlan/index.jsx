@@ -317,7 +317,7 @@ export default function ProfessionalPlan({ spaceId, childId, onUpdated }) {
       const updateResult = await childrenUpdate({
         pk: "id",
         values: String(selectedChildId),
-        data: { notes: markdown },
+        data: { notes2: markdown },
       });
 
       if (updateResult?.success === false) {
@@ -330,7 +330,7 @@ export default function ProfessionalPlan({ spaceId, childId, onUpdated }) {
       onUpdated?.(markdown);
 
       if (window.showInfoToast) {
-        window.showInfoToast("専門支援計画を取得し、メモ（notes）を保存しました", 2500);
+        window.showInfoToast("専門支援計画を取得し、メモ（notes2）を保存しました", 2500);
       }
 
       return markdown;

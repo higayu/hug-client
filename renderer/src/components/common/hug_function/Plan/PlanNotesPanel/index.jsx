@@ -5,8 +5,8 @@ import ProfessionalPlan from "../ProfessionalPlan";
 /**
  * 保存済み計画の本文表示と取得・更新ボタンを一体化したパネル。
  *
- * type="individual"   : 個別支援計画（notes2）
- * type="professional" : 専門的支援計画（notes）
+ * type="individual"   : 個別支援計画（notes）
+ * type="professional" : 専門的支援計画（notes2）
  *
  * 本文は親から notes として渡し、ボタンは既存の取得・DB更新処理をそのまま使用。
  */

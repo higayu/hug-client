@@ -11,7 +11,7 @@ export function useProfessionalSupportPanelData(selectedChildId) {
     Experience_childrenData,
   } = useAppState()
   const childId = selectedChildId == null ? '' : String(selectedChildId)
-  // ChildNotesTabs と同じ優先順位。DB の空の notes も最新値として扱う。
+  // ChildNotesTabs と同じ優先順位。DB の空文字も最新値として扱う。
   const sources = [
     databaseState?.children,
     childrenData,
@@ -26,7 +26,7 @@ export function useProfessionalSupportPanelData(selectedChildId) {
     .find(Boolean)
 
   return {
-    professionalPlanNotes: typeof child?.notes === 'string' ? child.notes : '',
+    professionalPlanNotes: typeof child?.notes2 === 'string' ? child.notes2 : '',
     staffId: appState?.STAFF_ID,
     saveMode: iniState?.apiSettings?.professionalSupportSaveMode === 'created'
       ? 'created'

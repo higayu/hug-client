@@ -9,7 +9,7 @@ export async function upsertPersonSupportPlan({ selectChild, markdown, loadDataB
   const updateResult = await childrenUpdate({
     pk: "id",
     values: String(selectChild),
-    data: { notes2: markdown },
+    data: { notes: markdown },
   });
   if (updateResult?.success === false) {
     throw new Error(updateResult.message || "児童情報の更新に失敗しました");
