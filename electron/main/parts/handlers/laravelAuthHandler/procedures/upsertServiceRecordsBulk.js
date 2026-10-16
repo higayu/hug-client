@@ -16,7 +16,7 @@ const { formatError, unwrapData } = require("../auth/utils");
  *       served_date: string,
  *       facility_id: number,
  *       note: string,
- *       is_copy?: number,
+ *       is_fsoaip_corrected?: number,
  *       is_deleted?: number,
  *     }
  *   ],
