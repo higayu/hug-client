@@ -106,7 +106,7 @@ export function buildServiceRecordPayload(record, { childrenId, facilityId, staf
     day_of_week_id: dayOfWeekId,
     note,
     status: toPersonalRecordStatus(record),
-    is_copy: 0,
+    is_fsoaip_corrected: 0,
     is_deleted: 0,
     recorded_staff_id: recordedStaffId,
     updated_staff_id: updatedStaffId,

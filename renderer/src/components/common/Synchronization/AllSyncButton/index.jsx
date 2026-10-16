@@ -140,7 +140,7 @@ const toBulkRecord = (record, facilityId) => {
     facility_id: normalizedFacilityId,
     note: String(record.note),
     status: toPersonalRecordStatus(record),
-    is_copy: 0,
+    is_fsoaip_corrected: 0,
     is_deleted: 0,
     recorded_staff_id:
       Number.isInteger(recordStaffId) && recordStaffId > 0
