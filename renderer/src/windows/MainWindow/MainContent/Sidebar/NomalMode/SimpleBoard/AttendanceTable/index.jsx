@@ -145,7 +145,7 @@ export default function AttendanceTable({ isExpanded, onExpandedChange }) {
           )}
               </div>
             )}
-            back={<WeekdayServiceRecordPanel embedded />}
+            back={<WeekdayServiceRecordPanel embedded attendanceRows={filteredRows} />}
           />
         </div>
       </div>
