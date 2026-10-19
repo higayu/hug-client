@@ -35,8 +35,7 @@ const tableKeys = [
   // メモ・テキスト系
   'temp_notes',
   'memo',
-  'text_data',
-  'toolbox',
+
   'staff_facility_roles',
 
   // 認証系
@@ -103,8 +102,7 @@ const initialState = {
   // メモ・テキスト系
   temp_notes: [],
   memo: [],
-  text_data: [],
-  toolbox: [],
+
   staff_facility_roles: [],
 
   // 認証系
@@ -244,8 +242,6 @@ export const selectMServiceItems = (state) =>
 export const selectTempNotes = (state) =>
   state.database?.temp_notes ?? []
 export const selectMemo = (state) => state.database?.memo ?? []
-export const selectTextData = (state) => state.database?.text_data ?? []
-export const selectToolbox = (state) => state.database?.toolbox ?? []
 export const selectStaffFacilityRoles = (state) =>
   state.database?.staff_facility_roles ?? []
 

@@ -40,8 +40,6 @@ import {
   selectStaffCompanyRoles,
   selectStaffs,
   selectTempNotes,
-  selectTextData,
-  selectToolbox,
   selectUsers,
 } from '@/store/slices/databaseSlice'
 
@@ -218,16 +216,6 @@ export function useReduxBindings() {
 
   const dbMemo = useSelector(
     selectMemo,
-    shallowEqual
-  )
-
-  const dbTextData = useSelector(
-    selectTextData,
-    shallowEqual
-  )
-
-  const dbToolbox = useSelector(
-    selectToolbox,
     shallowEqual
   )
 
@@ -555,14 +543,7 @@ export function useReduxBindings() {
       temp_notes:
         dbTempNotes,
 
-      memo:
-        dbMemo,
-
-      text_data:
-        dbTextData,
-
-      toolbox:
-        dbToolbox,
+      memo: dbMemo,
 
       staff_facility_roles:
         dbStaffFacilityRoles,
@@ -596,8 +577,6 @@ export function useReduxBindings() {
       dbMServiceItems,
       dbTempNotes,
       dbMemo,
-      dbTextData,
-      dbToolbox,
       dbStaffFacilityRoles,
       dbUsers,
       dbRefreshTokens,
@@ -829,8 +808,6 @@ export function useReduxBindings() {
     // メモ・テキスト系
     dbTempNotes,
     dbMemo,
-    dbTextData,
-    dbToolbox,
     dbStaffFacilityRoles,
 
     // 認証系

@@ -28,8 +28,7 @@ const TABLE_NAMES = [
   "child_records",
   "m_service_items",
   "staff_facility_roles",
-  "text_data",
-  "toolbox",
+
   "memo",
 ];
 
