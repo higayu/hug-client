@@ -9,6 +9,8 @@ import {
 import AttendanceHeader from './components/AttendanceHeader';
 import AttendanceDataTable from './components/AttendanceDataTable';
 import AttendanceMessage from './components/AttendanceMessage';
+import WeekdayServiceRecordPanel from './components/WeekdayServiceRecordPanel';
+import FlipCard from '@/components/ui/FlipCard';
 import { useSimpleAttendance } from './hooks/useSimpleAttendance';
 
 /**
@@ -103,6 +105,15 @@ export default function AttendanceTable({ isExpanded, onExpandedChange }) {
         inert={!isExpanded ? '' : undefined}
       >
         <div className="min-w-[320px] p-4">
+          <FlipCard
+            panel
+            width="100%"
+            height="min(72vh, 900px)"
+            defaultFlipped={false}
+            frontLabel="入退室テーブル"
+            backLabel="個人記録"
+            front={(
+              <div className="min-w-0">
           <AttendanceHeader
             lastUpdatedAt={lastUpdatedAt}
             totalCount={rows.length}
@@ -132,6 +143,10 @@ export default function AttendanceTable({ isExpanded, onExpandedChange }) {
               onToggleRow={(rowId) => dispatch(toggleSelectedRow(rowId))}
             />
           )}
+              </div>
+            )}
+            back={<WeekdayServiceRecordPanel embedded attendanceRows={filteredRows} />}
+          />
         </div>
       </div>
 

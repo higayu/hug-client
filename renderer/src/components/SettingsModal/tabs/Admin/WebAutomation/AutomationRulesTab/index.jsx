@@ -104,6 +104,7 @@ function normalizeMemo(memo, index = 0) {
     ...memo,
     id,
     _client_id: memo._client_id ?? (id == null ? `new-memo-${index}` : `memo-${id}`),
+    title: String(memo.title ?? ''),
     memo: String(memo.memo ?? ''),
     sort_order: Number(memo.sort_order ?? 0),
     is_active: Boolean(memo.is_active ?? true),
@@ -327,6 +328,7 @@ export default function AutomationRulesTab() {
       ...prev,
       normalizeMemo({
         _client_id: `new-memo-${Date.now()}`,
+        title: '',
         memo: '',
         sort_order: prev.length,
         is_active: true,
@@ -397,6 +399,12 @@ export default function AutomationRulesTab() {
       }
     }
 
+    const invalidMemoIndex = memos.findIndex((memo) => !String(memo.title ?? '').trim() || String(memo.title ?? '').trim().length > 255)
+    if (invalidMemoIndex !== -1) {
+      showErrorToast(`メモ #${invalidMemoIndex + 1} のタイトルは1〜255文字で入力してください。`)
+      return
+    }
+
     const payload = {
       name: flowForm.name.trim(),
       description: flowForm.description.trim() || null,
@@ -421,6 +429,7 @@ export default function AutomationRulesTab() {
       deleted_file_ids: deletedFileIds,
       memos: memos.map((memo) => ({
         ...(memo.id != null ? { id: memo.id } : {}),
+        title: String(memo.title ?? '').trim(),
         memo: memo.memo,
         sort_order: Number(memo.sort_order) || 0,
         is_active: Boolean(memo.is_active),
@@ -639,10 +648,13 @@ function MemosEditor({ memos, onAdd, onChange, onDelete, disabled }) {
       {memos.length === 0 ? <EmptyBox>メモがありません。</EmptyBox> : memos.map((memo, index) => (
         <div key={memo._client_id} className="rounded-lg border border-amber-200 bg-amber-50/40 p-4">
           <div className="mb-2 flex items-center justify-between">
-            <span className="text-xs font-semibold text-amber-800">#{index + 1}</span>
+            <span className="text-xs font-semibold text-amber-800">#{index + 1} {memo.title ? `— ${memo.title}` : '— 新しいメモ'}</span>
             <button type="button" onClick={() => onDelete(memo)} disabled={disabled} className="rounded-md border border-red-200 bg-red-50 px-3 py-1 text-xs text-red-700">削除</button>
           </div>
-          <TextArea label="memo" value={memo.memo} onChange={(v) => onChange(memo._client_id, 'memo', v)} rows={4} />
+          <div className="mb-3">
+            <Field label="タイトル（必須・255文字以内）" value={memo.title} onChange={(v) => onChange(memo._client_id, 'title', v.slice(0, 255))} placeholder="例：実行先URLと確認手順" />
+          </div>
+          <TextArea label="メモ本文" value={memo.memo} onChange={(v) => onChange(memo._client_id, 'memo', v)} rows={4} />
           <div className="mt-3 grid gap-3 sm:grid-cols-[180px_auto]">
             <NumberField label="sort_order" value={memo.sort_order} onChange={(v) => onChange(memo._client_id, 'sort_order', v)} min={0} />
             <label className="flex items-end gap-2 pb-2 text-sm text-gray-700">
