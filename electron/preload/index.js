@@ -6,6 +6,7 @@ console.log("[preload.bundle.cjs] start");
 const { createElectronApi } = require("./electronApi");
 const { createDevApi } = require("./devApi");
 const { createWhisperApi } = require("./whisperApi");
+const { createWebviewPageSaveBridge } = require("./webviewPageSaveBridge");
 
 const isDebugMode =
   process.argv.includes("--dev") || process.argv.includes("--debug");
@@ -23,4 +24,9 @@ contextBridge.exposeInMainWorld(
 contextBridge.exposeInMainWorld(
   "whisperAPI",
   createWhisperApi(ipcRenderer)
+);
+
+contextBridge.exposeInMainWorld(
+  "electronWebviewPageSave",
+  createWebviewPageSaveBridge(ipcRenderer)
 );

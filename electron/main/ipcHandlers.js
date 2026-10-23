@@ -21,6 +21,7 @@ const {
   registerPhpMyAdminWindow,
 } = require("./windowHandlers/phpMyAdminWindow");
 const { resolvePreloadPath } = require("./windowHandlers/windowManager");
+const { registerWebviewPageSaveIpc } = require("./webviewPageSaveIpc");
 
 /**
  * IPC登録処理を個別に安全実行する。
@@ -144,6 +145,11 @@ function registerIpcHandlers(mainWindow, tempNoteHandler) {
       clipboard.writeText(text);
       return true;
     });
+  });
+
+  // WebViewのHTML + 関連ファイル保存
+  safeRegister("webview complete page save", () => {
+    registerWebviewPageSaveIpc();
   });
 
   // ============================================================

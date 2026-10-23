@@ -579,3 +579,8 @@ contextBridge.exposeInMainWorld(
   "whisperAPI",
   createWhisperApi(ipcRenderer)
 );
+
+// WebView complete-page save bridge (bundled entrypoint)
+contextBridge.exposeInMainWorld("electronWebviewPageSave", {
+  saveCompletePage: (webContentsId) => ipcRenderer.invoke("webview:save-complete-page", webContentsId)
+});
