@@ -88,29 +88,6 @@ export const buildAttendanceSyncRows = (attendanceData) => {
   return rows
 }
 
-export const buildAdditionSyncRows = (additionCountData) => {
-  const rows = []
-
-  for (const day of additionCountData?.days ?? []) {
-    for (const addition of day.additions ?? []) {
-      const additionId =
-        addition.name === '専門的支援実施加算' ? '55' : null
-
-      for (const childName of addition.children ?? []) {
-        rows.push({
-          targetDate: day.date,
-          additionId,
-          additionName: addition.name,
-          childId: null,
-          childName,
-        })
-      }
-    }
-  }
-
-  return rows
-}
-
 export const buildRecordSyncRows = (additionListData) =>
   (additionListData?.records ?? [])
     .map((record) => {
@@ -148,13 +125,11 @@ export const buildProfessionalSupportSyncPayload = ({
   year,
   month,
   attendanceData,
-  additionCountData,
   additionListData,
 }) => ({
   facilityId: Number(facilityId),
   year: Number(year),
   month: Number(month),
   attendanceData: buildAttendanceSyncRows(attendanceData),
-  additionData: buildAdditionSyncRows(additionCountData),
   recordData: buildRecordSyncRows(additionListData),
 })

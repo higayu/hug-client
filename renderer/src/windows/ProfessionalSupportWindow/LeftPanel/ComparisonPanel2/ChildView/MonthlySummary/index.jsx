@@ -8,15 +8,12 @@ const FILTER_OPTIONS = [
   { value: 'all', label: 'すべて' },
   { value: 'redBackground', label: '赤背景のみ' },
   { value: 'noRedBackground', label: '赤背景なし' },
-  { value: 'additionWarning', label: '加算登録不足で赤' },
   { value: 'recordWarning', label: '専門的支援一覧不足で赤' },
-  { value: 'bothWarnings', label: '両方不足で赤' },
 ]
 
 const SORT_OPTIONS = [
   { value: 'childName', label: '氏名' },
   { value: 'attendanceCount', label: '出席数' },
-  { value: 'additionCount', label: '加算登録数' },
   { value: 'recordCount', label: '専門的支援一覧数' },
   { value: 'personalRecordCount', label: '個人記録数' },
 ]
@@ -95,7 +92,6 @@ export default function MonthlySummary({
       if (!hasSelectedAttendanceDay) return false
 
       const {
-        isAdditionWarning,
         isRecordWarning,
         hasWarning,
       } = getMonthlySummaryWarningState(item)
@@ -105,12 +101,8 @@ export default function MonthlySummary({
           return hasWarning
         case 'noRedBackground':
           return !hasWarning
-        case 'additionWarning':
-          return isAdditionWarning
         case 'recordWarning':
           return isRecordWarning
-        case 'bothWarnings':
-          return isAdditionWarning && isRecordWarning
         default:
           return true
       }
@@ -304,10 +296,6 @@ export default function MonthlySummary({
               </th>
 
               <th className="w-[17%] px-4 py-2 text-center font-medium">
-                加算登録数
-              </th>
-
-              <th className="w-[17%] px-4 py-2 text-center font-medium">
                 専門的支援一覧数
               </th>
 
@@ -332,7 +320,7 @@ export default function MonthlySummary({
             {displayedItems.length === 0 && (
               <tr>
                 <td
-                  colSpan={5}
+                  colSpan={4}
                   className="px-4 py-10 text-center text-sm text-gray-400"
                 >
                   条件に一致する児童はいません。

@@ -4,7 +4,6 @@ import { useAppState } from '@/AppStateContext'
 
 import LeftTabs from './LeftTabs'
 import AttendancePanel from './AttendancePanel'
-import AdditionCountPanel from './AdditionCountPanel'
 import AdditionListPanel from './AdditionListPanel'
 import ComparisonPanel2 from './ComparisonPanel2'
 import ProfessionalSupportAutoSync from './ProfessionalSupportAutoSync'
@@ -139,15 +138,6 @@ export default function LeftPanel({
         {DEBUG_FLG && activeTab === 'personalRecord' && (
           <PersonalRecordSyncResultPanel
             snapshot={personalRecordResult}
-          />
-        )}
-
-        {DEBUG_FLG && activeTab === 'additionCount' && (
-          <AdditionCountPanel
-            loading={additionCountLoading}
-            error={additionCountError}
-            additionCountData={additionCountData}
-            targetDate={targetDate}
           />
         )}
 

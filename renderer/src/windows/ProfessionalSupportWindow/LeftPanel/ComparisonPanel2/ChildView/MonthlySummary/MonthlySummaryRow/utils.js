@@ -181,6 +181,6 @@ export const getMonthlySummaryWarningState = (item) => {
   return {
     isAdditionWarning,
     isRecordWarning,
-    hasWarning: isAdditionWarning || isRecordWarning,
+    hasWarning: isRecordWarning,
   }
 }

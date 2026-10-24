@@ -3,7 +3,6 @@ import {
   getMonthlySummaryWarningState,
   getPersonalRecordStatus,
   getRecordStatus,
-  hasProfessionalSupportAddition,
 } from './utils'
 
 export default function MonthlySummaryRow({
@@ -14,11 +13,10 @@ export default function MonthlySummaryRow({
   personalRecordStatusMap,
 }) {
   const attendanceCount = Number(item.attendanceCount) || 0
-  const additionCount = Number(item.additionCount) || 0
   const recordCount = Number(item.recordCount) || 0
   const personalRecordCount = Number(item.personalRecordCount) || 0
 
-  const { isAdditionWarning, isRecordWarning, hasWarning } =
+  const { isRecordWarning, hasWarning } =
     getMonthlySummaryWarningState(item)
   const childRows = Array.isArray(item.rows) ? item.rows : []
 
@@ -49,18 +47,6 @@ export default function MonthlySummaryRow({
         <td className="px-4 py-2.5 text-center">
           <span
             className={
-              isAdditionWarning
-                ? 'text-lg font-black tabular-nums text-red-600'
-                : 'font-semibold tabular-nums text-blue-700'
-            }
-          >
-            {additionCount}
-          </span>
-        </td>
-
-        <td className="px-4 py-2.5 text-center">
-          <span
-            className={
               isRecordWarning
                 ? 'text-lg font-black tabular-nums text-red-600'
                 : 'font-semibold tabular-nums text-indigo-700'
@@ -79,7 +65,7 @@ export default function MonthlySummaryRow({
 
       {expanded && (
         <tr>
-          <td colSpan={5} className="bg-gray-50 p-0">
+          <td colSpan={4} className="bg-gray-50 p-0">
             <div className="border-t border-gray-200 px-6 py-3">
               <div className="overflow-x-auto rounded border border-gray-200 bg-white">
                 <table className="min-w-full divide-y divide-gray-200 text-xs">
@@ -87,9 +73,6 @@ export default function MonthlySummaryRow({
                     <tr>
                       <th className="whitespace-nowrap px-3 py-2 font-medium">
                         日付
-                      </th>
-                      <th className="whitespace-nowrap px-3 py-2 text-center font-medium">
-                        加算登録
                       </th>
                       <th className="whitespace-nowrap px-3 py-2 font-medium">
                         専門的支援一覧
@@ -102,7 +85,6 @@ export default function MonthlySummaryRow({
 
                   <tbody className="divide-y divide-gray-100">
                     {childRows.map((row, index) => {
-                      const hasAddition = hasProfessionalSupportAddition(row)
                       const recordStatus = getRecordStatus({
                         row,
                         recordStatusMap,
@@ -119,16 +101,6 @@ export default function MonthlySummaryRow({
                         >
                           <td className="whitespace-nowrap px-3 py-2 font-medium text-gray-900">
                             {formatMonthDay(row.target_date)}
-                          </td>
-
-                          <td className="px-3 py-2 text-center">
-                            {hasAddition ? (
-                              <span className="text-lg font-bold text-green-600">
-                                ✓
-                              </span>
-                            ) : (
-                              <span className="text-gray-300">-</span>
-                            )}
                           </td>
 
                           <td className="px-3 py-2">

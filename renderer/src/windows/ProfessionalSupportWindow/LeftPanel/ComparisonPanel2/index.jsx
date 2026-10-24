@@ -58,7 +58,7 @@ export default function ComparisonPanel2({
               <>
                 {calendar.year}年{String(calendar.month).padStart(2, '0')}月の専門的支援比較
                 <span className="text-red-600">
-                  {' '}（※加算登録と出席は前日までのデータを取得します）
+                  {' '}（※出席は前日までのデータを取得します）
                 </span>
               </>
             ) : (
@@ -93,17 +93,11 @@ export default function ComparisonPanel2({
       />
 
       <div className="flex flex-wrap gap-2 text-[11px] text-gray-500">
-        <span className="rounded bg-blue-100 px-2 py-1 text-blue-700">
-          加算 = 加算数データ
-        </span>
         <span className="rounded bg-indigo-100 px-2 py-1 text-indigo-700">
           一覧 = 加算一覧データ
         </span>
         <span className="rounded bg-emerald-100 px-2 py-1 text-emerald-700">
           個人記録 = Laravel保存済みデータ
-        </span>
-        <span className="rounded bg-red-100 px-2 py-1 text-red-700">
-          加算なし
         </span>
         <span className="rounded bg-amber-100 px-2 py-1 text-amber-800">
           一覧なし

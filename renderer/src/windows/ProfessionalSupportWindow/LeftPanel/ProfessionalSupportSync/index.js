@@ -48,13 +48,6 @@ export default function useProfessionalSupportSync({
         { facilityId, targetDate },
       )
 
-      setProgressText('HUGから加算数データを取得中...')
-
-      const additionCountData = await executeFlowV2(
-        'professional_support_addition_count_fetch',
-        { facilityId, targetDate },
-      )
-
       setProgressText('HUGから加算一覧データを取得中...')
 
       const additionListData = await executeFlowV2(
@@ -64,15 +57,14 @@ export default function useProfessionalSupportSync({
 
       console.log('加算一覧のデータ一括取得結果',additionListData);
 
-      if (!attendanceData || !additionCountData || !additionListData) {
+      if (!attendanceData || !additionListData) {
         throw new Error(
-          '3種類のデータをすべて取得できなかったため保存を中止しました。',
+          '出席データまたは専門的支援一覧を取得できなかったため保存を中止しました。',
         )
       }
 
       onFetched?.({
         attendanceData,
-        additionCountData,
         additionListData,
       })
 
@@ -83,7 +75,6 @@ export default function useProfessionalSupportSync({
         year,
         month,
         attendanceData,
-        additionCountData,
         additionListData,
       })
 
@@ -99,7 +90,6 @@ export default function useProfessionalSupportSync({
 
       setSyncMessage(
         `DB保存完了：出席 ${counts.attendance_count ?? payload.attendanceData.length}件 / ` +
-          `加算 ${counts.addition_count ?? payload.additionData.length}件 / ` +
           `一覧 ${counts.record_count ?? payload.recordData.length}件`,
       )
 

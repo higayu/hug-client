@@ -305,7 +305,7 @@ function ProfessionalSupportWindowContent() {
 
   const handleSyncFetchStart = useCallback(() => {
     setLoading(true)
-    setAdditionCountLoading(true)
+    setAdditionCountLoading(false)
     setAdditionListLoading(true)
     setError('')
     setAdditionCountError('')
@@ -314,11 +314,10 @@ function ProfessionalSupportWindowContent() {
 
   const handleSyncFetched = useCallback(({
     attendanceData: nextAttendanceData,
-    additionCountData: nextAdditionCountData,
     additionListData: nextAdditionListData,
   }) => {
     setAttendanceData(nextAttendanceData)
-    setAdditionCountData(nextAdditionCountData)
+    setAdditionCountData(null)
     setAdditionListData(nextAdditionListData)
     setLoading(false)
     setAdditionCountLoading(false)
@@ -331,7 +330,7 @@ function ProfessionalSupportWindowContent() {
     setAdditionListLoading(false)
 
     setError(message)
-    setAdditionCountError(message)
+    setAdditionCountError('')
     setAdditionListError(message)
   }, [])
 
