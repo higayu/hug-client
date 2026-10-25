@@ -558,12 +558,25 @@ var require_whisperApi = __commonJS({
   }
 });
 
+// electron/preload/webviewPageSaveBridge.js
+var require_webviewPageSaveBridge = __commonJS({
+  "electron/preload/webviewPageSaveBridge.js"(exports2, module2) {
+    function createWebviewPageSaveBridge2(ipcRenderer2) {
+      return {
+        saveCompletePage: (webContentsId) => ipcRenderer2.invoke("webview:save-complete-page", webContentsId)
+      };
+    }
+    module2.exports = { createWebviewPageSaveBridge: createWebviewPageSaveBridge2 };
+  }
+});
+
 // electron/preload/index.js
 var { contextBridge, ipcRenderer } = require("electron");
 console.log("[preload.bundle.cjs] start");
 var { createElectronApi } = require_electronApi();
 var { createDevApi } = require_devApi();
 var { createWhisperApi } = require_whisperApi();
+var { createWebviewPageSaveBridge } = require_webviewPageSaveBridge();
 var isDebugMode = process.argv.includes("--dev") || process.argv.includes("--debug");
 contextBridge.exposeInMainWorld(
   "electronAPI",
@@ -577,8 +590,7 @@ contextBridge.exposeInMainWorld(
   "whisperAPI",
   createWhisperApi(ipcRenderer)
 );
-
-// WebView complete-page save bridge (bundled entrypoint)
-contextBridge.exposeInMainWorld("electronWebviewPageSave", {
-  saveCompletePage: (webContentsId) => ipcRenderer.invoke("webview:save-complete-page", webContentsId)
-});
+contextBridge.exposeInMainWorld(
+  "electronWebviewPageSave",
+  createWebviewPageSaveBridge(ipcRenderer)
+);
