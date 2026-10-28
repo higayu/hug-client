@@ -1,4 +1,8 @@
 import React from "react";
+import { useAppState } from "@/AppStateContext";
+import { useSelector } from "react-redux";
+import { selectSpaceChildId } from "@/store/workSpaceSelectors.js";
+import { useDataBase } from "@/hooks/useDataBase";
 import PersonSupportPlan from "../PersonSupportPlan";
 import ProfessionalPlan from "../ProfessionalPlan";
 
@@ -19,7 +23,13 @@ export default function PlanNotesPanel({
   className = "",
   onUpdated,
   updateControl,
+  facilityId,
+  loadDataBase,
 }) {
+  const { FACILITY_ID: defaultFacilityId } = useAppState();
+  const workspaceChildId = useSelector(selectSpaceChildId(spaceId));
+  const { loadDataBase: defaultLoadDataBase } = useDataBase();
+  const selectedChildId = childId ?? workspaceChildId;
   const individual = type === "individual";
 
   return (
@@ -29,9 +39,9 @@ export default function PlanNotesPanel({
           {individual ? "個別支援計画" : "専門的支援計画"}
         </span>
         {updateControl !== undefined ? updateControl : individual ? (
-          <PersonSupportPlan spaceId={spaceId} />
+          <PersonSupportPlan childId={selectedChildId} facilityId={facilityId ?? defaultFacilityId} loadDataBase={loadDataBase ?? defaultLoadDataBase} onUpdated={onUpdated} />
         ) : (
-          <ProfessionalPlan spaceId={spaceId} childId={childId} onUpdated={onUpdated} />
+          <ProfessionalPlan childId={selectedChildId} facilityId={facilityId ?? defaultFacilityId} loadDataBase={loadDataBase ?? defaultLoadDataBase} onUpdated={onUpdated} />
         )}
       </div>
       <div className="max-h-64 overflow-y-auto rounded bg-gray-700 p-2 text-xs text-white whitespace-pre-wrap">

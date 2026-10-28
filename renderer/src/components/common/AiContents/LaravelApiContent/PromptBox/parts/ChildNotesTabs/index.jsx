@@ -1,4 +1,4 @@
-// renderer/src/Sidebar/NomalMode/Dashboard/TabsContainer/SelectChildren/AiContents/parts/ChildNotesTabs/index.jsx
+// renderer/src/components/common/AiContents/LaravelApiContent/PromptBox/parts/ChildNotesTabs/index.jsx
 
 import React, { useEffect, useMemo, useState } from "react";
 import { useAppState } from "@/AppStateContext";
@@ -6,6 +6,7 @@ import { useSelector } from "react-redux";
 import { selectSpaceChildId } from "@/store/workSpaceSelectors.js";
 import ChildNotes from "./ChildNotes";
 import { PlanNotesPanel } from "@/components/common/hug_function/Plan";
+import { useDataBase } from "@/hooks/useDataBase";
 
 const DBG = "ChildNotesTabs";
 
@@ -35,6 +36,7 @@ export default function ChildNotesTabs({
   noteKey, // single時: "notes" | "notes2" | "notes3"
 }) {
   const appState = useAppState();
+  const { loadDataBase } = useDataBase();
 
   const selectedChildId = useSelector(selectSpaceChildId(spaceId));
 
@@ -255,7 +257,9 @@ export default function ChildNotesTabs({
       ===================================================== */}
       {activeTab === "notes2" || activeTab === "notes" ? (
         <PlanNotesPanel
-          spaceId={spaceId}
+          childId={selectedChildId}
+          facilityId={appState.FACILITY_ID}
+          loadDataBase={loadDataBase}
           type={activeTab === "notes" ? "individual" : "professional"}
           notes={activeNotes}
           emptyText={emptyText}

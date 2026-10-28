@@ -1,14 +1,10 @@
-import { getHugWebviewForCache } from "@/hooks/useHugCache/getHugCache.js";
+import { executeFlowV2 } from "@/components/WebAutomationV2";
 import { upsertPersonSupportPlan } from "./database_upsert";
-import { fetchPersonSupportPlanDetailHtml } from "./hug_get_detail";
-import { fetchFirstPersonSupportPlanId } from "./hug_post_list";
 
 export async function fetchPersonSupportPlan({ facilityId, selectChild, loadDataBase }) {
-  const webview = await getHugWebviewForCache();
-  if (!webview) throw new Error("Webviewが利用できません");
-
-  const id = await fetchFirstPersonSupportPlanId({ webview, facilityId, selectChild });
-  const markdown = await fetchPersonSupportPlanDetailHtml(webview, id);
-  await upsertPersonSupportPlan({ selectChild, markdown, loadDataBase });
-  return markdown;
+  if (!selectChild || !facilityId) throw new Error("児童IDまたは施設IDが指定されていません");
+  const result = await executeFlowV2("person_support_plan_fetch", { facilityId, childId: selectChild });
+  if (!result?.markdown) throw new Error("個別支援計画の本文がありません");
+  await upsertPersonSupportPlan({ selectChild, markdown: result.markdown, loadDataBase });
+  return result.markdown;
 }
