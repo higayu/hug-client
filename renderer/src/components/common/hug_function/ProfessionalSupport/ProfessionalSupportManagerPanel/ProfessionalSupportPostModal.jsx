@@ -170,6 +170,7 @@ export default function ProfessionalSupportPostModal({
               <PlanNotesPanel
                 type="professional"
                 childId={childId}
+                facilityId={facilityId}
                 notes={updatedPlan ?? professionalPlanNotes}
                 onUpdated={setUpdatedPlan}
                 emptyText="専門的支援計画はまだ保存されていません"
