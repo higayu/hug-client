@@ -229,6 +229,10 @@ async function finishExecutionLog(payload = {}) {
       normalized.result !== undefined
         ? normalized.result
         : normalized.result_json ?? null,
+    debug_json:
+      normalized.debug !== undefined
+        ? normalized.debug
+        : normalized.debug_json ?? null,
     error_message:
       normalized.errorMessage ?? normalized.error_message ?? null,
     duration_ms:

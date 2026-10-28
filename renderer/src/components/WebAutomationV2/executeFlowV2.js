@@ -86,6 +86,36 @@ async function loadPublishedFlowBundle({ appKey, flowKey }) {
   return { flow, files };
 }
 
+/**
+ * debug_log_mode is stored on each published web_automation_flows_v2 row.
+ * Existing DB records without this column default to failed_only.
+ */
+function getDebugLogMode(flow) {
+  const mode = String(flow?.debug_log_mode ?? "failed_only").trim();
+  return mode === "always" ? "always" : "failed_only";
+}
+
+function buildDebugLog({ flow, executionUuid, startedAt, status, error }) {
+  const debug = {
+    executionUuid,
+    flowId: flow.id,
+    flowKey: flow.flow_key,
+    flowVersion: flow.version,
+    status,
+    startedAt: new Date(startedAt).toISOString(),
+    finishedAt: new Date().toISOString(),
+    durationMs: Date.now() - startedAt,
+  };
+  if (error) {
+    debug.error = {
+      name: error?.name || "Error",
+      message: error?.message || String(error),
+      stack: typeof error?.stack === "string" ? error.stack : null,
+    };
+  }
+  return debug;
+}
+
 async function writeExecutionLog(api, methodName, payload) {
   if (typeof api?.[methodName] !== "function") {
     return null;
@@ -134,6 +164,7 @@ export async function executeFlowV2(
     flowKey,
   });
 
+  const debugLogMode = getDebugLogMode(flow);
   const config = parseJson(flow.config_json, {});
   const timeoutMs =
     Number(flow.timeout_ms) > 0
@@ -190,6 +221,9 @@ export async function executeFlowV2(
         status: "success",
         result,
         durationMs: Date.now() - startedAt,
+        ...(debugLogMode === "always"
+          ? { debug: buildDebugLog({ flow, executionUuid, startedAt, status: "success" }) }
+          : {}),
       }
     );
 
@@ -203,6 +237,7 @@ export async function executeFlowV2(
         status: "failed",
         errorMessage: error?.message || String(error),
         durationMs: Date.now() - startedAt,
+        debug: buildDebugLog({ flow, executionUuid, startedAt, status: "failed", error }),
       }
     );
 
