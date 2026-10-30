@@ -1,5 +1,6 @@
 import {
   useEffect,
+  useMemo,
   useState,
 } from 'react'
 import { useSelector } from 'react-redux'
@@ -113,18 +114,11 @@ export default function SettingsModal({
     DEBUG_FLG,
   } = useAppState();
 
-  // DEBUG_FLG に基づいて表示するタブを決定
-  const visibleDebugTabs = isAdmin
-    ? DEBUG_TABS
-    : DEBUG_TABS.filter((tab) => tab.id !== 'debug')
-
-  const baseTabs = isMentorOrAbove
-    ? [...BASE_TABS, ...ADMIN_TABS]
-    : BASE_TABS
-
-  const tabs = DEBUG_FLG
-    ? [...baseTabs, ...visibleDebugTabs]
-    : baseTabs
+  const tabs = useMemo(() => {
+    const visibleDebugTabs = isAdmin ? DEBUG_TABS : DEBUG_TABS.filter((tab) => tab.id !== 'debug')
+    const baseTabs = isMentorOrAbove ? [...BASE_TABS, ...ADMIN_TABS] : BASE_TABS
+    return DEBUG_FLG ? [...baseTabs, ...visibleDebugTabs] : baseTabs
+  }, [DEBUG_FLG, isAdmin, isMentorOrAbove])
 
   /*
    * モーダルを開くたびにAPI設定タブへ戻す。

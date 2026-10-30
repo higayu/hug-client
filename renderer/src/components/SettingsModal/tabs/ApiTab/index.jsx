@@ -4,7 +4,7 @@ import { useSelector } from 'react-redux'
 import { useAppState } from '@/AppStateContext'
 import { useToast } from '@/provider/ToastProvider/ToastContext'
 import { useDataBase } from '@/hooks/useDataBase'
-import { selectLaravelAuth } from '@/store/slices/authSlice'
+import { selectAuthenticatedStaffId, selectLaravelAuth } from '@/store/slices/authSlice'
 
 import {
   createFormState,
@@ -18,6 +18,7 @@ function ApiTab() {
   const [isSaving, setIsSaving] = useState(false)
   const [isResetting, setIsResetting] = useState(false)
   const auth = useSelector(selectLaravelAuth)
+  const authenticatedStaffId = useSelector(selectAuthenticatedStaffId)
 
   const {
     appState,
@@ -77,23 +78,20 @@ function ApiTab() {
   /*
    * 削除されていない施設一覧を生成
    */
+  // 所属会社に属し、かつ facility_staff に本人の登録がある施設のみ選択可能。
   const facilityList = useMemo(() => {
+    const ownStaff = rawStaffs.find((staff) => toId(staff.id) === toId(authenticatedStaffId))
+    if (!ownStaff || ownStaff.company_id == null) return []
+    const allowedIds = new Set(rawFacilityStaff
+      .filter((row) => toId(row.staff_id) === toId(authenticatedStaffId))
+      .map((row) => toId(row.facility_id)))
     return rawFacilities
-      .filter((facility) => {
-        return (
-          facility?.id != null &&
-          facility?.name &&
-          isNotDeleted(facility?.is_delete)
-        )
-      })
-      .map((facility) => {
-        return {
-          id: toId(facility.id),
-          name: String(facility.name),
-          url: String(facility.url ?? ''),
-        }
-      })
-  }, [rawFacilities])
+      .filter((facility) => facility?.id != null && facility?.name &&
+        isNotDeleted(facility?.is_delete) &&
+        toId(facility.company_id) === toId(ownStaff.company_id) &&
+        allowedIds.has(toId(facility.id)))
+      .map((facility) => ({ id: toId(facility.id), name: String(facility.name), url: String(facility.url ?? '') }))
+  }, [rawFacilities, rawStaffs, rawFacilityStaff, authenticatedStaffId])
 
   /*
    * スタッフごとの所属施設を生成
@@ -199,7 +197,6 @@ function ApiTab() {
   useEffect(() => {
     if (
       !databaseReady ||
-      facilityList.length === 0 ||
       !form.facilityId
     ) {
       return
@@ -262,6 +259,7 @@ function ApiTab() {
       event.target.value
     )
 
+    if (nextFacilityId && !facilityList.some((facility) => facility.id === nextFacilityId)) return
     setForm((previous) => ({
       ...previous,
       facilityId: nextFacilityId,
@@ -332,6 +330,10 @@ function ApiTab() {
    * ini.jsonへ保存
    */
   const handleSave = async () => {
+    if (!databaseReady || !authenticatedStaffId || !facilityList.some((facility) => facility.id === toId(form.facilityId))) {
+      showErrorToast('自分に登録されている施設を選択してください')
+      return
+    }
     if (isSaving || isResetting) {
       return
     }
