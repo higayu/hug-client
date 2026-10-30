@@ -92,14 +92,16 @@ export default function ChatPage({
 }) {
   const defaults = getDefaultPeriod();
 
-  const { databaseState } = useAppState();
+  const { databaseState, iniState } = useAppState();
 
   const facilities = toTable(databaseState?.facilitys);
   const allChildren = toTable(databaseState?.children);
   const facilityChildren = toTable(databaseState?.facility_children);
   const { getServiceRecordMonthly } = useServiceRecord();
 
-  const [facilityId, setFacilityId] = useState(initialFacilityId);
+  const configuredFacilityId = iniState?.apiSettings?.facilityId ?? null;
+  const [facilityId, setFacilityId] = useState(null);
+  const [facilityChangedManually, setFacilityChangedManually] = useState(false);
   const [childId, setChildId] = useState(initialChildId);
   const [startDate, setStartDate] = useState(defaults.startDate);
   const [endDate, setEndDate] = useState(defaults.endDate);
@@ -115,21 +117,33 @@ export default function ChatPage({
   const facilitiesLoading = false;
   const childrenLoading = false;
 
-  /*
-   * 施設一覧取得後、
-   * facilityId が未設定なら先頭施設を初期値にする
-   */
+  // API設定が非同期で読み込まれても、手動選択済みの場合は上書きしない。
+  // API設定が未設定のときだけ呼び出し元の初期値、次に先頭施設を使用する。
   useEffect(() => {
-    if (!facilityId && facilities.length > 0) {
-      setFacilityId(getFacilityId(facilities[0]));
+    if (facilityChangedManually) return;
+
+    const candidates = [configuredFacilityId, initialFacilityId];
+    const matching = candidates
+      .filter((id) => id != null && String(id).trim() !== '')
+      .map((id) => facilities.find((facility) => sameId(getFacilityId(facility), id)))
+      .find(Boolean);
+    const nextId = matching
+      ? getFacilityId(matching)
+      : facilities.length > 0
+        ? getFacilityId(facilities[0])
+        : null;
+
+    if (!sameId(facilityId, nextId) && !(facilityId == null && nextId == null)) {
+      setFacilityId(nextId);
+      setChildId(null);
     }
-  }, [facilities, facilityId]);
+  }, [configuredFacilityId, initialFacilityId, facilities, facilityId, facilityChangedManually]);
 
   const children = useMemo(() => {
     const activeChildren = allChildren.filter(isActiveChild);
 
-    if (!facilityId || facilityChildren.length === 0) {
-      return activeChildren;
+    if (facilityId == null || String(facilityId) === '' || facilityChildren.length === 0) {
+      return [];
     }
 
     const childIdsForFacility = new Set(
@@ -140,7 +154,7 @@ export default function ChatPage({
     );
 
     if (childIdsForFacility.size === 0) {
-      return activeChildren;
+      return [];
     }
 
     return activeChildren.filter((child) =>
@@ -175,7 +189,9 @@ export default function ChatPage({
   )?.name;
 
   const handleFacilityChange = (value) => {
+    setFacilityChangedManually(true);
     setFacilityId(value);
+    setChildId(null);
     onFacilityChange?.(value);
   };
 
@@ -185,6 +201,9 @@ export default function ChatPage({
   };
 
   const startChat = async () => {
+    if (facilityId == null || !children.some((child) => sameId(getChildId(child), childId))) {
+      return;
+    }
     const targetMonths = getTargetMonths(startDate, endDate);
     const monthlyRows = await Promise.all(
       targetMonths.map((targetMonth) =>
@@ -413,7 +432,7 @@ export default function ChatPage({
                 type="button"
                 className="btn btn-primary"
                 onClick={startChat}
-                disabled={!facilityId || !childId || !startDate || !endDate}
+                disabled={!facilityId || !children.some((child) => sameId(getChildId(child), childId)) || !startDate || !endDate}
               >
                 チャット開始
               </button>
