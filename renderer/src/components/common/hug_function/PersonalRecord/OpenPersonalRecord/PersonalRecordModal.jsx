@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import store from '@/store/store.js'
 import ToggleContainer from '@/components/ui/ToggleContainer'
+import ToggleContainerHorizontal from '@/components/ui/ToggleContainerHorizontal'
 import PlanNotesPanel from '@/components/common/hug_function/Plan/PlanNotesPanel'
 import { fetchPersonSupportPlan } from '@/components/common/hug_function/Plan/PersonSupportPlan/function'
 import { selectChildren, setAllTables } from '@/store/slices/databaseSlice'
@@ -24,6 +25,18 @@ function combinePersonalRecordAndAiText(existingText, aiText) {
   return `${original}\n\n${addition}`
 }
 
+function buildPersonalRecordText(existingText, newText, mode, hasExistingRecord) {
+  if (mode === 'overwrite' && hasExistingRecord) {
+    const replacement = typeof newText === 'string' ? newText : ''
+    if (!replacement.trim()) {
+      throw new Error('上書きする新しい記録を入力してください')
+    }
+    return replacement
+  }
+
+  return combinePersonalRecordAndAiText(existingText, newText)
+}
+
 // createRoot で独立マウントされるため Context hooks を使わず Redux を参照する。
 function findIndividualPlan(childId) {
   const id = String(childId ?? '')
@@ -39,6 +52,8 @@ function PersonalRecordControls({ webview, childName, childId, date, initialOpen
   const [value, setValue] = useState('')
   const [original, setOriginal] = useState('')
   const [aiValue, setAiValue] = useState('')
+  const [saveMode, setSaveMode] = useState('append')
+  const [savedRecordOpen, setSavedRecordOpen] = useState(true)
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
   const [individualNotes, setIndividualNotes] = useState(() => findIndividualPlan(childId))
@@ -88,6 +103,8 @@ function PersonalRecordControls({ webview, childName, childId, date, initialOpen
       setValue(result.value)
       setAiValue(aiText ?? '')
       setOriginal(result.value)
+      setSaveMode('append')
+      setSavedRecordOpen(true)
       setOpen(true)
     } catch (error) {
       setMessage(error.message || '記録の取得に失敗しました')
@@ -101,7 +118,7 @@ function PersonalRecordControls({ webview, childName, childId, date, initialOpen
     setMessage('')
     try {
       if (!isPersonalRecordEditPage(webview)) throw new Error('編集画面が切り替わっています')
-      const finalText = combinePersonalRecordAndAiText(value, aiValue)
+      const finalText = buildPersonalRecordText(value, aiValue, saveMode, hasInitialRecord)
       const result = await writePersonalRecord(webview, finalText)
       if (!result?.ok) throw new Error(result?.message || '入力に失敗しました')
       setOriginal(finalText)
@@ -122,7 +139,7 @@ function PersonalRecordControls({ webview, childName, childId, date, initialOpen
     try {
       if (!isPersonalRecordEditPage(webview)) throw new Error('編集画面が切り替わっています')
       if (open) {
-        const finalText = combinePersonalRecordAndAiText(value, aiValue)
+        const finalText = buildPersonalRecordText(value, aiValue, saveMode, hasInitialRecord)
         const result = await writePersonalRecord(webview, finalText)
         if (!result?.ok) throw new Error(result?.message || '入力に失敗しました')
         setOriginal(finalText)
@@ -154,6 +171,11 @@ function PersonalRecordControls({ webview, childName, childId, date, initialOpen
   }, [webview, busy])
 
   const hasInitialRecord = Boolean(String(original ?? '').trim())
+  const recordLayoutClass = !hasInitialRecord
+    ? 'grid grid-cols-1'
+    : savedRecordOpen
+      ? 'grid grid-cols-1 md:grid-cols-2'
+      : 'flex'
 
   return (
     <>
@@ -192,24 +214,53 @@ function PersonalRecordControls({ webview, childName, childId, date, initialOpen
                 {planError && <p role="alert" className="mt-2 text-xs text-red-700">{planError}</p>}
               </ToggleContainer>
             </div>
-            <p className="text-sm text-slate-600">保存済みの記録がある場合は、一時メモ１と分けて表示します。反映時には改行2つで結合します。</p>
-            <div className="flex min-h-0 flex-1 flex-col gap-3">
-              {hasInitialRecord && <div className="max-h-[40%] shrink-0 overflow-y-auto">
-                <ToggleContainer buttonLabel="保存済みの個人記録" defaultOpen={true}>
-                  <label htmlFor="personal-record-existing" className="text-sm font-semibold text-slate-800">個人記録（既存の入力内容）</label>
-                  <textarea
-                    id="personal-record-existing"
-                    autoFocus
-                    value={value}
-                    onChange={e => setValue(e.target.value)}
-                    className="mt-1 h-32 min-h-24 w-full resize-y overflow-y-auto rounded-lg border border-slate-300 bg-white p-3 text-sm text-slate-900"
-                    placeholder="WebView内の記録本文を入力してください"
-                  />
-                </ToggleContainer>
-              </div>}
-              <div className="flex min-h-0 flex-1 flex-col gap-1">
+            {hasInitialRecord && (
+              <fieldset className="shrink-0 rounded-lg border border-slate-200 p-3">
+                <legend className="px-1 text-sm font-semibold text-slate-800">入力済み記録への反映方法</legend>
+                <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
+                  <label className="flex items-center gap-2">
+                    <input type="radio" name="personal-record-save-mode" value="append" checked={saveMode === 'append'} onChange={() => setSaveMode('append')} />
+                    追記（既存記録の後に追加）
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input type="radio" name="personal-record-save-mode" value="overwrite" checked={saveMode === 'overwrite'} onChange={() => setSaveMode('overwrite')} />
+                    上書き（一時メモの内容に置換）
+                  </label>
+                </div>
+              </fieldset>
+            )}
+            <p className="text-sm text-slate-600">
+              {hasInitialRecord
+                ? saveMode === 'overwrite'
+                  ? '上書きでは保存済み記録を使わず、一時メモ１の内容で置き換えます。'
+                  : '追記では既存記録と一時メモ１を改行2つで結合します。'
+                : '新しい個人記録として一時メモ１の内容を入力します。'}
+            </p>
+            <div className={`${recordLayoutClass} min-h-0 flex-1 gap-3`}>
+              {hasInitialRecord && (
+                <ToggleContainerHorizontal
+                  buttonLabel=""
+                  defaultOpen={true}
+                  onOpenChange={setSavedRecordOpen}
+                  className={`h-full min-h-0 ${savedRecordOpen ? 'min-w-0' : 'shrink-0'}`}
+                >
+                  <div className="flex h-full min-h-0 flex-col gap-1">
+                    <label htmlFor="personal-record-existing" className="text-sm font-semibold text-slate-800">{saveMode === 'overwrite' ? '個人記録（上書き前の参考）' : '個人記録（記入済み）'}</label>
+                    <textarea
+                      id="personal-record-existing"
+                      autoFocus
+                      value={value}
+                      onChange={e => setValue(e.target.value)}
+                      readOnly={saveMode === 'overwrite'}
+                      className={`min-h-0 w-full flex-1 resize-y overflow-y-auto rounded-lg border border-slate-300 p-3 text-sm text-slate-900 ${saveMode === 'overwrite' ? 'bg-slate-100' : 'bg-white'}`}
+                      placeholder="WebView内の記録本文を入力してください"
+                    />
+                  </div>
+                </ToggleContainerHorizontal>
+              )}
+              <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-1">
                 <div className="flex items-center justify-between gap-2">
-                  <label htmlFor="personal-record-ai" className="text-sm font-semibold text-slate-800">一時メモ１（編集可能）</label>
+                  <label htmlFor="personal-record-ai" className="text-sm font-semibold text-slate-800">{hasInitialRecord && saveMode === 'overwrite' ? '一時メモ１（上書きする新しい記録）' : hasInitialRecord ? '一時メモ１（追記内容）' : '一時メモ１（記録内容）'}</label>
                   <span className="text-xs text-slate-500">日付: {date || '未指定'} / 児童ID: {childId || '未指定'}</span>
                 </div>
                 <textarea
@@ -222,7 +273,7 @@ function PersonalRecordControls({ webview, childName, childId, date, initialOpen
                 />
               </div>
             </div>
-            {(value !== original || aiValue !== '') && <p className="text-xs text-amber-700">「入力欄に反映」で既存記録と一時メモ１を結合します（両方ある場合は改行2つ）。モーダルを閉じると未反映編集は破棄されます。</p>}
+            {(value !== original || aiValue !== '') && <p className="text-xs text-amber-700">{hasInitialRecord && saveMode === 'overwrite' ? '「入力欄に反映」で一時メモ１の内容に置き換えます。' : '「入力欄に反映」で既存記録と一時メモ１を結合します（両方ある場合は改行2つ）。'} モーダルを閉じると未反映編集は破棄されます。</p>}
             {message && <p role="alert" className="text-sm text-red-700">{message}</p>}
             <footer className="flex flex-wrap justify-end gap-2">
               <button type="button" onClick={() => setOpen(false)} disabled={busy} className="rounded-lg border px-4 py-2 text-slate-800">キャンセル</button>
