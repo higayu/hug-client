@@ -118,17 +118,23 @@ function buildDebugLog({ flow, executionUuid, startedAt, status, error }) {
 
 async function writeExecutionLog(api, methodName, payload) {
   if (typeof api?.[methodName] !== "function") {
-    return null;
+    console.warn(`[WebAutomationV2] ログAPIが未登録: ${methodName}`);
+    return { ok: false, reason: "api-missing" };
   }
 
   try {
-    return await api[methodName](payload);
+    const response = await api[methodName](payload);
+    if (response == null || response === false || response?.ok === false) {
+      console.warn(`[WebAutomationV2] ログ記録を確認できません: ${methodName}`, {
+        response,
+        executionUuid: payload.executionUuid,
+      });
+      return { ok: false, reason: "response-not-success", response };
+    }
+    return { ok: true, response };
   } catch (error) {
-    console.warn(
-      `[WebAutomationV2] 実行ログAPI ${methodName} 失敗:`,
-      error
-    );
-    return null;
+    console.warn(`[WebAutomationV2] ログAPI ${methodName} 失敗:`, error);
+    return { ok: false, reason: "exception", error };
   }
 }
 
@@ -157,45 +163,55 @@ export async function executeFlowV2(
 
   const appKey = options.appKey || DEFAULT_APP_KEY;
   const startedAt = Date.now();
-  const api = getApi();
-
-  const { flow, files } = await loadPublishedFlowBundle({
-    appKey,
-    flowKey,
-  });
-
-  const debugLogMode = getDebugLogMode(flow);
-  const config = parseJson(flow.config_json, {});
-  const timeoutMs =
-    Number(flow.timeout_ms) > 0
-      ? Number(flow.timeout_ms)
-      : 30000;
-
-  const helpers = createWebAutomationV2Helpers({
-    defaultTimeoutMs: timeoutMs,
-  });
-
   const executionUuid =
-    typeof crypto?.randomUUID === "function"
-      ? crypto.randomUUID()
+    typeof globalThis.crypto?.randomUUID === "function"
+      ? globalThis.crypto.randomUUID()
       : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 
-  await writeExecutionLog(
-    api,
-    "webAutomationV2_executionLogStart",
-    {
-      executionUuid,
-      appKey,
-      flowId: flow.id,
-      flowKey: flow.flow_key || flowKey,
-      flowVersion: flow.version,
-      entryFile: flow.entry_file,
-      entryExport: flow.entry_export,
-      input,
-    }
-  );
+  // Flow取得前に失敗した場合も、本文を出さずに段階だけ診断可能にする。
+  let stage = "preflight";
+  let api;
+  let flow;
+  let files;
+  let debugLogMode = "failed_only";
+  let logStarted = false;
 
+  console.info("[WebAutomationV2] 実行開始", { flowKey, executionUuid });
   try {
+    api = getApi();
+    stage = "load-flow";
+    ({ flow, files } = await loadPublishedFlowBundle({ appKey, flowKey }));
+    debugLogMode = getDebugLogMode(flow);
+    stage = "prepare-runtime";
+    const config = parseJson(flow.config_json, {});
+    const timeoutMs = Number(flow.timeout_ms) > 0
+      ? Number(flow.timeout_ms)
+      : 30000;
+    const helpers = createWebAutomationV2Helpers({ defaultTimeoutMs: timeoutMs });
+
+    stage = "execution-log-start";
+    const startLog = await writeExecutionLog(
+      api,
+      "webAutomationV2_executionLogStart",
+      {
+        executionUuid,
+        appKey,
+        flowId: flow.id,
+        flowKey: flow.flow_key || flowKey,
+        flowVersion: flow.version,
+        entryFile: flow.entry_file,
+        entryExport: flow.entry_export,
+        input,
+      }
+    );
+    logStarted = startLog.ok;
+    if (!logStarted) {
+      console.warn("[WebAutomationV2] 実行ログ開始が未確認（実行は継続）", {
+        flowKey, executionUuid, reason: startLog.reason,
+      });
+    }
+
+    stage = "execute-virtual-entry";
     const result = await executeVirtualEntry({
       files,
       entryFile: flow.entry_file || "index.js",
@@ -213,7 +229,13 @@ export async function executeFlowV2(
       },
     });
 
-    await writeExecutionLog(
+    // AI送信フローの false は実行失敗。成功としてログ保存しない。
+    if (result === false && String(flowKey).startsWith("ai_")) {
+      throw new Error(`[WebAutomationV2] ${flowKey} が false を返しました（入力欄・送信ボタン・対象WebViewを確認してください）`);
+    }
+
+    stage = "execution-log-finish";
+    const finishLog = await writeExecutionLog(
       api,
       "webAutomationV2_executionLogFinish",
       {
@@ -227,9 +249,15 @@ export async function executeFlowV2(
       }
     );
 
+    if (!finishLog.ok) {
+      console.warn("[WebAutomationV2] 成功ログ終了が未確認", { flowKey, executionUuid });
+    }
+    console.info("[WebAutomationV2] 実行完了", { flowKey, executionUuid });
     return result;
   } catch (error) {
-    await writeExecutionLog(
+    // Flow取得前はflowId未確定。既存APIに不正な開始ログを送らない。
+    if (flow && logStarted) {
+      await writeExecutionLog(
       api,
       "webAutomationV2_executionLogFinish",
       {
@@ -239,12 +267,17 @@ export async function executeFlowV2(
         durationMs: Date.now() - startedAt,
         debug: buildDebugLog({ flow, executionUuid, startedAt, status: "failed", error }),
       }
-    );
+      );
+    }
 
-    console.error(
-      `[WebAutomationV2] Flow実行失敗: ${flowKey}`,
-      error
-    );
+    console.error("[WebAutomationV2] Flow実行失敗", {
+      flowKey,
+      executionUuid,
+      stage,
+      logStarted,
+      message: error?.message || String(error),
+      error,
+    });
 
     throw error;
   }

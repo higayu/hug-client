@@ -134,6 +134,7 @@ export default function ProfessionalPrompt1({
     }
 
     await sendPrompt({
+      textValue,
       prompt: text1,
       message,
       promptKey,

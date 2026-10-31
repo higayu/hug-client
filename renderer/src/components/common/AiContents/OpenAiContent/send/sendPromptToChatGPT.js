@@ -1,14 +1,23 @@
 import { executeAiAutomationFlow } from "../../common/webAutomation/executeAiAutomationFlow.js";
 
 export async function sendPromptToChatGPT({ textValue }) {
-  if (!textValue || !textValue.trim()) return false;
+  const prompt = typeof textValue === "string" ? textValue.trim() : "";
+  if (!prompt) {
+    throw new Error("ChatGPTに送信するテキストが空です");
+  }
+
   try {
-    return Boolean(await executeAiAutomationFlow({
+    const result = await executeAiAutomationFlow({
       flowKey: "ai_chatgpt_prompt_send",
-      input: { textValue: textValue.trim() },
-    }));
+      input: { textValue: prompt },
+    });
+    if (result !== true) {
+      throw new Error(`ChatGPT送信フローが成功を返しませんでした（結果: ${String(result)}）`);
+    }
+    return true;
   } catch (error) {
-    console.error("[ChatGPT DB Flow] send failed", error);
-    return false;
+    // 内容を含むプロンプト本文はログへ出さない。
+    console.error("[ChatGPT DB Flow] send failed:", error);
+    throw error;
   }
 }

@@ -188,6 +188,7 @@ export default function PersonalRecordPrompt({
       // selectedPromptKey にはしない
       const success =
         await sendPrompt({
+          textValue,
           prompt: selectedPrompt,
           message,
           promptKey,

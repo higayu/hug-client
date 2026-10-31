@@ -11,11 +11,12 @@ export default function LaravelApiContent({ spaceId, activePromptKey, onPromptCh
   const [laravelApiResults, setLaravelApiResults] = useState({});
 
   const sendPrompt = useCallback(
-    async ({ prompt, message, promptKey = "personal" }) => {
+    async ({ textValue, prompt, message, promptKey = "personal" }) => {
 
       showInfoToast("Laravel API に送信中…");
       try {
         const text = await sendPromptToLaravelApi({
+          textValue,
           prompt,
           message,
           promptKey,
