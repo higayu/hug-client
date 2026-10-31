@@ -1,4 +1,4 @@
-// renderer/src/Sidebar/NomalMode/Dashboard/TabsContainer/SelectChildren/AiContents/parts/PersonalRecordPrompt/index.jsx
+// renderer/src/Sidebar/NomalMode/Dashboard/TabsContainer/SelectChildren/AiContents/common/PersonalRecordPrompt/index.jsx
 
 import React, { useState } from "react";
 

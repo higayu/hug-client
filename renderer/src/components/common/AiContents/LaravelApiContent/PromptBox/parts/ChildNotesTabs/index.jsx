@@ -1,4 +1,3 @@
-// renderer/src/components/common/AiContents/LaravelApiContent/PromptBox/parts/ChildNotesTabs/index.jsx
 
 import React, { useEffect, useMemo, useState } from "react";
 import { useAppState } from "@/AppStateContext";

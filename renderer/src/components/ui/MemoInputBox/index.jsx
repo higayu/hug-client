@@ -14,7 +14,9 @@ import {
 } from "@/store/workSpaceSelectors.js";
 import { useAppState } from "@/AppStateContext";
 import { useNote } from "@/hooks/useNote";
+import { PersonalRecordButton } from '@/components/common/hug_function';
 import CopyButton from "@/components/ui/CopyButton";
+import { ArrowDownIcon, EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 
 export default function MemoInputBox({
   memoType,
@@ -43,6 +45,8 @@ export default function MemoInputBox({
   const weekdayId = CURRENT_DAY_OF_WEEK?.weekdayId;
 
   const [value, setValue] = useState("");
+  // 入力内容は維持したまま、表示だけを切り替える。
+  const [isMemoHidden, setIsMemoHidden] = useState(false);
 
   /*
    * useNoteから返る関数参照が変化しても、
@@ -216,7 +220,7 @@ export default function MemoInputBox({
    */
   useEffect(() => {
     function restoreTextareaFocus() {
-      if (!selectedChildId) {
+      if (!selectedChildId || isMemoHidden) {
         return;
       }
 
@@ -315,7 +319,14 @@ export default function MemoInputBox({
         handleVisibilityChange,
       );
     };
-  }, [selectedChildId]);
+  }, [selectedChildId, isMemoHidden]);
+
+  function toggleMemoVisibility() {
+    if (!isMemoHidden) {
+      textareaRef.current?.blur();
+    }
+    setIsMemoHidden((previous) => !previous);
+  }
 
   async function handleSave() {
     if (!selectedChildId) {
@@ -440,47 +451,71 @@ export default function MemoInputBox({
           className="
             bg-white hover:bg-slate-500
             inline-flex items-center gap-2
-            rounded-2xl px-3 py-2 text-sm text-black shadow-sm
+            rounded-md px-3 py-2 text-sm text-black shadow-sm
             active:scale-[0.98]
             disabled:opacity-50 disabled:cursor-not-allowed
           "
           title="クリップボードから貼り付け"
         >
-          貼り付け
+          <span>貼り付け</span>
+          <ArrowDownIcon className="h-4 w-4" aria-hidden="true" />
         </button>
       </div>
 
-      <textarea
-        id={textareaId}
-        ref={textareaRef}
-        data-memo-input="true"
-        data-memo-type={memoType}
-        className="
-          w-full p-2 border border-gray-300 rounded text-xs
-          bg-white resize-y text-black
-          focus:outline-none focus:border-blue-600
-          focus:ring-2 focus:ring-blue-200
-          disabled:bg-gray-100 disabled:cursor-not-allowed
-        "
-        style={{
-          minHeight,
-        }}
-        value={value}
-        disabled={!selectedChildId}
-        onChange={handleChange}
-        onFocus={handleFocus}
-        onCompositionStart={handleCompositionStart}
-        onKeyDown={handleKeyDown}
-      />
+      <div className="relative w-full">
+        {isMemoHidden && (
+          <div
+            className="flex w-full items-center justify-center rounded border border-gray-300 bg-gray-100 p-3 text-xs text-gray-500"
+            style={{ minHeight }}
+            role="status"
+          >
+            メモの内容を非表示にしています
+          </div>
+        )}
+
+        <textarea
+          id={textareaId}
+          ref={textareaRef}
+          data-memo-input="true"
+          data-memo-type={memoType}
+          aria-hidden={isMemoHidden}
+          tabIndex={isMemoHidden ? -1 : undefined}
+          className={`
+            w-full p-2 border border-gray-300 rounded text-xs
+            bg-white resize-y text-black
+            focus:outline-none focus:border-blue-600
+            focus:ring-2 focus:ring-blue-200
+            disabled:bg-gray-100 disabled:cursor-not-allowed
+            ${isMemoHidden ? "hidden" : ""}
+          `}
+          style={{ minHeight }}
+          value={value}
+          disabled={!selectedChildId}
+          onChange={handleChange}
+          onFocus={handleFocus}
+          onCompositionStart={handleCompositionStart}
+          onKeyDown={handleKeyDown}
+        />
+
+
+      </div>
 
       <div className="mt-2 flex gap-2 items-stretch">
-        <CopyButton 
-          text={value}
-          className='bg-white hover:bg-slate-500 inline-flex items-center gap-2 rounded-2xl px-3 py-2 text-sm shadow-sm active:scale-[0.98]'
-          fontStyle='text-black'
-          title='個人記録用メモをコピー'
-         />
-
+        <button
+          type="button"
+          onClick={toggleMemoVisibility}
+          aria-pressed={!isMemoHidden}
+          aria-label={`${label}を${isMemoHidden ? "表示" : "隠す"}`}
+          title={`${label}を${isMemoHidden ? "表示" : "隠す"}`}
+          aria-controls={textareaId}
+          className="inline-flex items-center justify-center rounded-md border border-gray-200 bg-white px-3 text-gray-600 hover:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-600"
+        >
+          {isMemoHidden ? (
+            <EyeIcon className="h-5 w-5" aria-hidden="true" />
+          ) : (
+            <EyeSlashIcon className="h-5 w-5" aria-hidden="true" />
+          )}
+        </button>
 
         <button
           type="button"
@@ -496,6 +531,23 @@ export default function MemoInputBox({
         >
           このメモを保存
         </button>
+
+        {(memoType === 1 || memoType === 2) && (
+          <PersonalRecordButton
+            id={`kojin-kiroku-${memoType}-${instanceId}`}
+            selectedChildId={selectedChildId}
+            selectedChildName={selectedChildName}
+            disabled={!selectedChildId}
+            label="個人記録"
+            className={[
+              "px-2 py-2 rounded-md text-white bg-[#00a405] cursor-pointer transition-all whitespace-nowrap hover:bg-[#006305] hover:scale-105 active:bg-[#005004] active:scale-[0.97]",
+              "flex h-full items-center justify-center rounded-none border-0 px-2",
+              "text-xs font-bold whitespace-nowrap",
+              "focus:outline-none focus:ring-1 focus:ring-inset focus:ring-green-400",
+              "disabled:cursor-not-allowed disabled:opacity-40",
+            ].join(" ")}
+          />
+        )}
       </div>
     </div>
   );

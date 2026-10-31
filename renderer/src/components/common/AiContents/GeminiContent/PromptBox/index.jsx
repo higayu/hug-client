@@ -1,7 +1,7 @@
 // renderer/src/Sidebar/NomalMode/Dashboard/TabsContainer/SelectChildren/AiContents/GeminiContent/PromptBox/index.jsx
-import PersonalRecordPrompt from "../../parts/PersonalRecordPrompt";
-import ProfessionalPrompt1 from "../../parts/ProfessionalPrompt1";
-import ProfessionalPrompt2 from "../../parts/ProfessionalPrompt2";
+import PersonalRecordPrompt from "../../common/PersonalRecordPrompt";
+import ProfessionalPrompt1 from "../../common/ProfessionalPrompt1";
+import ProfessionalPrompt2 from "../../common/ProfessionalPrompt2";
 
 export const AI_PROMPT_COMPONENT_MAP = {
   personal: {

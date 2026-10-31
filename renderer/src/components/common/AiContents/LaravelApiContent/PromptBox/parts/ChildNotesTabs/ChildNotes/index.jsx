@@ -1,4 +1,3 @@
-// renderer/src/Sidebar/NomalMode/Dashboard/TabsContainer/SelectChildren/AiContents/parts/ChildNotes/index.jsx
 
 import React from "react";
 

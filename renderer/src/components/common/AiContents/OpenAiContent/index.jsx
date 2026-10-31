@@ -1,6 +1,6 @@
 import React, { useEffect } from "react"
 import { useAppState } from "@/AppStateContext"
-import PromptPanel from "../parts/PromptPanel";
+import PromptPanel from "../common/PromptPanel";
 import AccountInfoPanel from "@/components/ui/AccountInfoPanel"
 
 import { AI_PROMPT_COMPONENT_MAP } from "./PromptBox"
