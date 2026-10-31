@@ -1,4 +1,6 @@
 {
+  "APP_LOCK_PASSCODE": "",
+  "APP_LOCK_ENABLED": false,
   "HUG_USERNAME": "",
   "HUG_PASSWORD": "",
   "GEMINI_API_KEY": "",

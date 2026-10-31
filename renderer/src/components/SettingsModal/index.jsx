@@ -46,7 +46,7 @@ const BASE_TABS = [
   },
   {
     id: 'config',
-    label: 'Config.json設定',
+    label: 'ID・パスワードの設定',
     component: ConfigTab,
   },
   {

@@ -1,4 +1,6 @@
 export const DEFAULT_CONFIG_FORM = {
+  APP_LOCK_ENABLED: false,
+  APP_LOCK_PASSCODE: '',
   HUG_USERNAME: '',
   HUG_PASSWORD: '',
 
@@ -24,6 +26,11 @@ export const createConfigFormState = (source = {}) => {
   return CONFIG_KEYS.reduce((result, key) => {
     const defaultValue = DEFAULT_CONFIG_FORM[key]
 
+    if (key === 'APP_LOCK_ENABLED') {
+      result[key] = source?.[key] === true
+      return result
+    }
+
     result[key] = String(
       source?.[key] ??
       defaultValue
@@ -35,6 +42,8 @@ export const createConfigFormState = (source = {}) => {
 
 export const normalizeConfigData = (form = {}) => {
   return {
+    APP_LOCK_ENABLED: form.APP_LOCK_ENABLED === true,
+    APP_LOCK_PASSCODE: String(form.APP_LOCK_PASSCODE ?? ""),
     HUG_USERNAME: String(
       form.HUG_USERNAME ?? ''
     ).trim(),

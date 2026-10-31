@@ -517,6 +517,8 @@ function createElectronApi(ipcRenderer, isDebugMode) {
       }),
 
     // ---- 設定 ----
+    getAppLockStatus: () => ipcRenderer.invoke("app-lock-status"),
+    unlockApp: (passcode) => ipcRenderer.invoke("app-lock-unlock", passcode),
     readConfig: () =>
       ipcRenderer.invoke("read-config"),
 

@@ -17,6 +17,36 @@ function removeHandlerIfRegistered(ipcMain, channel) {
 }
 
 function handleConfigAccess(ipcMain) {
+  removeHandlerIfRegistered(ipcMain, "app-lock-status");
+  removeHandlerIfRegistered(ipcMain, "app-lock-unlock");
+  // Check the passcode in the main process; the lock screen only receives status.
+  const readLockConfig = () => {
+    const filePath = getConfigPath();
+    return fs.existsSync(filePath)
+      ? JSON.parse(fs.readFileSync(filePath, "utf8"))
+      : {};
+  };
+  ipcMain.handle("app-lock-status", () => {
+    try {
+      const config = readLockConfig();
+      return { success: true, enabled: config.APP_LOCK_ENABLED === true,
+        configured: typeof config.APP_LOCK_PASSCODE === "string" && config.APP_LOCK_PASSCODE.length > 0 };
+    } catch {
+      return { success: false, error: "設定ファイルを読み込めませんでした。設定を確認してアプリを再起動してください。" };
+    }
+  });
+  ipcMain.handle("app-lock-unlock", (_event, passcode) => {
+    try {
+      const config = readLockConfig();
+      const valid = config.APP_LOCK_ENABLED !== true ||
+        (typeof passcode === "string" && passcode.length > 0 && passcode === config.APP_LOCK_PASSCODE);
+      return { success: valid };
+    } catch {
+      return { success: false };
+    }
+  });
+
+
   removeHandlerIfRegistered(ipcMain, "read-config");
   removeHandlerIfRegistered(ipcMain, "save-config");
   removeHandlerIfRegistered(ipcMain, "import-config-file");

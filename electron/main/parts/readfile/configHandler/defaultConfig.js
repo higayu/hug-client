@@ -2,6 +2,8 @@
 // config.json のデフォルト設定
 
 const DEFAULT_CONFIG = {
+    APP_LOCK_ENABLED: false,
+    APP_LOCK_PASSCODE: "",
     // AI関連設定
     GEMINI_API_KEY: "",
     GEMINI_MODEL: "gemini-3.5-flash",

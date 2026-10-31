@@ -69,6 +69,10 @@ export async function initializeAppState({
     // =============================================================
 
     // HUG 認証情報
+    merged.APP_LOCK_ENABLED = config?.APP_LOCK_ENABLED === true;
+    merged.APP_LOCK_PASSCODE = typeof config?.APP_LOCK_PASSCODE === 'string'
+      ? config.APP_LOCK_PASSCODE : '';
+
     if (config?.HUG_USERNAME !== undefined) {
       merged.HUG_USERNAME = config.HUG_USERNAME;
     }

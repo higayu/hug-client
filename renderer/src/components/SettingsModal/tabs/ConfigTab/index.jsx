@@ -1,3 +1,4 @@
+import PassWordInput from '@/components/ui/PassWordInput'
 import {
   useEffect,
   useState,
@@ -9,7 +10,6 @@ import { useToast } from '@/provider/ToastProvider/ToastContext'
 import { useDataBase } from '@/hooks/useDataBase'
 
 import {
-  loadConfig,
   saveConfig,
 } from '@/utils/config/configUtils'
 
@@ -18,15 +18,8 @@ import {
   normalizeConfigData,
 } from './parts'
 
-const PASSWORD_FIELDS = {
-  HUG_PASSWORD: 'HUG_PASSWORD',
-  OPENAI_PASSWORD: 'OPENAI_PASSWORD',
-  DEEPSEEK_PASSWORD: 'DEEPSEEK_PASSWORD',
-}
-
 function ConfigTab() {
   const [isSaving, setIsSaving] = useState(false)
-  const [isReloading, setIsReloading] = useState(false)
 
   /*
    * ConfigTabで必要なのは主に
@@ -51,20 +44,11 @@ function ConfigTab() {
   } = useToast()
 
   // Config.json の変更反映後にDBデータを再取得するために使用
-  // autoLoad は使わず、保存・再読み込み後に明示的に実行する
+  // autoLoad は使わず、保存後に明示的に実行する
   const { loadDataBase } = useDataBase()
 
   const [form, setForm] = useState(() => {
     return createConfigFormState(appState)
-  })
-
-  const [
-    passwordVisibility,
-    setPasswordVisibility,
-  ] = useState({
-    HUG_PASSWORD: false,
-    OPENAI_PASSWORD: false,
-    DEEPSEEK_PASSWORD: false,
   })
 
   /*
@@ -86,6 +70,8 @@ function ConfigTab() {
       createConfigFormState(appState)
     )
   }, [
+    appState?.APP_LOCK_ENABLED,
+    appState?.APP_LOCK_PASSCODE,
     appState?.HUG_USERNAME,
     appState?.HUG_PASSWORD,
     appState?.OPENAI_MAIL,
@@ -114,105 +100,11 @@ function ConfigTab() {
     })
   }
 
-  const togglePasswordVisibility = (fieldName) => {
-    setPasswordVisibility((previous) => {
-      return {
-        ...previous,
-        [fieldName]:
-          !previous[fieldName],
-      }
-    })
-  }
-
-  /*
-   * config.jsonから再読み込み
-   */
-  const handleReload = async () => {
-    if (isSaving || isReloading) {
-      return
-    }
-
-    setIsReloading(true)
-
-    try {
-      const configData =
-        await loadConfig()
-
-      if (!configData) {
-        throw new Error(
-          'config.jsonを読み込めませんでした'
-        )
-      }
-
-      const nextForm =
-        createConfigFormState(configData)
-
-      setForm(nextForm)
-
-      /*
-       * Redux / AppStateContextへ反映
-       */
-      updateAppState(nextForm)
-
-      /*
-       * Config.json の内容を AppState に反映した後、
-       * 現在選択中のDB/APIから全テーブルを再取得する。
-       *
-       * ConfigTabではDB種別自体は変更しないため、
-       * forceDatabaseType は指定しない。
-       * AUTO_SWITCHING は初回起動時のみ使用するため false。
-       */
-      console.log(
-        '[ConfigTab] Config.json再読み込み後のDBデータ再取得開始'
-      )
-
-      const reloadSuccess = await loadDataBase({
-        reason: 'config-reloaded',
-        useAutoSwitching: false,
-      })
-
-      if (!reloadSuccess) {
-        console.warn(
-          '[ConfigTab] Config.jsonは再読み込みしましたが、DBデータの再取得に失敗しました'
-        )
-
-        showErrorToast(
-          'Config.jsonは再読み込みしましたが、データの再取得に失敗しました'
-        )
-      } else {
-        console.log(
-          '[ConfigTab] Config.json再読み込み後のDBデータ再取得完了'
-        )
-
-        showSuccessToast(
-          'Config.jsonとデータを再読み込みしました'
-        )
-      }
-
-      console.log(
-        '[ConfigTab] Config.json再読み込み完了:',
-        nextForm
-      )
-    } catch (error) {
-      console.error(
-        '[ConfigTab] Config.json再読み込みエラー:',
-        error
-      )
-
-      showErrorToast(
-        error?.message ||
-        'Config.jsonの再読み込みに失敗しました'
-      )
-    } finally {
-      setIsReloading(false)
-    }
-  }
-
   /*
    * config.jsonへ保存
    */
   const handleSave = async () => {
-    if (isSaving || isReloading) {
+    if (isSaving) {
       return
     }
 
@@ -221,6 +113,11 @@ function ConfigTab() {
     try {
       const configData =
         normalizeConfigData(form)
+      if (configData.APP_LOCK_ENABLED && !configData.APP_LOCK_PASSCODE) {
+        throw new Error('ロックをONにする場合はパスコードを入力してください')
+      }
+
+
 
       console.log(
         '[ConfigTab] Config.json保存内容:',
@@ -307,88 +204,68 @@ function ConfigTab() {
     }
   }
 
-  const isProcessing =
-    isSaving || isReloading
-
   return (
     <div>
       <h3 className="mb-4 border-b border-gray-200 pb-2 text-lg text-gray-700">
-        Config.json設定
+        ID・パスワードの設定
       </h3>
 
-      <div className="mb-6">
-        <div className="mb-2 rounded-lg border border-gray-500 bg-slate-50 p-2">
-          <p className="font-bold">
-            【 ログイン用データ 】
-          </p>
+      <div className="mb-2 rounded-lg border border-gray-500 bg-slate-50 p-2">
+        <p className="font-bold">
+          【 ログイン用データ 】
+        </p>
 
-          <div className="mb-3 flex items-center py-2">
-            <label
-              htmlFor="config-username"
-              className="min-w-[120px] font-medium text-gray-700"
-            >
-              HUGユーザー名:
-            </label>
+        <div className="mb-3 flex items-center py-2">
+          <label
+            htmlFor="config-username"
+            className="min-w-[120px] font-medium text-gray-700"
+          >
+            HUGユーザー名:
+          </label>
 
-            <input
-              type="text"
-              id="config-username"
-              name="HUG_USERNAME"
-              value={form.HUG_USERNAME}
-              onChange={handleInputChange}
-              className="max-w-[200px] flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm transition-all focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-200"
-            />
-          </div>
-
-          <div className="mb-3 flex items-center py-2">
-            <label
-              htmlFor="config-password"
-              className="min-w-[120px] font-medium text-gray-700"
-            >
-              HUGパスワード:
-            </label>
-
-            <div className="relative flex w-full max-w-[200px] flex-1 items-center">
-              <input
-                type={
-                  passwordVisibility.HUG_PASSWORD
-                    ? 'text'
-                    : 'password'
-                }
-                id="config-password"
-                name="HUG_PASSWORD"
-                value={form.HUG_PASSWORD}
-                onChange={handleInputChange}
-                className="w-full flex-1 rounded-md border border-gray-300 px-3 py-2 pr-10 text-sm transition-all focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-200"
-              />
-
-              <button
-                type="button"
-                id="toggle-password"
-                title={
-                  passwordVisibility.HUG_PASSWORD
-                    ? 'パスワードを隠す'
-                    : 'パスワードを表示'
-                }
-                aria-label={
-                  passwordVisibility.HUG_PASSWORD
-                    ? 'HUGパスワードを隠す'
-                    : 'HUGパスワードを表示'
-                }
-                onClick={() => {
-                  togglePasswordVisibility(
-                    PASSWORD_FIELDS.HUG_PASSWORD
-                  )
-                }}
-                className="absolute right-2 cursor-pointer rounded border-none bg-transparent p-1 text-base transition-colors hover:bg-gray-100"
-              >
-                {passwordVisibility.HUG_PASSWORD
-                  ? '🙈'
-                  : '👁️'}
-              </button>
-            </div>
-          </div>
+          <input
+            type="text"
+            id="config-username"
+            name="HUG_USERNAME"
+            value={form.HUG_USERNAME}
+            onChange={handleInputChange}
+            className="max-w-[200px] flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm transition-all focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-200"
+          />
         </div>
+
+        <div className="mb-3 flex items-center py-2">
+          <label
+            htmlFor="config-password"
+            className="min-w-[120px] font-medium text-gray-700"
+          >
+            HUGパスワード:
+          </label>
+
+          <PassWordInput containerClassName="w-full max-w-[200px] flex-1"
+              id="config-password"
+              name="HUG_PASSWORD"
+              value={form.HUG_PASSWORD}
+              onChange={handleInputChange}
+              className="w-full flex-1 rounded-md border border-gray-300 px-3 py-2 pr-10 text-sm transition-all focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-200"
+            />
+        </div>
+      </div>
+
+      <div className="mb-6 rounded-lg border border-gray-300 bg-slate-50 p-4">
+        <p className="mb-3 font-bold">起動時のロック</p>
+        <label className="mb-3 flex items-center gap-2">
+          <input type="checkbox" checked={form.APP_LOCK_ENABLED}
+            onChange={(event) => setForm((previous) => ({ ...previous, APP_LOCK_ENABLED: event.target.checked }))} />
+          パスコードロックを有効にする
+        </label>
+        <label htmlFor="config-lock-passcode" className="mr-3">パスコード:</label>
+        <PassWordInput id="config-lock-passcode" visibilityLabel="パスコード" name="APP_LOCK_PASSCODE"
+          autoComplete="new-password" value={form.APP_LOCK_PASSCODE} onChange={handleInputChange}
+          className="rounded border border-gray-300 px-3 py-2" />
+        <p className="mt-2 text-sm text-gray-600">保存後、次回のアプリ起動から適用されます。</p>
+      </div>
+      <div className="mb-6">
+
 
         <div className="mb-2 flex flex-col gap-2 rounded-lg border border-gray-500 bg-slate-50 p-2">
           <p className="font-bold">
@@ -423,45 +300,13 @@ function ConfigTab() {
                   OpenAIパスワード:
                 </label>
 
-                <div className="relative flex w-full max-w-[200px] flex-1 items-center">
-                  <input
-                    type={
-                      passwordVisibility.OPENAI_PASSWORD
-                        ? 'text'
-                        : 'password'
-                    }
+                <PassWordInput containerClassName="w-full max-w-[200px] flex-1"
                     id="config-openai-password"
                     name="OPENAI_PASSWORD"
                     value={form.OPENAI_PASSWORD}
                     onChange={handleInputChange}
                     className="w-full flex-1 rounded-md border border-gray-300 px-3 py-2 pr-10 text-sm transition-all focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-200"
                   />
-
-                  <button
-                    type="button"
-                    id="toggle-openai-password"
-                    title={
-                      passwordVisibility.OPENAI_PASSWORD
-                        ? 'パスワードを隠す'
-                        : 'パスワードを表示'
-                    }
-                    aria-label={
-                      passwordVisibility.OPENAI_PASSWORD
-                        ? 'OpenAIパスワードを隠す'
-                        : 'OpenAIパスワードを表示'
-                    }
-                    onClick={() => {
-                      togglePasswordVisibility(
-                        PASSWORD_FIELDS.OPENAI_PASSWORD
-                      )
-                    }}
-                    className="absolute right-2 cursor-pointer rounded border-none bg-transparent p-1 text-base transition-colors hover:bg-gray-100"
-                  >
-                    {passwordVisibility.OPENAI_PASSWORD
-                      ? '🙈'
-                      : '👁️'}
-                  </button>
-                </div>
               </div>
             </div>
           </ToggleContainer>
@@ -534,45 +379,13 @@ function ConfigTab() {
                   DeepSeekパスワード:
                 </label>
 
-                <div className="relative flex w-full max-w-[200px] flex-1 items-center">
-                  <input
-                    type={
-                      passwordVisibility.DEEPSEEK_PASSWORD
-                        ? 'text'
-                        : 'password'
-                    }
+                <PassWordInput containerClassName="w-full max-w-[200px] flex-1"
                     id="config-deepseek-password"
                     name="DEEPSEEK_PASSWORD"
                     value={form.DEEPSEEK_PASSWORD}
                     onChange={handleInputChange}
                     className="w-full flex-1 rounded-md border border-gray-300 px-3 py-2 pr-10 text-sm transition-all focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-200"
                   />
-
-                  <button
-                    type="button"
-                    id="toggle-deepseek-password"
-                    title={
-                      passwordVisibility.DEEPSEEK_PASSWORD
-                        ? 'パスワードを隠す'
-                        : 'パスワードを表示'
-                    }
-                    aria-label={
-                      passwordVisibility.DEEPSEEK_PASSWORD
-                        ? 'DeepSeekパスワードを隠す'
-                        : 'DeepSeekパスワードを表示'
-                    }
-                    onClick={() => {
-                      togglePasswordVisibility(
-                        PASSWORD_FIELDS.DEEPSEEK_PASSWORD
-                      )
-                    }}
-                    className="absolute right-2 cursor-pointer rounded border-none bg-transparent p-1 text-base transition-colors hover:bg-gray-100"
-                  >
-                    {passwordVisibility.DEEPSEEK_PASSWORD
-                      ? '🙈'
-                      : '👁️'}
-                  </button>
-                </div>
               </div>
             </div>
           </ToggleContainer>
@@ -661,27 +474,15 @@ function ConfigTab() {
 
       <div className="mb-6 flex gap-2.5">
         <button
-          id="reload-config"
-          type="button"
-          onClick={handleReload}
-          disabled={isProcessing}
-          className="cursor-pointer rounded-md border-none bg-gray-600 px-5 py-2.5 font-medium text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {isReloading
-            ? '再読み込み中...'
-            : 'Config.jsonを再読み込み'}
-        </button>
-
-        <button
           id="save-config"
           type="button"
           onClick={handleSave}
-          disabled={isProcessing}
+          disabled={isSaving}
           className="cursor-pointer rounded-md border-none bg-gradient-to-r from-blue-600 to-blue-700 px-5 py-2.5 font-medium text-white transition-all duration-200 hover:-translate-y-0.5 hover:from-blue-700 hover:to-blue-800 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isSaving
             ? '保存中...'
-            : 'Config.jsonを保存'}
+            : 'ID・パスワードの変更を保存'}
         </button>
       </div>
     </div>

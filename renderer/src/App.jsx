@@ -1,5 +1,7 @@
 import { lazy, Suspense, useEffect } from 'react'
 
+import AppLook from '@/components/ui/AppLook'
+
 import MainWindow from '@/windows/MainWindow'
 import { ToastProvider } from '@/provider/ToastProvider/ToastContext'
 import { runStartupAutoLogin } from '@/components/AutoLoginButton/runStartupAutoLogin.js'
@@ -26,6 +28,10 @@ const WINDOW_COMPONENTS = {
 let didRunStartupAutoLogin = false
 
 export default function App() {
+  return <AppLook><UnlockedApp /></AppLook>
+}
+
+function UnlockedApp() {
   const windowType = resolveWindowType()
   const WindowComponent = WINDOW_COMPONENTS[windowType] ?? MainWindow
 

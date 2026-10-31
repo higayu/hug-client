@@ -446,6 +446,8 @@ var require_electronApi = __commonJS({
           date_str
         }),
         // ---- 設定 ----
+        getAppLockStatus: () => ipcRenderer2.invoke("app-lock-status"),
+        unlockApp: (passcode) => ipcRenderer2.invoke("app-lock-unlock", passcode),
         readConfig: () => ipcRenderer2.invoke("read-config"),
         saveConfig: (data) => ipcRenderer2.invoke("save-config", data),
         readIni: () => ipcRenderer2.invoke("read-ini"),

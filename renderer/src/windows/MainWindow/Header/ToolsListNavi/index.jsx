@@ -19,6 +19,7 @@ import StaffUpdateButton from '@/components/common/Synchronization/StaffUpdateBu
 import ChildrenUpdateButton from '@/components/common/Synchronization/ChildrenUpdateButton';
 import OpenProfessionalSupportButton from './OpenProfessionalSupportButton';
 import AutoLoginButton from '@/components/AutoLoginButton';
+import SleepButton from './SleepButton';
 
 export default function ToolsListNavi({
     className = '',
@@ -229,6 +230,7 @@ export default function ToolsListNavi({
       >
         {({ closeMenu }) => (
           <ul className="m-0 list-none p-0 py-1">
+          <SleepButton onSleep={closeMenu} />
             <li className="m-0 p-0">
               <button
                 id="cash-Clear"

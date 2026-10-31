@@ -22,6 +22,8 @@ const normalizeSelectChildFilterMode = (value) => {
 
 // 初期状態
 const initialState = {
+  APP_LOCK_ENABLED: false,
+  APP_LOCK_PASSCODE: '',
   // 認証情報
   HUG_USERNAME: "",
   HUG_PASSWORD: "",
@@ -268,6 +270,14 @@ const appStateSlice = createSlice({
     // 複数の状態を一度に更新
     updateAppState: (state, action) => {
       const updates = action.payload || {}
+      if (updates.APP_LOCK_ENABLED !== undefined) {
+        state.APP_LOCK_ENABLED = updates.APP_LOCK_ENABLED === true
+      }
+      if (updates.APP_LOCK_PASSCODE !== undefined) {
+        state.APP_LOCK_PASSCODE = String(updates.APP_LOCK_PASSCODE ?? '')
+      }
+
+
 
       // デバッグフラグ
       if (updates.DEBUG_FLG !== undefined) {

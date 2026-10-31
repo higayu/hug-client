@@ -1,3 +1,4 @@
+import PassWordInput from '@/components/ui/PassWordInput'
 import { useEffect, useState } from 'react'
 
 import { useToast } from '@/provider/ToastProvider/ToastContext'
@@ -94,8 +95,8 @@ export default function Login({ staff }) {
 
         <label className="block text-sm font-medium text-gray-700">
           新しいパスワード
-          <input
-            type="password"
+          <PassWordInput containerClassName="w-full"
+
             value={password}
             onChange={(event) => setPassword(event.target.value)}
             minLength={8}
@@ -107,8 +108,8 @@ export default function Login({ staff }) {
 
         <label className="block text-sm font-medium text-gray-700">
           新しいパスワード（確認）
-          <input
-            type="password"
+          <PassWordInput containerClassName="w-full"
+
             value={passwordConfirmation}
             onChange={(event) => setPasswordConfirmation(event.target.value)}
             minLength={8}

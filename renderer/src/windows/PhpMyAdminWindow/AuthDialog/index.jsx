@@ -1,3 +1,4 @@
+import PassWordInput from '@/components/ui/PassWordInput'
 import { useEffect, useState } from 'react'
 
 export default function AuthDialog({ host, onCancel, onLogin }) {
@@ -54,8 +55,8 @@ export default function AuthDialog({ host, onCancel, onLogin }) {
             <span className="mb-1 block text-sm font-medium text-slate-700">
               パスワード
             </span>
-            <input
-              type="password"
+            <PassWordInput containerClassName="w-full"
+
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               autoComplete="current-password"
