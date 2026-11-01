@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from "react";
 import { useAppState } from "@/AppStateContext";
-import { useToast } from '@/provider/ToastProvider/ToastContext'
+import { useToast } from '@/utils/notifications.jsx'
 import PromptPanel from "../common/PromptPanel";
 import AccountInfoPanel from "@/components/ui/AccountInfoPanel";
 import { AI_PROMPT_COMPONENT_MAP } from "./PromptBox"

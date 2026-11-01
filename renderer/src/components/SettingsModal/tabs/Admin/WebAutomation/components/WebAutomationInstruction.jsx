@@ -2,7 +2,7 @@ import { Download } from 'lucide-react'
 import { saveAs } from 'file-saver'
 
 import CopyButton from '@/components/ui/CopyButton'
-import { useToast } from '@/provider/ToastProvider/ToastContext.jsx'
+import { useToast } from '@/utils/notifications.jsx'
 
 import FULL_INSTRUCTION_TEXT from '@/assets/md/webAuto.md?raw'
 

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { ArrowPathIcon } from '@heroicons/react/24/outline'
 
 import { useAppState } from '@/AppStateContext'
-import { useToast } from '@/provider/ToastProvider/ToastContext'
+import { useToast } from '@/utils/notifications.jsx'
 
 import PersonalRecordSyncRunner from './PersonalRecordSyncRunner'
 import useIndependentProfessionalSupportSync from './useIndependentProfessionalSupportSync'

@@ -5,7 +5,7 @@ import { useCallback } from 'react'
 import { useSelector } from 'react-redux'
 import { selectActiveSpaceId, selectSpace } from '@/store/slices/chilledspaceSlice.js'
 import { useAppState } from '@/AppStateContext'
-import { useToast } from '@/provider/ToastProvider/ToastContext'
+import { useToast } from '@/utils/notifications.jsx'
 import { getActiveWebview } from '@/utils/webview/webviewState.js'
 
 export function useHugActions(spaceId) {

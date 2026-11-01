@@ -3,7 +3,7 @@ import { lazy, Suspense, useEffect } from 'react'
 import AppLook from '@/components/ui/AppLook'
 
 import MainWindow from '@/windows/MainWindow'
-import { ToastProvider } from '@/provider/ToastProvider/ToastContext'
+import AppToaster from '@/components/common/AppToaster'
 import { runStartupAutoLogin } from '@/components/AutoLoginButton/runStartupAutoLogin.js'
 
 const ProfessionalSupportWindow = lazy(
@@ -45,10 +45,11 @@ function UnlockedApp() {
   }, [windowType])
 
   return (
-    <ToastProvider>
+    <>
+      <AppToaster />
       <Suspense fallback={<div className="p-4">画面を読み込んでいます...</div>}>
         <WindowComponent />
       </Suspense>
-    </ToastProvider>
+    </>
   )
 }

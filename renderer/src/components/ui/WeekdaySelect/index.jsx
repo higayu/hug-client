@@ -3,7 +3,7 @@
 import React from "react";
 
 import { useAppState } from "@/AppStateContext";
-import { useToast } from "@/provider/ToastProvider/ToastContext.jsx";
+import { useToast } from "@/utils/notifications.jsx";
 
 import {
   DAY_OF_WEEK_MASTER,

@@ -1,7 +1,7 @@
 import PassWordInput from '@/components/ui/PassWordInput'
 import { useEffect, useState } from 'react'
 
-import { useToast } from '@/provider/ToastProvider/ToastContext'
+import { useToast } from '@/utils/notifications.jsx'
 import { useDataBase } from '@/hooks/useDataBase'
 
 export default function Login({ staff }) {

@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 
 import { useAppState } from "@/AppStateContext";
-import { useToast } from "@/provider/ToastProvider/ToastContext";
+import { useToast } from "@/utils/notifications.jsx";
 
 import { useDispatch, useSelector } from "react-redux";
 import { selectSpaceChildId, selectSpaceChildName } from "@/store/workSpaceSelectors.js";

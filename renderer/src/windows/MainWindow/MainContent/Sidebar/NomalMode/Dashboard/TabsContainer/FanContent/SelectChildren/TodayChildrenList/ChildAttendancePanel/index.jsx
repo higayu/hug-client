@@ -7,7 +7,7 @@ import {
   clickExitButton,
   isAttendanceDataLoaded,
 } from '@/components/common/hug_function'
-import { useToast } from '@/provider/ToastProvider/ToastContext'
+import { useToast } from '@/utils/notifications.jsx'
 import AttendanceActionSection from './AttendanceActionSection'
 import CheckPanels from './CheckPanels'
 

@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux'
 import { ArrowPathIcon } from '@heroicons/react/24/outline'
 
 import { useAppState } from '@/AppStateContext'
-import { useToast } from '@/provider/ToastProvider/ToastContext'
+import { useToast } from '@/utils/notifications.jsx'
 import { selectFacilityId } from '@/store/slices/appStateSlice'
 
 import { executeFlowV2 } from '@/components/WebAutomationV2'

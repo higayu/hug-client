@@ -6,7 +6,7 @@ import React, {
   useId,
 } from "react";
 
-import { useToast } from "@/provider/ToastProvider/ToastContext.jsx";
+import { useToast } from "@/utils/notifications.jsx";
 import { useSelector } from "react-redux";
 import {
   selectSpaceChildId,

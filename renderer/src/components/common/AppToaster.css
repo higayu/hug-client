@@ -1,0 +1,9 @@
+[data-sonner-toaster].hug-toaster { max-width: calc(100vw - 40px); }
+.hug-toaster [data-sonner-toast] { font-size: 14px; padding: 12px 14px; border-radius: 8px; overflow-wrap: anywhere; }
+.hug-toaster [data-content] { min-width: 0; flex: 1; }
+.hug-toaster [data-title] { font-weight: 700; white-space: pre-line; }
+.hug-toaster [data-description] { color: inherit; white-space: pre-line; }
+.hug-toast-message { margin-top: 4px; font-weight: 500; }
+.hug-toast-details { margin-top: 8px; padding-top: 8px; max-height: 192px; overflow: auto; border-top: 1px solid rgb(255 255 255 / 30%); font-size: 12px; opacity: .9; }
+.hug-toaster [data-close-button] { color: inherit; background: inherit; border-color: currentColor; }
+@media print { [data-sonner-toaster].hug-toaster { display: none !important; } }

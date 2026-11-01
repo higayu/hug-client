@@ -5,7 +5,7 @@ import { loadAllReload } from '@/utils/config/reloadSettings.js'
 import { useUpdateUI } from './useUpdateUI.js'
 // buttonVisibilityManager は削除されました（機能が空のため）
 import { getActiveWebview } from '@/utils/webview/webviewState.js'
-import { useToast } from '@/provider/ToastProvider/ToastContext'
+import { useToast } from '@/utils/notifications.jsx'
 import { confirmDialog } from '@/utils/dialog/confirmDialog.js'
 
 function toBooleanFlag(value, defaultValue = true) {

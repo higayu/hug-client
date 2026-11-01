@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 
 import { useAppState } from '@/AppStateContext'
 import { usePrompt } from '@/hooks/usePrompt'
-import { useToast } from '@/provider/ToastProvider/ToastContext'
+import { useToast } from '@/utils/notifications.jsx'
 
 import {
   DEFAULT_PROMPTS,

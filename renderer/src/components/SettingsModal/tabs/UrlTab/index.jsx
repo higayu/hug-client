@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 
 import { useAppState } from '@/AppStateContext'
-import { useToast } from '@/provider/ToastProvider/ToastContext'
+import { useToast } from '@/utils/notifications.jsx'
 
 const LARAVEL_URL_OPTIONS = [
   'https://dev-hug-banso.we-labo.com',

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { MoonIcon } from '@heroicons/react/24/outline'
 import { useAppState } from '@/AppStateContext'
 import { useAppLock } from '@/components/ui/AppLook'
-import { useToast } from '@/provider/ToastProvider/ToastContext'
+import { useToast } from '@/utils/notifications.jsx'
 
 export default function SleepButton({ onSleep }) {
   const { appState } = useAppState()

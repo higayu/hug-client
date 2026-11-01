@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, useCallback } from 'react'  // ← useCal
 import { useSelector } from 'react-redux'
 
 import { useAppState } from '@/AppStateContext'
-import { useToast } from '@/provider/ToastProvider/ToastContext'
+import { useToast } from '@/utils/notifications.jsx'
 import { useDataBase } from '@/hooks/useDataBase'
 import { selectAuthenticatedStaffId, selectLaravelAuth } from '@/store/slices/authSlice'
 

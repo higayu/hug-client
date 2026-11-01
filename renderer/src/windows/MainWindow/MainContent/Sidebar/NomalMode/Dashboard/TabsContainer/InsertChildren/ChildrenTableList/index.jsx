@@ -1,7 +1,7 @@
 // renderer/src/components/Sidebar/Tools/InsertManageChildren/ChildrenTableList/index.jsx
 
 import React, { useState, useEffect, useMemo } from "react";
-import { useToast } from '@/provider/ToastProvider/ToastContext'
+import { useToast } from '@/utils/notifications.jsx'
 import { useAppState } from "@/AppStateContext";
 import ConfirmModal from "./ConfirmModal";
 import { insertManager } from "./insertManager";

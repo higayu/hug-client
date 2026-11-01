@@ -8,7 +8,7 @@ import { useSelector } from 'react-redux'
 import { useAppState } from '@/AppStateContext'
 import { useDataBase } from '@/hooks/useDataBase'
 import { useStaff } from './useStaff'
-import { useToast } from '@/provider/ToastProvider/ToastContext'
+import { useToast } from '@/utils/notifications.jsx'
 import { selectLaravelAuth } from '@/store/slices/authSlice'
 import { useSettingsRoleAccess } from '../../useSettingsRoleAccess'
 

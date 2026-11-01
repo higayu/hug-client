@@ -2,7 +2,7 @@ import { useCallback, useRef, useState } from "react";
 import { useAppState } from "@/AppStateContext";
 import { useSelector } from "react-redux";
 import { selectSpaceChildId } from "@/store/workSpaceSelectors.js";
-import { useToast } from '@/provider/ToastProvider/ToastContext'
+import { useToast } from '@/utils/notifications.jsx'
 import { fetchPersonalRecordV2 } from "../../fetchPersonalRecordV2";
 import { postServiceRecordsToLocalApi } from "./postServiceRecordsToLocalApi";
 import { useDataBase } from "@/hooks/useDataBase";

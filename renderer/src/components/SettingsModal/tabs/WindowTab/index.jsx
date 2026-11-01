@@ -4,7 +4,7 @@ import {
 } from 'react'
 
 import { useAppState } from '@/AppStateContext'
-import { useToast } from '@/provider/ToastProvider/ToastContext'
+import { useToast } from '@/utils/notifications.jsx'
 
 const clampInteger = (
   value,

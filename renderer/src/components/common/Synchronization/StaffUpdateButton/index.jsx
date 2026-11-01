@@ -6,7 +6,7 @@ import {
 
 import {
   useToast,
-} from '@/provider/ToastProvider/ToastContext.jsx';
+} from '@/utils/notifications.jsx';
 
 import {
   selectFacilityId,

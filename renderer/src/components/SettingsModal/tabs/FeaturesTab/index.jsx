@@ -5,7 +5,7 @@ import {
 } from 'react'
 
 import { useAppState } from '@/AppStateContext'
-import { useToast } from '@/provider/ToastProvider/ToastContext'
+import { useToast } from '@/utils/notifications.jsx'
 import { getActiveWebview } from '@/utils/webview/webviewState.js'
 
 const createFormState = (iniState) => {

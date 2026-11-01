@@ -7,7 +7,7 @@ import {
   TrashIcon,
 } from '@heroicons/react/24/outline';
 
-import { useToast } from '@/provider/ToastProvider/ToastContext'
+import { useToast } from '@/utils/notifications.jsx'
 import { useAppState } from '@/AppStateContext';
 import { useTabs } from '@/hooks/useTabs';
 import { useHugActions } from '@/hooks/useHugActions';
