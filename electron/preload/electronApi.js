@@ -89,6 +89,10 @@ function createElectronApi(ipcRenderer, isDebugMode) {
         params,
       ),
 
+    /** 管理者・開発者モード用。下書き以外はMain側で拒否する。 */
+    webAutomationV2_getDraftTestFlowBundle: (params = {}) =>
+      ipcRenderer.invoke("laravel:web-automation-v2:flow-bundle:draft-test", params),
+
     /** executeFlowV2() の実行開始ログを作成する。 */
     webAutomationV2_executionLogStart: (data = {}) =>
       ipcRenderer.invoke(

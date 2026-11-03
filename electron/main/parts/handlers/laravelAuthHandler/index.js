@@ -36,6 +36,7 @@ const IPC_CHANNELS = [
 
   // Web自動化 V2
   "laravel:web-automation-v2:flow-bundle:get",
+  "laravel:web-automation-v2:flow-bundle:draft-test",
   "laravel:web-automation-v2:execution-log:start",
   "laravel:web-automation-v2:execution-log:finish",
 
@@ -289,6 +290,10 @@ function registerLaravelAuthHandlers(
   ipcMain.handle(
     "laravel:web-automation-v2:flow-bundle:get",
     webAutomationV2.getFlowBundleHandler
+  );
+  ipcMain.handle(
+    "laravel:web-automation-v2:flow-bundle:draft-test",
+    webAutomationV2.getDraftTestFlowBundleHandler
   );
 
   ipcMain.handle(

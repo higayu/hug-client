@@ -86,6 +86,30 @@ async function loadPublishedFlowBundle({ appKey, flowKey }) {
   return { flow, files };
 }
 
+async function loadDraftFlowBundle({ appKey, flowKey }) {
+  const api = getApi();
+  if (typeof api.webAutomationV2_getDraftTestFlowBundle !== "function") {
+    throw new Error("下書きテスト用preload APIがありません");
+  }
+  const response = await api.webAutomationV2_getDraftTestFlowBundle({ appKey, flowKey });
+  if (!response || response.ok === false || response.success === false) {
+    throw new Error(response?.error || response?.message || "下書きの取得に失敗しました");
+  }
+  const meta = response.meta || response.data?.meta || {};
+  if (meta.status !== "draft" || !Number.isInteger(Number(meta.revision_id)) || Number(meta.revision_id) <= 0) {
+    throw new Error("下書きリビジョンではありません。公開版の代替実行を拒否しました");
+  }
+  const flow = response.flow || response.data?.flow;
+  const files = response.files || response.data?.files;
+  if (!flow || !Array.isArray(files) || files.length === 0) {
+    throw new Error("下書きのFlowまたはJSファイルがありません");
+  }
+  if (Number(flow.engine_version || 1) > EXECUTOR_ENGINE_VERSION) {
+    throw new Error("Executorの更新が必要です");
+  }
+  return { flow, files, meta };
+}
+
 /**
  * debug_log_mode is stored on each published web_automation_flows_v2 row.
  * Existing DB records without this column default to failed_only.
@@ -175,12 +199,15 @@ export async function executeFlowV2(
   let files;
   let debugLogMode = "failed_only";
   let logStarted = false;
+  const draftTest = options.revisionMode === "draft";
 
   console.info("[WebAutomationV2] 実行開始", { flowKey, executionUuid });
   try {
     api = getApi();
     stage = "load-flow";
-    ({ flow, files } = await loadPublishedFlowBundle({ appKey, flowKey }));
+    ({ flow, files } = draftTest
+      ? await loadDraftFlowBundle({ appKey, flowKey })
+      : await loadPublishedFlowBundle({ appKey, flowKey }));
     debugLogMode = getDebugLogMode(flow);
     stage = "prepare-runtime";
     const config = parseJson(flow.config_json, {});
@@ -190,6 +217,8 @@ export async function executeFlowV2(
     const helpers = createWebAutomationV2Helpers({ defaultTimeoutMs: timeoutMs });
 
     stage = "execution-log-start";
+    // テスト実行のログを通常公開版と混同させない。
+    console.info("[WebAutomationV2] 実行モード", draftTest ? "draft-test" : "published");
     const startLog = await writeExecutionLog(
       api,
       "webAutomationV2_executionLogStart",
@@ -202,6 +231,7 @@ export async function executeFlowV2(
         entryFile: flow.entry_file,
         entryExport: flow.entry_export,
         input,
+        ...(draftTest ? { executionMode: "draft-test" } : {}),
       }
     );
     logStarted = startLog.ok;
