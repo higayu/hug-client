@@ -127,7 +127,7 @@ async function getFlowBundle(payload = {}) {
     throw new Error("WebAutomation V2 Filesのレスポンス形式が正しくありません。");
   }
 
-  return {
+  return validateRevisionBundle({
     success: true,
     ok: true,
     connected: true,
@@ -139,6 +139,7 @@ async function getFlowBundle(payload = {}) {
       files,
     },
     meta: {
+      ...(data?.meta ?? {}),
       ...(result?.meta ?? {}),
       authenticated: true,
       appKey,
@@ -148,7 +149,64 @@ async function getFlowBundle(payload = {}) {
       reauthenticated: result?.meta?.reauthenticated ?? false,
     },
     error: null,
+  }, "published");
+}
+
+// 公開版・下書き版ともにスナップショットの整合性を検証する。
+function validateRevisionBundle(bundle, expectedStatus) {
+  const meta = bundle?.meta ?? {};
+  const flow = bundle?.flow;
+  const files = bundle?.files;
+  const status = String(meta.status ?? meta.revision_status ?? "").toLowerCase();
+  const revisionId = Number(meta.revision_id ?? meta.revisionId);
+  if (status !== expectedStatus || !Number.isSafeInteger(revisionId) || revisionId <= 0) {
+    throw new Error(`${expectedStatus}リビジョンを確認できません。取得したJSは実行しません。`);
+  }
+  if (!flow || !Array.isArray(files) || files.length === 0) {
+    throw new Error("リビジョンのフローまたはJSファイルがありません。");
+  }
+  const active = files.filter(f => f && f.is_active !== false && f.is_active !== 0 && f.is_active !== "0");
+  if (active.length === 0 || active.some(f => typeof f.source_text !== "string" || !f.source_text.trim())) {
+    throw new Error("有効なJSファイルが存在しないか、内容が空です。");
+  }
+  const entry = String(flow.entry_file ?? flow.entryFile ?? "").trim();
+  if (!entry || !active.some(f => String(f.file_path ?? f.filePath ?? "") === entry)) {
+    throw new Error("公開・下書きリビジョンのエントリーファイルが見つかりません。");
+  }
+  return bundle;
+}
+
+/** 管理者専用。下書きがなければ公開版へフォールバックせず失敗させる。 */
+async function getDraftTestFlowBundle(payload = {}) {
+  const normalized = normalizeObject(payload);
+  const flowKey = normalizeFlowKey(normalized.flowKey ?? normalized.flow_key);
+  const appKey = normalizeAppKey(normalized.appKey ?? normalized.app_key);
+  const engineVersion = Number(normalized.engineVersion ?? normalized.engine_version ?? EXECUTOR_ENGINE_VERSION);
+  const result = await executeAuthenticatedOperation(
+    () => laravelApiClient.get(`/web-automation-v2/flows/${encodeURIComponent(flowKey)}`, {
+      params: {
+        app_key: appKey,
+        engine_version: Number.isInteger(engineVersion) && engineVersion > 0 ? engineVersion : EXECUTOR_ENGINE_VERSION,
+        developer_mode: 1,
+      },
+    }),
+    "下書きリビジョンの取得に失敗しました。"
+  );
+  if (result?.success === false) return result;
+  const data = unwrapData(result);
+  const bundle = {
+    success: true, ok: true, connected: true,
+    flow: data?.flow, files: data?.files,
+    data: {flow: data?.flow, files: data?.files},
+    meta: {...(data?.meta ?? {}), ...(result?.meta ?? {}), authenticated: true, appKey, flowKey, engineVersion},
+    error: null,
   };
+  return validateRevisionBundle(bundle, "draft");
+}
+
+async function getDraftTestFlowBundleHandler(_event, payload = {}) {
+  try { return await getDraftTestFlowBundle(payload); }
+  catch (error) { return formatError(error, "下書きテスト用JSの取得に失敗しました。"); }
 }
 
 async function startExecutionLog(payload = {}) {
@@ -392,36 +450,8 @@ async function adminGetFlow(flowIdOrKey, payload = {}) {
  *
  * PATCH /api/web-automation-v2/admin/flows/{id}
  */
-async function adminUpdateFlow(flowId, payload = {}) {
-  const id = normalizeAdminFlowId(flowId);
-  const normalized = normalizeObject(payload);
-
-  const result = await executeAuthenticatedOperation(
-    () =>
-      laravelApiClient.patch(
-        `/web-automation-v2/admin/flows/${id}`,
-        normalized
-      ),
-    "WebAutomation V2管理用Flowの保存に失敗しました。"
-  );
-
-  if (result?.success === false) {
-    return result;
-  }
-
-  const data = unwrapData(result);
-
-  return {
-    success: true,
-    ok: true,
-    data,
-    flow: data,
-    meta: {
-      ...(result?.meta ?? {}),
-      authenticated: true,
-    },
-    error: null,
-  };
+async function adminUpdateFlow(_flowId, _payload = {}) {
+  throw new Error("旧管理APIからの直接更新は禁止されています。Filamentで下書きを編集し、公開してください。");
 }
 
 /**
@@ -575,6 +605,8 @@ async function executionLogFinishHandler(_event, payload = {}) {
 
 module.exports = {
   getFlowBundle,
+  getDraftTestFlowBundle,
+  getDraftTestFlowBundleHandler,
   startExecutionLog,
   finishExecutionLog,
 

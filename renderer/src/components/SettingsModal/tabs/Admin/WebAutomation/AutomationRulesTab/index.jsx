@@ -1,3 +1,5 @@
+import { executeFlowV2 } from '@/components/WebAutomationV2'
+import { useSettingsRoleAccess } from '@/components/SettingsModal/useSettingsRoleAccess'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import { useToast } from '@/utils/notifications.jsx'
@@ -121,6 +123,31 @@ function getApi(...names) {
 
 export default function AutomationRulesTab() {
   const { showSuccessToast, showErrorToast } = useToast()
+  const { isAdmin } = useSettingsRoleAccess()
+  const [developerTestMode, setDeveloperTestMode] = useState(false)
+  const [testingDraft, setTestingDraft] = useState(false)
+  const [draftInput, setDraftInput] = useState('{}')
+  const runDraftTest = async () => {
+    if (!isAdmin || !developerTestMode || !selectedFlow?.flow_key || testingDraft) return
+    let input
+    try {
+      input = JSON.parse(draftInput)
+      if (!input || typeof input !== 'object' || Array.isArray(input)) throw new Error('入力はJSONオブジェクトにしてください')
+    } catch (e) {
+      showErrorToast(`テスト入力JSONが不正です: ${e.message}`)
+      return
+    }
+    if (!window.confirm(`下書き「${selectedFlow.flow_key}」を実行します。実際のWebView操作や外部送信が発生する可能性があります。続行しますか？`)) return
+    setTestingDraft(true)
+    try {
+      await executeFlowV2(selectedFlow.flow_key, input, { appKey, revisionMode: 'draft' })
+      showSuccessToast('下書きのテスト実行が完了しました')
+    } catch (e) {
+      showErrorToast(e?.message || '下書きテストに失敗しました')
+    } finally {
+      setTestingDraft(false)
+    }
+  }
 
   const [appKey, setAppKey] = useState(DEFAULT_APP_KEY)
   const [activeTab, setActiveTab] = useState('flows')
@@ -365,6 +392,8 @@ export default function AutomationRulesTab() {
     deletedMemoIds.length > 0
 
   const save = async () => {
+    showErrorToast('旧方式の直接保存は廃止しました。Filamentのリビジョン下書き編集を使用してください。')
+    return
     if (!selectedFlow || saving) return
 
     const api = getApi(
@@ -556,13 +585,32 @@ export default function AutomationRulesTab() {
                 <LogsPanel logs={logs} onReload={loadLogs} />
               )}
 
+              {isAdmin && (
+                <div className="mt-4 rounded-lg border border-amber-300 bg-amber-50 p-3 space-y-3">
+                  <label className="flex items-center gap-2 text-sm font-semibold">
+                    <input type="checkbox" checked={developerTestMode} onChange={(e) => setDeveloperTestMode(e.target.checked)} />
+                    開発者モード：下書きテスト実行
+                  </label>
+                  {developerTestMode && (
+                    <>
+                      <p className="text-xs text-amber-900">公開版には反映しません。ただし、下書きJSによる実際の操作・送信は発生します。</p>
+                      <label className="block text-sm">テスト入力 (JSON)</label>
+                      <textarea className="w-full rounded border p-2 font-mono text-xs" rows={3} value={draftInput} onChange={(e) => setDraftInput(e.target.value)} />
+                      <button type="button" disabled={testingDraft || hasChanges} onClick={runDraftTest} className="rounded bg-amber-700 px-4 py-2 text-sm text-white disabled:opacity-50">
+                        {testingDraft ? 'テスト実行中...' : '下書きJSをテスト実行'}
+                      </button>
+                      {hasChanges && <p className="text-xs text-red-700">未保存の画面変更はテストに反映されません。</p>}
+                    </>
+                  )}
+                </div>
+              )}
               {activeTab !== 'logs' && (
                 <div className="mt-5 flex flex-wrap items-center gap-2 border-t border-gray-200 pt-4">
                   <button type="button" onClick={reset} disabled={!hasChanges || saving} className="rounded-md bg-gray-600 px-5 py-2.5 font-medium text-white disabled:opacity-50">
                     変更を戻す
                   </button>
-                  <button type="button" onClick={save} disabled={!hasChanges || saving} className="rounded-md bg-blue-600 px-5 py-2.5 font-medium text-white hover:bg-blue-700 disabled:opacity-50">
-                    {saving ? '保存中...' : '保存'}
+                  <button type="button" onClick={save} disabled={true} className="rounded-md bg-blue-600 px-5 py-2.5 font-medium text-white hover:bg-blue-700 disabled:opacity-50">
+                    '旧方式の保存は停止中'
                   </button>
                   {hasChanges && <span className="text-sm text-amber-700">未保存の変更があります</span>}
                 </div>
