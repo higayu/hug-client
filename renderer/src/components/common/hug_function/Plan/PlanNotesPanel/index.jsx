@@ -1,19 +1,23 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import PersonSupportPlan from "../PersonSupportPlan";
 import ProfessionalPlan from "../ProfessionalPlan";
+import { fetchPersonSupportPlan } from "../PersonSupportPlan/function";
+import { fetchProfessionalPlan } from "../ProfessionalPlan/fetchProfessionalPlan";
+
+// React StrictMode の effect 再実行や同一児童の複数パネル表示での重複取得を防ぐ。
+const pendingAutoFetches = new Map();
 
 /**
- * 保存済み計画の本文表示と取得・更新ボタンを一体化したパネル。
- *
- * type="individual"   : 個別支援計画（notes）
- * type="professional" : 専門的支援計画（notes2）
- *
- * 本文は親から notes として渡し、ボタンは既存の取得・DB更新処理をそのまま使用。
+ * notes が未登録のときだけ、初期表示・児童切替時に取得する。
+ * 親側のデータ読み込み完了後に notesLoaded=true を渡すこと。
+ * notes=null/undefined は未読込扱いにして自動取得しない。
  */
 export default function PlanNotesPanel({
   childId,
   type = "individual",
-  notes = "",
+  notes,
+  notesLoaded = true,
+  autoFetchIfEmpty = true,
   emptyText = "メモがありません",
   className = "",
   onUpdated,
@@ -22,6 +26,40 @@ export default function PlanNotesPanel({
   loadDataBase,
 }) {
   const individual = type === "individual";
+  const attemptedRef = useRef(new Set());
+  const latestRef = useRef({ onUpdated, loadDataBase });
+  latestRef.current = { onUpdated, loadDataBase };
+
+  useEffect(() => {
+    if (!autoFetchIfEmpty || !notesLoaded || notes == null || !childId || !facilityId) return;
+    if (String(notes).trim() !== "") return;
+
+    const key = `${type}:${facilityId}:${childId}`;
+    if (attemptedRef.current.has(key)) return;
+    attemptedRef.current.add(key);
+
+    let promise = pendingAutoFetches.get(key);
+    if (!promise) {
+      promise = individual
+        ? fetchPersonSupportPlan({ facilityId, selectChild: childId, loadDataBase: latestRef.current.loadDataBase })
+        : fetchProfessionalPlan({ facilityId, childId, loadDataBase: latestRef.current.loadDataBase });
+      pendingAutoFetches.set(key, promise);
+      promise.finally(() => {
+        if (pendingAutoFetches.get(key) === promise) pendingAutoFetches.delete(key);
+      }).catch(() => {});
+    }
+
+    let active = true;
+    promise.then((markdown) => {
+      if (!active) return;
+      latestRef.current.onUpdated?.(markdown);
+      window.showInfoToast?.(`${individual ? "個別支援計画" : "専門的支援計画"}を自動取得しました`, 2500);
+    }).catch((error) => {
+      console.error(`[PlanNotesPanel] ${key} auto fetch failed`, error);
+      if (active) window.showInfoToast?.(`計画の自動取得に失敗しました: ${error.message}`, 4000);
+    });
+    return () => { active = false; };
+  }, [autoFetchIfEmpty, notesLoaded, notes, childId, facilityId, type, individual]);
 
   return (
     <section className={`w-full min-w-0 ${className}`}>
