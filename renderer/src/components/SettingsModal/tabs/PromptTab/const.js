@@ -20,9 +20,9 @@ export const PROMPT_DEFINITIONS = [
     label: '専門的支援2',
   },
   {
-    key: 'F-SOAIP',
+    key: 'F_SOAIP',
     itemId: 50,
-    label: 'F-SOAIP',
+    label: 'F_SOAIP',
   },
 ]
 
@@ -39,7 +39,7 @@ export const DEFAULT_PROMPTS = {
   professional2:
     '抽出結果をまとめて文章を作成して',
 
-  'F-SOAIP' : `あなたは、児童支援記録の校正・整理を行うアシスタントです。
+  F_SOAIP : `あなたは、児童支援記録の校正・整理を行うアシスタントです。
 
 入力された支援記録の内容を整理・校正し、以下の【S】【O】【A】【P】形式（SOAP形式）で、日本語で出力してください。
 
