@@ -1,6 +1,4 @@
 import { getActiveAiPrompts as getFromLaravel } from "./parts/laravel";
-import { getActiveAiPrompts as getFromMariadb } from "./parts/mariadb";
-import { getActiveAiPrompts as getFromSqlite } from "./parts/sqlite";
 
 const PROMPT_KEY_BY_ITEM_ID = {
   1: "personalRecord",
@@ -29,6 +27,8 @@ export function normalizeActiveAiPrompts(rows) {
       content: typeof row.content === "string" ? row.content : "",
       promptId: row.prompt_id,
       staffId: row.staff_id,
+      companyId: row.company_id ?? null,
+      scope: row.company_id != null && row.staff_id == null ? "company" : row.staff_id != null && row.company_id == null ? "personal" : "unknown",
       itemId: row.item_id,
       isActive: Boolean(row.is_active),
       updatedBy: row.updated_by,
@@ -51,8 +51,6 @@ export async function getActiveAiPrompts({
 
   const getter = {
     laravel: getFromLaravel,
-    mariadb: getFromMariadb,
-    sqlite: getFromSqlite,
   }[normalizedDatabaseType];
 
   if (!getter) return null;

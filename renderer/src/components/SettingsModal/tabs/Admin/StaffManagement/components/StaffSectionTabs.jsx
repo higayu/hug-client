@@ -10,10 +10,12 @@ export default function StaffSectionTabs({
           key={section.id}
           type="button"
           onClick={() => onChangeSection(section.id)}
-          className={`border-b-2 px-4 py-2 text-sm font-medium ${
+          aria-selected={activeSectionId === section.id}
+          role="tab"
+          className={`rounded-t-md border-b-2 px-4 py-2 text-sm font-medium transition-colors ${
             activeSectionId === section.id
-              ? 'border-blue-600 text-blue-600'
-              : 'border-transparent text-gray-600 hover:text-gray-900'
+              ? 'border-blue-800 bg-blue-800 text-white shadow-sm'
+              : 'border-transparent text-gray-600 hover:bg-blue-50 hover:text-blue-800'
           }`}
         >
           {section.label}

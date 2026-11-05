@@ -250,10 +250,10 @@ export default function SettingsModal({
                     aria-controls={`settings-panel-${tab.id}`}
                     tabIndex={isActive ? 0 : -1}
                     disabled={isLoading}
-                    className={`shrink-0 cursor-pointer border-none border-b-[3px] bg-transparent px-5 py-3 text-sm font-medium transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-60 ${
+                    className={`shrink-0 cursor-pointer rounded-t-md border-b-[3px] px-5 py-3 text-sm font-medium transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-60 ${
                       isActive
-                        ? 'border-b-blue-600 bg-gray-100 text-blue-600'
-                        : 'border-transparent text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                        ? 'border-blue-800 bg-blue-800 text-white shadow-sm'
+                        : 'border-transparent text-gray-600 hover:bg-blue-50 hover:text-blue-800'
                     }`}
                     onClick={() => {
                       setActiveTab(tab.id)

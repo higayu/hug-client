@@ -1,6 +1,4 @@
 import { upsertAiPrompt as upsertToLaravel } from "./parts/laravel";
-import { upsertAiPrompt as upsertToMariadb } from "./parts/mariadb";
-import { upsertAiPrompt as upsertToSqlite } from "./parts/sqlite";
 
 /**
  * 使用中のDBに応じてAIプロンプトを登録・更新する。
@@ -10,8 +8,6 @@ export async function upsertAiPrompt({ databaseType, ...params }) {
 
   const upsert = {
     laravel: upsertToLaravel,
-    mariadb: upsertToMariadb,
-    sqlite: upsertToSqlite,
   }[normalizedDatabaseType];
 
   return upsert ? upsert(params) : null;

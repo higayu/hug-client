@@ -1,4 +1,9 @@
+
 import { useCallback, useEffect, useState } from 'react'
+import { useSelector } from 'react-redux'
+import { selectLaravelAuth } from '@/store/slices/authSlice'
+import { selectStaffs } from '@/store/slices/databaseSlice'
+import { selectCurrentCompanyRole } from '@/store/roleSelectors'
 
 import { useAppState } from '@/AppStateContext'
 import { usePrompt } from '@/hooks/usePrompt'
@@ -11,6 +16,113 @@ import {
 
 function PromptTab() {
   const { DATABASE_TYPE, STAFF_ID, updateAppState } = useAppState()
+
+  const auth = useSelector(selectLaravelAuth)
+  const staffRows = useSelector(selectStaffs)
+
+  const selectedStaff = staffRows.find(
+    (row) => String(row.id) === String(STAFF_ID)
+  )
+
+  const authStaffId = auth?.user?.staff_id ?? auth?.user?.id
+  const authCompanyId = auth?.user?.company_id
+  const selectedCompanyId = selectedStaff?.company_id
+
+  const companyRole = useSelector((state) =>
+    authCompanyId == null
+      ? null
+      : selectCurrentCompanyRole(state, authCompanyId)
+  )
+
+  // ログイン職員の会社別ロールを優先する
+  const roleCode =
+    typeof companyRole === 'string'
+      ? companyRole
+      : companyRole?.role_code ?? null
+
+  const isGlobalAdmin =
+    auth?.user?.role_code === 'admin' ||
+    roleCode === 'admin'
+
+  // 会社共有プロンプトを編集できるロール
+  const editableCompanyRoles = [
+    'admin',
+    'mentor',
+    'franchise_mentor',
+  ]
+
+  const isCompanyManager =
+    editableCompanyRoles.includes(roleCode)
+
+  const expectedScope =
+    Number(selectedStaff?.use_my_prompt) === 1
+      ? 'personal'
+      : 'company'
+
+  const expectedCompanyId =
+    selectedCompanyId ?? authCompanyId
+
+  const getScope = (record) => {
+    if (record?.companyId != null) return 'company'
+    if (record?.staffId != null) return 'personal'
+
+    if (record?.scope === 'company' || record?.scope === 'personal') {
+      return record.scope
+    }
+
+    return expectedScope
+  }
+
+  const isPersonalPrompt =
+    expectedScope === 'personal'
+
+  const canEditCompanyPrompt = (record) => {
+    if (!auth?.authenticated) return false
+    if (authStaffId == null) return false
+    if (!isGlobalAdmin && !isCompanyManager) return false
+
+    const targetCompanyId =
+      record?.companyId ?? expectedCompanyId
+
+    if (targetCompanyId == null) return false
+
+    // 全体adminは会社を横断できる
+    if (isGlobalAdmin) return true
+
+    // 管理者は所属会社の共有プロンプトのみ編集可能
+    return (
+      authCompanyId != null &&
+      String(authCompanyId) === String(targetCompanyId)
+    )
+  }
+
+  const canEditPersonalPrompt = (record) => {
+    if (!auth?.authenticated) return false
+    if (authStaffId == null || STAFF_ID == null) return false
+
+    const targetStaffId =
+      record?.staffId ?? STAFF_ID
+
+    return (
+      String(authStaffId) === String(STAFF_ID) &&
+      String(authStaffId) === String(targetStaffId)
+    )
+  }
+
+  const canEditRecord = (record) => {
+    const scope = getScope(record)
+
+    if (scope === 'company') {
+      return canEditCompanyPrompt(record)
+    }
+
+    if (scope === 'personal') {
+      return canEditPersonalPrompt(record)
+    }
+
+    return false
+  }
+
   const { getActiveAiPrompts, upsertAiPrompt } = usePrompt()
   const { showSuccessToast, showErrorToast } = useToast()
 
@@ -54,14 +166,10 @@ function PromptTab() {
         )
       }
     } catch (error) {
-      console.error(
-        '[PromptTab] DB読み込みエラー:',
-        error
-      )
+      console.error('[PromptTab] DB読み込みエラー:', error)
 
       showErrorToast(
-        error?.message ||
-          'プロンプトの取得に失敗しました。'
+        error?.message || 'プロンプトの取得に失敗しました。'
       )
     } finally {
       setIsLoading(false)
@@ -79,28 +187,48 @@ function PromptTab() {
     loadPrompts()
   }, [loadPrompts])
 
+  const editablePromptCount = PROMPT_DEFINITIONS.filter(
+    ({ key }) => canEditRecord(promptRecords[key])
+  ).length
+
+  const hasEditablePrompts = editablePromptCount > 0
+
+  const changedDefinitions = PROMPT_DEFINITIONS.filter(
+    ({ key }) => prompts[key] !== savedPrompts[key]
+  )
+
+  const hasChanges = changedDefinitions.length > 0
+
+  const hasUnauthorizedChanges = changedDefinitions.some(
+    ({ key }) => !canEditRecord(promptRecords[key])
+  )
+
   /**
-   * プロンプトを初期値に戻す
-   *
-   * DBにはまだ保存しない。
-   * textareaの内容だけ初期値へ変更する。
+   * プロンプトを初期値に戻す。
+   * DBへの保存は行わない。
    */
   const handleReset = () => {
-    if (isLoading || isSaving) {
-      return
-    }
+    if (isLoading || isSaving || !hasEditablePrompts) return
 
-    setPrompts({
-      ...DEFAULT_PROMPTS,
+    setPrompts((previous) => {
+      const next = { ...previous }
+
+      for (const { key } of PROMPT_DEFINITIONS) {
+        if (canEditRecord(promptRecords[key])) {
+          next[key] = DEFAULT_PROMPTS[key] ?? ''
+        }
+      }
+
+      return next
     })
 
     showSuccessToast(
-      'プロンプトを初期値に戻しました。保存するとデータベースに反映されます。'
+      '編集可能なプロンプトを初期値に戻しました。保存するとデータベースに反映されます。'
     )
   }
 
   const handleSave = async () => {
-    if (isLoading || isSaving) return
+    if (isLoading || isSaving || !hasChanges) return
 
     setIsSaving(true)
 
@@ -109,26 +237,57 @@ function PromptTab() {
         throw new Error('スタッフを選択してください。')
       }
 
-      const changedDefinitions =
-        PROMPT_DEFINITIONS.filter(
-          ({ key }) =>
-            prompts[key] !== savedPrompts[key]
+      if (!auth?.authenticated || authStaffId == null) {
+        throw new Error('ログイン情報を確認できません。')
+      }
+
+      if (hasUnauthorizedChanges) {
+        throw new Error(
+          '編集権限のないプロンプトが含まれています。'
         )
+      }
+
+      // 保存時の所有者はプロンプト種別で決定する
+      const saveDefinitions = changedDefinitions.map(
+        ({ key, itemId }) => {
+          const record = promptRecords[key]
+          const scope = getScope(record)
+
+          const targetCompanyId =
+            record?.companyId ?? expectedCompanyId
+
+          if (!canEditRecord(record)) {
+            throw new Error(
+              `${key} の編集権限がありません。`
+            )
+          }
+
+          if (scope === 'company' && targetCompanyId == null) {
+            throw new Error('対象会社を特定できません。')
+          }
+
+          return {
+            databaseType: DATABASE_TYPE,
+            promptId: record?.promptId ?? null,
+            staffId:
+              scope === 'personal'
+                ? authStaffId
+                : null,
+            companyId:
+              scope === 'company'
+                ? targetCompanyId
+                : null,
+            itemId,
+            content: prompts[key],
+            isActive: true,
+            updatedBy: authStaffId,
+          }
+        }
+      )
 
       await Promise.all(
-        changedDefinitions.map(
-          ({ key, itemId }) =>
-            upsertAiPrompt({
-              databaseType: DATABASE_TYPE,
-              promptId:
-                promptRecords[key]?.promptId ??
-                null,
-              staffId: STAFF_ID,
-              itemId,
-              content: prompts[key],
-              isActive: true,
-              updatedBy: STAFF_ID,
-            })
+        saveDefinitions.map((payload) =>
+          upsertAiPrompt(payload)
         )
       )
 
@@ -138,10 +297,7 @@ function PromptTab() {
         'プロンプトをデータベースに保存しました。'
       )
     } catch (error) {
-      console.error(
-        '[PromptTab] DB保存エラー:',
-        error
-      )
+      console.error('[PromptTab] DB保存エラー:', error)
 
       showErrorToast(
         error?.message ||
@@ -152,20 +308,27 @@ function PromptTab() {
     }
   }
 
-  const hasChanges = PROMPT_DEFINITIONS.some(
-    ({ key }) =>
-      prompts[key] !== savedPrompts[key]
-  )
-
   return (
     <div>
       <h3 className="mb-2 border-b border-gray-200 pb-2 text-lg text-gray-700">
         AIプロンプト設定
       </h3>
 
-      <p className="mb-5 text-sm text-gray-600">
-        選択中のスタッフのプロンプトをデータベースで管理します。
-      </p>
+      {/* 個人用プロンプトの場合のみ表示 */}
+      {isPersonalPrompt && (
+        <p className="mb-5 text-sm text-gray-600">
+          選択中のスタッフのプロンプトをデータベースで管理します。
+        </p>
+      )}
+
+      {/* 会社共有プロンプトの権限案内 */}
+      {!isPersonalPrompt && !isLoading && (
+        <p className="mb-5 text-sm text-gray-600">
+          {hasEditablePrompts
+            ? '会社共有プロンプトを管理します。変更内容は同じ会社の職員に適用されます。'
+            : '会社共有プロンプトを表示しています。編集には管理者以上の権限が必要です。'}
+        </p>
+      )}
 
       {isLoading ? (
         <p className="py-8 text-center text-gray-500">
@@ -174,30 +337,49 @@ function PromptTab() {
       ) : (
         <div className="space-y-5">
           {PROMPT_DEFINITIONS.map(
-            ({ key, itemId, label }) => (
-              <div key={key}>
-                <label
-                  htmlFor={`prompt-${key}`}
-                  className="mb-2 block font-semibold text-gray-700"
-                >
-                  {label}（item_id: {itemId}）
-                </label>
+            ({ key, itemId, label }) => {
+              const record = promptRecords[key]
+              const scope = getScope(record)
+              const canEdit = canEditRecord(record)
 
-                <textarea
-                  id={`prompt-${key}`}
-                  value={prompts[key] ?? ''}
-                  onChange={(event) => {
-                    setPrompts((previous) => ({
-                      ...previous,
-                      [key]: event.target.value,
-                    }))
-                  }}
-                  rows={5}
-                  disabled={isSaving}
-                  className="w-full resize-y rounded-md border border-gray-300 px-3 py-2 text-sm leading-6 text-gray-900 transition focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-200 disabled:bg-gray-100"
-                />
-              </div>
-            )
+              return (
+                <div key={key}>
+                  <label
+                    htmlFor={`prompt-${key}`}
+                    className="mb-2 block font-semibold text-gray-700"
+                  >
+                    {label}（item_id: {itemId}）
+
+                    <span className="ml-2 text-xs font-normal text-gray-600">
+                      {scope === 'company'
+                        ? '会社共有'
+                        : scope === 'personal'
+                          ? '個人用'
+                          : '取得不可'}
+
+                      {!canEdit && '（閲覧のみ）'}
+                    </span>
+                  </label>
+
+                  <textarea
+                    id={`prompt-${key}`}
+                    value={prompts[key] ?? ''}
+                    onChange={(event) => {
+                      if (!canEdit) return
+
+                      setPrompts((previous) => ({
+                        ...previous,
+                        [key]: event.target.value,
+                      }))
+                    }}
+                    rows={5}
+                    readOnly={!canEdit}
+                    disabled={isSaving}
+                    className="w-full resize-y rounded-md border border-gray-300 px-3 py-2 text-sm leading-6 text-gray-900 transition focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-200 read-only:bg-gray-100 disabled:bg-gray-100"
+                  />
+                </div>
+              )
+            }
           )}
         </div>
       )}
@@ -206,11 +388,7 @@ function PromptTab() {
         <button
           type="button"
           onClick={() => loadPrompts(true)}
-          disabled={
-            isLoading ||
-            isSaving ||
-            !STAFF_ID
-          }
+          disabled={isLoading || isSaving || !STAFF_ID}
           className="rounded-md bg-gray-600 px-5 py-2.5 text-white transition-colors hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-60"
         >
           再読み込み
@@ -222,7 +400,8 @@ function PromptTab() {
           disabled={
             isLoading ||
             isSaving ||
-            !STAFF_ID
+            !STAFF_ID ||
+            !hasEditablePrompts
           }
           className="rounded-md bg-amber-600 px-5 py-2.5 text-white transition-colors hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-60"
         >
@@ -236,7 +415,8 @@ function PromptTab() {
             isLoading ||
             isSaving ||
             !hasChanges ||
-            !STAFF_ID
+            !STAFF_ID ||
+            hasUnauthorizedChanges
           }
           className="rounded-md bg-gradient-to-r from-blue-600 to-blue-700 px-5 py-2.5 text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
         >

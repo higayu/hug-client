@@ -138,3 +138,9 @@
 #update-log-container::-webkit-scrollbar-thumb:hover {
   background: #898888;
 }
+
+/* 選択中の設定タブは濃い青背景・白文字を優先する */
+.settings-modal-container [role="tab"][aria-selected="true"],
+.settings-modal-container [role="tab"][aria-selected="true"] span {
+  color: #ffffff !important;
+}

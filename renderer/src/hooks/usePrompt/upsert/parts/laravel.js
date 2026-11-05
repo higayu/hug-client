@@ -5,6 +5,7 @@
 export async function upsertAiPrompt({
   promptId = null,
   staffId,
+  companyId = null,
   itemId,
   content,
   isActive,
@@ -98,7 +99,8 @@ export async function upsertAiPrompt({
   try {
     const result = await api({
       prompt_id: normalizedPromptId,
-      staff_id: normalizedStaffId,
+      staff_id: companyId == null ? normalizedStaffId : null,
+      company_id: companyId == null ? null : Number(companyId),
       item_id: normalizedItemId,
       content,
       is_active: normalizedIsActive,
