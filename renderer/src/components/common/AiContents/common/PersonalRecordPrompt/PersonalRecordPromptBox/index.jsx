@@ -4,12 +4,12 @@ export const PERSONAL_RECORD_PROMPTS = [
   {
     key: "personalRecord",
     label: "個人記録1",
-    useDbNote: false,
+    useDbNote: true, // false → true
   },
   {
     key: "personalRecord2",
     label: "個人記録2",
-    useDbNote: true,
+    useDbNote: false, // true → false
   },
 ];
 
