@@ -57,7 +57,6 @@ function PromptTab() {
   // 会社共有専用項目の表示権限。未認証・ロール未取得時は非表示。
   const canViewCompanyOnly = Boolean(
     auth?.authenticated &&
-    authStaffId != null &&
     (isGlobalAdmin || isCompanyManager)
   )
 
@@ -92,7 +91,6 @@ function PromptTab() {
 
   const canEditCompanyPrompt = (record) => {
     if (!auth?.authenticated) return false
-    if (authStaffId == null) return false
     if (!isGlobalAdmin && !isCompanyManager) return false
 
     const targetCompanyId =
@@ -150,20 +148,14 @@ function PromptTab() {
     setIsLoading(true)
 
     try {
-      if (!STAFF_ID) {
-        throw new Error('スタッフを選択してください。')
-      }
-
       // 通常利用用と会社共有編集用を分けて取得する。
       // 会社共有取得は認証済みユーザーの権限をLaravel側で検証する。
       const normalRecords = await getActiveAiPrompts({
         databaseType: DATABASE_TYPE,
-        staffId: STAFF_ID,
       })
       const companyRecords = canViewCompanyOnly
         ? await getActiveAiPrompts({
             databaseType: DATABASE_TYPE,
-            staffId: authStaffId,
             scope: 'company',
           })
         : {}
@@ -264,11 +256,7 @@ function PromptTab() {
     setIsSaving(true)
 
     try {
-      if (!STAFF_ID) {
-        throw new Error('スタッフを選択してください。')
-      }
-
-      if (!auth?.authenticated || authStaffId == null) {
+      if (!auth?.authenticated) {
         throw new Error('ログイン情報を確認できません。')
       }
 
@@ -300,10 +288,6 @@ function PromptTab() {
           return {
             databaseType: DATABASE_TYPE,
             promptId: record?.promptId ?? null,
-            staffId:
-              scope === 'personal'
-                ? authStaffId
-                : null,
             companyId:
               scope === 'company'
                 ? targetCompanyId
@@ -311,7 +295,6 @@ function PromptTab() {
             itemId,
             content: prompts[key],
             isActive: true,
-            updatedBy: authStaffId,
           }
         }
       )
@@ -424,7 +407,7 @@ function PromptTab() {
         <button
           type="button"
           onClick={() => loadPrompts(true)}
-          disabled={isLoading || isSaving || !STAFF_ID}
+          disabled={isLoading || isSaving}
           className="rounded-md bg-gray-600 px-5 py-2.5 text-white transition-colors hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-60"
         >
           再読み込み
@@ -436,7 +419,6 @@ function PromptTab() {
           disabled={
             isLoading ||
             isSaving ||
-            !STAFF_ID ||
             !hasEditablePrompts
           }
           className="rounded-md bg-amber-600 px-5 py-2.5 text-white transition-colors hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-60"
@@ -451,7 +433,6 @@ function PromptTab() {
             isLoading ||
             isSaving ||
             !hasChanges ||
-            !STAFF_ID ||
             hasUnauthorizedChanges
           }
           className="rounded-md bg-gradient-to-r from-blue-600 to-blue-700 px-5 py-2.5 text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"

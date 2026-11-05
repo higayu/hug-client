@@ -9,12 +9,6 @@ export async function getActiveAiPrompts({ staffId, itemId = null, scope = null 
     throw new Error("LaravelプロシージャAPIが利用できません。");
   }
 
-  const normalizedStaffId = Number(staffId);
-
-  if (!Number.isInteger(normalizedStaffId) || normalizedStaffId <= 0) {
-    throw new Error("AIプロンプトの取得に必要なstaff_idが不正です。");
-  }
-
   const normalizedItemId =
     itemId == null || itemId === "" ? null : Number(itemId);
 
@@ -30,7 +24,6 @@ export async function getActiveAiPrompts({ staffId, itemId = null, scope = null 
   }
 
   const result = await api({
-    staff_id: normalizedStaffId,
     item_id: normalizedItemId,
     ...(scope === "company" ? { scope: "company" } : {}),
   });

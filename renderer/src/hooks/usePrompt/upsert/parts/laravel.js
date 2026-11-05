@@ -22,9 +22,7 @@ export async function upsertAiPrompt({
   const normalizedPromptId =
     promptId == null || promptId === "" ? null : Number(promptId);
 
-  const normalizedStaffId = Number(staffId);
   const normalizedItemId = Number(itemId);
-  const normalizedUpdatedBy = Number(updatedBy);
   const normalizedCompanyId = companyId == null || companyId === "" ? null : Number(companyId);
 
   if (companyId != null && (companyId === "" || !Number.isInteger(normalizedCompanyId) || normalizedCompanyId <= 0)) {
@@ -46,16 +44,6 @@ export async function upsertAiPrompt({
 
     throw new Error(
       "編集対象のプロンプトを確認できませんでした。画面を開き直してから、もう一度お試しください。"
-    );
-  }
-
-  if (!Number.isInteger(normalizedStaffId) || normalizedStaffId <= 0) {
-    console.error("[AIプロンプト保存] staff_idが不正", {
-      staffId,
-    });
-
-    throw new Error(
-      "職員情報を取得できませんでした。ログイン状態を確認してから、もう一度お試しください。"
     );
   }
 
@@ -91,25 +79,14 @@ export async function upsertAiPrompt({
     );
   }
 
-  if (!Number.isInteger(normalizedUpdatedBy) || normalizedUpdatedBy <= 0) {
-    console.error("[AIプロンプト保存] updated_byが不正", {
-      updatedBy,
-    });
-
-    throw new Error(
-      "更新する職員の情報を取得できませんでした。ログイン状態を確認してから、もう一度お試しください。"
-    );
-  }
-
   try {
     const result = await api({
       prompt_id: normalizedPromptId,
-      staff_id: normalizedCompanyId === null ? normalizedStaffId : null,
+      // 職員IDはLaravelの認証済みユーザーから決定する。
       company_id: normalizedCompanyId,
       item_id: normalizedItemId,
       content,
       is_active: normalizedIsActive,
-      updated_by: normalizedUpdatedBy,
     });
 
     if (result?.success === false) {
