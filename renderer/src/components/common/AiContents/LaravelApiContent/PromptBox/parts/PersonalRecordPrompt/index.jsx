@@ -24,7 +24,7 @@ import MemoInputBox from "@/components/ui/MemoInputBox";
 
 import PersonalRecordPromptBox, {
   getPersonalRecordPromptConfig,
-} from "@/components/ui/PersonalRecordPromptBox";
+} from "./PersonalRecordPromptBox";
 
 import ChildNotesTabs from "../ChildNotesTabs";
 

@@ -23,7 +23,7 @@ import MemoToAiTransferButton from "../MemoToAiTransferButton";
 
 import PersonalRecordPromptBox, {
   getPersonalRecordPromptConfig,
-} from "@/components/ui/PersonalRecordPromptBox";
+} from "./PersonalRecordPromptBox";
 
 import ChildNotesTabs from "../ChildNotesTabs";
 
