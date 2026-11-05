@@ -3,11 +3,14 @@
  * LaravelでAIプロンプトを登録・更新する。
  *
  * 1〜4番:
- *   従来の個人プロンプト保存処理を使用する。
+ *   companyId がある場合は会社共有、ない場合は個人プロンプトとして保存する。
  *
  * 50・51・100・150番:
  *   会社共有プロンプトとして保存する。
  *   scope: "company" を送信する。
+ *
+ * 会社共有として保存する場合は、item_id にかかわらず
+ * scope: "company" を明示する。
  *
  * staff_id / updated_by:
  *   Electronから送信せず、Laravelの認証情報から決定する。
@@ -197,8 +200,8 @@ export async function upsertAiPrompt({
     content,
     is_active: normalizedIsActive,
 
-    // 会社共有管理モードのときだけ追加
-    ...(isCompanyOnlyItem
+    // 会社専用項目、または会社IDが指定された共有プロンプト
+    ...(isCompanyOnlyItem || normalizedCompanyId !== null
       ? { scope: "company" }
       : {}),
   };
