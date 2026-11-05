@@ -1,5 +1,5 @@
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useSelector } from 'react-redux'
 import { selectLaravelAuth } from '@/store/slices/authSlice'
 import { selectStaffs } from '@/store/slices/databaseSlice'
@@ -54,6 +54,19 @@ function PromptTab() {
   const isCompanyManager =
     editableCompanyRoles.includes(roleCode)
 
+  // 会社共有専用項目の表示権限。未認証・ロール未取得時は非表示。
+  const canViewCompanyOnly = Boolean(
+    auth?.authenticated &&
+    authStaffId != null &&
+    (isGlobalAdmin || isCompanyManager)
+  )
+
+  const companyOnlyIds = useMemo(() => new Set([50, 51, 100, 150]), [])
+
+  const visibleDefinitions = PROMPT_DEFINITIONS.filter(
+    ({ itemId }) => !companyOnlyIds.has(itemId) || canViewCompanyOnly
+  )
+
   const expectedScope =
     Number(selectedStaff?.use_my_prompt) === 1
       ? 'personal'
@@ -62,7 +75,8 @@ function PromptTab() {
   const expectedCompanyId =
     selectedCompanyId ?? authCompanyId
 
-  const getScope = (record) => {
+  const getScope = (record, itemId) => {
+    if (companyOnlyIds.has(Number(itemId))) return 'company'
     if (record?.companyId != null) return 'company'
     if (record?.staffId != null) return 'personal'
 
@@ -109,8 +123,8 @@ function PromptTab() {
     )
   }
 
-  const canEditRecord = (record) => {
-    const scope = getScope(record)
+  const canEditRecord = (record, itemId) => {
+    const scope = getScope(record, itemId)
 
     if (scope === 'company') {
       return canEditCompanyPrompt(record)
@@ -140,15 +154,29 @@ function PromptTab() {
         throw new Error('スタッフを選択してください。')
       }
 
-      const records = await getActiveAiPrompts({
+      // 通常利用用と会社共有編集用を分けて取得する。
+      // 会社共有取得は認証済みユーザーの権限をLaravel側で検証する。
+      const normalRecords = await getActiveAiPrompts({
         databaseType: DATABASE_TYPE,
         staffId: STAFF_ID,
       })
-
-      const nextRecords = records ?? {}
+      const companyRecords = canViewCompanyOnly
+        ? await getActiveAiPrompts({
+            databaseType: DATABASE_TYPE,
+            staffId: authStaffId,
+            scope: 'company',
+          })
+        : {}
+      const nextRecords = { ...(normalRecords ?? {}) }
+      for (const { key, itemId } of visibleDefinitions) {
+        if (companyOnlyIds.has(itemId)) {
+          // 会社共有専用は個人用レコードを流用しない。
+          nextRecords[key] = companyRecords?.[key] ?? null
+        }
+      }
       const nextPrompts = {}
 
-      for (const { key } of PROMPT_DEFINITIONS) {
+      for (const { key } of visibleDefinitions) {
         nextPrompts[key] = nextRecords[key]?.content ?? ''
       }
 
@@ -156,9 +184,9 @@ function PromptTab() {
       setPrompts(nextPrompts)
       setSavedPrompts(nextPrompts)
 
-      updateAppState({
-        PROMPTS: nextRecords,
-      })
+      // 実際のAI実行には通常取得結果だけを渡す。
+      // 管理用の別スコープをアプリ全体の実行プロンプトに混ぜない。
+      updateAppState({ PROMPTS: normalRecords ?? {} })
 
       if (showToast) {
         showSuccessToast(
@@ -178,6 +206,9 @@ function PromptTab() {
     DATABASE_TYPE,
     STAFF_ID,
     getActiveAiPrompts,
+    authStaffId,
+    companyOnlyIds,
+    canViewCompanyOnly,
     showErrorToast,
     showSuccessToast,
     updateAppState,
@@ -187,20 +218,20 @@ function PromptTab() {
     loadPrompts()
   }, [loadPrompts])
 
-  const editablePromptCount = PROMPT_DEFINITIONS.filter(
-    ({ key }) => canEditRecord(promptRecords[key])
+  const editablePromptCount = visibleDefinitions.filter(
+    ({ key, itemId }) => canEditRecord(promptRecords[key], itemId)
   ).length
 
   const hasEditablePrompts = editablePromptCount > 0
 
-  const changedDefinitions = PROMPT_DEFINITIONS.filter(
+  const changedDefinitions = visibleDefinitions.filter(
     ({ key }) => prompts[key] !== savedPrompts[key]
   )
 
   const hasChanges = changedDefinitions.length > 0
 
   const hasUnauthorizedChanges = changedDefinitions.some(
-    ({ key }) => !canEditRecord(promptRecords[key])
+    ({ key, itemId }) => !canEditRecord(promptRecords[key], itemId)
   )
 
   /**
@@ -213,8 +244,8 @@ function PromptTab() {
     setPrompts((previous) => {
       const next = { ...previous }
 
-      for (const { key } of PROMPT_DEFINITIONS) {
-        if (canEditRecord(promptRecords[key])) {
+      for (const { key, itemId } of visibleDefinitions) {
+        if (canEditRecord(promptRecords[key], itemId)) {
           next[key] = DEFAULT_PROMPTS[key] ?? ''
         }
       }
@@ -251,12 +282,12 @@ function PromptTab() {
       const saveDefinitions = changedDefinitions.map(
         ({ key, itemId }) => {
           const record = promptRecords[key]
-          const scope = getScope(record)
+          const scope = getScope(record, itemId)
 
           const targetCompanyId =
             record?.companyId ?? expectedCompanyId
 
-          if (!canEditRecord(record)) {
+          if (!canEditRecord(record, itemId)) {
             throw new Error(
               `${key} の編集権限がありません。`
             )
@@ -314,6 +345,11 @@ function PromptTab() {
         AIプロンプト設定
       </h3>
 
+      {canViewCompanyOnly && (
+        <p className="mb-3 text-sm text-gray-600">
+          50・51・100・150は個人設定に関係なく会社共有です。編集権限はLaravel側でも確認されます。
+        </p>
+      )}
       {/* 個人用プロンプトの場合のみ表示 */}
       {isPersonalPrompt && (
         <p className="mb-5 text-sm text-gray-600">
@@ -336,11 +372,11 @@ function PromptTab() {
         </p>
       ) : (
         <div className="space-y-5">
-          {PROMPT_DEFINITIONS.map(
+          {visibleDefinitions.map(
             ({ key, itemId, label }) => {
               const record = promptRecords[key]
-              const scope = getScope(record)
-              const canEdit = canEditRecord(record)
+              const scope = getScope(record, itemId)
+              const canEdit = canEditRecord(record, itemId)
 
               return (
                 <div key={key}>

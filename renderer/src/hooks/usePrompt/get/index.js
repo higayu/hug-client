@@ -6,8 +6,9 @@ const PROMPT_KEY_BY_ITEM_ID = {
   3: "professional2",
   4: "personalRecord2",
   50: "F_SOAIP",
-  100: "健康状態の分析",
-  150: "問い合わせ-個人記録の要約",// staff_idがついてないものは取得出来ない
+  51: "F_SOAIP2",
+  100: "healthAnalysis",
+  150: "recordSummary",
 };
 
 /**
@@ -46,6 +47,7 @@ export async function getActiveAiPrompts({
   databaseType,
   staffId,
   itemId = null,
+  scope = null,
 }) {
   const normalizedDatabaseType = String(databaseType ?? "").toLowerCase();
 
@@ -55,7 +57,7 @@ export async function getActiveAiPrompts({
 
   if (!getter) return null;
 
-  const rows = await getter({ staffId, itemId });
+  const rows = await getter({ staffId, itemId, scope });
 
   return normalizeActiveAiPrompts(rows);
 }

@@ -25,6 +25,11 @@ export async function upsertAiPrompt({
   const normalizedStaffId = Number(staffId);
   const normalizedItemId = Number(itemId);
   const normalizedUpdatedBy = Number(updatedBy);
+  const normalizedCompanyId = companyId == null || companyId === "" ? null : Number(companyId);
+
+  if (companyId != null && (companyId === "" || !Number.isInteger(normalizedCompanyId) || normalizedCompanyId <= 0)) {
+    throw new Error("会社情報が不正です。画面を開き直してから、もう一度お試しください。");
+  }
 
   const validIsActiveValues = [true, false, 1, 0, "1", "0"];
 
@@ -99,8 +104,8 @@ export async function upsertAiPrompt({
   try {
     const result = await api({
       prompt_id: normalizedPromptId,
-      staff_id: companyId == null ? normalizedStaffId : null,
-      company_id: companyId == null ? null : Number(companyId),
+      staff_id: normalizedCompanyId === null ? normalizedStaffId : null,
+      company_id: normalizedCompanyId,
       item_id: normalizedItemId,
       content,
       is_active: normalizedIsActive,

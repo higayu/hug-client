@@ -2,7 +2,7 @@
  * Laravelから指定職員の有効なAIプロンプトを取得する。
  * itemIdを省略すると全項目を取得する。
  */
-export async function getActiveAiPrompts({ staffId, itemId = null }) {
+export async function getActiveAiPrompts({ staffId, itemId = null, scope = null }) {
   const api = window.electronAPI?.laravel_procedure_getActiveAiPrompt;
 
   if (typeof api !== "function") {
@@ -25,9 +25,14 @@ export async function getActiveAiPrompts({ staffId, itemId = null }) {
     throw new Error("item_idが不正です。");
   }
 
+  if (scope !== null && scope !== "company") {
+    throw new Error("プロンプトの取得範囲が不正です。");
+  }
+
   const result = await api({
     staff_id: normalizedStaffId,
     item_id: normalizedItemId,
+    ...(scope === "company" ? { scope: "company" } : {}),
   });
 
   if (result?.success === false) {

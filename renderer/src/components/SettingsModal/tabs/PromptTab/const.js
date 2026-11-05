@@ -22,8 +22,11 @@ export const PROMPT_DEFINITIONS = [
   {
     key: 'F_SOAIP',
     itemId: 50,
-    label: 'F_SOAIP',
+    label: 'F-SOAIP',
   },
+  { key: 'F_SOAIP2', itemId: 51, label: 'F-SOAIP2' },
+  { key: 'healthAnalysis', itemId: 100, label: '健康状態の分析' },
+  { key: 'recordSummary', itemId: 150, label: '問い合わせ（個人記録の要約）' },
 ]
 
 export const DEFAULT_PROMPTS = {
