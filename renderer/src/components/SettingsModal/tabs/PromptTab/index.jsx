@@ -13,6 +13,7 @@ import {
   DEFAULT_PROMPTS,
   PROMPT_DEFINITIONS,
 } from './const'
+import PromptSection from './PromptSection'
 
 function PromptTab() {
   const { DATABASE_TYPE, STAFF_ID, updateAppState } = useAppState()
@@ -322,83 +323,83 @@ function PromptTab() {
     }
   }
 
+  const personalAllowedDefinitions = visibleDefinitions.filter(
+    ({ itemId }) => !companyOnlyIds.has(itemId)
+  )
+  const companyOnlyDefinitions = visibleDefinitions.filter(
+    ({ itemId }) => companyOnlyIds.has(itemId)
+  )
+
+  const renderPromptEditor = ({ key, itemId, label }) => {
+    const record = promptRecords[key]
+    const scope = getScope(record, itemId)
+    const canEdit = canEditRecord(record, itemId)
+
+    return (
+      <div key={key}>
+        <label
+          htmlFor={`prompt-${key}`}
+          className="mb-2 block font-semibold text-gray-700"
+        >
+          {label}（item_id: {itemId}）
+          <span className="ml-2 text-xs font-normal text-gray-600">
+            {scope === 'company'
+              ? '会社共有'
+              : scope === 'personal'
+                ? '個人用'
+                : '取得不可'}
+            {!canEdit && '（閲覧のみ）'}
+          </span>
+        </label>
+        <textarea
+          id={`prompt-${key}`}
+          value={prompts[key] ?? ''}
+          onChange={(event) => {
+            if (!canEdit) return
+            setPrompts((previous) => ({
+              ...previous,
+              [key]: event.target.value,
+            }))
+          }}
+          rows={5}
+          readOnly={!canEdit}
+          disabled={isSaving}
+          className="w-full resize-y rounded-md border border-gray-300 px-3 py-2 text-sm leading-6 text-gray-900 transition focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-200 read-only:bg-gray-100 disabled:bg-gray-100"
+        />
+      </div>
+    )
+  }
+
   return (
     <div>
       <h3 className="mb-2 border-b border-gray-200 pb-2 text-lg text-gray-700">
         AIプロンプト設定
       </h3>
 
-      {canViewCompanyOnly && (
-        <p className="mb-3 text-sm text-gray-600">
-          50・51・100・150は個人設定に関係なく会社共有です。編集権限はLaravel側でも確認されます。
-        </p>
-      )}
-      {/* 個人用プロンプトの場合のみ表示 */}
-      {isPersonalPrompt && (
-        <p className="mb-5 text-sm text-gray-600">
-          選択中のスタッフのプロンプトをデータベースで管理します。
-        </p>
-      )}
-
-      {/* 会社共有プロンプトの権限案内 */}
-      {!isPersonalPrompt && !isLoading && (
-        <p className="mb-5 text-sm text-gray-600">
-          {hasEditablePrompts
-            ? '会社共有プロンプトを管理します。変更内容は同じ会社の職員に適用されます。'
-            : '会社共有プロンプトを表示しています。編集には管理者以上の権限が必要です。'}
-        </p>
-      )}
-
       {isLoading ? (
         <p className="py-8 text-center text-gray-500">
           プロンプトを読み込んでいます...
         </p>
       ) : (
-        <div className="space-y-5">
-          {visibleDefinitions.map(
-            ({ key, itemId, label }) => {
-              const record = promptRecords[key]
-              const scope = getScope(record, itemId)
-              const canEdit = canEditRecord(record, itemId)
+        <div className="space-y-6">
+          <PromptSection
+            title="基本プロンプト"
+            description={isPersonalPrompt
+              ? '選択中のスタッフの個人用プロンプトを表示しています。'
+              : '会社共有プロンプトを表示しています。会社共有の編集には権限が必要です。'}
+            count={personalAllowedDefinitions.length}
+          >
+            {personalAllowedDefinitions.map(renderPromptEditor)}
+          </PromptSection>
 
-              return (
-                <div key={key}>
-                  <label
-                    htmlFor={`prompt-${key}`}
-                    className="mb-2 block font-semibold text-gray-700"
-                  >
-                    {label}（item_id: {itemId}）
-
-                    <span className="ml-2 text-xs font-normal text-gray-600">
-                      {scope === 'company'
-                        ? '会社共有'
-                        : scope === 'personal'
-                          ? '個人用'
-                          : '取得不可'}
-
-                      {!canEdit && '（閲覧のみ）'}
-                    </span>
-                  </label>
-
-                  <textarea
-                    id={`prompt-${key}`}
-                    value={prompts[key] ?? ''}
-                    onChange={(event) => {
-                      if (!canEdit) return
-
-                      setPrompts((previous) => ({
-                        ...previous,
-                        [key]: event.target.value,
-                      }))
-                    }}
-                    rows={5}
-                    readOnly={!canEdit}
-                    disabled={isSaving}
-                    className="w-full resize-y rounded-md border border-gray-300 px-3 py-2 text-sm leading-6 text-gray-900 transition focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-200 read-only:bg-gray-100 disabled:bg-gray-100"
-                  />
-                </div>
-              )
-            }
+          {canViewCompanyOnly && (
+            <PromptSection
+              title="会社共有専用プロンプト"
+              description="個人設定に関係なく会社共有で管理するプロンプトです。編集権限はLaravel側でも確認されます。"
+              count={companyOnlyDefinitions.length}
+            >
+              {companyOnlyDefinitions.map(renderPromptEditor)}
+            </PromptSection>
           )}
         </div>
       )}
