@@ -1,13 +1,19 @@
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { AlertCircle, CheckCircle2, Loader2, RefreshCw } from 'lucide-react'
 import { useDispatch } from 'react-redux'
 
 import { checkLaravelConnection } from '@/hooks/useDataBase/checkLaravelConnection'
+import { useAppState } from '@/AppStateContext'
 
 const CHECK_INTERVAL_MS = 5 * 60 * 1000;//5分ごとにLaravalとの接続を確認する
 
 const ActiveApiStatus = ({ className = '' }) => {
   const dispatch = useDispatch()
+  const { appState } = useAppState()
+  const username = appState?.HUG_USERNAME ?? ''
+  const password = appState?.HUG_PASSWORD ?? ''
+  const hasCredentials = Boolean(username.trim() && password)
+  const requestIdRef = useRef(0)
 
   const [checking, setChecking] = useState(true)
   const [connected, setConnected] = useState(null)
@@ -15,6 +21,15 @@ const ActiveApiStatus = ({ className = '' }) => {
   const [checkedAt, setCheckedAt] = useState(null)
 
   const checkConnection = useCallback(async () => {
+    const requestId = ++requestIdRef.current
+    if (!hasCredentials) {
+      setConnected(false)
+      setChecking(false)
+      setCheckedAt(null)
+      setMessage('HUGのログイン情報が設定されていません')
+      return
+    }
+
     setChecking(true)
 
     try {
@@ -23,6 +38,7 @@ const ActiveApiStatus = ({ className = '' }) => {
         switchToLaravelOnSuccess: false,
         persistIni: false,
       })
+      if (requestId !== requestIdRef.current) return
 
       const isConnected = result?.connected === true
       const now = new Date()
@@ -36,15 +52,16 @@ const ActiveApiStatus = ({ className = '' }) => {
             : 'Laravel APIと通信できません')
       )
     } catch (error) {
+      if (requestId !== requestIdRef.current) return
       console.error('[ActiveApiStatus] Laravel API接続確認エラー:', error)
 
       setConnected(false)
       setCheckedAt(new Date())
       setMessage(error?.message || 'Laravel APIとの通信確認に失敗しました')
     } finally {
-      setChecking(false)
+      if (requestId === requestIdRef.current) setChecking(false)
     }
-  }, [dispatch])
+  }, [dispatch, hasCredentials, username, password])
 
   useEffect(() => {
     let disposed = false
@@ -60,34 +77,37 @@ const ActiveApiStatus = ({ className = '' }) => {
 
     return () => {
       disposed = true
+      requestIdRef.current += 1
       window.clearInterval(intervalId)
     }
   }, [checkConnection])
 
-  const statusLabel = checking
+  const isChecking = hasCredentials && checking
+  const isConnected = hasCredentials && connected === true
+  const statusLabel = isChecking
     ? '確認中'
-    : connected === true
+    : isConnected
       ? '接続OK'
       : '接続NG'
 
-  const icon = checking ? (
+  const icon = isChecking ? (
     <Loader2 size={10} className="animate-spin" />
-  ) : connected === true ? (
+  ) : isConnected ? (
     <CheckCircle2 size={10} />
   ) : (
     <AlertCircle size={10} />
   )
 
-  const statusClass = checking
+  const statusClass = isChecking
     ? 'border-amber-200 bg-amber-50 text-amber-800 hover:bg-amber-100'
-    : connected === true
+    : isConnected
       ? 'border-emerald-200 bg-emerald-50 text-emerald-800 hover:bg-emerald-100'
       : 'border-red-200 bg-red-50 text-red-800 hover:bg-red-100'
 
   const titleText = [
     `: ${statusLabel}`,
-    message,
-    checkedAt ? `最終確認: ${checkedAt.toLocaleString('ja-JP')}` : null,
+    hasCredentials ? message : 'HUGのログイン情報が設定されていません',
+    hasCredentials && checkedAt ? `最終確認: ${checkedAt.toLocaleString('ja-JP')}` : null,
     'クリックすると再確認します',
   ]
     .filter(Boolean)
@@ -97,7 +117,7 @@ const ActiveApiStatus = ({ className = '' }) => {
     <button
       type="button"
       onClick={checkConnection}
-      disabled={checking}
+      disabled={isChecking}
       className={[
         'inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs leading-none transition',
         'disabled:cursor-wait',
@@ -111,7 +131,7 @@ const ActiveApiStatus = ({ className = '' }) => {
       <span className="opacity-75">{statusLabel}</span>
       <RefreshCw
         size={10}
-        className={['ml-1 opacity-70', checking ? 'animate-spin' : ''].join(' ')}
+        className={['ml-1 opacity-70', isChecking ? 'animate-spin' : ''].join(' ')}
       />
     </button>
   )
