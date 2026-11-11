@@ -2,7 +2,7 @@
 const fs = require("fs");
 const path = require("path");
 const { getIniPath } = require("../../utils/pathResolver");
-const { DEFAULT_INI, getDefaultIni } = require("./defaultIni");
+const { DEFAULT_INI, getDefaultIni, normalizeMemoAutoSaveSettings } = require("./defaultIni");
 
 function removeHandlerIfRegistered(ipcMain, channel) {
   try {
@@ -47,6 +47,7 @@ function handleIniAccess(ipcMain) {
       // バージョンにかかわらず不足キーを補完し、未知の既存キーは保持する
       const normalizedData = mergeDeep(DEFAULT_INI, jsonData);
       normalizedData.apiSettings.databaseType = "laravel";
+      normalizeMemoAutoSaveSettings(normalizedData);
       normalizedData.version = DEFAULT_INI.version;
 
       if (!jsonData.version || jsonData.version !== DEFAULT_INI.version) {
@@ -94,6 +95,7 @@ function handleIniAccess(ipcMain) {
         data || {}
       );
       saveData.apiSettings.databaseType = "laravel";
+      normalizeMemoAutoSaveSettings(saveData);
       saveData.version = data?.version || DEFAULT_INI.version;
 
       const jsonString = JSON.stringify(saveData, null, 2);
@@ -165,6 +167,7 @@ function handleIniAccess(ipcMain) {
       obj[keys[keys.length - 1]] = value;
 
       data.apiSettings = { ...data.apiSettings, databaseType: "laravel" };
+      normalizeMemoAutoSaveSettings(data);
 
       // 原子的書き込み
       fs.writeFileSync(filePath, JSON.stringify(data, null, 2), "utf8");

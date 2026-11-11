@@ -1,3 +1,5 @@
+import { isMemoAutoSaveEnabled, normalizeMemoAutoSaveInterval } from '@/utils/memoAutoSave'
+
 export const toId = (value) => {
   return String(value ?? '').trim()
 }
@@ -77,6 +79,8 @@ export const createFormState = ({
     ),
 
     autoSwitching: false,
+    memoAutoSaveEnabled: isMemoAutoSaveEnabled(apiSettings?.memoAutoSaveEnabled),
+    memoAutoSaveIntervalSeconds: normalizeMemoAutoSaveInterval(apiSettings?.memoAutoSaveIntervalSeconds),
 
     normalModeView: normalizeNormalModeView(apiSettings?.normalModeView),
 

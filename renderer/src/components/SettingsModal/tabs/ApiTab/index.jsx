@@ -4,6 +4,7 @@ import { useSelector } from 'react-redux'
 import { useAppState } from '@/AppStateContext'
 import { useToast } from '@/utils/notifications.jsx'
 import { useDataBase } from '@/hooks/useDataBase'
+import { normalizeMemoAutoSaveInterval, MEMO_AUTO_SAVE_MIN_SECONDS, MEMO_AUTO_SAVE_MAX_SECONDS } from '@/utils/memoAutoSave'
 import { selectAuthenticatedStaffId, selectLaravelAuth } from '@/store/slices/authSlice'
 
 import {
@@ -366,6 +367,8 @@ function ApiTab() {
         ),
 
         autoSwitching: 'false',
+        memoAutoSaveEnabled: form.memoAutoSaveEnabled,
+        memoAutoSaveIntervalSeconds: normalizeMemoAutoSaveInterval(form.memoAutoSaveIntervalSeconds),
 
         normalModeView: normalizeNormalModeView(form.normalModeView),
 
@@ -752,6 +755,38 @@ function ApiTab() {
             <option value="draft">下書き保存</option>
             <option value="created">保存</option>
           </select>
+        </div>
+
+        <div className="mb-3 flex items-center gap-2 py-2">
+          <span className="min-w-[120px] font-medium text-gray-700">メモ自動保存:</span>
+          <label className="flex items-center gap-2 text-sm text-gray-700">
+            <input
+              name="memoAutoSaveEnabled"
+              type="checkbox"
+              checked={form.memoAutoSaveEnabled}
+              onChange={handleInputChange}
+              disabled={isProcessing}
+              className="h-4 w-4"
+            />
+            有効にする（保存成功時の通知なし）
+          </label>
+        </div>
+        <div className="mb-3 flex flex-wrap items-center gap-2 py-2">
+          <label htmlFor="api-memo-auto-save-interval" className="min-w-[120px] font-medium text-gray-700">自動保存の待ち時間:</label>
+          <input
+            id="api-memo-auto-save-interval"
+            name="memoAutoSaveIntervalSeconds"
+            type="number"
+            min={MEMO_AUTO_SAVE_MIN_SECONDS}
+            max={MEMO_AUTO_SAVE_MAX_SECONDS}
+            step="1"
+            value={form.memoAutoSaveIntervalSeconds}
+            onChange={handleInputChange}
+            onBlur={() => setForm(previous => ({ ...previous, memoAutoSaveIntervalSeconds: normalizeMemoAutoSaveInterval(previous.memoAutoSaveIntervalSeconds) }))}
+            disabled={isProcessing || !form.memoAutoSaveEnabled}
+            className="w-24 rounded-md border border-gray-300 px-3 py-2 text-sm disabled:bg-gray-100"
+          />
+          <span className="text-xs text-gray-500">秒（1〜300秒、初期値3秒）。最後の編集から数えます。</span>
         </div>
 
         {form.debugFlg && (

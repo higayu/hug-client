@@ -51,6 +51,8 @@ const DEFAULT_INI = {
       autoSwitching: "false",
       normalModeView: "dashboard",
       professionalSupportSaveMode: "draft",
+      memoAutoSaveEnabled: true,
+      memoAutoSaveIntervalSeconds: 3,
       debugFlg: "false"
     }
   };
@@ -86,7 +88,21 @@ const DEFAULT_INI = {
     return full[section] || null;
   }
   
+  // 待ち時間は整数の1〜300秒。空欄・不正値は3秒に戻す。
+  function normalizeMemoAutoSaveSettings(data) {
+    const settings = data.apiSettings;
+    settings.memoAutoSaveEnabled = ![false, "false", 0, "0"].includes(settings.memoAutoSaveEnabled);
+    const value = settings.memoAutoSaveIntervalSeconds;
+    const seconds = typeof value === "number" ||
+      (typeof value === "string" && value.trim() !== "")
+      ? Number(value) : NaN;
+    settings.memoAutoSaveIntervalSeconds = Number.isFinite(seconds)
+      ? Math.min(300, Math.max(1, Math.round(seconds))) : 3;
+    return data;
+  }
+
   module.exports = {
+    normalizeMemoAutoSaveSettings,
     DEFAULT_INI,
     getDefaultIni,
     getDefaultIniSection
