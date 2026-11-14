@@ -62,9 +62,23 @@ export default function AttendanceRow({ row, busy, onAction, selected, onToggle,
     <tr
       aria-selected={selected}
       className={`cursor-pointer ${selected ? 'bg-sky-100' : 'odd:bg-white even:bg-slate-50 hover:bg-sky-50'}`}
+      onClickCapture={(event) => {
+        const control = event.target.closest?.('button, a, input, select, textarea, label, [role="button"], [role="dialog"]');
+        const isControl = Boolean(control && event.currentTarget.contains(control));
+        console.log('[AttendanceRow] click', {
+          rowId: row.rId,
+          childId: row.childId,
+          selected,
+          selectionDisabled,
+          reason: isControl ? 'interactive-control' : selectionDisabled ? 'selection-limit' : 'toggle-selection',
+          target: event.target.tagName,
+        });
+      }}
       onClick={(event) => {
         if (selectionDisabled) return;
-        if (event.target.closest('button, a, input, select, textarea, label, [role="button"], [role="dialog"]')) return;
+        const control = event.target.closest?.('button, a, input, select, textarea, label, [role="button"], [role="dialog"]');
+        // closest() は行の外まで探索するため、行内の操作要素だけを除外する。
+        if (control && event.currentTarget.contains(control)) return;
         onToggle();
       }}
     >
@@ -73,7 +87,14 @@ export default function AttendanceRow({ row, busy, onAction, selected, onToggle,
           type="checkbox"
           checked={selected}
           disabled={selectionDisabled}
-          onChange={onToggle}
+          onChange={() => {
+            console.log('[AttendanceRow] checkbox change', {
+              rowId: row.rId,
+              childId: row.childId,
+              selected: !selected,
+            });
+            onToggle();
+          }}
           aria-label={`${row.name}を選択`}
           className="h-4 w-4 cursor-pointer accent-sky-600"
         />

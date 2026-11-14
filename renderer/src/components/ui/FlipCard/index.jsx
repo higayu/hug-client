@@ -41,10 +41,12 @@ export default function FlipCard({
           <div className="relative h-full w-full transition-transform duration-[600ms] ease-in-out [transform-style:preserve-3d] motion-reduce:transition-none"
             style={{ transform: flipped ? 'rotateY(180deg)' : 'rotateY(0deg)' }}>
             <div aria-hidden={flipped} inert={flipped ? '' : undefined}
+              style={{ pointerEvents: flipped ? 'none' : 'auto' }}
               className="absolute inset-0 min-w-0 overflow-auto bg-white [backface-visibility:hidden]">
               {front}
             </div>
             <div aria-hidden={!flipped} inert={!flipped ? '' : undefined}
+              style={{ pointerEvents: flipped ? 'auto' : 'none' }}
               className="absolute inset-0 min-w-0 overflow-auto bg-white [backface-visibility:hidden] [transform:rotateY(180deg)]">
               {back}
             </div>
