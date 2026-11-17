@@ -25,6 +25,7 @@ export default function Toolbar() {
     activeSidebarTab: activeTab,
     setActiveSidebarTab: setActiveTab,
     DEBUG_FLG,
+    isCompanyAutomationEnabled,
   } = useAppState()
 
   // 施設IDの同期状態を追跡する診断ログ。ここでは値を更新しない。
@@ -41,7 +42,7 @@ export default function Toolbar() {
   return (
     <div
       id="toolbar"
-      className="
+      className={`
         relative
         z-[1000]
         flex
@@ -51,10 +52,11 @@ export default function Toolbar() {
         gap-2.5
         overflow-x-auto
         whitespace-nowrap
-        bg-[#616161]
-        text-white
         pointer-events-auto
-      "
+        ${isCompanyAutomationEnabled === true
+          ? 'bg-[#616161] text-white'
+          : 'bg-white text-gray-800'}
+      `}
     >
 
      <ModeNavi />

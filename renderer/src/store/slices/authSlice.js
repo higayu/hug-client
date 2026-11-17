@@ -10,7 +10,15 @@ export const fetchLaravelAuthState = createAsyncThunk(
       }
 
       const result = await api();
-      const user = result?.user ?? result?.data?.user ?? null;
+      const topLevelUser = result?.user ?? null;
+      const dataUser = result?.data?.user ?? null;
+      const user =
+        topLevelUser || dataUser
+          ? {
+              ...(topLevelUser ?? {}),
+              ...(dataUser ?? {}),
+            }
+          : null;
       const authenticated =
         result?.success === true &&
         result?.meta?.authenticated === true &&
@@ -22,7 +30,7 @@ export const fetchLaravelAuthState = createAsyncThunk(
         );
       }
 
-      return { user: sanitizeUser(user) };
+      return { user: normalizeAuthUser(user) };
     } catch (error) {
       return rejectWithValue(
         error?.message || "Laravel authentication failed.",
@@ -31,10 +39,17 @@ export const fetchLaravelAuthState = createAsyncThunk(
   },
 );
 
-const sanitizeUser = (user) => {
-  if (!user) return null;
-  const { role_id: _oldRoleId, ...safe } = user;
-  return safe;
+// JWT / Laravel auth_me の role_code のみを利用する。
+// 旧 role_id からの権限推測は行わない。
+const normalizeAuthUser = (user) => {
+  if (!user || typeof user !== "object") return null;
+  const { role_id: _legacyRoleId, ...rest } = user;
+  return {
+    ...rest,
+    company_id: user.company_id ?? null,
+    is_automation_enabled: user.is_automation_enabled === true,
+    role_code: typeof user.role_code === "string" ? user.role_code : null,
+  };
 };
 
 const initialState = {
@@ -50,10 +65,10 @@ const authSlice = createSlice({
   initialState,
   reducers: {
     setLaravelAuthentication: (state, action) => {
-      const user = action.payload?.user ?? null;
+      const user = normalizeAuthUser(action.payload?.user);
       const authenticated = Boolean(user) && action.payload?.authenticated !== false;
 
-      state.user = sanitizeUser(user);
+      state.user = user;
       state.authenticated = authenticated;
       state.hasAccessToken = authenticated;
       state.status = authenticated ? "authenticated" : "unauthenticated";
@@ -71,7 +86,7 @@ const authSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchLaravelAuthState.fulfilled, (state, action) => {
-        state.user = sanitizeUser(action.payload.user);
+        state.user = action.payload.user;
         state.authenticated = true;
         state.hasAccessToken = true;
         state.status = "authenticated";
@@ -105,3 +120,14 @@ export const selectIsLaravelAuthenticated = (state) =>
   );
 
 export default authSlice.reducer;
+
+// 管理者判定はLaravelが認証済みユーザーに返したrole_codeを使用する。
+export const selectAuthenticatedRoleCode = (state) =>
+  state.auth?.authenticated ? state.auth?.user?.role_code ?? null : null;
+export const selectIsGlobalAdmin = (state) =>
+  selectAuthenticatedRoleCode(state) === "admin";
+
+// 会社単位の自動化利用可否。未認証・未取得は false。
+export const selectIsCompanyAutomationEnabled = (state) =>
+  selectIsLaravelAuthenticated(state) &&
+  state.auth?.user?.is_automation_enabled === true;

@@ -112,6 +112,7 @@ export default function SettingsModal({
 
   const {
     DEBUG_FLG,
+    isCompanyAutomationEnabled,
   } = useAppState();
 
   const tabs = useMemo(() => {
@@ -205,6 +206,13 @@ export default function SettingsModal({
           <header className="flex shrink-0 items-center justify-between bg-gradient-to-r from-[#667eea] to-[#764ba2] p-5 text-white">
             <h2 className="m-0 text-2xl font-semibold">
               ⚙️ 設定編集
+              <span className={`ml-2 rounded px-2 py-0.5 text-sm font-normal ${
+                isCompanyAutomationEnabled === true
+                  ? 'bg-emerald-100 text-emerald-800'
+                  : 'bg-gray-100 text-gray-700'
+              }`}>
+                Webview自動化：{isCompanyAutomationEnabled === true ? 'ON' : 'OFF'}
+              </span>
               {DEBUG_FLG && (
                 <span className="ml-2 rounded bg-yellow-400 px-2 py-0.5 text-sm font-normal text-black">
                   DEBUG

@@ -11,6 +11,7 @@ import {
 } from 'react-redux'
 
 import * as s from '@/store/slices/appStateSlice'
+import { selectIsCompanyAutomationEnabled } from '@/store/slices/authSlice'
 
 import {
   selectChildren,
@@ -72,6 +73,7 @@ import {
 } from '@/AppStateContext/splitChildrenData'
 
 export function useReduxBindings() {
+  const isCompanyAutomationEnabled = useSelector(selectIsCompanyAutomationEnabled)
   // ============================================================
   // appStateSlice
   // ============================================================
@@ -772,6 +774,7 @@ export function useReduxBindings() {
 
   return {
     appState,
+    isCompanyAutomationEnabled,
 
     // ==========================================================
     // databaseSlice
