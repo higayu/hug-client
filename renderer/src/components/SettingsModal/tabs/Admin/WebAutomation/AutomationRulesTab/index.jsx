@@ -23,7 +23,6 @@ const EMPTY_FLOW = {
   status: 'draft',
   published_at: null,
 }
-
 function normalizeArray(result) {
   if (Array.isArray(result?.data)) return result.data
   if (Array.isArray(result?.data?.data)) return result.data.data
@@ -32,10 +31,15 @@ function normalizeArray(result) {
 }
 
 function normalizeSingle(result) {
-  if (result?.data?.data && !Array.isArray(result.data.data)) {
-    return result.data.data
+  const data = result?.data?.data ?? result?.data ?? null
+  if (data?.flow) {
+    return {
+      ...data.flow,
+      files: Array.isArray(data.files) ? data.files : [],
+      memos: Array.isArray(data.memos) ? data.memos : [],
+    }
   }
-  return result?.data ?? null
+  return data
 }
 
 function stringifyJson(value) {
@@ -300,6 +304,26 @@ export default function AutomationRulesTab() {
     }
   }, [appKey, selectedFlow?.flow_key])
 
+  const deleteLog = async (log) => {
+    if (!log?.id || !window.confirm('この実行ログを削除しますか？')) return
+    const api = getApi(
+      'laravel_webAutomationV2ExecutionLog_delete',
+      'webAutomationV2_adminExecutionLogDelete',
+    )
+    if (!api) {
+      showErrorToast('実行ログ削除APIがpreloadに公開されていません。')
+      return
+    }
+    try {
+      const result = await api(log.id)
+      if (!result?.success) throw new Error(result?.message ?? '実行ログの削除に失敗しました。')
+      setLogs((current) => current.filter((item) => Number(item.id) !== Number(log.id)))
+      showSuccessToast('実行ログを削除しました。')
+    } catch (e) {
+      showErrorToast(e?.message ?? '実行ログの削除に失敗しました。')
+    }
+  }
+
   useEffect(() => {
     loadFlows()
   }, [])
@@ -377,23 +401,15 @@ export default function AutomationRulesTab() {
   }
 
   const reset = () => {
-    setFlowForm({ ...savedFlowForm })
-    setFiles(savedFiles.map((file) => ({ ...file })))
     setMemos(savedMemos.map((memo) => ({ ...memo })))
-    setDeletedFileIds([])
     setDeletedMemoIds([])
   }
 
   const hasChanges =
-    JSON.stringify(flowForm) !== JSON.stringify(savedFlowForm) ||
-    JSON.stringify(files) !== JSON.stringify(savedFiles) ||
     JSON.stringify(memos) !== JSON.stringify(savedMemos) ||
-    deletedFileIds.length > 0 ||
     deletedMemoIds.length > 0
 
   const save = async () => {
-    showErrorToast('旧方式の直接保存は廃止しました。Filamentのリビジョン下書き編集を使用してください。')
-    return
     if (!selectedFlow || saving) return
 
     const api = getApi(
@@ -406,28 +422,6 @@ export default function AutomationRulesTab() {
       return
     }
 
-    let configJson
-    let inputSchemaJson
-    let outputSchemaJson
-
-    try {
-      configJson = JSON.parse(flowForm.config_json || '{}')
-      inputSchemaJson = JSON.parse(flowForm.input_schema_json || '{}')
-      outputSchemaJson = JSON.parse(flowForm.output_schema_json || '{}')
-    } catch (e) {
-      showErrorToast(`JSON形式が不正です: ${e.message}`)
-      return
-    }
-
-    for (const file of files) {
-      try {
-        JSON.parse(file.config_json || '{}')
-      } catch (e) {
-        showErrorToast(`${file.file_path || '新規ファイル'} の config_json が不正です。`)
-        return
-      }
-    }
-
     const invalidMemoIndex = memos.findIndex((memo) => !String(memo.title ?? '').trim() || String(memo.title ?? '').trim().length > 255)
     if (invalidMemoIndex !== -1) {
       showErrorToast(`メモ #${invalidMemoIndex + 1} のタイトルは1〜255文字で入力してください。`)
@@ -435,27 +429,6 @@ export default function AutomationRulesTab() {
     }
 
     const payload = {
-      name: flowForm.name.trim(),
-      description: flowForm.description.trim() || null,
-      entry_file: flowForm.entry_file.trim(),
-      entry_export: flowForm.entry_export.trim() || 'default',
-      engine_version: Math.max(1, Number(flowForm.engine_version) || 1),
-      config_json: configJson,
-      input_schema_json: inputSchemaJson,
-      output_schema_json: outputSchemaJson,
-      timeout_ms: Math.max(1, Number(flowForm.timeout_ms) || 30000),
-      version: Math.max(1, Number(flowForm.version) || 1),
-      status: flowForm.status,
-      files: files.map((file) => ({
-        ...(file.id != null ? { id: file.id } : {}),
-        file_path: file.file_path.trim(),
-        file_type: file.file_type || 'javascript',
-        module_type: file.module_type || 'commonjs',
-        source_text: file.source_text,
-        config_json: JSON.parse(file.config_json || '{}'),
-        is_active: Boolean(file.is_active),
-      })),
-      deleted_file_ids: deletedFileIds,
       memos: memos.map((memo) => ({
         ...(memo.id != null ? { id: memo.id } : {}),
         title: String(memo.title ?? '').trim(),
@@ -476,7 +449,7 @@ export default function AutomationRulesTab() {
       const returned = normalizeSingle(result)
       if (returned) applyFlow(returned)
       await loadFlows(false)
-      showSuccessToast(`V2 Flow「${flowForm.flow_key}」を保存しました。`)
+      showSuccessToast(`「${flowForm.flow_key}」のメモを保存しました。`)
     } catch (e) {
       console.error('[WebAutomationV2Admin] 保存エラー:', e)
       showErrorToast(e?.message ?? 'V2 Flowの保存に失敗しました。')
@@ -492,7 +465,7 @@ export default function AutomationRulesTab() {
           <div>
             <h3 className="text-lg font-semibold text-gray-700">Web自動化 V2</h3>
             <p className="mt-1 text-sm text-gray-600">
-              web_automation_flows_v2 / files_v2 / flow_memos_v2 / execution_logs_v2 を管理します。
+              FlowとwebviewScriptを閲覧し、Flowメモを管理します。
             </p>
           </div>
 
@@ -558,10 +531,10 @@ export default function AutomationRulesTab() {
             <>
               <div className="mb-4 flex gap-2 border-b border-gray-200">
                 {[
-                  ['flows', 'Flow'],
-                  ['files', `Files (${files.length})`],
-                  ['memos', `Memos (${memos.length})`],
-                  ['logs', 'Logs'],
+                  ['flows', 'Flow情報'],
+                  ['files', `webviewScript (${files.length})`],
+                  ['memos', `メモ (${memos.length})`],
+                  ['logs', '実行ログ'],
                 ].map(([id, label]) => (
                   <TabButton key={id} active={activeTab === id} onClick={() => setActiveTab(id)}>
                     {label}
@@ -570,11 +543,11 @@ export default function AutomationRulesTab() {
               </div>
 
               {activeTab === 'flows' && (
-                <FlowEditor flow={flowForm} update={updateFlowField} />
+                <FlowEditor flow={flowForm} />
               )}
 
               {activeTab === 'files' && (
-                <FilesEditor files={files} onAdd={addFile} onChange={updateFile} onDelete={deleteFile} disabled={saving} />
+                <FilesEditor files={files} />
               )}
 
               {activeTab === 'memos' && (
@@ -582,35 +555,16 @@ export default function AutomationRulesTab() {
               )}
 
               {activeTab === 'logs' && (
-                <LogsPanel logs={logs} onReload={loadLogs} />
+                <LogsPanel logs={logs} onReload={loadLogs} onDelete={deleteLog} />
               )}
 
-              {isAdmin && (
-                <div className="mt-4 rounded-lg border border-amber-300 bg-amber-50 p-3 space-y-3">
-                  <label className="flex items-center gap-2 text-sm font-semibold">
-                    <input type="checkbox" checked={developerTestMode} onChange={(e) => setDeveloperTestMode(e.target.checked)} />
-                    開発者モード：下書きテスト実行
-                  </label>
-                  {developerTestMode && (
-                    <>
-                      <p className="text-xs text-amber-900">公開版には反映しません。ただし、下書きJSによる実際の操作・送信は発生します。</p>
-                      <label className="block text-sm">テスト入力 (JSON)</label>
-                      <textarea className="w-full rounded border p-2 font-mono text-xs" rows={3} value={draftInput} onChange={(e) => setDraftInput(e.target.value)} />
-                      <button type="button" disabled={testingDraft || hasChanges} onClick={runDraftTest} className="rounded bg-amber-700 px-4 py-2 text-sm text-white disabled:opacity-50">
-                        {testingDraft ? 'テスト実行中...' : '下書きJSをテスト実行'}
-                      </button>
-                      {hasChanges && <p className="text-xs text-red-700">未保存の画面変更はテストに反映されません。</p>}
-                    </>
-                  )}
-                </div>
-              )}
-              {activeTab !== 'logs' && (
+              {activeTab === 'memos' && (
                 <div className="mt-5 flex flex-wrap items-center gap-2 border-t border-gray-200 pt-4">
                   <button type="button" onClick={reset} disabled={!hasChanges || saving} className="rounded-md bg-gray-600 px-5 py-2.5 font-medium text-white disabled:opacity-50">
                     変更を戻す
                   </button>
-                  <button type="button" onClick={save} disabled={true} className="rounded-md bg-blue-600 px-5 py-2.5 font-medium text-white hover:bg-blue-700 disabled:opacity-50">
-                    '旧方式の保存は停止中'
+                  <button type="button" onClick={save} disabled={!hasChanges || saving} className="rounded-md bg-blue-600 px-5 py-2.5 font-medium text-white hover:bg-blue-700 disabled:opacity-50">
+                    {saving ? '保存中...' : 'メモを保存'}
                   </button>
                   {hasChanges && <span className="text-sm text-amber-700">未保存の変更があります</span>}
                 </div>
@@ -623,29 +577,29 @@ export default function AutomationRulesTab() {
   )
 }
 
-function FlowEditor({ flow, update }) {
+function FlowEditor({ flow }) {
   return (
     <div className="space-y-4">
       <div className="grid gap-4 md:grid-cols-2">
         <Field label="flow_key" value={flow.flow_key} readOnly />
-        <Field label="名称" value={flow.name} onChange={(v) => update('name', v)} />
-        <Field label="entry_file" value={flow.entry_file} onChange={(v) => update('entry_file', v)} />
-        <Field label="entry_export" value={flow.entry_export} onChange={(v) => update('entry_export', v)} />
-        <NumberField label="engine_version" value={flow.engine_version} onChange={(v) => update('engine_version', v)} min={1} />
-        <NumberField label="timeout_ms" value={flow.timeout_ms} onChange={(v) => update('timeout_ms', v)} min={1} />
-        <NumberField label="version" value={flow.version} onChange={(v) => update('version', v)} min={1} />
-        <SelectField label="status" value={flow.status} onChange={(v) => update('status', v)} options={['draft', 'published', 'disabled']} />
+        <Field label="名称" value={flow.name} readOnly />
+        <Field label="entry_file" value={flow.entry_file} readOnly />
+        <Field label="entry_export" value={flow.entry_export} readOnly />
+        <Field label="engine_version" value={flow.engine_version} readOnly />
+        <Field label="timeout_ms" value={flow.timeout_ms} readOnly />
+        <Field label="version" value={flow.version} readOnly />
+        <Field label="status" value={flow.status} readOnly />
       </div>
 
-      <TextArea label="description" value={flow.description} onChange={(v) => update('description', v)} rows={3} />
-      <JsonEditor label="config_json" value={flow.config_json} onChange={(v) => update('config_json', v)} />
-      <JsonEditor label="input_schema_json" value={flow.input_schema_json} onChange={(v) => update('input_schema_json', v)} />
-      <JsonEditor label="output_schema_json" value={flow.output_schema_json} onChange={(v) => update('output_schema_json', v)} />
+      <TextArea label="description" value={flow.description} rows={3} readOnly />
+      <CodeEditor label="config_json" value={flow.config_json} readOnly rows={8} />
+      <CodeEditor label="input_schema_json" value={flow.input_schema_json} readOnly rows={8} />
+      <CodeEditor label="output_schema_json" value={flow.output_schema_json} readOnly rows={8} />
     </div>
   )
 }
 
-function FilesEditor({ files, onAdd, onChange, onDelete, disabled }) {
+function FilesEditor({ files }) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -653,27 +607,25 @@ function FilesEditor({ files, onAdd, onChange, onDelete, disabled }) {
           <h4 className="font-semibold text-gray-800">仮想JSファイル</h4>
           <p className="text-xs text-gray-500">web_automation_files_v2。物理ファイルには書き出さず、moduleLoaderがメモリ上で実行します。</p>
         </div>
-        <button type="button" onClick={onAdd} disabled={disabled} className="rounded-md bg-emerald-600 px-3 py-2 text-sm font-medium text-white disabled:opacity-50">ファイル追加</button>
       </div>
 
       {files.length === 0 ? <EmptyBox>ファイルがありません。</EmptyBox> : files.map((file) => (
         <div key={file._client_id} className="rounded-lg border border-gray-200 bg-white p-4">
           <div className="mb-3 grid gap-3 md:grid-cols-2">
-            <Field label="file_path" value={file.file_path} onChange={(v) => onChange(file._client_id, 'file_path', v)} />
-            <SelectField label="module_type" value={file.module_type} onChange={(v) => onChange(file._client_id, 'module_type', v)} options={['commonjs', 'module', 'raw']} />
+            <Field label="file_path" value={file.file_path} readOnly />
+            <Field label="module_type" value={file.module_type} readOnly />
           </div>
 
-          <CodeEditor label="source_text" value={file.source_text} onChange={(v) => onChange(file._client_id, 'source_text', v)} />
-          <JsonEditor label="config_json" value={file.config_json} onChange={(v) => onChange(file._client_id, 'config_json', v)} />
+          <CodeEditor label="source_text" value={file.source_text} readOnly />
+          <CodeEditor label="config_json" value={file.config_json} readOnly rows={8} />
 
           <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
             <label className="flex items-center gap-2 text-sm text-gray-700">
-              <input type="checkbox" checked={file.is_active} onChange={(e) => onChange(file._client_id, 'is_active', e.target.checked)} />
+              <input type="checkbox" checked={file.is_active} readOnly disabled />
               有効
             </label>
             <div className="flex items-center gap-3">
               {file.content_hash && <span className="max-w-[280px] truncate font-mono text-[10px] text-gray-400">SHA-256: {file.content_hash}</span>}
-              <button type="button" onClick={() => onDelete(file)} disabled={disabled} className="rounded-md border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-medium text-red-700 disabled:opacity-50">削除</button>
             </div>
           </div>
         </div>
@@ -716,7 +668,7 @@ function MemosEditor({ memos, onAdd, onChange, onDelete, disabled }) {
   )
 }
 
-function LogsPanel({ logs, onReload }) {
+function LogsPanel({ logs, onReload, onDelete }) {
   return (
     <div>
       <div className="mb-3 flex items-center justify-between">
@@ -730,7 +682,7 @@ function LogsPanel({ logs, onReload }) {
       {logs.length === 0 ? <EmptyBox>ログがありません。</EmptyBox> : (
         <div className="overflow-x-auto rounded-lg border border-gray-200">
           <table className="min-w-full text-left text-xs">
-            <thead className="bg-gray-50 text-gray-600"><tr><th className="p-2">started_at</th><th className="p-2">flow</th><th className="p-2">version</th><th className="p-2">status</th><th className="p-2">duration</th><th className="p-2">error</th></tr></thead>
+            <thead className="bg-gray-50 text-gray-600"><tr><th className="p-2">started_at</th><th className="p-2">flow</th><th className="p-2">version</th><th className="p-2">status</th><th className="p-2">duration</th><th className="p-2">error</th><th className="p-2">操作</th></tr></thead>
             <tbody>
               {logs.map((log) => (
                 <tr key={log.id ?? log.execution_uuid} className="border-t border-gray-100">
@@ -740,6 +692,7 @@ function LogsPanel({ logs, onReload }) {
                   <td className="p-2"><StatusBadge status={log.status} /></td>
                   <td className="p-2">{log.duration_ms == null ? '-' : `${log.duration_ms} ms`}</td>
                   <td className="max-w-[320px] truncate p-2 text-red-700">{log.error_message ?? '-'}</td>
+                  <td className="p-2"><button type="button" onClick={() => onDelete(log)} className="rounded border border-red-200 bg-red-50 px-2 py-1 text-red-700 hover:bg-red-100">削除</button></td>
                 </tr>
               ))}
             </tbody>
@@ -776,8 +729,8 @@ function SelectField({ label, value, onChange, options }) {
   return <label className="block"><span className="mb-1 block text-xs font-semibold text-gray-600">{label}</span><select value={value ?? ''} onChange={(e) => onChange?.(e.target.value)} className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm">{options.map((option) => <option key={option} value={option}>{option}</option>)}</select></label>
 }
 
-function TextArea({ label, value, onChange, rows = 4 }) {
-  return <label className="block"><span className="mb-1 block text-xs font-semibold text-gray-600">{label}</span><textarea value={value ?? ''} onChange={(e) => onChange?.(e.target.value)} rows={rows} className="w-full resize-y rounded-md border border-gray-300 px-3 py-2 text-sm" /></label>
+function TextArea({ label, value, onChange, rows = 4, readOnly = false }) {
+  return <label className="block"><span className="mb-1 block text-xs font-semibold text-gray-600">{label}</span><textarea value={value ?? ''} onChange={(e) => onChange?.(e.target.value)} rows={rows} readOnly={readOnly} className={`w-full resize-y rounded-md border border-gray-300 px-3 py-2 text-sm ${readOnly ? 'bg-gray-100 text-gray-600' : ''}`} /></label>
 }
 
 function JsonEditor({ label, value, onChange }) {
@@ -794,8 +747,8 @@ function JsonEditor({ label, value, onChange }) {
   return <div><div className="mb-1 flex items-center justify-between"><span className="text-xs font-semibold text-gray-600">{label}</span><button type="button" onClick={format} className="rounded bg-slate-100 px-2 py-1 text-[11px] text-slate-700">整形</button></div><textarea value={value ?? ''} onChange={(e) => { onChange(e.target.value); setLocalError('') }} rows={8} spellCheck={false} className="w-full resize-y rounded-md border border-gray-300 bg-slate-950 p-3 font-mono text-xs leading-5 text-slate-100" />{localError && <p className="mt-1 text-xs text-red-600">{localError}</p>}</div>
 }
 
-function CodeEditor({ label, value, onChange }) {
-  return <label className="block"><span className="mb-1 block text-xs font-semibold text-gray-600">{label}</span><textarea value={value ?? ''} onChange={(e) => onChange?.(e.target.value)} rows={18} spellCheck={false} className="w-full resize-y rounded-md border border-gray-300 bg-slate-950 p-3 font-mono text-xs leading-5 text-slate-100" /></label>
+function CodeEditor({ label, value, onChange, readOnly = false, rows = 18 }) {
+  return <label className="block"><span className="mb-1 block text-xs font-semibold text-gray-600">{label}</span><textarea value={value ?? ''} onChange={(e) => onChange?.(e.target.value)} rows={rows} readOnly={readOnly} spellCheck={false} className="w-full resize-y rounded-md border border-gray-300 bg-slate-950 p-3 font-mono text-xs leading-5 text-slate-100" /></label>
 }
 
 function ErrorBox({ children }) {

@@ -1,9 +1,7 @@
 import { useState } from 'react'
-import { useSelector } from 'react-redux'
 
 import { useAppState } from '@/AppStateContext'
-import { selectLaravelAuth } from '@/store/slices/authSlice'
-import { selectCanManageStaff, selectIsGlobalAdmin } from '@/store/roleSelectors'
+import { useSettingsRoleAccess } from '../../useSettingsRoleAccess'
 
 import AdminHeader from './components/AdminHeader'
 import AdminSectionCards from './components/AdminSectionCards'
@@ -15,13 +13,9 @@ import StaffManagement from './StaffManagement'
 import WebAutomation from './WebAutomation'
 
 export default function AdminTab() {
-  const auth = useSelector(selectLaravelAuth)
-  const isMentorOrAbove = useSelector(selectCanManageStaff)
-  const isAdmin = useSelector(selectIsGlobalAdmin)
-  const authenticatedStaffId = auth.user?.staff_id
+  const { canAccessAdminTab, canManageStaff, isAdmin } = useSettingsRoleAccess()
   const {
     databaseState,
-    DEBUG_FLG,
   } = useAppState()
   const [activeAdminSection, setActiveAdminSection] = useState(
     ADMIN_SECTION_IDS.STAFF_MANAGEMENT,
@@ -29,7 +23,7 @@ export default function AdminTab() {
 
   const visibleAdminSections = ADMIN_SECTIONS.filter((section) => {
     if (section.id === ADMIN_SECTION_IDS.WEB_AUTOMATION) {
-      return isAdmin && DEBUG_FLG
+      return isAdmin
     }
 
     return true
@@ -41,7 +35,7 @@ export default function AdminTab() {
     ? activeAdminSection
     : ADMIN_SECTION_IDS.STAFF_MANAGEMENT
 
-  if (!isAdmin && !isMentorOrAbove) {
+  if (!canAccessAdminTab) {
     return null
   }
 
@@ -58,12 +52,11 @@ export default function AdminTab() {
       {visibleActiveSection === ADMIN_SECTION_IDS.STAFF_MANAGEMENT && (
         <StaffManagement
           staffs={databaseState?.staffs}
-          authenticatedStaffId={authenticatedStaffId}
+          canManageStaff={canManageStaff}
         />
       )}
 
       {isAdmin &&
-        DEBUG_FLG &&
         visibleActiveSection === ADMIN_SECTION_IDS.WEB_AUTOMATION && (
           <WebAutomation />
         )}

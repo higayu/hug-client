@@ -7,7 +7,6 @@
   color: #111827 !important;
   color-scheme: light !important;
 }
-
 .settings-modal-container p,
 .settings-modal-container span:not(.text-white),
 .settings-modal-container div:not(.text-white),
@@ -81,6 +80,7 @@
   border-radius: 6px;
   cursor: pointer;
 }
+
 /* === ボタンスタイル（動的生成要素で使用） === */
 .btn-danger {
   background: linear-gradient(135deg, #dc3545, #c82333);
@@ -139,8 +139,16 @@
   background: #898888;
 }
 
-/* 選択中の設定タブは濃い青背景・白文字を優先する */
-.settings-modal-container [role="tab"][aria-selected="true"],
-.settings-modal-container [role="tab"][aria-selected="true"] span {
-  color: #ffffff !important;
+/* 選択中の設定タブは淡い青＋濃い文字で強調する。
+   設定モーダルの既存の文字色 !important 指定より優先する。 */
+.settings-modal-container .settings-tab-active,
+.settings-modal-container .settings-tab-active span,
+.settings-modal-container .settings-tab-active svg {
+  color: #1e3a8a !important;
+}
+
+.settings-modal-container .settings-tab-active:hover,
+.settings-modal-container .settings-tab-active:hover span,
+.settings-modal-container .settings-tab-active:hover svg {
+  color: #172554 !important;
 }

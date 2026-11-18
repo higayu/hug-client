@@ -209,6 +209,10 @@ var require_electronApi = __commonJS({
           "laravel:web-automation-v2:admin:execution-logs:list",
           params
         ),
+        laravel_webAutomationV2ExecutionLog_delete: (id) => ipcRenderer2.invoke(
+          "laravel:web-automation-v2:admin:execution-log:delete",
+          id
+        ),
         // SettingsModal側の互換名。
         webAutomationV2_adminFlowsGetAll: (params = {}) => ipcRenderer2.invoke(
           "laravel:web-automation-v2:admin:flows:list",
@@ -227,6 +231,10 @@ var require_electronApi = __commonJS({
         webAutomationV2_adminExecutionLogsGetAll: (params = {}) => ipcRenderer2.invoke(
           "laravel:web-automation-v2:admin:execution-logs:list",
           params
+        ),
+        webAutomationV2_adminExecutionLogDelete: (id) => ipcRenderer2.invoke(
+          "laravel:web-automation-v2:admin:execution-log:delete",
+          id
         ),
         // ---- Q&A・障害対応ナレッジ ----
         laravel_troubleshootingKnowledge_getAll: (params = {}) => ipcRenderer2.invoke(

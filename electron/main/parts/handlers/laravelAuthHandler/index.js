@@ -45,6 +45,7 @@ const IPC_CHANNELS = [
   "laravel:web-automation-v2:admin:flow:get",
   "laravel:web-automation-v2:admin:flow:update",
   "laravel:web-automation-v2:admin:execution-logs:list",
+  "laravel:web-automation-v2:admin:execution-log:delete",
 
   // ============================================================
   // Q&A・障害対応ナレッジ
@@ -330,6 +331,11 @@ function registerLaravelAuthHandlers(
     webAutomationV2.adminExecutionLogsGetAllHandler
   );
 
+  ipcMain.handle(
+    "laravel:web-automation-v2:admin:execution-log:delete",
+    webAutomationV2.adminExecutionLogDeleteHandler
+  );
+
   // ============================================================
   // Q&A・障害対応ナレッジ
   // ============================================================
@@ -540,4 +546,3 @@ module.exports = {
   handleLaravelAuth:
     registerLaravelAuthHandlers,
 };
-

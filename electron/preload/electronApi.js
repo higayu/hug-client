@@ -135,6 +135,12 @@ function createElectronApi(ipcRenderer, isDebugMode) {
         params,
       ),
 
+    laravel_webAutomationV2ExecutionLog_delete: (id) =>
+      ipcRenderer.invoke(
+        "laravel:web-automation-v2:admin:execution-log:delete",
+        id,
+      ),
+
     // SettingsModal側の互換名。
     webAutomationV2_adminFlowsGetAll: (params = {}) =>
       ipcRenderer.invoke(
@@ -160,6 +166,12 @@ function createElectronApi(ipcRenderer, isDebugMode) {
       ipcRenderer.invoke(
         "laravel:web-automation-v2:admin:execution-logs:list",
         params,
+      ),
+
+    webAutomationV2_adminExecutionLogDelete: (id) =>
+      ipcRenderer.invoke(
+        "laravel:web-automation-v2:admin:execution-log:delete",
+        id,
       ),
 
     // ---- Q&A・障害対応ナレッジ ----

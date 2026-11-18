@@ -9,10 +9,12 @@ import {
   STAFF_SECTIONS,
 } from './constants/staffSections'
 import { useStaffSelection } from './hooks/useStaffSelection'
+import StaffUpdateButton from '@/components/common/Synchronization/StaffUpdateButton';
+import ChildrenUpdateButton from '@/components/common/Synchronization/ChildrenUpdateButton';
 
 export default function StaffManagement({
   staffs,
-  authenticatedStaffId,
+  canManageStaff,
 }) {
   const [activeStaffSection, setActiveStaffSection] = useState(
     STAFF_SECTION_IDS.BASE,
@@ -25,7 +27,7 @@ export default function StaffManagement({
     setSelectedStaffId,
   } = useStaffSelection({
     staffs,
-    authenticatedStaffId,
+    canManageStaff,
   })
 
   return (

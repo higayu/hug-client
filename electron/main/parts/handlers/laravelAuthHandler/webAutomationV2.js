@@ -127,7 +127,7 @@ async function getFlowBundle(payload = {}) {
     throw new Error("WebAutomation V2 Filesのレスポンス形式が正しくありません。");
   }
 
-  return validateRevisionBundle({
+  return {
     success: true,
     ok: true,
     connected: true,
@@ -139,7 +139,6 @@ async function getFlowBundle(payload = {}) {
       files,
     },
     meta: {
-      ...(data?.meta ?? {}),
       ...(result?.meta ?? {}),
       authenticated: true,
       appKey,
@@ -149,34 +148,10 @@ async function getFlowBundle(payload = {}) {
       reauthenticated: result?.meta?.reauthenticated ?? false,
     },
     error: null,
-  }, "published");
+  };
 }
 
-// 公開版・下書き版ともにスナップショットの整合性を検証する。
-function validateRevisionBundle(bundle, expectedStatus) {
-  const meta = bundle?.meta ?? {};
-  const flow = bundle?.flow;
-  const files = bundle?.files;
-  const status = String(meta.status ?? meta.revision_status ?? "").toLowerCase();
-  const revisionId = Number(meta.revision_id ?? meta.revisionId);
-  if (status !== expectedStatus || !Number.isSafeInteger(revisionId) || revisionId <= 0) {
-    throw new Error(`${expectedStatus}リビジョンを確認できません。取得したJSは実行しません。`);
-  }
-  if (!flow || !Array.isArray(files) || files.length === 0) {
-    throw new Error("リビジョンのフローまたはJSファイルがありません。");
-  }
-  const active = files.filter(f => f && f.is_active !== false && f.is_active !== 0 && f.is_active !== "0");
-  if (active.length === 0 || active.some(f => typeof f.source_text !== "string" || !f.source_text.trim())) {
-    throw new Error("有効なJSファイルが存在しないか、内容が空です。");
-  }
-  const entry = String(flow.entry_file ?? flow.entryFile ?? "").trim();
-  if (!entry || !active.some(f => String(f.file_path ?? f.filePath ?? "") === entry)) {
-    throw new Error("公開・下書きリビジョンのエントリーファイルが見つかりません。");
-  }
-  return bundle;
-}
-
-/** 管理者専用。下書きがなければ公開版へフォールバックせず失敗させる。 */
+// Dedicated draft test IPC. Never allow developer_mode on the normal execution path.
 async function getDraftTestFlowBundle(payload = {}) {
   const normalized = normalizeObject(payload);
   const flowKey = normalizeFlowKey(normalized.flowKey ?? normalized.flow_key);
@@ -184,29 +159,23 @@ async function getDraftTestFlowBundle(payload = {}) {
   const engineVersion = Number(normalized.engineVersion ?? normalized.engine_version ?? EXECUTOR_ENGINE_VERSION);
   const result = await executeAuthenticatedOperation(
     () => laravelApiClient.get(`/web-automation-v2/flows/${encodeURIComponent(flowKey)}`, {
-      params: {
-        app_key: appKey,
-        engine_version: Number.isInteger(engineVersion) && engineVersion > 0 ? engineVersion : EXECUTOR_ENGINE_VERSION,
-        developer_mode: 1,
-      },
+      params: { app_key: appKey, engine_version: Number.isInteger(engineVersion) && engineVersion > 0 ? engineVersion : EXECUTOR_ENGINE_VERSION, developer_mode: 1 },
     }),
-    "下書きリビジョンの取得に失敗しました。"
+    "下書きテスト用Flowの取得に失敗しました。"
   );
   if (result?.success === false) return result;
   const data = unwrapData(result);
-  const bundle = {
-    success: true, ok: true, connected: true,
-    flow: data?.flow, files: data?.files,
-    data: {flow: data?.flow, files: data?.files},
-    meta: {...(data?.meta ?? {}), ...(result?.meta ?? {}), authenticated: true, appKey, flowKey, engineVersion},
-    error: null,
-  };
-  return validateRevisionBundle(bundle, "draft");
+  if (!data?.flow || !Array.isArray(data?.files)) throw new Error("下書きテスト用Flowの形式が不正です。");
+  const meta = result?.meta ?? {};
+  if (meta.developer_mode !== true || meta.status !== "draft" || !Number.isInteger(Number(meta.revision_id)) || Number(meta.revision_id) <= 0) {
+    throw new Error("下書きリビジョンが取得できません。公開版はテスト実行しません。");
+  }
+  return { success: true, ok: true, flow: data.flow, files: data.files, data, meta: { ...meta, authenticated: true, testExecution: true }, error: null };
 }
 
 async function getDraftTestFlowBundleHandler(_event, payload = {}) {
   try { return await getDraftTestFlowBundle(payload); }
-  catch (error) { return formatError(error, "下書きテスト用JSの取得に失敗しました。"); }
+  catch (error) { return formatError(error, "下書きテスト用Flowの取得に失敗しました。"); }
 }
 
 async function startExecutionLog(payload = {}) {
@@ -450,8 +419,35 @@ async function adminGetFlow(flowIdOrKey, payload = {}) {
  *
  * PATCH /api/web-automation-v2/admin/flows/{id}
  */
-async function adminUpdateFlow(_flowId, _payload = {}) {
-  throw new Error("旧管理APIからの直接更新は禁止されています。Filamentで下書きを編集し、公開してください。");
+async function adminUpdateFlow(flowId, payload = {}) {
+  const id = normalizeAdminFlowId(flowId);
+  const normalized = normalizeObject(payload);
+
+  // Electronの管理画面から変更できるのはFlowメモだけに限定する。
+  const requestBody = {
+    memos: Array.isArray(normalized.memos) ? normalized.memos : [],
+    deleted_memo_ids: Array.isArray(normalized.deleted_memo_ids)
+      ? normalized.deleted_memo_ids
+      : [],
+  };
+
+  const result = await executeAuthenticatedOperation(
+    () => laravelApiClient.patch(
+      `/web-automation-v2/admin/flows/${id}`,
+      requestBody
+    ),
+    "WebAutomation V2メモの保存に失敗しました。"
+  );
+
+  if (result?.success === false) return result;
+
+  return {
+    success: true,
+    ok: true,
+    data: unwrapData(result),
+    meta: { ...(result?.meta ?? {}), authenticated: true },
+    error: null,
+  };
 }
 
 /**
@@ -519,6 +515,18 @@ async function adminGetExecutionLogs(payload = {}) {
   };
 }
 
+async function adminDeleteExecutionLog(logId) {
+  const id = normalizePositiveInt(logId);
+  if (!id) throw new Error("実行ログIDが正しくありません。");
+
+  const result = await executeAuthenticatedOperation(
+    () => laravelApiClient.delete(`/web-automation-v2/admin/execution-logs/${id}`),
+    "WebAutomation V2実行ログの削除に失敗しました。"
+  );
+  if (result?.success === false) return result;
+  return { success: true, ok: true, data: unwrapData(result), error: null };
+}
+
 async function adminFlowsGetAllHandler(_event, payload = {}) {
   try {
     return await adminGetFlows(payload);
@@ -564,6 +572,14 @@ async function adminExecutionLogsGetAllHandler(_event, payload = {}) {
       error,
       "WebAutomation V2管理用実行ログ一覧の取得に失敗しました。"
     );
+  }
+}
+
+async function adminExecutionLogDeleteHandler(_event, logId) {
+  try {
+    return await adminDeleteExecutionLog(logId);
+  } catch (error) {
+    return formatError(error, "WebAutomation V2実行ログの削除に失敗しました。");
   }
 }
 
@@ -614,6 +630,7 @@ module.exports = {
   adminGetFlow,
   adminUpdateFlow,
   adminGetExecutionLogs,
+  adminDeleteExecutionLog,
 
   getFlowBundleHandler,
   executionLogStartHandler,
@@ -623,4 +640,5 @@ module.exports = {
   adminFlowGetHandler,
   adminFlowUpdateHandler,
   adminExecutionLogsGetAllHandler,
+  adminExecutionLogDeleteHandler,
 };
