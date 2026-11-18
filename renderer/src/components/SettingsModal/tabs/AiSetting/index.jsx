@@ -1,3 +1,4 @@
+import UsageCharts from './UsageCharts'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useSelector } from 'react-redux'
 import { useAppState } from '@/AppStateContext'
@@ -124,6 +125,7 @@ export default function AiSetting({ isActive = true }) {
           <p className="mt-4 text-xs text-gray-500">取得日時: {date(data.fetched_at)}</p>
         </>}
       </div>
+      <UsageCharts isActive={isActive} />
     </div>
   )
 }

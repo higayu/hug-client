@@ -63,6 +63,25 @@ const checkConnectionHandler = async (_event, payload = {}) => {
 };
 
 module.exports = {
+  chartsHandler: async (_event, params = {}) => {
+    try {
+      const days = Number(params?.days ?? 30);
+      const scope = params?.scope ?? "company";
+      if (![7, 30, 90].includes(days) || !["personal", "company", "all"].includes(scope)) {
+        throw new Error("グラフの期間・集計範囲が不正です。");
+      }
+      const result = await executeAuthenticatedOperation(
+        () => laravelApiClient.get("/ai/usage-charts", { params: { days, scope, ...(params?.company_id ? { company_id: params.company_id } : {}) } }),
+        "AI使用量グラフの取得に失敗しました。",
+      );
+      if (result?.success === false) return result;
+      return { success: true, data: unwrapData(result) };
+    } catch (error) {
+      return formatError(error, "AI使用量グラフの取得に失敗しました。");
+    }
+  },
+
+
   settingsHandler: async () => {
     try {
       const result = await executeAuthenticatedOperation(

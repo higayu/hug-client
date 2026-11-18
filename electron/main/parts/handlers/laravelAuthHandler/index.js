@@ -103,6 +103,7 @@ const IPC_CHANNELS = [
   "laravel:ai-record-editer:personal-record:with-plan:correct",
   "laravel:ai-record-editer:professional-support:two-stage:correct",
   "laravel:ai:settings",
+  "laravel:ai:usage-charts",
   "laravel:ai-chat:message",
   "laravel:ai-chat:check-connection",
   "laravel:ai-record-editer:professional-support:correct",
@@ -249,6 +250,7 @@ function registerLaravelAuthHandlers(
   ipcMain.handle("laravel:ai-record-editer:personal-record:with-plan:correct", aiRecordEditer.personalWithPlanHandler);
   ipcMain.handle("laravel:ai-record-editer:professional-support:two-stage:correct", aiRecordEditer.professionalTwoStageHandler);
   ipcMain.handle("laravel:ai:settings", aiChat.settingsHandler);
+  ipcMain.handle("laravel:ai:usage-charts", aiChat.chartsHandler);
   ipcMain.handle("laravel:ai-chat:message", aiChat.messageHandler);
   ipcMain.handle("laravel:ai-chat:check-connection", aiChat.checkConnectionHandler);
 

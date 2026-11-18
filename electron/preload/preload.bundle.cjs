@@ -170,6 +170,7 @@ var require_electronApi = __commonJS({
         ),
         laravel_aiRecordEditer_correctPersonalRecordWithPlan: (data = {}) => ipcRenderer2.invoke("laravel:ai-record-editer:personal-record:with-plan:correct", data),
         laravel_aiRecordEditer_correctProfessionalSupportTwoStage: (data = {}) => ipcRenderer2.invoke("laravel:ai-record-editer:professional-support:two-stage:correct", data),
+        laravel_ai_usageCharts: (params = {}) => ipcRenderer2.invoke("laravel:ai:usage-charts", params),
         laravel_ai_settings: () => ipcRenderer2.invoke("laravel:ai:settings"),
         laravel_ai_chat_message: (data) => ipcRenderer2.invoke("laravel:ai-chat:message", data),
         laravel_ai_chat_checkConnection: (data = {}) => ipcRenderer2.invoke("laravel:ai-chat:check-connection", data),
