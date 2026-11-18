@@ -7,6 +7,7 @@ const updateStaffLogin = require("./admin/updateStaffLogin");
 const managers2 = require("./managers2");
 const children = require("./children");
 const aiRecordEditer = require("./aiRecordEditer");
+const aiChat = require("./aiChat");
 const webAutomationV2 = require("./webAutomationV2");
 const troubleshootingKnowledge = require("./troubleshootingKnowledge");
 const personalRecordSyncs = require("./personalRecordSyncs");
@@ -99,6 +100,11 @@ const IPC_CHANNELS = [
   // AI文章校正
   // ============================================================
   "laravel:ai-record-editer:personal-record:correct",
+  "laravel:ai-record-editer:personal-record:with-plan:correct",
+  "laravel:ai-record-editer:professional-support:two-stage:correct",
+  "laravel:ai:settings",
+  "laravel:ai-chat:message",
+  "laravel:ai-chat:check-connection",
   "laravel:ai-record-editer:professional-support:correct",
 ];
 
@@ -240,6 +246,11 @@ function registerLaravelAuthHandlers(
     "laravel:ai-record-editer:professional-support:correct",
     aiRecordEditer.professionalHandler
   );
+  ipcMain.handle("laravel:ai-record-editer:personal-record:with-plan:correct", aiRecordEditer.personalWithPlanHandler);
+  ipcMain.handle("laravel:ai-record-editer:professional-support:two-stage:correct", aiRecordEditer.professionalTwoStageHandler);
+  ipcMain.handle("laravel:ai:settings", aiChat.settingsHandler);
+  ipcMain.handle("laravel:ai-chat:message", aiChat.messageHandler);
+  ipcMain.handle("laravel:ai-chat:check-connection", aiChat.checkConnectionHandler);
 
   // ============================================================
   // 全テーブル取得

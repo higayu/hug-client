@@ -1,0 +1,609 @@
+import React, {
+  useRef,
+  useState,
+  useEffect,
+  useCallback,
+  useId,
+} from "react";
+
+import { useToast } from "@/utils/notifications.jsx";
+import { useSelector } from "react-redux";
+import {
+  selectSpaceChildId,
+  selectSpaceChildName,
+} from "@/store/workSpaceSelectors.js";
+import { useAppState } from "@/AppStateContext";
+import { useNote } from "@/hooks/useNote";
+import { isMemoAutoSaveEnabled, normalizeMemoAutoSaveInterval } from "@/utils/memoAutoSave";
+import { PersonalRecordButton } from '@/components/common/hug_function';
+import CopyButton from "@/components/ui/CopyButton";
+import { ArrowDownIcon, EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
+
+export default function MemoInputBox({
+  memoType,
+  label,
+  minHeight = 100,
+  spaceId,
+  childId,
+  childName,
+  laravelApiResult = "",
+  onApplyToAiText,
+  applyToAiTextDisabled = false,
+}) {
+  const textareaRef = useRef(null);
+
+  // 最新の読込処理だけを有効にする番号
+  const loadSeqRef = useRef(0);
+
+  // ユーザーが入力を始めたか
+  const editingRef = useRef(false);
+  const editRevisionRef = useRef(0);
+  const autoSaveRevisionRef = useRef(-1);
+  const savedValueRef = useRef("");
+  const savingRef = useRef(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isComposing, setIsComposing] = useState(false);
+
+  const { showSuccessToast, showErrorToast } = useToast();
+  const spaceChildId = useSelector(selectSpaceChildId(spaceId));
+  const spaceChildName = useSelector(selectSpaceChildName(spaceId));
+  // 児童を直接渡す使い方と、作業スペースから参照する使い方に対応する。
+  const selectedChildId = String(childId ?? spaceChildId);
+  const selectedChildName = childName ?? spaceChildName;
+  const { saveTemp1, saveTemp2, loadTemp } = useNote();
+  const { STAFF_ID, CURRENT_DAY_OF_WEEK, DATABASE_TYPE, iniState } = useAppState();
+  const autoSaveEnabled = isMemoAutoSaveEnabled(iniState?.apiSettings?.memoAutoSaveEnabled);
+  const autoSaveIntervalSeconds = normalizeMemoAutoSaveInterval(iniState?.apiSettings?.memoAutoSaveIntervalSeconds);
+  const weekdayId = CURRENT_DAY_OF_WEEK?.weekdayId;
+
+  const [value, setValue] = useState("");
+  // 入力内容は維持したまま、表示だけを切り替える。
+  const [isMemoHidden, setIsMemoHidden] = useState(false);
+
+  /*
+   * useNoteから返る関数参照が変化しても、
+   * メモ読込用useEffectを不用意に再実行させない。
+   */
+  const loadTempRef = useRef(loadTemp);
+  const saveTemp1Ref = useRef(saveTemp1);
+  const saveTemp2Ref = useRef(saveTemp2);
+  const showSuccessToastRef = useRef(showSuccessToast);
+  const showErrorToastRef = useRef(showErrorToast);
+
+  useEffect(() => {
+    loadTempRef.current = loadTemp;
+  }, [loadTemp]);
+
+  useEffect(() => {
+    saveTemp1Ref.current = saveTemp1;
+  }, [saveTemp1]);
+
+  useEffect(() => {
+    saveTemp2Ref.current = saveTemp2;
+  }, [saveTemp2]);
+
+  useEffect(() => {
+    showSuccessToastRef.current = showSuccessToast;
+  }, [showSuccessToast]);
+
+  useEffect(() => {
+    showErrorToastRef.current = showErrorToast;
+  }, [showErrorToast]);
+
+  const instanceId = useId();
+  const textareaId = `memo-input-${memoType}-${instanceId}`;
+
+  const log = useCallback(
+    (...args) => {
+      console.log(
+        "[MemoInputBox]",
+        {
+          label,
+          memoType,
+          selectedChildId,
+        },
+        ...args,
+      );
+    },
+    [label, memoType, selectedChildId],
+  );
+
+  // 認証情報の更新では入力中フラグを解除しない。
+  useEffect(() => {
+    editingRef.current = false;
+    editRevisionRef.current += 1;
+    savedValueRef.current = "";
+    setIsComposing(false);
+    setValue("");
+  }, [selectedChildId, memoType]);
+
+  // 初期化後にスタッフIDが揃った場合も読み込む。
+  useEffect(() => {
+
+    if (!selectedChildId) {
+      loadSeqRef.current += 1;
+      setValue("");
+      return undefined;
+    }
+
+    if (!STAFF_ID || weekdayId == null || weekdayId === "") {
+      return undefined;
+    }
+
+    const seq = ++loadSeqRef.current;
+
+    const proxy = {
+      set value(result) {
+        /*
+         * 児童切替後などに返ってきた古い通信結果は無視する。
+         */
+        if (seq !== loadSeqRef.current) {
+          log("古い読み込み結果を無視", {
+            seq,
+            activeSeq: loadSeqRef.current,
+          });
+
+          return;
+        }
+
+        /*
+         * API読込中にユーザーが入力を始めた場合は、
+         * DBの値で入力内容を上書きしない。
+         */
+        if (editingRef.current) {
+          log("入力中のため読み込み結果を無視", {
+            seq,
+          });
+
+          return;
+        }
+
+        let nextValue = "";
+
+        if (typeof result === "object" && result !== null) {
+          nextValue =
+            memoType === 1
+              ? result.memo1 ?? ""
+              : result.memo2 ?? "";
+        } else {
+          nextValue = result ?? "";
+        }
+
+        savedValueRef.current = String(nextValue);
+        setValue(String(nextValue));
+      },
+    };
+
+    async function loadMemo() {
+      try {
+        const currentLoadTemp = loadTempRef.current;
+
+        if (typeof currentLoadTemp !== "function") {
+          throw new Error("loadTempが利用できません。");
+        }
+
+        await currentLoadTemp(
+          selectedChildId,
+          proxy,
+          { throwOnError: true },
+        );
+      } catch (error) {
+        if (seq !== loadSeqRef.current) {
+          return;
+        }
+
+        console.error(
+          "[MemoInputBox] メモ読込エラー",
+          {
+            label,
+            memoType,
+            selectedChildId,
+            error,
+          },
+        );
+
+        showErrorToastRef.current?.(
+          `${label} の読み込みに失敗しました`,
+        );
+      }
+    }
+
+    loadMemo();
+
+    return () => {
+      /*
+       * コンポーネント更新後に古い通信結果が返ってきても
+       * 適用されないようにする。
+       */
+      if (loadSeqRef.current === seq) {
+        loadSeqRef.current += 1;
+      }
+    };
+  }, [
+    selectedChildId,
+    memoType,
+    label,
+    log,
+    STAFF_ID,
+    weekdayId,
+    DATABASE_TYPE,
+  ]);
+
+  /*
+   * AIなどのwebviewタブを閉じたあと、
+   * Electron側のフォーカスが親rendererへ戻った際に
+   * メモ欄を再び入力可能な状態へ戻す。
+   */
+  useEffect(() => {
+    function restoreTextareaFocus() {
+      if (!selectedChildId || isMemoHidden) {
+        return;
+      }
+
+      const textarea = textareaRef.current;
+
+      if (
+        !(textarea instanceof HTMLTextAreaElement) ||
+        textarea.disabled ||
+        textarea.readOnly
+      ) {
+        return;
+      }
+
+      /*
+       * 既に別のinput/textareaを操作中なら
+       * 勝手にフォーカスを奪わない。
+       */
+      const activeElement = document.activeElement;
+
+      const isOtherEditableElement =
+        activeElement &&
+        activeElement !== document.body &&
+        activeElement !== textarea &&
+        (
+          activeElement instanceof HTMLInputElement ||
+          activeElement instanceof HTMLTextAreaElement ||
+          activeElement instanceof HTMLSelectElement ||
+          activeElement.isContentEditable
+        );
+
+      if (isOtherEditableElement) {
+        return;
+      }
+
+      requestAnimationFrame(() => {
+        if (!textarea.isConnected) {
+          return;
+        }
+
+        textarea.focus({
+          preventScroll: true,
+        });
+      });
+    }
+
+    function handleWindowFocus() {
+      restoreTextareaFocus();
+    }
+
+    function handleVisibilityChange() {
+      if (document.visibilityState === "visible") {
+        restoreTextareaFocus();
+      }
+    }
+
+    /*
+     * closeTab側から明示的に通知できるようにする。
+     *
+     * 使用例:
+     * window.dispatchEvent(
+     *   new CustomEvent("app:webview-tab-closed")
+     * );
+     */
+    function handleWebviewTabClosed() {
+      restoreTextareaFocus();
+    }
+
+    window.addEventListener(
+      "focus",
+      handleWindowFocus,
+    );
+
+    window.addEventListener(
+      "app:webview-tab-closed",
+      handleWebviewTabClosed,
+    );
+
+    document.addEventListener(
+      "visibilitychange",
+      handleVisibilityChange,
+    );
+
+    return () => {
+      window.removeEventListener(
+        "focus",
+        handleWindowFocus,
+      );
+
+      window.removeEventListener(
+        "app:webview-tab-closed",
+        handleWebviewTabClosed,
+      );
+
+      document.removeEventListener(
+        "visibilitychange",
+        handleVisibilityChange,
+      );
+    };
+  }, [selectedChildId, isMemoHidden]);
+
+  function toggleMemoVisibility() {
+    if (!isMemoHidden) {
+      textareaRef.current?.blur();
+    }
+    setIsMemoHidden((previous) => !previous);
+  }
+
+  const handleSave = useCallback(async ({ silent = false } = {}) => {
+    if (!selectedChildId || savingRef.current) {
+      return;
+    }
+
+    const revision = editRevisionRef.current;
+    savingRef.current = true;
+    setIsSaving(true);
+
+    try {
+      const saveFunction =
+        memoType === 1
+          ? saveTemp1Ref.current
+          : saveTemp2Ref.current;
+
+      if (typeof saveFunction !== "function") {
+        throw new Error(
+          memoType === 1
+            ? "saveTemp1が利用できません。"
+            : "saveTemp2が利用できません。",
+        );
+      }
+
+      const result = await saveFunction(
+        selectedChildId,
+        value,
+      );
+
+      if (!result) {
+        showErrorToastRef.current?.(
+          `${label} の保存に失敗しました`,
+        );
+
+        return;
+      }
+
+      if (revision !== editRevisionRef.current) {
+        return;
+      }
+
+      savedValueRef.current = value;
+      editingRef.current = false;
+
+      if (!silent) {
+        showSuccessToastRef.current?.(
+          `${label} を保存しました`,
+        );
+      }
+    } catch (error) {
+      console.error(
+        "[MemoInputBox] メモ保存エラー",
+        error,
+      );
+
+      showErrorToastRef.current?.(
+        `${label} の保存中にエラーが発生しました`,
+      );
+    } finally {
+      savingRef.current = false;
+      setIsSaving(false);
+    }
+  }, [selectedChildId, memoType, value, label]);
+
+  useEffect(() => {
+    if (
+      !autoSaveEnabled ||
+      !editingRef.current ||
+      autoSaveRevisionRef.current === editRevisionRef.current ||
+      value === savedValueRef.current ||
+      !selectedChildId ||
+      !STAFF_ID ||
+      weekdayId == null || weekdayId === "" ||
+      isComposing || isSaving
+    ) {
+      return undefined;
+    }
+
+    const timer = setTimeout(() => {
+      autoSaveRevisionRef.current = editRevisionRef.current;
+      void handleSave({ silent: true });
+    }, autoSaveIntervalSeconds * 1000);
+
+    return () => clearTimeout(timer);
+  }, [value, selectedChildId, STAFF_ID, weekdayId, isComposing, isSaving, handleSave, autoSaveEnabled, autoSaveIntervalSeconds]);
+
+  function handleChange(event) {
+    editingRef.current = true;
+    editRevisionRef.current += 1;
+    setValue(event.target.value);
+  }
+
+  function handleApplyLaravelApiResult() {
+    if (!selectedChildId || !laravelApiResult.trim()) {
+      return;
+    }
+
+    editingRef.current = true;
+    editRevisionRef.current += 1;
+    setValue(laravelApiResult);
+    setIsMemoHidden(false);
+    showSuccessToastRef.current?.(`${label} にLaravel APIの返却値を反映しました`);
+  }
+
+  function handleCompositionStart() {
+    editingRef.current = true;
+    setIsComposing(true);
+  }
+
+  function handleKeyDown(event) {
+    /*
+     * 日本語IME変換中のEnterを、
+     * 親側のショートカット処理などに渡さない。
+     */
+    const isComposing =
+      event.nativeEvent?.isComposing ||
+      event.isComposing ||
+      event.keyCode === 229;
+
+    if (isComposing) {
+      event.stopPropagation();
+    }
+  }
+
+  function handleFocus() {
+    log("textarea focus", {
+      valueLength: value.length,
+      activeElementIsSelf:
+        document.activeElement === textareaRef.current,
+    });
+  }
+
+  return (
+    <div className="mt-3">
+      <div className="flex flex-wrap gap-2 mt-1 mb-1 items-center">
+        <label
+          htmlFor={textareaId}
+          className="px-2 py-1 text-xs font-bold text-gray-700"
+        >
+          {label}
+        </label>
+        <button
+          type="button"
+          onClick={handleApplyLaravelApiResult}
+          disabled={!selectedChildId || !laravelApiResult.trim()}
+          className="
+            bg-white hover:bg-slate-500
+            inline-flex items-center gap-2
+            rounded-md px-3 py-2 text-sm text-black shadow-sm
+            active:scale-[0.98]
+            disabled:opacity-50 disabled:cursor-not-allowed
+          "
+          title="Laravel APIの結果欄の内容でメモを置き換えます"
+        >
+          <span>Laravel APIの返却値を反映</span>
+          <ArrowDownIcon className="h-4 w-4" aria-hidden="true" />
+        </button>
+        {onApplyToAiText && (
+          <button
+            type="button"
+            onClick={() => {
+              if (!selectedChildId || !value.trim() || applyToAiTextDisabled) return;
+              onApplyToAiText(value);
+            }}
+            disabled={!selectedChildId || !value.trim() || applyToAiTextDisabled}
+            title="現在の一時メモの内容で、AIに送信するテキストを置き換えます"
+            className="rounded-md bg-indigo-600 px-3 py-2 text-sm text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            AIに送信するテキストに反映
+          </button>
+        )}
+      </div>
+
+      <div className="relative w-full">
+        {isMemoHidden && (
+          <div
+            className="flex w-full items-center justify-center rounded border border-gray-300 bg-gray-100 p-3 text-xs text-gray-500"
+            style={{ minHeight }}
+            role="status"
+          >
+            メモの内容を非表示にしています
+          </div>
+        )}
+
+        <textarea
+          id={textareaId}
+          ref={textareaRef}
+          data-memo-input="true"
+          data-memo-type={memoType}
+          aria-hidden={isMemoHidden}
+          tabIndex={isMemoHidden ? -1 : undefined}
+          className={`
+            w-full p-2 border border-gray-300 rounded text-xs
+            bg-white resize-y text-black
+            focus:outline-none focus:border-blue-600
+            focus:ring-2 focus:ring-blue-200
+            disabled:bg-gray-100 disabled:cursor-not-allowed
+            ${isMemoHidden ? "hidden" : ""}
+          `}
+          style={{ minHeight }}
+          value={value}
+          disabled={!selectedChildId}
+          onChange={handleChange}
+          onFocus={handleFocus}
+          onCompositionStart={handleCompositionStart}
+          onCompositionEnd={() => setIsComposing(false)}
+          onKeyDown={handleKeyDown}
+        />
+
+
+      </div>
+
+      <div className="mt-2 flex gap-2 items-stretch">
+        <button
+          type="button"
+          onClick={toggleMemoVisibility}
+          aria-pressed={!isMemoHidden}
+          aria-label={`${label}を${isMemoHidden ? "表示" : "隠す"}`}
+          title={`${label}を${isMemoHidden ? "表示" : "隠す"}`}
+          aria-controls={textareaId}
+          className="inline-flex items-center justify-center rounded-md border border-gray-200 bg-white px-3 text-gray-600 hover:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-600"
+        >
+          {isMemoHidden ? (
+            <EyeIcon className="h-5 w-5" aria-hidden="true" />
+          ) : (
+            <EyeSlashIcon className="h-5 w-5" aria-hidden="true" />
+          )}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => handleSave()}
+          disabled={!selectedChildId || isSaving}
+          className="
+            flex-1 px-3 py-2
+            bg-blue-600 text-white rounded text-xs
+            hover:bg-blue-700
+            disabled:opacity-50
+            disabled:cursor-not-allowed
+          "
+        >
+          このメモを保存
+        </button>
+
+        {(memoType === 1 || memoType === 2) && (
+          <PersonalRecordButton
+            id={`kojin-kiroku-${memoType}-${instanceId}`}
+            selectedChildId={selectedChildId}
+            selectedChildName={selectedChildName}
+            disabled={!selectedChildId}
+            label="個人記録"
+            className={[
+              "px-2 py-2 rounded-md text-white bg-[#00a405] cursor-pointer transition-all whitespace-nowrap hover:bg-[#006305] hover:scale-105 active:bg-[#005004] active:scale-[0.97]",
+              "flex h-full items-center justify-center rounded-none border-0 px-2",
+              "text-xs font-bold whitespace-nowrap",
+              "focus:outline-none focus:ring-1 focus:ring-inset focus:ring-green-400",
+              "disabled:cursor-not-allowed disabled:opacity-40",
+            ].join(" ")}
+          />
+        )}
+      </div>
+    </div>
+  );
+}

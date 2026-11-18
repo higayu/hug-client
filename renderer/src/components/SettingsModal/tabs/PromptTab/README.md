@@ -8,4 +8,11 @@
 
 既存プロジェクトの `PromptTab/index.jsx` を同名ファイルで置き換えてください。`const.js` は前回のパッチ版を同梱しています。
 
-注意: `usePrompt` が `scope: 'company'` をAPIまで転送するかは別途確認が必要です。
+`usePrompt`は会社共有専用項目の保存時に`scope: 'company'`をAPIへ転送します。
+
+## 保存APIのscope
+
+- 1〜4番の会社共有プロンプトは`company_id`を指定し、`scope`は送信しません。
+- 50/51/100/150番の会社共有専用項目は`company_id`と`scope: 'company'`を指定します。
+- Laravelの`scope=company`は専用項目の管理モードです。通常の会社共有保存に指定すると、adminでも422で拒否されます。
+- admin/mentor/franchise_mentorの編集権限はLaravelの`AiPromptAccess::canEdit`で引き続き検証します。

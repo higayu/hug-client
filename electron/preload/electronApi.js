@@ -78,6 +78,14 @@ function createElectronApi(ipcRenderer, isDebugMode) {
         data,
       ),
 
+    laravel_aiRecordEditer_correctPersonalRecordWithPlan: (data = {}) =>
+      ipcRenderer.invoke("laravel:ai-record-editer:personal-record:with-plan:correct", data),
+    laravel_aiRecordEditer_correctProfessionalSupportTwoStage: (data = {}) =>
+      ipcRenderer.invoke("laravel:ai-record-editer:professional-support:two-stage:correct", data),
+    laravel_ai_settings: () => ipcRenderer.invoke("laravel:ai:settings"),
+    laravel_ai_chat_message: (data) => ipcRenderer.invoke("laravel:ai-chat:message", data),
+    laravel_ai_chat_checkConnection: (data = {}) => ipcRenderer.invoke("laravel:ai-chat:check-connection", data),
+
     // ---- Web自動化 V2 ----
     /**
      * published Flow + DB上の仮想JSファイル群を一括取得する。

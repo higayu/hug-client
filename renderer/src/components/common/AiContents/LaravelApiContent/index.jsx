@@ -1,18 +1,17 @@
 import React, { useCallback, useState } from "react";
-import { useAppState } from "@/AppStateContext";
 import { useToast } from '@/utils/notifications.jsx'
-import PromptPanel from "../common/PromptPanel";
+import PromptPanel from "./PromptPanel";
 import { AI_PROMPT_COMPONENT_MAP } from "./PromptBox"
 import { sendPromptToLaravelApi } from "./send/sendPromptToLaravelApi";
 
 export default function LaravelApiContent({ spaceId, activePromptKey, onPromptChange, onPromptTabsChange }) {
-  const { appState } = useAppState();
   const { showSuccessToast, showErrorToast, showInfoToast } = useToast();
   const [laravelApiResults, setLaravelApiResults] = useState({});
 
   const sendPrompt = useCallback(
-    async ({ textValue, prompt, message, promptKey = "personal" }) => {
+    async ({ textValue, prompt, message, childId, promptKey = "personal" }) => {
 
+      // API送信に関する通知は、この親コンポーネントだけが表示する。
       showInfoToast("Laravel API に送信中…");
       try {
         const text = await sendPromptToLaravelApi({
@@ -20,6 +19,7 @@ export default function LaravelApiContent({ spaceId, activePromptKey, onPromptCh
           prompt,
           message,
           promptKey,
+          childId,
         });
         setLaravelApiResults((prev) => ({
           ...prev,
@@ -76,6 +76,7 @@ export default function LaravelApiContent({ spaceId, activePromptKey, onPromptCh
         onActiveKeyChange={onPromptChange}
         onTabsChange={onPromptTabsChange}
         sendPrompt={sendPrompt}
+        laravelApiResults={laravelApiResults}
         aiName="Laravel API"
         renderLaravelApiResultArea={renderLaravelApiResultArea}
       />

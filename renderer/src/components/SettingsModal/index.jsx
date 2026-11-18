@@ -15,6 +15,7 @@ import { useSettingsModal } from './useSettingsModal'
 
 import {
   ApiTab,
+  AiSetting,
   UrlTab,
   ConfigTab,
   UITab,
@@ -41,6 +42,7 @@ const BASE_TABS = [
     label: 'API設定',
     component: ApiTab,
   },
+  { id: 'ai', label: 'AI設定', component: AiSetting },
   {
     id: 'prompt',
     label: 'Prompt編集',
@@ -358,7 +360,7 @@ export default function SettingsModal({
                   hidden={!isActive}
                   className={isActive ? 'block' : 'hidden'}
                 >
-                  <TabComponent />
+                  <TabComponent isActive={isActive} />
                 </section>
               )
             })}

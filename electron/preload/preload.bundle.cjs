@@ -168,6 +168,11 @@ var require_electronApi = __commonJS({
           "laravel:ai-record-editer:professional-support:correct",
           data
         ),
+        laravel_aiRecordEditer_correctPersonalRecordWithPlan: (data = {}) => ipcRenderer2.invoke("laravel:ai-record-editer:personal-record:with-plan:correct", data),
+        laravel_aiRecordEditer_correctProfessionalSupportTwoStage: (data = {}) => ipcRenderer2.invoke("laravel:ai-record-editer:professional-support:two-stage:correct", data),
+        laravel_ai_settings: () => ipcRenderer2.invoke("laravel:ai:settings"),
+        laravel_ai_chat_message: (data) => ipcRenderer2.invoke("laravel:ai-chat:message", data),
+        laravel_ai_chat_checkConnection: (data = {}) => ipcRenderer2.invoke("laravel:ai-chat:check-connection", data),
         // ---- Web自動化 V2 ----
         /**
          * published Flow + DB上の仮想JSファイル群を一括取得する。

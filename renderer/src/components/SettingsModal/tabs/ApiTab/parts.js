@@ -61,12 +61,6 @@ export const createFormState = ({
       'laravel'
     ),
 
-    useAI: String(
-      apiSettings?.useAI ??
-      appState?.USE_AI ??
-      'gemini'
-    ),
-
     autoAttendanceFetch: toBoolean(
       apiSettings?.autoAttendanceFetch,
       false

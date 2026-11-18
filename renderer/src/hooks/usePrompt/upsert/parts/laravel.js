@@ -9,8 +9,8 @@
  *   会社共有プロンプトとして保存する。
  *   scope: "company" を送信する。
  *
- * 会社共有として保存する場合は、item_id にかかわらず
- * scope: "company" を明示する。
+ * scope: "company" は会社共有専用項目の管理モードを表す。
+ * 1〜4番の会社共有保存はcompany_idだけで所有区分を指定する。
  *
  * staff_id / updated_by:
  *   Electronから送信せず、Laravelの認証情報から決定する。
@@ -200,8 +200,8 @@ export async function upsertAiPrompt({
     content,
     is_active: normalizedIsActive,
 
-    // 会社専用項目、または会社IDが指定された共有プロンプト
-    ...(isCompanyOnlyItem || normalizedCompanyId !== null
+    // scopeは所有区分ではなく、会社共有専用項目の管理モード。
+    ...(isCompanyOnlyItem
       ? { scope: "company" }
       : {}),
   };

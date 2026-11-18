@@ -1,4 +1,4 @@
-// renderer/src/Sidebar/NomalMode/Dashboard/TabsContainer/SelectChildren/AiContents/common/PersonalRecordPrompt/index.jsx
+// LaravelApiContent/PromptBox/parts/PersonalRecordPrompt/index.jsx
 
 import React, { useState } from "react";
 
@@ -20,10 +20,11 @@ import {
   selectAiChatText,
 } from "@/store/slices/aiChatSlice.js";
 
-import MemoInputBox from "@/components/ui/MemoInputBox";
+import MemoInputBox from "../MemoInputBox";
 
 import PersonalRecordPromptBox, {
   getPersonalRecordPromptConfig,
+  DEFAULT_PERSONAL_RECORD_PROMPT_KEY,
 } from "./PersonalRecordPromptBox";
 
 import ChildNotesTabs from "../ChildNotesTabs";
@@ -38,6 +39,7 @@ export default function PersonalRecordPrompt({
   renderResultArea = null,
   resultAreaLabel = "API 返却値",
   showTabButton = null,
+  laravelApiResults = {},
 }) {
   const appState = useAppState();
   const { PROMPTS, CURRENT_YMD } = appState;
@@ -47,7 +49,7 @@ export default function PersonalRecordPrompt({
   // =============================================================
   // 個人記録プロンプト選択
   // =============================================================
-  const [selectedPromptKey, setSelectedPromptKey] = useState("personalRecord");
+  const selectedPromptKey = DEFAULT_PERSONAL_RECORD_PROMPT_KEY;
 
   // =============================================================
   // DB保存済みメモ
@@ -80,7 +82,6 @@ export default function PersonalRecordPrompt({
   const {
     showSuccessToast,
     showErrorToast,
-    showInfoToast,
   } = useToast();
 
   // =============================================================
@@ -135,28 +136,17 @@ export default function PersonalRecordPrompt({
     if (sending) {
       return;
     }
+    if (!selectedChildId) {
+      showErrorToast("対象児童を選択してください");
+      return;
+    }
 
     const selectedPrompt =
       PROMPTS?.[selectedPromptKey]?.content ??
       "";
 
-    // =========================================================
-    // 個人記録1
-    //
-    //   selectedPrompt
-    //   aiText
-    //
-    // 個人記録2
-    //
-    //   dbNote
-    //   selectedPrompt
-    //   aiText
-    //
-    // ProfessionalPrompt1 と同じ3ブロック構成
-    // =========================================================
-    const message = useDbNote
-      ? `${dbNote}\n\n\n${aiText}`
-      : aiText;
+    // 計画とプロンプトはLaravelがDBから取得する。入力文章だけを送る。
+    const message = aiText;
 
     const textValue = `${selectedPrompt}\n\n\n${message}`;
 
@@ -179,26 +169,17 @@ export default function PersonalRecordPrompt({
       })
     );
 
-    showInfoToast(
-      `${aiName} に送信中…`
-    );
-
     try {
       // promptKey は personal のまま
       // selectedPromptKey にはしない
-      const success =
-        await sendPrompt({
+      // 親は成功時に true を返し、失敗時は例外を投げる。
+      await sendPrompt({
           textValue,
           prompt: selectedPrompt,
           message,
           promptKey,
+          childId: selectedChildId,
         });
-
-      if (!success) {
-        throw new Error(
-          `sendPromptTo${aiName} returned false`
-        );
-      }
 
       dispatch(
         sendSuccess({
@@ -206,15 +187,8 @@ export default function PersonalRecordPrompt({
         })
       );
 
-      showSuccessToast(
-        `${aiName} に送信しました`
-      );
     } catch (error) {
-      console.error(
-        "送信エラー:",
-        error
-      );
-
+      // エラーのログと通知は親側で処理済み。Reduxの状態だけを更新する。
       dispatch(
         sendError({
           key: PROMPT_KEY,
@@ -224,9 +198,7 @@ export default function PersonalRecordPrompt({
         })
       );
 
-      showErrorToast(
-        `${aiName} への送信に失敗しました`
-      );
+      // 送信開始・成功・失敗の通知はLaravelApiContentで一度だけ表示する。
     }
   };
 
@@ -278,22 +250,6 @@ export default function PersonalRecordPrompt({
         selectedPromptKey={
           selectedPromptKey
         }
-        onChange={(nextKey) => {
-          logDbg(
-            "selectedPromptKey",
-            "プロンプト変更",
-            {
-              prev:
-                selectedPromptKey,
-              next:
-                nextKey,
-            }
-          );
-
-          setSelectedPromptKey(
-            nextKey
-          );
-        }}
       />
 
       {/* =====================================================
@@ -432,6 +388,7 @@ export default function PersonalRecordPrompt({
             }
             disabled={
               !aiText ||
+              !selectedChildId ||
               aiText.trim() === "" ||
               sending
             }
@@ -460,6 +417,18 @@ export default function PersonalRecordPrompt({
         ================================================= */}
         <div className="mt-2">
           <MemoInputBox
+            laravelApiResult={laravelApiResults[promptKey]}
+            applyToAiTextDisabled={sending}
+            onApplyToAiText={(memoText) => {
+              if (!selectedChildId || sending) return;
+              dispatch(setAiChatText({
+                date: CURRENT_YMD,
+                childId: selectedChildId,
+                key: AI_TEXT_KEY,
+                text: memoText,
+              }));
+              showSuccessToast("一時メモをAIに送信するテキストに反映しました");
+            }}
             childId={selectedChildId}
             childName={selectedChildName}
             spaceId={spaceId}

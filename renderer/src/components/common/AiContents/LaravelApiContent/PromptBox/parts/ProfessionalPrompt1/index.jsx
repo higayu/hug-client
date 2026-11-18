@@ -12,6 +12,7 @@ import {
 
 
 import ChildNotesTabs from "../ChildNotesTabs";
+import MemoInputBox from "../MemoInputBox";
 
 const DBG = "ProfessionalPrompt1";
 
@@ -23,6 +24,7 @@ export default function ProfessionalPrompt1({
   renderResultArea = null,
   resultAreaLabel = "API 返却値（専門1）",
   showSupportCheck = true,
+  laravelApiResults = {},
 }) {
   const appState = useAppState();
   const selectedChildId = useSelector(selectSpaceChildId(spaceId));
@@ -65,6 +67,7 @@ export default function ProfessionalPrompt1({
 
   const [text1, setText1] = useState("");
   const [dbNote, setDbNote] = useState("");
+  const [sending, setSending] = useState(false);
 
   const dispatch = useDispatch();
 
@@ -122,23 +125,24 @@ export default function ProfessionalPrompt1({
   // =============================================================
   // AI送信文字列
   // =============================================================
-  const message = dbNote
-    ? `${dbNote}\n\n\n${aiText}`
-    : aiText;
+  // Laravel retrieves the saved plan and both prompts. Only send the input text.
+  const message = aiText;
 
   const textValue = `${text1}\n\n\n${message}`;
 
   const handleSendPrompt = async () => {
-    if (!aiText || aiText.trim() === "") {
+    if (!selectedChildId || !aiText || aiText.trim() === "" || sending) {
       return;
     }
 
-    await sendPrompt({
-      textValue,
-      prompt: text1,
-      message,
-      promptKey,
-    });
+    setSending(true);
+    try {
+      await sendPrompt({ textValue, prompt: text1, message, promptKey, childId: selectedChildId });
+    } catch {
+      // LaravelApiContent displays the failure toast; do not leave an unhandled rejection.
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -172,7 +176,7 @@ export default function ProfessionalPrompt1({
       ===================================================== */}
       <div>
         <label className="font-semibold">
-          専門的支援加算用プロンプト1
+          専門的支援プロンプト1（計画から抽出）
         </label>
 
         <textarea
@@ -196,6 +200,11 @@ export default function ProfessionalPrompt1({
       {/* =====================================================
           AI入力
       ===================================================== */}
+      <div>
+        <label className="font-semibold">専門的支援プロンプト2（抽出結果を1つの文章にまとめる）</label>
+        <textarea className="w-full h-20 bg-gray-900 text-white rounded p-2" value={PROMPTS?.professional2?.content ?? ""} readOnly />
+        <p className="text-xs text-gray-500">実行時にLaravelが保存済みの専門的支援計画と両プロンプトを取得し、抽出→文章化の順でAIを2回呼び出します。</p>
+      </div>
       <div>
         <label className="font-bold text-gray-700 block mb-1">
           AIに送信するテキスト
@@ -240,10 +249,11 @@ export default function ProfessionalPrompt1({
             onClick={handleSendPrompt}
             disabled={
               !aiText ||
+              !selectedChildId || sending ||
               aiText.trim() === ""
             }
           >
-            {aiName}実行
+            {sending ? "抽出・文章化中…" : `${aiName}実行（抽出→文章化）`}
           </button>
         </div>
 
@@ -255,6 +265,18 @@ export default function ProfessionalPrompt1({
             })}
           </div>
         )}
+
+        <div className="mt-2">
+          <MemoInputBox
+            laravelApiResult={laravelApiResults[promptKey]}
+            childId={selectedChildId}
+            childName={selectedChildName}
+            spaceId={spaceId}
+            memoType={2}
+            label="一時メモ２（編集可能）"
+            minHeight={200}
+          />
+        </div>
       </div>
     </div>
   );

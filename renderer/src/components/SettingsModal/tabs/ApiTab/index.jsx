@@ -184,7 +184,6 @@ function ApiTab() {
     appState?.STAFF_ID,
     appState?.FACILITY_ID,
     appState?.DATABASE_TYPE,
-    appState?.USE_AI,
     appState?.AUTO_SYNCHRONIZATION,
     appState?.AUTO_SWITCHING,
     appState?.DEBUG_FLG,  // ← 追加
@@ -356,7 +355,6 @@ function ApiTab() {
           form.databaseType
         ),
 
-        useAI: form.useAI,
 
         autoAttendanceFetch: String(
           form.autoAttendanceFetch
@@ -424,9 +422,6 @@ function ApiTab() {
 
         DATABASE_TYPE:
           nextApiSettings.databaseType,
-
-        USE_AI:
-          nextApiSettings.useAI,
 
         AUTO_SYNCHRONIZATION:
           form.autoSynchronization,
@@ -525,7 +520,7 @@ function ApiTab() {
       updateAppState({
         FACILITY_ID: nextForm.facilityId,
         DATABASE_TYPE: nextForm.databaseType,
-        USE_AI: nextForm.useAI,
+        USE_AI: resetIniState.apiSettings.useAI ?? 'gemini',
         AUTO_SYNCHRONIZATION: nextForm.autoSynchronization,
         AUTO_SWITCHING: nextForm.autoSwitching,
         DEBUG_FLG: nextForm.debugFlg,
@@ -650,47 +645,6 @@ function ApiTab() {
 
             <option value="laravel">
               Laravel
-            </option>
-          </select>
-        </div>
-
-        <div className="mb-3 flex items-center py-2">
-          <label
-            htmlFor="api-ai-type"
-            className="min-w-[120px] font-medium text-gray-700"
-          >
-            AI種別:
-          </label>
-
-          <select
-            id="api-ai-type"
-            name="useAI"
-            value={form.useAI}
-            onChange={handleInputChange}
-            className="max-w-[300px] flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm transition-all"
-          >
-            <option value="chatGPT">
-              ChatGPT
-            </option>
-
-            <option value="LaravelApi">
-              Laravel-Api
-            </option>
-
-            <option value="gemini">
-              Gemini
-            </option>
-
-            <option value="ollama">
-              Ollama
-            </option>
-
-            <option value="deepseek">
-              DeepSeek
-            </option>
-
-            <option value="openrouter">
-              OpenRouter
             </option>
           </select>
         </div>
