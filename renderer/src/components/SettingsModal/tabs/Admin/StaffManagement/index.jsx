@@ -9,12 +9,16 @@ import {
   STAFF_SECTIONS,
 } from './constants/staffSections'
 import { useStaffSelection } from './hooks/useStaffSelection'
+import {
+  getActiveWebview,
+} from '@/utils/webview/webviewState.js';
 import StaffUpdateButton from '@/components/common/Synchronization/StaffUpdateButton';
-import ChildrenUpdateButton from '@/components/common/Synchronization/ChildrenUpdateButton';
 
 export default function StaffManagement({
   staffs,
   canManageStaff,
+  facilityId,
+  canSync,
 }) {
   const [activeStaffSection, setActiveStaffSection] = useState(
     STAFF_SECTION_IDS.BASE,
@@ -32,6 +36,13 @@ export default function StaffManagement({
 
   return (
     <section>
+        <StaffUpdateButton
+          facilityId={facilityId}
+          disabled={!facilityId || !canSync}
+          webview={getActiveWebview()}
+          className=""
+        />
+
       <StaffSelector
         staffs={editableStaffs}
         selectedStaffId={selectedStaffId}

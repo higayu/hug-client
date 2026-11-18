@@ -10,12 +10,14 @@ import {
   ADMIN_SECTIONS,
 } from './constants/adminSections'
 import StaffManagement from './StaffManagement'
+import ChildManager from './ChildManager'
 import WebAutomation from './WebAutomation'
 
 export default function AdminTab() {
-  const { canAccessAdminTab, canManageStaff, isAdmin } = useSettingsRoleAccess()
+  const { canAccessAdminTab, canManageStaff, canManageCurrentCompanyStaff, isAdmin } = useSettingsRoleAccess()
   const {
     databaseState,
+    FACILITY_ID,
   } = useAppState()
   const [activeAdminSection, setActiveAdminSection] = useState(
     ADMIN_SECTION_IDS.STAFF_MANAGEMENT,
@@ -53,6 +55,17 @@ export default function AdminTab() {
         <StaffManagement
           staffs={databaseState?.staffs}
           canManageStaff={canManageStaff}
+          facilityId={FACILITY_ID}
+          canSync={canManageCurrentCompanyStaff}
+        />
+      )}
+
+      {visibleActiveSection === ADMIN_SECTION_IDS.CHILD_MANAGEMENT && (
+        <ChildManager
+          key={FACILITY_ID}
+          databaseState={databaseState}
+          facilityId={FACILITY_ID}
+          canSync={canManageCurrentCompanyStaff}
         />
       )}
 

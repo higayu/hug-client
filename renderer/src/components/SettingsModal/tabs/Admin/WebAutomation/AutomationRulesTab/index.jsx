@@ -23,6 +23,7 @@ const EMPTY_FLOW = {
   status: 'draft',
   published_at: null,
 }
+
 function normalizeArray(result) {
   if (Array.isArray(result?.data)) return result.data
   if (Array.isArray(result?.data?.data)) return result.data.data
