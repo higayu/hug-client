@@ -11,12 +11,9 @@ import { useToast } from '@/utils/notifications.jsx'
 import { useAppState } from '@/AppStateContext';
 import { useTabs } from '@/hooks/useTabs';
 import { useHugActions } from '@/hooks/useHugActions';
-
 import PortalDropdown from '@/components/ui/PortalDropdown';
 import ServerConnectButton from '@/components/common/Synchronization/ServerConnectButton';
 import DataBaseButton from '@/components/common/Synchronization/DataBaseButton';
-import StaffUpdateButton from '@/components/common/Synchronization/StaffUpdateButton';
-import ChildrenUpdateButton from '@/components/common/Synchronization/ChildrenUpdateButton';
 import OpenProfessionalSupportButton from './OpenProfessionalSupportButton';
 import AutoLoginButton from '@/components/AutoLoginButton';
 import SleepButton from './SleepButton';
