@@ -117,7 +117,7 @@ export default function SettingsModal({
 
   const tabs = useMemo(() => {
     const visibleDebugTabs = isAdmin ? DEBUG_TABS : DEBUG_TABS.filter((tab) => tab.id !== 'debug')
-    const baseTabs = isMentorOrAbove ? [...BASE_TABS, ...ADMIN_TABS] : BASE_TABS
+    const baseTabs = isAdmin || isMentorOrAbove ? [...BASE_TABS, ...ADMIN_TABS] : BASE_TABS
     return DEBUG_FLG ? [...baseTabs, ...visibleDebugTabs] : baseTabs
   }, [DEBUG_FLG, isAdmin, isMentorOrAbove])
 

@@ -41,7 +41,7 @@ export default function AdminTab() {
     ? activeAdminSection
     : ADMIN_SECTION_IDS.STAFF_MANAGEMENT
 
-  if (!isMentorOrAbove) {
+  if (!isAdmin && !isMentorOrAbove) {
     return null
   }
 
