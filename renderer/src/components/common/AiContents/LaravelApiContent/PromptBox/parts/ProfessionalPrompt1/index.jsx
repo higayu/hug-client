@@ -245,7 +245,8 @@ export default function ProfessionalPrompt1({
         <div className="flex flex-row justify-between items-start gap-2">
           <button
             type="button"
-            className="w-[70%] bg-green-500 hover:bg-green-600 p-2 rounded text-white disabled:opacity-50 disabled:cursor-not-allowed"
+            aria-busy={sending}
+            className="flex min-h-10 w-[70%] items-center justify-center gap-2 bg-green-500 p-2 rounded text-white enabled:hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={handleSendPrompt}
             disabled={
               !aiText ||
@@ -253,7 +254,17 @@ export default function ProfessionalPrompt1({
               aiText.trim() === ""
             }
           >
-            {sending ? "抽出・文章化中…" : `${aiName}実行（抽出→文章化）`}
+            {sending ? (
+              <>
+                <span
+                  aria-hidden="true"
+                  className="h-5 w-5 shrink-0 animate-spin rounded-full border-2 border-white/40 border-t-white"
+                />
+                <span>抽出・文章化中…</span>
+              </>
+            ) : (
+              `${aiName}実行（抽出→文章化）`
+            )}
           </button>
         </div>
 
