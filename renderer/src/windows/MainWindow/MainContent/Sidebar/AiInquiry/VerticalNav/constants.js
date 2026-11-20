@@ -15,6 +15,7 @@ export const AI_INQUIRY_SCREENS =
   Object.freeze({
     CHAT: 'chat',
     PERSONAL_RECORD: 'personalRecord',
+    HEALTH_ANALYSIS: 'healthAnalysis',
   });
 
 export const NAV_ITEMS = [
@@ -27,6 +28,12 @@ export const NAV_ITEMS = [
     id: AI_INQUIRY_SCREENS.PERSONAL_RECORD,
     icon: UserSquare,
     label: '個人記録',
+  },
+  {
+    id: AI_INQUIRY_SCREENS.HEALTH_ANALYSIS,
+    icon: Activity,
+    label: '健康分析',
+    isNew: true,
   },
 
 ];

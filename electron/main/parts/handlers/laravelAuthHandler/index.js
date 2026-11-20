@@ -8,6 +8,7 @@ const managers2 = require("./managers2");
 const children = require("./children");
 const aiRecordEditer = require("./aiRecordEditer");
 const aiChat = require("./aiChat");
+const healthAnalysis = require("./healthAnalysis");
 const webAutomationV2 = require("./webAutomationV2");
 const troubleshootingKnowledge = require("./troubleshootingKnowledge");
 const personalRecordSyncs = require("./personalRecordSyncs");
@@ -107,6 +108,11 @@ const IPC_CHANNELS = [
   "laravel:ai-chat:message",
   "laravel:ai-chat:check-connection",
   "laravel:ai-record-editer:professional-support:correct",
+  "laravel:health-analysis:analyze",
+  "laravel:health-analysis:statistics",
+  "laravel:health-analysis:abnormal-children",
+  "laravel:health-analysis:logs",
+  "laravel:health-analysis:log-detail",
 ];
 
 /**
@@ -531,6 +537,32 @@ function registerLaravelAuthHandlers(
     procedures
       .upsertManagers2Handler
   );
+
+  ipcMain.handle(
+    "laravel:health-analysis:analyze",
+    healthAnalysis.analyzeHandler
+  );
+
+  ipcMain.handle(
+    "laravel:health-analysis:statistics",
+    healthAnalysis.statisticsHandler
+  );
+
+  ipcMain.handle(
+    "laravel:health-analysis:abnormal-children",
+    healthAnalysis.abnormalChildrenHandler
+  );
+
+  ipcMain.handle(
+    "laravel:health-analysis:logs",
+    healthAnalysis.logsHandler
+  );
+
+  ipcMain.handle(
+    "laravel:health-analysis:log-detail",
+    healthAnalysis.showLogHandler
+  );
+
   /**
    * managers2の担当情報を削除。
    */

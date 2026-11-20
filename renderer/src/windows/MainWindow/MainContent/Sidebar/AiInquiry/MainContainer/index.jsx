@@ -3,6 +3,7 @@
 import { useAppState } from '@/AppStateContext'
 
 import ChatPage from './Pages/ChatPage'
+import HealthAnalysisDashboard from './Pages/HealthAnalysisDashboard'
 import PersonalRecordPage from './Pages/PersonalRecordPage'
 
 export const MainContainer = () => {
@@ -17,6 +18,9 @@ export const MainContainer = () => {
 
       case 'personalRecord':
         return <PersonalRecordPage />
+
+      case 'healthAnalysis':
+        return <HealthAnalysisDashboard />
 
       case 'chat':
       default:

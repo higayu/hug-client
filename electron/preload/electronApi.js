@@ -347,6 +347,21 @@ function createElectronApi(ipcRenderer, isDebugMode) {
     laravel_procedure_upsertAiPrompt: (data) =>
       ipcRenderer.invoke("laravel:procedure:upsert-ai-prompt", data),
 
+    laravel_healthAnalysis_analyze: (data = {}) =>
+      ipcRenderer.invoke("laravel:health-analysis:analyze", data),
+
+    laravel_healthAnalysis_statistics: (data = {}) =>
+      ipcRenderer.invoke("laravel:health-analysis:statistics", data),
+
+    laravel_healthAnalysis_abnormalChildren: (data = {}) =>
+      ipcRenderer.invoke("laravel:health-analysis:abnormal-children", data),
+
+    laravel_healthAnalysis_logs: (data = {}) =>
+      ipcRenderer.invoke("laravel:health-analysis:logs", data),
+
+    laravel_healthAnalysis_logDetail: (logId) =>
+      ipcRenderer.invoke("laravel:health-analysis:log-detail", { logId }),
+
     mariadb_procedure_getActiveAiPrompt: (data) =>
       ipcRenderer.invoke("mariadb:procedure:get-active-ai-prompt", data),
 
