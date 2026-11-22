@@ -1,6 +1,6 @@
 {
   "name": "hug-banso-navi",
-  "version": "5.0.5",
+  "version": "5.0.6",
   "description": "FCC Hug banso-navi",
   "main": "electron/main/index.js",
   "scripts": {
