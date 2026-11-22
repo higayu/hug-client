@@ -1,16 +1,19 @@
 import { lazy, Suspense, useEffect } from 'react'
 
-import AppLook from '@/components/ui/AppLook'
-
 import MainWindow from '@/windows/MainWindow'
 import AppToaster from '@/components/common/AppToaster'
 import { runStartupAutoLogin } from '@/components/AutoLoginButton/runStartupAutoLogin.js'
+import AppLook from '@/components/ui/AppLook'
 
 const ProfessionalSupportWindow = lazy(
   () => import('@/windows/ProfessionalSupportWindow')
 )
-const InformationWindow = lazy(() => import('@/windows/InformationWindow'))
-const PhpMyAdminWindow = lazy(() => import('@/windows/PhpMyAdminWindow'))
+const InformationWindow = lazy(
+  () => import('@/windows/InformationWindow')
+)
+const PhpMyAdminWindow = lazy(
+  () => import('@/windows/PhpMyAdminWindow')
+)
 
 function resolveWindowType() {
   const params = new URLSearchParams(window.location.search)
@@ -28,7 +31,11 @@ const WINDOW_COMPONENTS = {
 let didRunStartupAutoLogin = false
 
 export default function App() {
-  return <AppLook><UnlockedApp /></AppLook>
+  return(
+    <AppLook>
+      <UnlockedApp />
+    </AppLook>
+  );
 }
 
 function UnlockedApp() {

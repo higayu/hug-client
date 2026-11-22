@@ -2,6 +2,7 @@
 // Dashboard のクイック操作モードで使用する作業スペース状態管理
 
 import { createSlice } from '@reduxjs/toolkit'
+import { isSimpleBoardSpaceId } from './simpleBoardSlice.js'
 
 const MIN_SPACE_COUNT = 1
 const MAX_SPACE_COUNT = 2
@@ -59,6 +60,8 @@ const chilledspaceSlice = createSlice({
     },
 
     deleteChilledSpace: (state, action) => {
+      if (isSimpleBoardSpaceId(action.payload?.spaceId ?? action.payload)) return
+
       if (state.spaceCount <= MIN_SPACE_COUNT) {
         return
       }
@@ -79,6 +82,8 @@ const chilledspaceSlice = createSlice({
     },
 
     setActiveSpaceId: (state, action) => {
+      if (isSimpleBoardSpaceId(action.payload?.spaceId ?? action.payload)) return
+
       const spaceId = action.payload
       getSpace(state, spaceId)
 
@@ -92,6 +97,8 @@ const chilledspaceSlice = createSlice({
     },
 
     setSpaceActiveFanContentPanel: (state, action) => {
+      if (isSimpleBoardSpaceId(action.payload?.spaceId ?? action.payload)) return
+
       const {
         spaceId,
         panelId,
@@ -102,6 +109,8 @@ const chilledspaceSlice = createSlice({
     },
 
     setSpaceChild: (state, action) => {
+      if (isSimpleBoardSpaceId(action.payload?.spaceId ?? action.payload)) return
+
       const { spaceId, childId, childName } = action.payload || {}
       const space = getSpace(state, spaceId)
 
@@ -117,12 +126,16 @@ const chilledspaceSlice = createSlice({
     },
 
     setSpacePcName: (state, action) => {
+      if (isSimpleBoardSpaceId(action.payload?.spaceId ?? action.payload)) return
+
       const { spaceId, pcName } = action.payload || {}
       const space = getSpace(state, spaceId)
       space.pcName = pcName || ''
     },
 
     setSpaceChildColumns: (state, action) => {
+      if (isSimpleBoardSpaceId(action.payload?.spaceId ?? action.payload)) return
+
       const {
         spaceId,
         column5,
@@ -147,6 +160,8 @@ const chilledspaceSlice = createSlice({
     },
 
     clearSpace: (state, action) => {
+      if (isSimpleBoardSpaceId(action.payload?.spaceId ?? action.payload)) return
+
       const spaceId = action.payload
       getSpace(state, spaceId)
       state.spaces[spaceId] = createSpace()
@@ -183,31 +198,17 @@ export const selectCanDeleteChilledSpace = (state) =>
 export const selectSpaces = (state) =>
   state.chilledspace.spaces
 
-export const selectSpace = (spaceId) => (state) =>
-  state.chilledspace.spaces[spaceId]
-
-export const selectSpaceActiveFanContentPanel = (spaceId) => (state) =>
-  state.chilledspace.spaces[spaceId]?.activeFanContentPanel ?? 'ai'
-
-export const selectSpaceChildId = (spaceId) => (state) =>
-  state.chilledspace.spaces[spaceId]?.childId ?? ''
-
-export const selectSpaceChildName = (spaceId) => (state) =>
-  state.chilledspace.spaces[spaceId]?.childName ?? ''
-
-export const selectSpacePcName = (spaceId) => (state) =>
-  state.chilledspace.spaces[spaceId]?.pcName ?? ''
-
-export const selectSpaceChildColumn5 = (spaceId) => (state) =>
-  state.chilledspace.spaces[spaceId]?.selectedChildColumn5 ?? null
-
-export const selectSpaceChildColumn5Html = (spaceId) => (state) =>
-  state.chilledspace.spaces[spaceId]?.selectedChildColumn5Html ?? null
-
-export const selectSpaceChildColumn6 = (spaceId) => (state) =>
-  state.chilledspace.spaces[spaceId]?.selectedChildColumn6 ?? null
-
-export const selectSpaceChildColumn6Html = (spaceId) => (state) =>
-  state.chilledspace.spaces[spaceId]?.selectedChildColumn6Html ?? null
+// Preserve existing imports while sharing space resolution across both boards.
+export {
+  selectSpace,
+  selectSpaceActiveFanContentPanel,
+  selectSpaceChildId,
+  selectSpaceChildName,
+  selectSpacePcName,
+  selectSpaceChildColumn5,
+  selectSpaceChildColumn5Html,
+  selectSpaceChildColumn6,
+  selectSpaceChildColumn6Html,
+} from '../workSpaceSelectors.js'
 
 export default chilledspaceSlice.reducer

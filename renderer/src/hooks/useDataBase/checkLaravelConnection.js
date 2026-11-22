@@ -1,83 +1,38 @@
-import { LARAVEL_ONLY_MODE } from "./databaseMode";
-import { switchDatabaseType } from "./checkMariaDbConnection";
-
-/**
- * Laravel APIへ接続できることを確認し、必要に応じてDB種別を切り替える。
- */
-export async function checkLaravelConnection(
-  dispatch,
-  {
-    autoFallbackToSqlite = true,
-    switchToLaravelOnSuccess = true,
-    persistIni = true,
-  } = {},
-) {
+export async function checkLaravelConnection() {
   try {
-    if (
-      typeof window.electronAPI?.checkLaravelConnection !== "function"
-    ) {
-      throw new Error(
-        "checkLaravelConnectionがpreloadに登録されていません。",
-      );
+    const api = window.electronAPI?.checkLaravelConnection;
+    if (typeof api !== "function") {
+      throw new Error("Laravel connection API is not exposed.");
     }
 
-    const connectionResult =
-      await window.electronAPI.checkLaravelConnection();
-
-    if (!connectionResult?.connected) {
-      if (autoFallbackToSqlite && !LARAVEL_ONLY_MODE) {
-        const switched = await switchDatabaseType({
-          dispatch,
-          databaseType: "sqlite",
-          message:
-            connectionResult?.message ||
-            "Laravel APIに接続できないためSQLiteを使用します。",
-          persistIni,
-        });
-
-        return {
-          ...connectionResult,
-          connected: false,
-          switchedDatabaseType: switched.databaseType,
-        };
-      }
-
-      return connectionResult;
-    }
-
-    if (!switchToLaravelOnSuccess) {
-      return {
-        ...connectionResult,
-        switchedDatabaseType: null,
-      };
-    }
-
-    const switched = await switchDatabaseType({
-      dispatch,
-      databaseType: "laravel",
-      message: "Laravel APIに切り替えました。",
-      persistIni,
-    });
+    const result = await api();
+    const connected = result?.connected ?? result?.success ?? false;
 
     return {
-      ...connectionResult,
-      success: switched.success,
-      connected: switched.success,
-      databaseType: switched.databaseType,
-      switchedDatabaseType: switched.databaseType,
-      message: switched.message,
+      ...result,
+      success: connected,
+      connected,
+      databaseType: "laravel",
+      switchedDatabaseType: "laravel",
     };
   } catch (error) {
-    console.error("❌ [checkLaravelConnection] 接続確認エラー:", error);
-
     return {
       success: false,
       connected: false,
-      message:
-        error?.message || "Laravel APIへの接続確認に失敗しました。",
+      databaseType: "laravel",
+      switchedDatabaseType: "laravel",
+      message: error?.message || "Laravel API connection failed.",
       error,
     };
   }
 }
 
-export { switchDatabaseType };
+export async function switchDatabaseType() {
+  const result = await window.electronAPI?.switchDatabaseMode?.("laravel");
+  return {
+    ...result,
+    success: result?.success !== false,
+    databaseType: "laravel",
+    mode: "laravel",
+  };
+}

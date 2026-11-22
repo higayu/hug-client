@@ -14,7 +14,6 @@ import {
 } from "@/store/workSpaceSelectors.js";
 import { useAppState } from "@/AppStateContext";
 import { useNote } from "@/hooks/useNote";
-import { isMemoAutoSaveEnabled, normalizeMemoAutoSaveInterval } from "@/utils/memoAutoSave";
 import { PersonalRecordButton } from '@/components/common/hug_function';
 import CopyButton from "@/components/ui/CopyButton";
 import { ArrowDownIcon, EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
@@ -37,12 +36,6 @@ export default function MemoInputBox({
 
   // ユーザーが入力を始めたか
   const editingRef = useRef(false);
-  const editRevisionRef = useRef(0);
-  const autoSaveRevisionRef = useRef(-1);
-  const savedValueRef = useRef("");
-  const savingRef = useRef(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [isComposing, setIsComposing] = useState(false);
 
   const { showSuccessToast, showErrorToast } = useToast();
   const spaceChildId = useSelector(selectSpaceChildId(spaceId));
@@ -51,9 +44,7 @@ export default function MemoInputBox({
   const selectedChildId = String(childId ?? spaceChildId);
   const selectedChildName = childName ?? spaceChildName;
   const { saveTemp1, saveTemp2, loadTemp } = useNote();
-  const { STAFF_ID, CURRENT_DAY_OF_WEEK, DATABASE_TYPE, iniState } = useAppState();
-  const autoSaveEnabled = isMemoAutoSaveEnabled(iniState?.apiSettings?.memoAutoSaveEnabled);
-  const autoSaveIntervalSeconds = normalizeMemoAutoSaveInterval(iniState?.apiSettings?.memoAutoSaveIntervalSeconds);
+  const { STAFF_ID, CURRENT_DAY_OF_WEEK, DATABASE_TYPE } = useAppState();
   const weekdayId = CURRENT_DAY_OF_WEEK?.weekdayId;
 
   const [value, setValue] = useState("");
@@ -111,9 +102,6 @@ export default function MemoInputBox({
   // 認証情報の更新では入力中フラグを解除しない。
   useEffect(() => {
     editingRef.current = false;
-    editRevisionRef.current += 1;
-    savedValueRef.current = "";
-    setIsComposing(false);
     setValue("");
   }, [selectedChildId, memoType]);
 
@@ -169,7 +157,6 @@ export default function MemoInputBox({
           nextValue = result ?? "";
         }
 
-        savedValueRef.current = String(nextValue);
         setValue(String(nextValue));
       },
     };
@@ -344,14 +331,10 @@ export default function MemoInputBox({
     setIsMemoHidden((previous) => !previous);
   }
 
-  const handleSave = useCallback(async ({ silent = false } = {}) => {
-    if (!selectedChildId || savingRef.current) {
+  async function handleSave() {
+    if (!selectedChildId) {
       return;
     }
-
-    const revision = editRevisionRef.current;
-    savingRef.current = true;
-    setIsSaving(true);
 
     try {
       const saveFunction =
@@ -380,18 +363,11 @@ export default function MemoInputBox({
         return;
       }
 
-      if (revision !== editRevisionRef.current) {
-        return;
-      }
-
-      savedValueRef.current = value;
       editingRef.current = false;
 
-      if (!silent) {
-        showSuccessToastRef.current?.(
-          `${label} を保存しました`,
-        );
-      }
+      showSuccessToastRef.current?.(
+        `${label} を保存しました`,
+      );
     } catch (error) {
       console.error(
         "[MemoInputBox] メモ保存エラー",
@@ -401,37 +377,11 @@ export default function MemoInputBox({
       showErrorToastRef.current?.(
         `${label} の保存中にエラーが発生しました`,
       );
-    } finally {
-      savingRef.current = false;
-      setIsSaving(false);
     }
-  }, [selectedChildId, memoType, value, label]);
-
-  useEffect(() => {
-    if (
-      !autoSaveEnabled ||
-      !editingRef.current ||
-      autoSaveRevisionRef.current === editRevisionRef.current ||
-      value === savedValueRef.current ||
-      !selectedChildId ||
-      !STAFF_ID ||
-      weekdayId == null || weekdayId === "" ||
-      isComposing || isSaving
-    ) {
-      return undefined;
-    }
-
-    const timer = setTimeout(() => {
-      autoSaveRevisionRef.current = editRevisionRef.current;
-      void handleSave({ silent: true });
-    }, autoSaveIntervalSeconds * 1000);
-
-    return () => clearTimeout(timer);
-  }, [value, selectedChildId, STAFF_ID, weekdayId, isComposing, isSaving, handleSave, autoSaveEnabled, autoSaveIntervalSeconds]);
+  }
 
   function handleChange(event) {
     editingRef.current = true;
-    editRevisionRef.current += 1;
     setValue(event.target.value);
   }
 
@@ -441,15 +391,16 @@ export default function MemoInputBox({
     }
 
     editingRef.current = true;
-    editRevisionRef.current += 1;
     setValue(laravelApiResult);
     setIsMemoHidden(false);
-    showSuccessToastRef.current?.(`${label} にLaravel APIの返却値を反映しました`);
+
+    showSuccessToastRef.current?.(
+      `${label} にLaravel APIの返却値を反映しました`,
+    );
   }
 
   function handleCompositionStart() {
     editingRef.current = true;
-    setIsComposing(true);
   }
 
   function handleKeyDown(event) {
@@ -548,7 +499,6 @@ export default function MemoInputBox({
           onChange={handleChange}
           onFocus={handleFocus}
           onCompositionStart={handleCompositionStart}
-          onCompositionEnd={() => setIsComposing(false)}
           onKeyDown={handleKeyDown}
         />
 
@@ -574,8 +524,8 @@ export default function MemoInputBox({
 
         <button
           type="button"
-          onClick={() => handleSave()}
-          disabled={!selectedChildId || isSaving}
+          onClick={handleSave}
+          disabled={!selectedChildId}
           className="
             flex-1 px-3 py-2
             bg-blue-600 text-white rounded text-xs

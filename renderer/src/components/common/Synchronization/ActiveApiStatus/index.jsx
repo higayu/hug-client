@@ -31,7 +31,6 @@ const ActiveApiStatus = ({ className = '' }) => {
 
   const requestIdRef = useRef(0)
   const isRunningRef = useRef(false)
-  const pendingCheckRef = useRef(null)
 
   const [checking, setChecking] = useState(true)
   const [connected, setConnected] = useState(null)
@@ -56,7 +55,6 @@ const ActiveApiStatus = ({ className = '' }) => {
 
     // 通信の重複を防止
     if (isRunningRef.current) {
-      pendingCheckRef.current = checkConnection
       return
     }
 
@@ -142,12 +140,6 @@ const ActiveApiStatus = ({ className = '' }) => {
       if (requestId === requestIdRef.current) {
         setChecking(false)
       }
-
-      const pendingCheck = pendingCheckRef.current
-      pendingCheckRef.current = null
-      if (pendingCheck) {
-        void pendingCheck()
-      }
     }
   }, [dispatch, hasCredentials, username, password])
 
@@ -176,7 +168,6 @@ const ActiveApiStatus = ({ className = '' }) => {
     // クリーンアップ
     return () => {
       disposed = true
-      pendingCheckRef.current = null
 
       requestIdRef.current += 1
 

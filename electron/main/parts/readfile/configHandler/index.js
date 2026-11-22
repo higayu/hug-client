@@ -5,20 +5,31 @@ const { app, dialog, shell } = require("electron");
 const { getDataDir, getConfigPath } = require("../../utils/pathResolver");
 const { DEFAULT_CONFIG, getDefaultConfig } = require("./defaultConfig");
 
+const CONFIG_IPC_CHANNELS = [
+  "app-lock-status",
+  "app-lock-unlock",
+  "read-config",
+  "save-config",
+  "import-config-file",
+  "open-config-folder",
+];
+
 function removeHandlerIfRegistered(ipcMain, channel) {
   try {
     ipcMain.removeHandler(channel);
   } catch (error) {
     console.warn(
-      `⚠️ IPCハンドラーを解除できませんでした: ${channel}`,
+      `⚠️ [Config IPC] ハンドラー解除失敗: ${channel}`,
       error?.message ?? error,
     );
   }
 }
 
 function handleConfigAccess(ipcMain) {
-  removeHandlerIfRegistered(ipcMain, "app-lock-status");
-  removeHandlerIfRegistered(ipcMain, "app-lock-unlock");
+  for (const channel of CONFIG_IPC_CHANNELS) {
+    removeHandlerIfRegistered(ipcMain, channel);
+  }
+
   // Check the passcode in the main process; the lock screen only receives status.
   const readLockConfig = () => {
     const filePath = getConfigPath();
@@ -45,12 +56,6 @@ function handleConfigAccess(ipcMain) {
       return { success: false };
     }
   });
-
-
-  removeHandlerIfRegistered(ipcMain, "read-config");
-  removeHandlerIfRegistered(ipcMain, "save-config");
-  removeHandlerIfRegistered(ipcMain, "import-config-file");
-  removeHandlerIfRegistered(ipcMain, "open-config-folder");
 
   // ============================================================
   // 📖 config.json 読み込み

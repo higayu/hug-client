@@ -1,58 +1,147 @@
 // main.js
-const { app } = require("electron");
 
-const { createMainWindow } = require("./window");
-const { registerIpcHandlers } = require("./ipcHandlers");
-const { setAppMenu } = require("./menu");
+const {
+  app,
+  ipcMain,
+} = require("electron");
 
-const { setupMediaPermissions } = require("./permissions");
-const { setupAutoUpdater, scheduleUpdateCheck } = require("./updateManager");
-const { registerWhisperTranscriber } = require("./whisperTranscriber");
-const { registerCloseConfirmation } = require("./closeConfirmation");
-const { registerAppLifecycleHandlers } = require("./lifecycle");
+const {
+  createMainWindow,
+} = require("./window");
 
-// 🔍 調査用: フォーカス/ウィンドウ生成トラッカー（原因調査が終わったら削除する）
-//const { attachFocusTracker } = require("./debug/focusTracker.main");
+const {
+  registerIpcHandlers,
+} = require("./ipcHandlers");
+
+const {
+  setAppMenu,
+} = require("./menu");
+
+const {
+  setupMediaPermissions,
+} = require("./permissions");
+
+const {
+  registerWhisperTranscriber,
+} = require("./whisperTranscriber");
+
+const {
+  registerCloseConfirmation,
+} = require("./closeConfirmation");
+
+const {
+  registerAppLifecycleHandlers,
+} = require("./lifecycle");
+
+const {
+  handleApiCalls,
+} = require("./parts/handlers");
 
 // ✅ 対策: window.confirm() の代わりに使う非ブロッキングな確認ダイアログ
 const { registerConfirmDialog } = require("./confirmDialog");
 
 // ============================================================
-// 🧹 アプリ終了系イベント
+// アプリ終了系イベント
 // ============================================================
+
 registerAppLifecycleHandlers();
 
 // ============================================================
-// 🏁 Electron 起動処理
+// Electron起動処理
 // ============================================================
-app.whenReady().then(async () => {
-  // 🔍 調査用トラッカーを一番最初に起動（以降作られるウィンドウを全部拾うため）
-  //attachFocusTracker();
 
-  // メニュー
-  setAppMenu();
+app.whenReady().then(
+  async () => {
+    try {
+      console.log(
+        "🚀 [main] Electron起動処理開始",
+      );
 
-  // マイク権限
-  setupMediaPermissions();
+      // ========================================================
+      // Laravel API関連IPC登録
+      //
+      // rendererが起動してAPIを呼び出す前に登録する。
+      // laravel-auth-me
+      // laravel-auth-login
+      // laravel-auth-logout
+      // fetchTableAll
+      // get-database-type
+      // ========================================================
 
-  // アップデーター
-  setupAutoUpdater();
+      console.log(
+        "🔧 [main] DB・Laravel IPC登録開始",
+      );
 
-  // whisper.cpp 文字起こし IPC
-  registerWhisperTranscriber();
+      await handleApiCalls(
+        ipcMain,
+      );
 
-  // 5秒後にアップデートチェック
-  scheduleUpdateCheck(5000);
+      console.log(
+        "✅ [main] DB・Laravel IPC登録完了",
+      );
 
-  // メインウィンドウ作成
-  const mainWindow = createMainWindow();
+      // ========================================================
+      // メニュー
+      // ========================================================
 
-  // ✅ 対策: 確認ダイアログのIPCを登録（mainWindow作成後、これに紐づける）
-  registerConfirmDialog(mainWindow);
+      setAppMenu();
 
-  // 既存IPC
-  registerIpcHandlers(mainWindow, null);
+      // ========================================================
+      // マイク権限
+      // ========================================================
 
-  // 終了確認
-  registerCloseConfirmation(mainWindow);
-});
+      setupMediaPermissions();
+
+      // ========================================================
+      // whisper.cpp文字起こしIPC
+      // ========================================================
+
+      registerWhisperTranscriber();
+
+      // ========================================================
+      // メインウィンドウ作成
+      //
+      // IPC登録後に作成する。
+      // rendererが先にlaravel-auth-meを呼ぶ問題を防止する。
+      // ========================================================
+
+      const mainWindow =
+        createMainWindow();
+
+      // ========================================================
+      // 既存IPC
+      // ========================================================
+
+      registerIpcHandlers(
+        mainWindow,
+        null,
+      );
+
+      // ✅ 対策: 確認ダイアログのIPCを登録（mainWindow作成後、これに紐づける）
+      registerConfirmDialog(mainWindow);
+
+      // ========================================================
+      // 終了確認
+      // ========================================================
+
+      registerCloseConfirmation(
+        mainWindow,
+      );
+
+      console.log(
+        "✅ [main] Electron起動処理完了",
+      );
+    } catch (error) {
+      console.error(
+        "❌ [main] Electron起動処理に失敗しました:",
+        error,
+      );
+
+      /*
+       * IPC登録などの根本的な初期化に失敗した場合は、
+       * 不完全な状態でアプリを動かさず終了する。
+       */
+      app.quit();
+    }
+  },
+);

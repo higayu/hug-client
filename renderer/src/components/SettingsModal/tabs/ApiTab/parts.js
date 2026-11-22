@@ -31,11 +31,21 @@ export const isNotDeleted = (value) => {
 }
 
 export const normalizeDatabaseType = (value) => {
-  return 'laravel'
+  const normalized = String(value ?? '').toLowerCase()
+
+  if (normalized === 'mariadb') {
+    return 'mariadb'
+  }
+
+  if (normalized === 'laravel') {
+    return 'laravel'
+  }
+
+  return 'sqlite'
 }
 
 export const normalizeNormalModeView = (value) => {
-  return value === 'dashboard' ? 'dashboard' : 'simpleBoard'
+  return value === 'simpleBoard' ? 'simpleBoard' : 'dashboard'
 }
 
 export const createFormState = ({
@@ -58,7 +68,7 @@ export const createFormState = ({
     databaseType: normalizeDatabaseType(
       apiSettings?.databaseType ??
       appState?.DATABASE_TYPE ??
-      'laravel'
+      'sqlite'
     ),
 
     autoAttendanceFetch: toBoolean(
@@ -72,11 +82,18 @@ export const createFormState = ({
       true
     ),
 
-    autoSwitching: false,
+    autoSwitching: toBoolean(
+      apiSettings?.autoSwitching ??
+      appState?.AUTO_SWITCHING,
+      true
+    ),
+
     memoAutoSaveEnabled: isMemoAutoSaveEnabled(apiSettings?.memoAutoSaveEnabled),
     memoAutoSaveIntervalSeconds: normalizeMemoAutoSaveInterval(apiSettings?.memoAutoSaveIntervalSeconds),
 
-    normalModeView: normalizeNormalModeView(apiSettings?.normalModeView),
+    normalModeView: normalizeNormalModeView(
+      apiSettings?.normalModeView ?? appState?.NORMAL_MODE_VIEW
+    ),
 
     professionalSupportSaveMode:
       apiSettings?.professionalSupportSaveMode === 'created'

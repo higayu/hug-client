@@ -93,15 +93,14 @@ export default function ChatPage({
   const defaults = getDefaultPeriod();
 
   const { databaseState, iniState } = useAppState();
+  const configuredFacilityId = iniState?.apiSettings?.facilityId ?? null;
 
   const facilities = toTable(databaseState?.facilitys);
   const allChildren = toTable(databaseState?.children);
   const facilityChildren = toTable(databaseState?.facility_children);
   const { getServiceRecordMonthly } = useServiceRecord();
 
-  const configuredFacilityId = iniState?.apiSettings?.facilityId ?? null;
   const [facilityId, setFacilityId] = useState(null);
-  const [facilityChangedManually, setFacilityChangedManually] = useState(false);
   const [childId, setChildId] = useState(initialChildId);
   const [startDate, setStartDate] = useState(defaults.startDate);
   const [endDate, setEndDate] = useState(defaults.endDate);
@@ -117,50 +116,49 @@ export default function ChatPage({
   const facilitiesLoading = false;
   const childrenLoading = false;
 
-  // API設定が非同期で読み込まれても、手動選択済みの場合は上書きしない。
-  // API設定が未設定のときだけ呼び出し元の初期値、次に先頭施設を使用する。
+  // APIタブで設定した施設を優先して選択する。
+  // 明示された initialFacilityId がある場合はその値を優先する。
+  // 存在しない施設IDをそのまま利用しない。
   useEffect(() => {
-    if (facilityChangedManually) return;
-
-    const candidates = [configuredFacilityId, initialFacilityId];
-    const matching = candidates
-      .filter((id) => id != null && String(id).trim() !== '')
-      .map((id) => facilities.find((facility) => sameId(getFacilityId(facility), id)))
-      .find(Boolean);
-    const nextId = matching
-      ? getFacilityId(matching)
-      : facilities.length > 0
-        ? getFacilityId(facilities[0])
-        : null;
-
-    if (!sameId(facilityId, nextId) && !(facilityId == null && nextId == null)) {
-      setFacilityId(nextId);
-      setChildId(null);
+    if (facilities.length === 0) {
+      setFacilityId(null);
+      return;
     }
-  }, [configuredFacilityId, initialFacilityId, facilities, facilityId, facilityChangedManually]);
 
+    const preferredId = initialFacilityId ?? configuredFacilityId;
+    setFacilityId((current) => {
+      if (preferredId != null && preferredId !== '' &&
+          facilities.some((facility) => sameId(getFacilityId(facility), preferredId))) {
+        // 設定変更時もAPIタブの選択を反映する。
+        return sameId(current, preferredId) ? current : preferredId;
+      }
+      if (facilities.some((facility) => sameId(getFacilityId(facility), current))) {
+        return current;
+      }
+      return getFacilityId(facilities[0]);
+    });
+  }, [initialFacilityId, configuredFacilityId, databaseState?.facilitys]);
+
+  // facility_children の紐付けを必須とする。該当0件なら必ず空配列。
   const children = useMemo(() => {
-    const activeChildren = allChildren.filter(isActiveChild);
-
-    if (facilityId == null || String(facilityId) === '' || facilityChildren.length === 0) {
+    if (facilityId == null || facilityId === '' || facilityChildren.length === 0) {
       return [];
     }
 
     const childIdsForFacility = new Set(
       facilityChildren
         .filter((row) => sameId(row?.facility_id, facilityId))
-        .map((row) => String(row?.children_id))
-        .filter((value) => value !== 'null' && value !== 'undefined'),
+        .map((row) => row?.children_id ?? row?.child_id)
+        .filter((id) => id != null)
+        .map(String),
     );
 
-    if (childIdsForFacility.size === 0) {
-      return [];
-    }
+    if (childIdsForFacility.size === 0) return [];
 
-    return activeChildren.filter((child) =>
-      childIdsForFacility.has(String(getChildId(child))),
+    return allChildren.filter((child) =>
+      isActiveChild(child) && childIdsForFacility.has(String(getChildId(child))),
     );
-  }, [allChildren, facilityChildren, facilityId]);
+  }, [databaseState?.children, databaseState?.facility_children, facilityId]);
 
   useEffect(() => {
     if (children.length === 0) {
@@ -189,9 +187,7 @@ export default function ChatPage({
   )?.name;
 
   const handleFacilityChange = (value) => {
-    setFacilityChangedManually(true);
     setFacilityId(value);
-    setChildId(null);
     onFacilityChange?.(value);
   };
 
@@ -201,6 +197,7 @@ export default function ChatPage({
   };
 
   const startChat = async () => {
+    // 選択施設と児童の関係が有効なときだけ処理する。
     if (facilityId == null || !children.some((child) => sameId(getChildId(child), childId))) {
       return;
     }
@@ -432,7 +429,7 @@ export default function ChatPage({
                 type="button"
                 className="btn btn-primary"
                 onClick={startChat}
-                disabled={!facilityId || !children.some((child) => sameId(getChildId(child), childId)) || !startDate || !endDate}
+                disabled={!facilityId || !childId || !startDate || !endDate}
               >
                 チャット開始
               </button>

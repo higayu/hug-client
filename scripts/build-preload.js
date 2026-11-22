@@ -1,21 +1,28 @@
-// scripts/build-preload.js
-const esbuild = require("esbuild");
-const path = require("path");
+const esbuild = require('esbuild');
+const path = require('path');
 
-esbuild
-  .build({
-    entryPoints: [path.join(__dirname, "../electron/preload/index.js")],
-    outfile: path.join(__dirname, "../electron/preload/preload.bundle.cjs"),
-    bundle: true,
-    platform: "node",
-    format: "cjs",
-    target: "node18",
-    external: ["electron"],
-  })
-  .then(() => {
-    console.log("✅ preload bundle created: electron/preload/preload.bundle.cjs");
-  })
-  .catch((error) => {
-    console.error("❌ preload bundle failed:", error);
+const isDev = process.argv.includes('--dev');
+
+async function buildPreload() {
+  try {
+    await esbuild.build({
+      entryPoints: [path.resolve(__dirname, '../electron/preload/index.js')],
+      outfile: path.resolve(__dirname, '../electron/preload/preload.bundle.cjs'),
+      bundle: true,
+      platform: 'node',
+      target: 'node18',
+      format: 'cjs',
+      sourcemap: isDev,
+      external: ['electron'],
+      logLevel: 'info',
+    });
+
+    console.log('electron/preload/preload.bundle.cjs built successfully');
+  } catch (error) {
+    console.error('Failed to build preload script');
+    console.error(error);
     process.exit(1);
-  });
+  }
+}
+
+buildPreload();

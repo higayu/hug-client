@@ -1,33 +1,36 @@
-import { configureStore } from '@reduxjs/toolkit'
+import { combineReducers, configureStore } from '@reduxjs/toolkit'
+import { withAiModePolicy } from './aiModeReducer.js'
+
 import attendanceReducer from './slices/attendanceSlice.js'
 import authReducer from './slices/authSlice.js'
 import appStateReducer from './slices/appStateSlice.js'
 import databaseReducer from './slices/databaseSlice.js'
-import sendTextReducer from './slices/sendTextSlice.js'
-import webviewReducer from "./slices/webviewSlice.js"
-import recordStatusReducer from "./slices/recordStatusSlice.js";
 import modeReducer from './slices/modeSlice.js'
+import recordStatusReducer from './slices/recordStatusSlice.js'
+import sendTextReducer from './slices/sendTextSlice.js'
+import webviewReducer from './slices/webviewSlice.js'
 import chilledspaceReducer from './slices/chilledspaceSlice.js'
 import webAutomationRuleReducer from './slices/webAutomationRuleSlice.js'
-import aiChatReducer from './slices/aiChatSlice.js'
 import simpleBoardReducer from './slices/simpleBoardSlice.js'
+import aiChatReducer from './slices/aiChatSlice.js'
 
 export const store = configureStore({
-  reducer: {
+  reducer: withAiModePolicy(combineReducers({
     attendance: attendanceReducer,
-    simpleBoard: simpleBoardReducer,
     auth: authReducer,
     appState: appStateReducer,
-    chilledspace: chilledspaceReducer,
-    webAutomationRules: webAutomationRuleReducer,
-    aiChat: aiChatReducer,
     database: databaseReducer,
+    mode: modeReducer,
     sendText: sendTextReducer,
     webview: webviewReducer,
     recordStatus: recordStatusReducer,
-    mode: modeReducer,
-  },
-  devTools: process.env.NODE_ENV !== 'production'
+    chilledspace: chilledspaceReducer,
+    webAutomationRules: webAutomationRuleReducer,
+    aiChat: aiChatReducer,
+    simpleBoard: simpleBoardReducer,
+  })),
+
+  devTools: process.env.NODE_ENV !== 'production',
 })
 
 export default store

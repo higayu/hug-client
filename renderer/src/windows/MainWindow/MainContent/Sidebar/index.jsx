@@ -1,7 +1,7 @@
 import { useRef } from "react";
 
-import NormalMode from "./NomalMode";
 import AiInquiry from "./AiInquiry";
+import NormalMode from './NomalMode';
 
 import { useAppState } from "@/AppStateContext";
 
@@ -35,4 +35,4 @@ function Sidebar() {
   );
 }
 
-export default Sidebar
+export default Sidebar;

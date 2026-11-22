@@ -125,7 +125,7 @@ export default function ProfessionalPrompt1({
   // =============================================================
   // AI送信文字列
   // =============================================================
-  // Laravel retrieves the saved plan and both prompts. Only send the input text.
+  // Laravel retrieves the saved plan and prompt. Only send the input text.
   const message = aiText;
 
   const textValue = `${text1}\n\n\n${message}`;
@@ -176,7 +176,7 @@ export default function ProfessionalPrompt1({
       ===================================================== */}
       <div>
         <label className="font-semibold">
-          専門的支援プロンプト1（計画から抽出）
+          専門的支援プロンプト（計画を使った文章生成）
         </label>
 
         <textarea
@@ -200,11 +200,7 @@ export default function ProfessionalPrompt1({
       {/* =====================================================
           AI入力
       ===================================================== */}
-      <div>
-        <label className="font-semibold">専門的支援プロンプト2（抽出結果を1つの文章にまとめる）</label>
-        <textarea className="w-full h-20 bg-gray-900 text-white rounded p-2" value={PROMPTS?.professional2?.content ?? ""} readOnly />
-        <p className="text-xs text-gray-500">実行時にLaravelが保存済みの専門的支援計画と両プロンプトを取得し、抽出→文章化の順でAIを2回呼び出します。</p>
-      </div>
+      <p className="text-xs text-gray-500">保存済みの専門的支援計画とプロンプトを使い、1回のAI処理で文章を生成します。</p>
       <div>
         <label className="font-bold text-gray-700 block mb-1">
           AIに送信するテキスト
@@ -245,7 +241,8 @@ export default function ProfessionalPrompt1({
         <div className="flex flex-row justify-between items-start gap-2">
           <button
             type="button"
-            className="w-[70%] bg-green-500 hover:bg-green-600 p-2 rounded text-white disabled:opacity-50 disabled:cursor-not-allowed"
+            aria-busy={sending}
+            className="flex min-h-10 w-[70%] items-center justify-center gap-2 bg-green-500 p-2 rounded text-white enabled:hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={handleSendPrompt}
             disabled={
               !aiText ||
@@ -253,7 +250,17 @@ export default function ProfessionalPrompt1({
               aiText.trim() === ""
             }
           >
-            {sending ? "抽出・文章化中…" : `${aiName}実行（抽出→文章化）`}
+            {sending ? (
+              <>
+                <span
+                  aria-hidden="true"
+                  className="h-5 w-5 shrink-0 animate-spin rounded-full border-2 border-white/40 border-t-white"
+                />
+                <span>生成中…</span>
+              </>
+            ) : (
+              `${aiName}実行`
+            )}
           </button>
         </div>
 

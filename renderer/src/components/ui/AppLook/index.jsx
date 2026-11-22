@@ -74,7 +74,7 @@ export default function AppLook({ children }) {
         {status === 'locked' && (
           <form onSubmit={unlock} className="flex flex-col gap-4">
             <label htmlFor="app-lock-passcode">パスコードを入力してください</label>
-            <PassWordInput containerClassName="w-full" visibilityLabel="パスコード" id="app-lock-passcode" autoFocus autoComplete="off"
+            <PassWordInput containerClassName="w-full" visibilityLabel="パスコード" id="app-lock-passcode"  autoFocus autoComplete="off"
               value={passcode} onChange={(event) => setPasscode(event.target.value)}
               disabled={busy} required className="rounded border border-gray-300 px-3 py-2" />
             <button type="submit" disabled={busy || !passcode}

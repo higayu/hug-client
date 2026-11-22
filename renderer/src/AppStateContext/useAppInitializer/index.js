@@ -38,7 +38,6 @@ const normalizeDatabaseType = (value) => {
  * - すべて読み込み完了後に Redux(appStateSlice) へ反映する
  * - activeApi は使わない
  * - DATABASE_TYPE を正本にする
- * - AUTO_SYNCHRONIZATION / AUTO_SWITCHING も ini.json から Redux に反映する
  * - Redux反映後、最後に setIsInitialized(true) を呼ぶ
  *
  * @param {Object} params
@@ -56,7 +55,7 @@ export async function initializeAppState({
     console.group("🚀 [initializeAppState] 初期化開始");
 
     // =============================================================
-    // 1) config / ini を読み込む
+    // 1) config / ini をすべて読み込む
     // =============================================================
     const [config, ini] = await Promise.all([
       loadConfig(),
@@ -135,26 +134,11 @@ export async function initializeAppState({
     // 3) ini.json → Redux 反映用 merged
     // =============================================================
     const apiSettings = ini?.apiSettings ?? {};
-    const uiSettings = ini?.appSettings?.ui ?? {};
 
     const databaseType = normalizeDatabaseType(apiSettings.databaseType);
 
-    const autoSynchronization = toBooleanFlag(
-      apiSettings.autoSynchronization,
-      true
-    );
-
-    const autoSwitching = false;
-
     merged.DATABASE_TYPE = databaseType;
-    merged.USE_AI = apiSettings.useAI || "gemini";
-
-    merged.AUTO_SYNCHRONIZATION = autoSynchronization;
-    merged.AUTO_SWITCHING = autoSwitching;
-    merged.closeButtonsVisible = toBooleanFlag(
-      uiSettings.showCloseButtons,
-      true
-    );
+    merged.USE_AI = apiSettings.useAI || "LaravelApi";
 
     if (apiSettings.facilityId != null) {
       merged.FACILITY_ID = String(apiSettings.facilityId);
@@ -172,12 +156,6 @@ export async function initializeAppState({
       rawDatabaseType: apiSettings.databaseType,
       databaseType,
 
-      rawAutoSynchronization: apiSettings.autoSynchronization,
-      autoSynchronization,
-
-      rawAutoSwitching: apiSettings.autoSwitching,
-      autoSwitching,
-
       rawUseAI: apiSettings.useAI,
       useAI: merged.USE_AI,
 
@@ -186,9 +164,6 @@ export async function initializeAppState({
 
       rawDebugFlg: apiSettings.debugFlg,
       DEBUG_FLG: merged.DEBUG_FLG,
-
-      rawShowCloseButtons: uiSettings.showCloseButtons,
-      closeButtonsVisible: merged.closeButtonsVisible,
 
       CURRENT_DAY_OF_WEEK: merged.CURRENT_DAY_OF_WEEK,
     });
@@ -211,8 +186,6 @@ export async function initializeAppState({
       STAFF_ID: merged.STAFF_ID,
       FACILITY_ID: merged.FACILITY_ID,
       CURRENT_DAY_OF_WEEK: merged.CURRENT_DAY_OF_WEEK,
-      AUTO_SYNCHRONIZATION: merged.AUTO_SYNCHRONIZATION,
-      AUTO_SWITCHING: merged.AUTO_SWITCHING,
     });
 
     console.groupEnd();

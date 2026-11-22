@@ -45,15 +45,13 @@ const DEFAULT_INI = {
       laravelURL: "https://dev-hug-banso.we-labo.com",
       facilityId: "3",
       databaseType: "laravel",
-      useAI: "chatGPT",
+      useAI: "LaravelApi",
       autoAttendanceFetch: "false",
-      autoSynchronization: "true",
-      autoSwitching: "false",
-      normalModeView: "dashboard",
-      professionalSupportSaveMode: "draft",
       memoAutoSaveEnabled: true,
       memoAutoSaveIntervalSeconds: 3,
-      debugFlg: "false"
+      normalModeView: "simpleBoard",
+      debugFlg: "false",
+      port: ""
     }
   };
   
@@ -74,7 +72,6 @@ const DEFAULT_INI = {
     // テスト環境用の設定
     if (options.test) {
       config.apiSettings.baseURL = "http://localhost:3000";
-      config.apiSettings.autoSynchronization = "false";
     }
     
     return config;
@@ -88,7 +85,6 @@ const DEFAULT_INI = {
     return full[section] || null;
   }
   
-  // 待ち時間は整数の1〜300秒。空欄・不正値は3秒に戻す。
   function normalizeMemoAutoSaveSettings(data) {
     const settings = data.apiSettings;
     settings.memoAutoSaveEnabled = ![false, "false", 0, "0"].includes(settings.memoAutoSaveEnabled);

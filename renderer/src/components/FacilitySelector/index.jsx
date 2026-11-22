@@ -7,18 +7,13 @@ import {
 
 import { useSelector } from 'react-redux';
 
-import {
-  selectFacilityId,
-} from '@/store/slices/appStateSlice';
+import {  selectFacilityId,} from '@/store/slices/appStateSlice';
 
-import {  useToast,} from '@/utils/notifications.jsx'
+import { useToast,} from '@/utils/notifications.jsx';
 
-import {
-  useAppState,
-} from '@/AppStateContext';
+import { useAppState,} from '@/AppStateContext';
 
-const TITLE =
-  '設定 > 設定編集 > API設定 から設定してください';
+const TITLE = '設定 > 設定編集 > API設定 から設定してください';
 
 function FacilitySelector() {
   const { showInfoToast } = useToast();
@@ -26,9 +21,7 @@ function FacilitySelector() {
   /*
    * 現在選択中の施設ID
    */
-  const facilityId = useSelector(
-    selectFacilityId,
-  );
+  const facilityId = useSelector( selectFacilityId,);
 
   /*
    * データベースから取得した施設一覧
@@ -41,8 +34,7 @@ function FacilitySelector() {
   /*
    * onMouseDownとonContextMenuの二重発火防止
    */
-  const lastRightClickHandledAtRef =
-    useRef(0);
+  const lastRightClickHandledAtRef = useRef(0);
 
   /**
    * DBから取得した施設一覧

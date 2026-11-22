@@ -5,36 +5,42 @@ import { updateManager, getManagerRecord } from "./managersUtils.js";
 import { ModalPortal } from "@/components/modals/ModalPortal";
 
 /**
- * 時間だけを HH:00:00 に変換する
+ * select の HH:mm を DB保存用の HH:mm:ss に変換する
  *
  * 例:
- * - "9"  → "09:00:00"
- * - "12" → "12:00:00"
- * - ""   → null
+ * - "09:00" → "09:00:00"
+ * - "09:30" → "09:30:00"
+ * - ""      → null
  */
-function hourToTimeValue(hour) {
-  if (hour === "" || hour == null) {
+function selectTimeToDbTime(value) {
+  if (value === "" || value == null) {
     return null;
   }
 
-  const hourNumber = Number(hour);
+  const match = String(value).match(/^(\d{1,2}):(00|30)$/);
 
-  if (Number.isNaN(hourNumber)) {
+  if (!match) {
     return null;
   }
 
-  return `${String(hourNumber).padStart(2, "0")}:00:00`;
+  const hour = Number(match[1]);
+
+  if (hour < 0 || hour > 23) {
+    return null;
+  }
+
+  return `${String(hour).padStart(2, "0")}:${match[2]}:00`;
 }
 
 /**
- * DBから来た TIME / TEXT を hour select 用の値に変換する
+ * DBから来た TIME / TEXT を select 用の HH:mm に変換する
  *
  * 例:
- * - "09:00:00" → "9"
- * - "12:00:00" → "12"
- * - null       → ""
+ * - "09:00:00" → "09:00"
+ * - "09:30:00" → "09:30"
+ * - null        → ""
  */
-function timeToHourValue(time) {
+function dbTimeToSelectValue(time) {
   if (!time) {
     return "";
   }
@@ -45,15 +51,17 @@ function timeToHourValue(time) {
     return "";
   }
 
-  if (text.includes(":")) {
-    const [hourText] = text.split(":");
-    const hour = Number(hourText);
+  const colonMatch = text.match(/^(\d{1,2}):(\d{2})/);
 
-    if (Number.isNaN(hour)) {
+  if (colonMatch) {
+    const hour = Number(colonMatch[1]);
+    const minute = Number(colonMatch[2]);
+
+    if (hour < 0 || hour > 23 || ![0, 30].includes(minute)) {
       return "";
     }
 
-    return String(hour);
+    return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
   }
 
   const digits = text.replace(/\D/g, "");
@@ -63,13 +71,14 @@ function timeToHourValue(time) {
   }
 
   const normalized = digits.padStart(4, "0");
-  const hour = Number(normalized.slice(0, -2));
+  const hour = Number(normalized.slice(0, 2));
+  const minute = Number(normalized.slice(2, 4));
 
-  if (Number.isNaN(hour)) {
+  if (hour < 0 || hour > 23 || ![0, 30].includes(minute)) {
     return "";
   }
 
-  return String(hour);
+  return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
 }
 
 /**
@@ -98,12 +107,18 @@ function getFacilityName(row) {
 }
 
 /**
- * 0時〜23時の選択肢
+ * 00:00〜23:30の30分刻みの選択肢
  */
-const HOUR_OPTIONS = Array.from({ length: 24 }, (_, hour) => ({
-  value: String(hour),
-  label: `${String(hour).padStart(2, "0")}:00`,
-}));
+const TIME_OPTIONS = Array.from({ length: 48 }, (_, index) => {
+  const hour = Math.floor(index / 2);
+  const minute = index % 2 === 0 ? "00" : "30";
+  const value = `${String(hour).padStart(2, "0")}:${minute}`;
+
+  return {
+    value,
+    label: value,
+  };
+});
 
 /**
  * 確認モーダルコンポーネント
@@ -133,6 +148,8 @@ function ConfirmModal({ show, message, list = [], onConfirm, onCancel }) {
       : [];
 
   const [selectedValues, setSelectedValues] = useState({});
+  const [submitError, setSubmitError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // モーダルを開いている間、初期値で選択値を上書きし続けないための ref
   const initializedForOpenRef = useRef(false);
@@ -161,6 +178,8 @@ function ConfirmModal({ show, message, list = [], onConfirm, onCancel }) {
     if (!show) {
       initializedForOpenRef.current = false;
       setSelectedValues({});
+      setSubmitError("");
+      setIsSubmitting(false);
       return;
     }
 
@@ -186,8 +205,8 @@ function ConfirmModal({ show, message, list = [], onConfirm, onCancel }) {
         // FACILITY_ID は初期値としてのみ使用
         facility_id: toSelectValue(FACILITY_ID),
 
-        support_start_hour: timeToHourValue(child.support_start_time),
-        support_end_hour: timeToHourValue(child.support_end_time),
+        support_start_time: dbTimeToSelectValue(child.support_start_time),
+        support_end_time: dbTimeToSelectValue(child.support_end_time),
       };
     });
 
@@ -209,6 +228,7 @@ function ConfirmModal({ show, message, list = [], onConfirm, onCancel }) {
       value,
     });
 
+    setSubmitError("");
     setSelectedValues((prev) => ({
       ...prev,
       [id]: {
@@ -260,7 +280,10 @@ function ConfirmModal({ show, message, list = [], onConfirm, onCancel }) {
     return getManagerRecord(childrenId, STAFF_ID, managersList);
   };
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
+    if (isSubmitting) return;
+
+    setSubmitError("");
     if (!weekdayId) {
       console.error("❌ weekdayId が未設定です");
       window.alert("曜日が未設定です。");
@@ -278,6 +301,21 @@ function ConfirmModal({ show, message, list = [], onConfirm, onCancel }) {
     if (missingFacility) {
       console.error("❌ facility_id が未設定です", missingFacility);
       window.alert("施設を選択してください。");
+      return;
+    }
+
+    const invalidTimeChild = list.find((child) => {
+      const selected = selectedValues[String(child.children_id)] ?? {};
+      const startTime = selectTimeToDbTime(selected.support_start_time);
+      const endTime = selectTimeToDbTime(selected.support_end_time);
+
+      return startTime !== null && endTime !== null && startTime >= endTime;
+    });
+
+    if (invalidTimeChild) {
+      setSubmitError(
+        `${invalidTimeChild.children_name ?? `ID: ${invalidTimeChild.children_id}`} の支援終了時間は、支援開始時間より後にしてください。`,
+      );
       return;
     }
 
@@ -302,8 +340,8 @@ function ConfirmModal({ show, message, list = [], onConfirm, onCancel }) {
         weekdayId
       );
 
-      const supportStartTime = hourToTimeValue(selected.support_start_hour);
-      const supportEndTime = hourToTimeValue(selected.support_end_hour);
+      const supportStartTime = selectTimeToDbTime(selected.support_start_time);
+      const supportEndTime = selectTimeToDbTime(selected.support_end_time);
 
       return {
         ...child,
@@ -331,7 +369,15 @@ function ConfirmModal({ show, message, list = [], onConfirm, onCancel }) {
     });
 
     console.log("送信データ(updatedList):", updatedList);
-    onConfirm(updatedList);
+    setIsSubmitting(true);
+    try {
+      const succeeded = await onConfirm(updatedList);
+      if (!succeeded) {
+        setSubmitError("登録に失敗しました。入力内容を確認して再度送信してください。");
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -375,12 +421,12 @@ function ConfirmModal({ show, message, list = [], onConfirm, onCancel }) {
                       selected.children_type_id
                   );
 
-                  const supportStartHourValue = toSelectValue(
-                    selected.support_start_hour
+                  const supportStartTimeValue = toSelectValue(
+                    selected.support_start_time
                   );
 
-                  const supportEndHourValue = toSelectValue(
-                    selected.support_end_hour
+                  const supportEndTimeValue = toSelectValue(
+                    selected.support_end_time
                   );
 
                   // セレクト変更済みならそれを優先、未変更なら FACILITY_ID
@@ -451,17 +497,17 @@ function ConfirmModal({ show, message, list = [], onConfirm, onCancel }) {
                       <td className="border px-2 py-1">
                         <select
                           className="border bg-slate-50 px-2 py-1 w-full text-black"
-                          value={supportStartHourValue}
+                          value={supportStartTimeValue}
                           onChange={(e) =>
                             handleSelectChange(
                               child.children_id,
-                              "support_start_hour",
+                              "support_start_time",
                               e.target.value
                             )
                           }
                         >
                           <option value="">未設定</option>
-                          {HOUR_OPTIONS.map((option) => (
+                          {TIME_OPTIONS.map((option) => (
                             <option key={option.value} value={option.value}>
                               {option.label}
                             </option>
@@ -472,17 +518,17 @@ function ConfirmModal({ show, message, list = [], onConfirm, onCancel }) {
                       <td className="border px-2 py-1">
                         <select
                           className="border bg-slate-50 px-2 py-1 w-full text-black"
-                          value={supportEndHourValue}
+                          value={supportEndTimeValue}
                           onChange={(e) =>
                             handleSelectChange(
                               child.children_id,
-                              "support_end_hour",
+                              "support_end_time",
                               e.target.value
                             )
                           }
                         >
                           <option value="">未設定</option>
-                          {HOUR_OPTIONS.map((option) => (
+                          {TIME_OPTIONS.map((option) => (
                             <option key={option.value} value={option.value}>
                               {option.label}
                             </option>
@@ -525,16 +571,32 @@ function ConfirmModal({ show, message, list = [], onConfirm, onCancel }) {
             </table>
           )}
 
+          {submitError && (
+            <div
+              className="mb-4 rounded border border-red-300 bg-red-50 px-3 py-2 text-left text-sm text-red-700"
+              role="alert"
+            >
+              {submitError}
+            </div>
+          )}
+
           <div className="flex justify-around">
             <button
+              type="button"
               onClick={handleConfirm}
+              disabled={isSubmitting}
               className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
             >
               はい
             </button>
 
             <button
-              onClick={onCancel}
+              type="button"
+              onClick={() => {
+                setSubmitError("");
+                onCancel();
+              }}
+              disabled={isSubmitting}
               className="bg-gray-300 text-black px-4 py-2 rounded hover:bg-gray-400"
             >
               いいえ

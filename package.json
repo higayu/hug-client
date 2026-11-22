@@ -1,7 +1,7 @@
 {
-  "name": "hug-client",
-  "version": "7.8.0",
-  "description": "FCC Hug Client",
+  "name": "hug-banso-navi",
+  "version": "5.0.4",
+  "description": "FCC Hug banso-navi",
   "main": "electron/main/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -10,56 +10,55 @@
     "start": "npm run build:preload && electron . --prod",
     "start:dev": "npm run build:preload && electron . --dev",
     "electron": "npm run build:preload && electron .",
-    "build:whisper": "cmake -S whisper.cpp -B whisper.cpp/build -DWHISPER_BUILD_EXAMPLES=ON && cmake --build whisper.cpp/build --config Release --target whisper-cli --parallel",
     "dev": "concurrently \"npm run dev:renderer\" \"wait-on http://localhost:5173 && npm run build:preload && electron . --dev\"",
     "dev:renderer": "vite --config renderer/vite.config.mjs",
-    "dist": "npm run build:preload && npm run build:renderer && electron-builder",
-    "release": "npm run build:preload && npm run build:renderer && electron-builder --publish always"
+    "preview:renderer": "vite preview --config renderer/vite.config.mjs",
+    "dist": "npm run build:preload && npm run build:renderer && electron-builder --win --x64"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@heroicons/react": "^2.2.0",
+    "@reduxjs/toolkit": "^2.10.1",
     "ag-grid-community": "36.1.0",
     "ag-grid-react": "36.1.0",
     "axios": "^1.12.2",
-    "better-sqlite3": "^12.4.1",
     "dotenv": "^17.2.3",
     "electron-log": "^5.4.3",
     "electron-updater": "^6.6.2",
     "exceljs": "4.4.0",
     "file-saver": "2.0.5",
     "iconv-lite": "^0.7.0",
+    "lucide-react": "^0.561.0",
     "puppeteer": "^24.23.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-icons": "5.7.0",
+    "react-redux": "^9.2.0",
+    "react-router-dom": "7.18.1",
     "recharts": "3.10.1",
-    "sonner": "^2.0.8",
-    "sqlite3": "^5.1.7"
+    "sonner": "^2.0.8"
   },
   "devDependencies": {
-    "@heroicons/react": "^2.2.0",
-    "@reduxjs/toolkit": "^2.10.1",
     "@types/react": "^18.2.43",
     "@types/react-dom": "^18.2.17",
     "@vitejs/plugin-react": "^4.2.1",
     "autoprefixer": "^10.4.21",
     "concurrently": "^8.2.2",
     "electron": "^38.2.0",
-    "electron-builder": "^26.0.12",
+    "electron-builder": "26.0.12",
     "esbuild": "^0.28.1",
-    "lucide-react": "^0.561.0",
     "postcss": "^8.5.6",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-icons": "^5.5.0",
-    "react-redux": "^9.2.0",
     "tailwindcss": "^3.4.18",
     "vite": "^5.0.8",
     "wait-on": "^7.2.0"
   },
   "build": {
-    "appId": "com.example.hugclient",
-    "productName": "Hug Client",
+    "appId": "com.example.hug-banso-navi",
+    "productName": "Hug banso-navi",
     "asar": true,
+    "publish": null,
     "directories": {
       "output": "dist",
       "buildResources": "assets"
@@ -111,13 +110,6 @@
           "**/*"
         ]
       }
-    ],
-    "publish": {
-      "provider": "github",
-      "owner": "higayu",
-      "repo": "hug-client",
-      "private": false,
-      "releaseType": "release"
-    }
+    ]
   }
 }

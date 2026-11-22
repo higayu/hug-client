@@ -39,16 +39,15 @@
   "apiSettings": {
     "baseURL": "http://192.168.1.229",
     "laravelURL": "https://dev-hug-banso.we-labo.com",
-    "facilityId": "",
+    "facilityId": "3",
     "databaseType": "laravel",
-    "useAI": "chatGPT",
+    "useAI": "LaravelApi",
     "autoAttendanceFetch": "false",
-    "autoSynchronization": "true",
-    "autoSwitching": "true",
+    "normalModeView": "simpleBoard",
     "professionalSupportSaveMode": "draft",
-    "memoAutoSaveEnabled": true,
-    "memoAutoSaveIntervalSeconds": 3,
     "debugFlg": "false",
-    "normalModeView": "simpleBoard"
+    "port": "",
+    "memoAutoSaveEnabled": true,
+    "memoAutoSaveIntervalSeconds": 3
   }
 }

@@ -16,8 +16,7 @@ export default function AddChilledSpaceBtn() {
       return
     }
 
-    const confirmDialog =
-      window.electronAPI?.confirmDialog
+    const confirmDialog = window.electronAPI?.confirmDialog
 
     if (typeof confirmDialog !== "function") {
       console.error(

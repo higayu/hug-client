@@ -159,7 +159,6 @@ function InsertChildren() {
 
   return (
     <div className="p-4">
-
       <ChildrenTableList />
     </div>
   );

@@ -16,26 +16,18 @@ function normalizeListParams(params = {}) {
   const normalized = {};
 
   const q = String(params?.q ?? "").trim();
-  if (q) {
-    normalized.q = q;
-  }
+  if (q) normalized.q = q;
 
   const category = String(params?.category ?? "").trim();
-  if (category) {
-    normalized.category = category;
-  }
+  if (category) normalized.category = category;
 
-  const systemKey = String(params?.system_key ?? "").trim();
-  if (systemKey) {
-    normalized.system_key = systemKey;
-  }
+  const systemKey = String(params?.system_key ?? params?.systemKey ?? "").trim();
+  if (systemKey) normalized.system_key = systemKey;
 
   if (params?.include_inactive !== undefined) {
     normalized.include_inactive = [true, 1, "1", "true"].includes(
       params.include_inactive,
-    )
-      ? 1
-      : 0;
+    ) ? 1 : 0;
   }
 
   return normalized;
@@ -52,27 +44,18 @@ function normalizeUpdatePayload(payload = {}) {
 async function fetchTroubleshootingKnowledgeList(params = {}) {
   const query = normalizeListParams(params);
 
-  console.log("📥 [Laravel Q&A] list request:", {
-    path: "/troubleshooting-knowledge",
-    params: query,
-  });
-
   const result = await executeAuthenticatedOperation(
     () => laravelApiClient.get("/troubleshooting-knowledge", { params: query }),
     "Q&A一覧の取得に失敗しました。",
   );
 
-  if (result?.success === false) {
-    return result;
-  }
-
-  const data = unwrapData(result);
+  if (result?.success === false) return result;
 
   return {
     success: true,
     connected: true,
     message: result?.message ?? "Q&A一覧を取得しました。",
-    data,
+    data: unwrapData(result),
     meta: {
       ...(result?.meta ?? {}),
       authenticated: true,
@@ -86,16 +69,12 @@ async function fetchTroubleshootingKnowledge(id) {
   const normalizedId = normalizeId(id);
   const path = `/troubleshooting-knowledge/${normalizedId}`;
 
-  console.log("📥 [Laravel Q&A] get request:", { path });
-
   const result = await executeAuthenticatedOperation(
     () => laravelApiClient.get(path),
     "Q&Aの取得に失敗しました。",
   );
 
-  if (result?.success === false) {
-    return result;
-  }
+  if (result?.success === false) return result;
 
   return {
     success: true,
@@ -117,19 +96,12 @@ async function updateTroubleshootingKnowledge(id, payload = {}) {
   const data = normalizeUpdatePayload(payload);
   const path = `/troubleshooting-knowledge/${normalizedId}`;
 
-  console.log("📝 [Laravel Q&A] update request:", {
-    path,
-    keys: Object.keys(data),
-  });
-
   const result = await executeAuthenticatedOperation(
     () => laravelApiClient.patch(path, data),
     "Q&Aの更新に失敗しました。",
   );
 
-  if (result?.success === false) {
-    return result;
-  }
+  if (result?.success === false) return result;
 
   return {
     success: true,

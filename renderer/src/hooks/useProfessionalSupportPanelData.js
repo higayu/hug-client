@@ -11,7 +11,7 @@ export function useProfessionalSupportPanelData(selectedChildId) {
     Experience_childrenData,
   } = useAppState()
   const childId = selectedChildId == null ? '' : String(selectedChildId)
-  // ChildNotesTabs と同じ優先順位。DB の空文字も最新値として扱う。
+  // ChildNotesTabs と同じ優先順位。DB の空の notes2 も最新値として扱う。
   const sources = [
     databaseState?.children,
     childrenData,

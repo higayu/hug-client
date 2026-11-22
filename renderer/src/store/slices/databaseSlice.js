@@ -29,13 +29,12 @@ const tableKeys = [
 
   // 記録系
   'service_record',
-  'child_records',
+  'record_types',
   'm_service_items',
 
   // メモ・テキスト系
   'temp_notes',
   'memo',
-
   'staff_facility_roles',
 
   // 認証系
@@ -48,10 +47,9 @@ const tableKeys = [
 // =============================================================
 const applyPayloadToState = (state, payload = {}) => {
   tableKeys.forEach((key) => {
-    // service_recordは月次取得で個別に更新する。
-    // 全件取得レスポンスに含まれない場合、現在の月次データを保持する。
+    // 個別取得データは __all に含まれない場合、既存値を保持する。
     if (
-      key === 'service_record' &&
+      (key === 'service_record' || key === 'record_types') &&
       !Object.prototype.hasOwnProperty.call(payload, key)
     ) {
       return
@@ -95,14 +93,12 @@ const initialState = {
 
   // 記録系
   service_record: [],
-  child_records: [],
   record_types: [],
   m_service_items: [],
 
   // メモ・テキスト系
   temp_notes: [],
   memo: [],
-
   staff_facility_roles: [],
 
   // 認証系
@@ -135,7 +131,6 @@ const databaseSlice = createSlice({
       state.error = null
     },
 
-    // 課題タイプは指定施設の専用APIからのみ更新する。
     setRecordTypes: (state, action) => {
       state.record_types = Array.isArray(action.payload) ? action.payload : []
     },
@@ -150,7 +145,6 @@ const databaseSlice = createSlice({
       tableKeys.forEach((key) => {
         state[key] = []
       })
-      state.record_types = []
 
       state.error = null
       state.metadata = {
@@ -231,8 +225,6 @@ export const selectDayOfWeek = (state) => state.database?.day_of_week ?? []
 // 記録系
 export const selectServiceRecord = (state) =>
   state.database?.service_record ?? []
-export const selectChildRecords = (state) =>
-  state.database?.child_records ?? []
 export const selectRecordTypes = (state) =>
   state.database?.record_types ?? []
 export const selectMServiceItems = (state) =>

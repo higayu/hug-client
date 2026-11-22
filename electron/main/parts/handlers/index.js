@@ -1,34 +1,7 @@
-// main/parts/handlers/index.js
-
-const fs = require("fs");
-const path = require("path");
-const { app } = require("electron");
-
 const {
   registerLaravelAuthHandlers,
 } = require("./laravelAuthHandler");
 
-/**
- * ini.jsonのパスを取得する。
- */
-function resolveIniPath() {
-  if (app.isPackaged) {
-    return path.join(
-      app.getPath("userData"),
-      "data",
-      "ini.json",
-    );
-  }
-
-  return path.join(
-    __dirname,
-    "../../../data/ini.json",
-  );
-}
-
-/**
- * DB種別を正規化する。
- */
 function normalizeDatabaseType() {
   return "laravel";
 }
@@ -37,122 +10,79 @@ function getDatabaseType() {
   return "laravel";
 }
 
-/**
- * IPCハンドラーの重複登録を防ぐ。
- */
-function removeHandlerIfRegistered(ipcMain, channel) {
+function removeHandlerIfRegistered(
+  ipcMain,
+  channel,
+) {
   try {
     ipcMain.removeHandler(channel);
   } catch (error) {
     console.warn(
-      `⚠️ IPCハンドラーを解除できませんでした: ${channel}`,
-      error?.message ?? error,
+      `[handlers] Failed to remove IPC handler: ${channel}`,
+      error,
     );
   }
 }
 
-/**
- * DB種別取得用IPCを登録する。
- */
-function registerDatabaseTypeHandler(ipcMain) {
-  const channel = "get-database-type";
+function registerDatabaseTypeHandlers(
+  ipcMain,
+) {
+  removeHandlerIfRegistered(
+    ipcMain,
+    "get-database-type",
+  );
 
-  removeHandlerIfRegistered(ipcMain, channel);
+  ipcMain.handle(
+    "get-database-type",
+    async () => "laravel",
+  );
 
-  ipcMain.handle(channel, async () => getDatabaseType());
+  removeHandlerIfRegistered(
+    ipcMain,
+    "switch-database-mode",
+  );
+
+  ipcMain.handle(
+    "switch-database-mode",
+    async () => ({
+      success: true,
+      mode: "laravel",
+    }),
+  );
 }
 
 /**
- * DBモード切り替え用IPCを登録する。
- */
-function registerDatabaseSwitchHandler(ipcMain) {
-  const channel = "switch-database-mode";
-
-  removeHandlerIfRegistered(ipcMain, channel);
-
-  ipcMain.handle(channel, async (_event, newMode) => {
-    try {
-      if (String(newMode ?? "").trim().toLowerCase() !== "laravel") {
-        throw new Error("現在はLaravel専用モードです。SQLite・MariaDBには切り替えできません。");
-      }
-      const iniPath = resolveIniPath();
-
-      if (!fs.existsSync(iniPath)) {
-        throw new Error("ini.jsonが見つかりません。");
-      }
-
-      const iniData = JSON.parse(
-        fs.readFileSync(iniPath, "utf8"),
-      );
-
-      if (
-        !iniData.apiSettings ||
-        typeof iniData.apiSettings !== "object" ||
-        Array.isArray(iniData.apiSettings)
-      ) {
-        iniData.apiSettings = {};
-      }
-
-      const mode = normalizeDatabaseType(newMode);
-      iniData.apiSettings.databaseType = mode;
-
-      fs.writeFileSync(
-        iniPath,
-        JSON.stringify(iniData, null, 2),
-        "utf8",
-      );
-
-      console.log(
-        "🔄 [switch-database-mode] モード切り替え:",
-        mode,
-      );
-
-      return {
-        success: true,
-        mode,
-      };
-    } catch (error) {
-      console.error(
-        "❌ [switch-database-mode] 切り替え失敗:",
-        error,
-      );
-
-      return {
-        success: false,
-        error: error?.message ?? String(error),
-      };
-    }
-  });
-}
-
-/**
- * IPCハンドラーをまとめて登録する。
+ * Main起動時にAPI系IPCを同期登録する。
+ *
+ * registerLaravelAuthHandlers() は ipcMain.handle() を
+ * 登録する同期処理なので、不要な await を挟まない。
+ * Renderer起動前にLaravel IPC登録を完了させる。
  */
 function handleApiCalls(ipcMain) {
-  console.log("🔥 [handleApiCalls] START");
+  console.log(
+    "🔥 [handleApiCalls] START",
+  );
 
-  if (!ipcMain || typeof ipcMain.handle !== "function") {
+  if (
+    !ipcMain ||
+    typeof ipcMain.handle !== "function"
+  ) {
     throw new TypeError(
-      "handleApiCallsにはElectronのipcMainを渡してください。",
+      "handleApiCalls requires Electron ipcMain.",
     );
   }
 
-  const registrars = [
-    registerLaravelAuthHandlers,
-  ];
-
-  for (const registerHandlers of registrars) {
-    if (typeof registerHandlers !== "function") {
-      throw new TypeError(
-        "IPCハンドラーの登録関数がエクスポートされていません。",
-      );
-    }
-
-    registerHandlers(ipcMain);
+  if (
+    typeof registerLaravelAuthHandlers !==
+    "function"
+  ) {
+    throw new TypeError(
+      "registerLaravelAuthHandlers is not exported.",
+    );
   }
 
-  registerDatabaseTypeHandler(ipcMain);
-  registerDatabaseSwitchHandler(ipcMain);
+  registerLaravelAuthHandlers(ipcMain);
+  registerDatabaseTypeHandlers(ipcMain);
 
   console.log(
     "✅ [handleApiCalls] IPC handlers registered:",

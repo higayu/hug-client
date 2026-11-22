@@ -133,15 +133,16 @@ export default function StaffTab({
     databaseState?.facilitys,
   ])
 
-  // 所属会社は staffs.company_id を唯一の基準にする。
-  const companies = useMemo(() =>
-    Array.isArray(databaseState?.companies) ? databaseState.companies : [],
-    [databaseState?.companies],
-  )
-  const belongingCompanies = useMemo(() => {
-    const target = staffs.find((row) => String(row.id) === String(targetStaffId))
-    return companies.filter((company) => target?.company_id != null && String(company.id) === String(target.company_id))
-  }, [companies, staffs, targetStaffId])
+  // 所属会社は staffs.company_id のみを参照する。会社別ロールとは独立。
+  const belongingCompany = useMemo(() => {
+    const staff = (databaseState?.staffs ?? []).find(
+      (item) => String(item.id) === String(targetStaffId),
+    )
+    if (staff?.company_id == null) return null
+    return (databaseState?.companies ?? []).find(
+      (company) => String(company.id) === String(staff.company_id),
+    ) ?? null
+  }, [databaseState?.staffs, databaseState?.companies, targetStaffId])
 
   const facilityStaff = useMemo(() => {
     return Array.isArray(
@@ -531,20 +532,13 @@ export default function StaffTab({
         現在選択中のスタッフ情報を編集します。
       </p>
 
-      {/* 所属会社：staffs.company_id を参照して表示（このタブでは編集しない） */}
+      {/* 所属会社：staffs.company_id（このタブでは編集しない） */}
       <div className="mb-5 rounded-md border border-gray-200 bg-gray-50 px-4 py-3">
         <div className="mb-1 text-sm font-medium text-gray-700">所属会社</div>
-        {belongingCompanies.length ? (
-          <div className="flex flex-wrap gap-2">
-            {belongingCompanies.map((company) => (
-              <span
-                key={company.id}
-                className="rounded-md border border-blue-200 bg-blue-50 px-3 py-1 text-sm text-blue-800"
-              >
-                {company.name}
-              </span>
-            ))}
-          </div>
+        {belongingCompany ? (
+          <span className="inline-flex rounded-md border border-blue-200 bg-blue-50 px-3 py-1 text-sm text-blue-800">
+            {belongingCompany.name}
+          </span>
         ) : (
           <p className="text-sm text-gray-500">所属会社がありません（または会社情報を取得できていません）。</p>
         )}

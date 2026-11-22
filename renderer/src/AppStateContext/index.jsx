@@ -1,32 +1,45 @@
 // AppStateContext/index.jsx
+
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
-  useState,
-  useCallback,
   useRef,
+  useMemo,
+  useState,
 } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
-
-import { useReduxBindings } from './useReduxBindings'
-import { useWindowBridge } from './useWindowBridge'
-import { initializeAppState } from './useAppInitializer'
 
 import {
-  setCurrentDate as setCurrentDateRedux,
+  useDispatch,
+  useSelector,
+} from 'react-redux'
+import { resolveAiMode, selectCanChooseAiMode } from '@/utils/aiModePolicy'
+
+import {
+  useReduxBindings,
+} from './useReduxBindings'
+
+import {
+  useWindowBridge,
+} from './useWindowBridge'
+
+import {
+  initializeAppState,
+} from './useAppInitializer'
+
+import {
   setAttendanceData as setAttendanceDataRedux,
-  updateAppState as updateAppStateRedux,
+  setCurrentDate as setCurrentDateRedux,
   setCurrentYmd as setCurrentYmdRedux,
-  setSelectChildFilterMode as setSelectChildFilterModeRedux,
   setDatabaseType as setDatabaseTypeRedux,
-  setUseAI as setUseAIRedux,
-  setStaffId as setStaffIdRedux,
-  setFacilityId as setFacilityIdRedux,
   setDebugFlg as setDebugFlgRedux,
+  setFacilityId as setFacilityIdRedux,
+  setSelectChildFilterMode as setSelectChildFilterModeRedux,
   setServerConnectionState as setServerConnectionStateRedux,
-  setAutoSynchronization as setAutoSynchronizationRedux,
-  setAutoSwitching as setAutoSwitchingRedux,
+  setStaffId as setStaffIdRedux,
+  setUseAI as setUseAIRedux,
+  updateAppState as updateAppStateRedux,
 } from '@/store/slices/appStateSlice'
 
 import {
@@ -40,7 +53,6 @@ import {
   resetChilledspace as resetChilledspaceRedux,
 } from '@/store/slices/chilledspaceSlice'
 
-
 import {
   setWebAutomationRulesLoading,
   setWebAutomationRules,
@@ -51,17 +63,23 @@ import {
 
 import {
   APP_MODES,
-  setMode as setModeRedux,
-  setSelectedItem as setSelectedItemRedux,
   resetMode as resetModeRedux,
   resetModeSelection as resetModeSelectionRedux,
   resetModeState as resetModeStateRedux,
+  setMode as setModeRedux,
+  setSelectedItem as setSelectedItemRedux,
 } from '@/store/slices/modeSlice'
 
-import { loadIni as loadIniFromUtils } from '@/utils/config/iniUtils'
-import { selectAuthenticatedStaffId } from '@/store/slices/authSlice'
+import {
+  loadIni as loadIniFromUtils,
+} from '@/utils/config/iniUtils'
 
-const AppStateContext = createContext(null)
+import {
+  selectAuthenticatedStaffId,
+} from '@/store/slices/authSlice'
+
+const AppStateContext =
+  createContext(null)
 
 export const FAN_CONTENT_PANELS = {
   AI_SUPPORT: 'ai',
@@ -69,33 +87,40 @@ export const FAN_CONTENT_PANELS = {
   PERSONAL_RECORD: 'personal-record',
 }
 
-const toBooleanFlag = (value, defaultValue = true) => {
-  if (value === true || value === 'true') return true
-  if (value === false || value === 'false') return false
-  return defaultValue
-}
-
-const toIniBooleanString = (value, defaultValue = true) => {
-  return String(toBooleanFlag(value, defaultValue))
-}
-
-const applyCloseButtonsVisibility = (visible) => {
-  document.querySelectorAll('.close-btn').forEach((button) => {
-    button.style.display = visible ? 'inline' : 'none'
-  })
-}
-
-export function AppStateProvider({ children }) {
+export function AppStateProvider({
+  children,
+}) {
   const dispatch = useDispatch()
+  const canChooseAi = useSelector(selectCanChooseAiMode)
+  const aiAuth = useSelector((state) => state.auth)
+
   const didInitRef = useRef(false)
 
-  const redux = useReduxBindings()
-  const authenticatedStaffId = useSelector(selectAuthenticatedStaffId)
+  const reduxBindings = useReduxBindings()
+  const simpleBoardSpaces = useSelector((state) => state.simpleBoard.spaces)
+  const chilledSpaces = useMemo(() => ({
+    ...reduxBindings.chilledSpaces,
+    ...simpleBoardSpaces,
+  }), [reduxBindings.chilledSpaces, simpleBoardSpaces])
+  const redux = { ...reduxBindings, chilledSpaces }
+  const authenticatedStaffId = useSelector(
+    selectAuthenticatedStaffId
+  )
 
-  const [isInitialized, setIsInitialized] = useState(false)
-  const [activeSidebarTab, setActiveSidebarTab] = useState('todayTable')
+  const [
+    isInitialized,
+    setIsInitialized,
+  ] = useState(false)
 
-  const [iniState, setIniState] = useState({
+  const [
+    activeSidebarTab,
+    setActiveSidebarTab,
+  ] = useState('FanContent')
+
+  const [
+    iniState,
+    setIniState,
+  ] = useState({
     appSettings: {},
     userPreferences: {},
     apiSettings: {},
@@ -107,44 +132,80 @@ export function AppStateProvider({ children }) {
         ? String(authenticatedStaffId)
         : ''
 
-    if (redux.STAFF_ID !== staffId) {
-      dispatch(setStaffIdRedux(staffId))
+    if (
+      redux.STAFF_ID !== staffId
+    ) {
+      dispatch(
+        setStaffIdRedux(
+          staffId
+        )
+      )
     }
-  }, [authenticatedStaffId, dispatch, redux.STAFF_ID])
+  }, [
+    authenticatedStaffId,
+    dispatch,
+    redux.STAFF_ID,
+  ])
 
-  useEffect(() => {
-    applyCloseButtonsVisibility(redux.appState.closeButtonsVisible)
-  }, [redux.appState.closeButtonsVisible])
-
-  // =============================================================
+  // ============================================================
   // 状態監視ログ
-  // =============================================================
+  // ============================================================
+
   useEffect(() => {
-    console.group('[AppStateContext] render/state snapshot')
-    console.log('isInitialized:', isInitialized)
-    console.log('redux.DATABASE_TYPE:', redux.DATABASE_TYPE)
-    console.log('redux.USE_AI:', redux.USE_AI)
-    console.log('redux.STAFF_ID:', redux.STAFF_ID)
-    console.log('redux.FACILITY_ID:', redux.FACILITY_ID)
-    console.log('redux.DEBUG_FLG:', redux.DEBUG_FLG)
-    console.log(
-      'redux.AUTO_SYNCHRONIZATION:',
-      redux.AUTO_SYNCHRONIZATION
+    console.group(
+      '[AppStateContext] render/state snapshot'
     )
-    console.log('redux.AUTO_SWITCHING:', redux.AUTO_SWITCHING)
-    console.log('iniState.apiSettings:', iniState?.apiSettings)
+
     console.log(
-      'iniState.apiSettings.databaseType:',
-      iniState?.apiSettings?.databaseType
+      'isInitialized:',
+      isInitialized
     )
+
     console.log(
-      'iniState.apiSettings.autoSynchronization:',
-      iniState?.apiSettings?.autoSynchronization
+      'redux.DATABASE_TYPE:',
+      redux.DATABASE_TYPE
     )
+
     console.log(
-      'iniState.apiSettings.autoSwitching:',
-      iniState?.apiSettings?.autoSwitching
+      'redux.USE_AI:',
+      redux.USE_AI
     )
+
+    console.log(
+      'redux.STAFF_ID:',
+      redux.STAFF_ID
+    )
+
+    console.log(
+      'redux.FACILITY_ID:',
+      redux.FACILITY_ID
+    )
+
+    console.log(
+      'redux.DEBUG_FLG:',
+      redux.DEBUG_FLG
+    )
+
+    console.log(
+      'redux.CURRENT_MODE:',
+      redux.CURRENT_MODE
+    )
+
+    console.log(
+      'redux.CURRENT_SELECTED_ITEM_ID:',
+      redux.CURRENT_SELECTED_ITEM_ID
+    )
+
+    console.log(
+      'redux.AI_INQUIRY_SELECTED_ITEM_ID:',
+      redux.AI_INQUIRY_SELECTED_ITEM_ID
+    )
+
+    console.log(
+      'iniState.apiSettings:',
+      iniState?.apiSettings
+    )
+
     console.groupEnd()
   }, [
     isInitialized,
@@ -153,639 +214,703 @@ export function AppStateProvider({ children }) {
     redux.STAFF_ID,
     redux.FACILITY_ID,
     redux.DEBUG_FLG,
-    redux.AUTO_SYNCHRONIZATION,
-    redux.AUTO_SWITCHING,
+    redux.CURRENT_MODE,
+    redux.CURRENT_SELECTED_ITEM_ID,
+    redux.AI_INQUIRY_SELECTED_ITEM_ID,
     iniState?.apiSettings,
   ])
 
-  // ===== ini 操作 =====
-  const loadIni = useCallback(async () => {
-    console.group('[AppStateContext/loadIni] START')
+  // ============================================================
+  // ini操作
+  // ============================================================
 
-    try {
-      const iniData = await loadIniFromUtils()
-
-      console.log('[AppStateContext/loadIni] 読み込んだ iniData:', iniData)
-      console.log(
-        '[AppStateContext/loadIni] iniData.apiSettings.databaseType:',
-        iniData?.apiSettings?.databaseType
-      )
-      console.log(
-        '[AppStateContext/loadIni] iniData.apiSettings.autoSynchronization:',
-        iniData?.apiSettings?.autoSynchronization
-      )
-      console.log(
-        '[AppStateContext/loadIni] iniData.apiSettings.autoSwitching:',
-        iniData?.apiSettings?.autoSwitching
+  const loadIni = useCallback(
+    async () => {
+      console.group(
+        '[AppStateContext/loadIni] START'
       )
 
-      if (!iniData) {
-        console.warn('[AppStateContext/loadIni] iniData が null/undefined')
-        console.groupEnd()
+      try {
+        const iniData =
+          await loadIniFromUtils()
+
+        console.log(
+          '[AppStateContext/loadIni] 読み込んだiniData:',
+          iniData
+        )
+
+        if (!iniData) {
+          console.warn(
+            '[AppStateContext/loadIni] iniDataがnull/undefined'
+          )
+
+          return null
+        }
+
+        const nextIniState = {
+          appSettings:
+            iniData.appSettings ?? {},
+
+          userPreferences:
+            iniData.userPreferences ?? {},
+
+          apiSettings:
+            iniData.apiSettings ?? {},
+        }
+
+        setIniState(
+          nextIniState
+        )
+
+        return iniData
+      } catch (error) {
+        console.error(
+          '[AppStateContext/loadIni] エラー:',
+          error
+        )
+
         return null
+      } finally {
+        console.groupEnd()
       }
-
-      const nextIniState = {
-        appSettings: iniData.appSettings ?? {},
-        userPreferences: iniData.userPreferences ?? {},
-        apiSettings: iniData.apiSettings ?? {},
-      }
-
-      console.log('[AppStateContext/loadIni] setIniState する値:', nextIniState)
-
-      setIniState(nextIniState)
-
-      console.groupEnd()
-      return iniData
-    } catch (error) {
-      console.error('[AppStateContext/loadIni] エラー:', error)
-      console.groupEnd()
-      return null
-    }
-  }, [])
+    },
+    []
+  )
 
   const saveIni = useCallback(
     async (override) => {
-      console.group('[AppStateContext/saveIni] START')
+      console.group(
+        '[AppStateContext/saveIni] START'
+      )
 
       try {
-        const source = override ?? iniState
+        const source =
+          override ?? iniState
 
-        console.log('[AppStateContext/saveIni] 保存対象 source:', source)
+        const result =
+          await window.electronAPI.saveIni({
+            version:
+              '1.0.0',
+
+            appSettings:
+              source.appSettings ?? {},
+
+            userPreferences:
+              source.userPreferences ?? {},
+
+            apiSettings:
+              source.apiSettings ?? {},
+          })
+
         console.log(
-          '[AppStateContext/saveIni] 保存 databaseType:',
-          source?.apiSettings?.databaseType
-        )
-        console.log(
-          '[AppStateContext/saveIni] 保存 autoSynchronization:',
-          source?.apiSettings?.autoSynchronization
-        )
-        console.log(
-          '[AppStateContext/saveIni] 保存 autoSwitching:',
-          source?.apiSettings?.autoSwitching
+          '[AppStateContext/saveIni] 保存結果:',
+          result
         )
 
-        const result = await window.electronAPI.saveIni({
-          version: '1.0.0',
-          appSettings: source.appSettings ?? {},
-          userPreferences: source.userPreferences ?? {},
-          apiSettings: source.apiSettings ?? {},
-        })
-
-        console.log('[AppStateContext/saveIni] 保存結果:', result)
-
-        console.groupEnd()
         return result
       } catch (error) {
-        console.error('[AppStateContext/saveIni] エラー:', error)
-        console.groupEnd()
+        console.error(
+          '[AppStateContext/saveIni] エラー:',
+          error
+        )
+
         return false
+      } finally {
+        console.groupEnd()
       }
     },
-    [iniState]
+    [
+      iniState,
+    ]
   )
 
-  const updateIniSetting = useCallback(async (path, value) => {
-    console.group('[AppStateContext/updateIniSetting] START')
-    console.log('path:', path)
-    console.log('value:', value)
+  const updateIniSetting = useCallback(
+    async (
+      path,
+      value
+    ) => {
+      console.group(
+        '[AppStateContext/updateIniSetting] START'
+      )
 
-    try {
-      const result = await window.electronAPI.updateIniSetting(path, value)
+      console.log(
+        'path:',
+        path
+      )
 
-      console.log('[AppStateContext/updateIniSetting] IPC結果:', result)
+      console.log(
+        'value:',
+        value
+      )
 
-      setIniState((prev) => {
-        console.log('[AppStateContext/updateIniSetting] before iniState:', prev)
+      try {
+        const result =
+          await window.electronAPI.updateIniSetting(
+            path,
+            value
+          )
 
-        const next = structuredClone(prev)
-        const keys = path.split('.')
-        let cur = next
+        setIniState(
+          (previous) => {
+            const next =
+              structuredClone(
+                previous
+              )
 
-        for (let i = 0; i < keys.length - 1; i++) {
-          const key = keys[i]
+            const keys =
+              path.split('.')
 
-          if (!cur[key]) {
-            cur[key] = {}
+            let current = next
+
+            for (
+              let index = 0;
+              index < keys.length - 1;
+              index += 1
+            ) {
+              const key =
+                keys[index]
+
+              if (!current[key]) {
+                current[key] = {}
+              }
+
+              current =
+                current[key]
+            }
+
+            current[
+              keys.at(-1)
+            ] = value
+
+            return next
           }
-
-          cur = cur[key]
-        }
-
-        cur[keys.at(-1)] = value
-
-        console.log('[AppStateContext/updateIniSetting] after iniState:', next)
-        console.log(
-          '[AppStateContext/updateIniSetting] after databaseType:',
-          next?.apiSettings?.databaseType
-        )
-        console.log(
-          '[AppStateContext/updateIniSetting] after autoSynchronization:',
-          next?.apiSettings?.autoSynchronization
-        )
-        console.log(
-          '[AppStateContext/updateIniSetting] after autoSwitching:',
-          next?.apiSettings?.autoSwitching
         )
 
-        return next
-      })
+        return result
+      } catch (error) {
+        console.error(
+          '[AppStateContext/updateIniSetting] エラー:',
+          error
+        )
 
-      console.groupEnd()
-      return result
-    } catch (error) {
-      console.error('[AppStateContext/updateIniSetting] エラー:', error)
-      console.groupEnd()
-      return null
-    }
-  }, [])
+        return null
+      } finally {
+        console.groupEnd()
+      }
+    },
+    []
+  )
 
   const isFeatureEnabled = useCallback(
-    (name) => iniState.appSettings.features?.[name]?.enabled ?? false,
-    [iniState]
+    (name) =>
+      iniState
+        .appSettings
+        .features?.[name]
+        ?.enabled ?? false,
+    [
+      iniState,
+    ]
   )
 
   const getUISettings = useCallback(
-    () => iniState.appSettings.ui,
-    [iniState]
+    () =>
+      iniState.appSettings.ui,
+    [
+      iniState,
+    ]
   )
 
   const getWindowSettings = useCallback(
-    () => iniState.appSettings.window,
-    [iniState]
+    () =>
+      iniState.appSettings.window,
+    [
+      iniState,
+    ]
   )
 
   const getApiSettings = useCallback(
-    () => iniState.apiSettings ?? {},
-    [iniState]
+    () =>
+      iniState.apiSettings ?? {},
+    [
+      iniState,
+    ]
   )
 
-  const isAutoSynchronizationEnabled = useCallback(() => {
-    return toBooleanFlag(
-      iniState?.apiSettings?.autoSynchronization,
-      true
-    )
-  }, [iniState?.apiSettings?.autoSynchronization])
+  // ============================================================
+  // 初期化
+  // ============================================================
 
-  const isAutoSwitchingEnabled = useCallback(() => {
-    return toBooleanFlag(
-      iniState?.apiSettings?.autoSwitching,
-      true
-    )
-  }, [iniState?.apiSettings?.autoSwitching])
-
-  const setAutoSynchronization = useCallback(
-    async (enabled) => {
-      const value = toIniBooleanString(enabled, true)
-
-      console.group('[AppStateContext/setAutoSynchronization]')
-      console.log('enabled:', enabled)
-      console.log('save value:', value)
-
-      try {
-        const result = await updateIniSetting(
-          'apiSettings.autoSynchronization',
-          value
-        )
-
-        dispatch(setAutoSynchronizationRedux(toBooleanFlag(enabled, true)))
-
-        console.groupEnd()
-        return result
-      } catch (error) {
-        console.error('[AppStateContext/setAutoSynchronization] エラー:', error)
-        console.groupEnd()
-        return null
-      }
-    },
-    [dispatch, updateIniSetting]
-  )
-
-  const setAutoSwitching = useCallback(
-    async (enabled) => {
-      const value = toIniBooleanString(enabled, true)
-
-      console.group('[AppStateContext/setAutoSwitching]')
-      console.log('enabled:', enabled)
-      console.log('save value:', value)
-
-      try {
-        const result = await updateIniSetting(
-          'apiSettings.autoSwitching',
-          value
-        )
-
-        dispatch(setAutoSwitchingRedux(toBooleanFlag(enabled, true)))
-
-        console.groupEnd()
-        return result
-      } catch (error) {
-        console.error('[AppStateContext/setAutoSwitching] エラー:', error)
-        console.groupEnd()
-        return null
-      }
-    },
-    [dispatch, updateIniSetting]
-  )
-
-  // ===== 初期化 =====
   useEffect(() => {
-    console.group('[AppStateContext/init useEffect]')
-    console.log('didInitRef.current:', didInitRef.current)
-
     if (didInitRef.current) {
-      console.log('初期化済みのため return')
-      console.groupEnd()
       return
     }
 
     didInitRef.current = true
 
     const init = async () => {
-      console.group('[AppStateContext/init] START')
-
       try {
-        const { ini } = await initializeAppState({
+        const {
+          ini,
+        } = await initializeAppState({
           dispatch,
           setIsInitialized,
         })
 
-        console.log('[AppStateContext/init] initializeAppState returned ini:', ini)
-        console.log(
-          '[AppStateContext/init] returned ini databaseType:',
-          ini?.apiSettings?.databaseType
-        )
-        console.log(
-          '[AppStateContext/init] returned ini autoSynchronization:',
-          ini?.apiSettings?.autoSynchronization
-        )
-        console.log(
-          '[AppStateContext/init] returned ini autoSwitching:',
-          ini?.apiSettings?.autoSwitching
-        )
-
-        const iniData = ini ?? (await loadIniFromUtils())
-
-        console.log('[AppStateContext/init] 最終 iniData:', iniData)
-        console.log(
-          '[AppStateContext/init] 最終 iniData databaseType:',
-          iniData?.apiSettings?.databaseType
-        )
-        console.log(
-          '[AppStateContext/init] 最終 iniData autoSynchronization:',
-          iniData?.apiSettings?.autoSynchronization
-        )
-        console.log(
-          '[AppStateContext/init] 最終 iniData autoSwitching:',
-          iniData?.apiSettings?.autoSwitching
-        )
+        const iniData =
+          ini ??
+          (
+            await loadIniFromUtils()
+          )
 
         if (iniData) {
-          const nextIniState = {
-            appSettings: iniData.appSettings ?? {},
-            userPreferences: iniData.userPreferences ?? {},
-            apiSettings: iniData.apiSettings ?? {},
-          }
+          setIniState({
+            appSettings:
+              iniData.appSettings ?? {},
 
-          console.log('[AppStateContext/init] setIniState:', nextIniState)
+            userPreferences:
+              iniData.userPreferences ?? {},
 
-          setIniState(nextIniState)
+            apiSettings:
+              iniData.apiSettings ?? {},
+          })
         }
       } catch (error) {
-        console.error('[AppStateContext/init] エラー:', error)
-      } finally {
-        console.groupEnd()
+        console.error(
+          '[AppStateContext/init] エラー:',
+          error
+        )
       }
     }
 
     init()
+  }, [
+    dispatch,
+  ])
 
-    console.groupEnd()
-  }, [dispatch])
+  // ============================================================
+  // iniStateからReduxへ反映
+  // ============================================================
 
-  // ===== iniState → Redux反映 =====
   useEffect(() => {
-    console.group('[AppStateContext] iniState -> Redux effect')
-
-    const apiSettings = iniState?.apiSettings
-    const uiSettings = iniState?.appSettings?.ui
-
-    console.log('iniState.apiSettings:', apiSettings)
-    console.log('iniState databaseType:', apiSettings?.databaseType)
-    console.log(
-      'iniState autoSynchronization:',
-      apiSettings?.autoSynchronization
-    )
-    console.log('iniState autoSwitching:', apiSettings?.autoSwitching)
-    console.log('redux snapshot:', {
-      DATABASE_TYPE: redux.DATABASE_TYPE,
-      STAFF_ID: redux.STAFF_ID,
-      FACILITY_ID: redux.FACILITY_ID,
-      USE_AI: redux.USE_AI,
-      DEBUG_FLG: redux.DEBUG_FLG,
-      AUTO_SYNCHRONIZATION: redux.AUTO_SYNCHRONIZATION,
-      AUTO_SWITCHING: redux.AUTO_SWITCHING,
-    })
+    const apiSettings =
+      iniState?.apiSettings
 
     if (!apiSettings) {
-      console.log('apiSettings がないため return')
-      console.groupEnd()
       return
     }
 
     const updates = {}
 
-    const hasFacilityId = Object.prototype.hasOwnProperty.call(
-      apiSettings,
-      'facilityId'
-    )
-    const iniFacilityId = String(apiSettings.facilityId ?? '').trim()
-    const reduxFacilityId = String(redux.FACILITY_ID ?? '').trim()
+    const hasFacilityId =
+      Object.prototype.hasOwnProperty.call(
+        apiSettings,
+        'facilityId'
+      )
+    const iniFacilityId = String(
+      apiSettings.facilityId ?? ''
+    ).trim()
+    const reduxFacilityId = String(
+      redux.FACILITY_ID ?? ''
+    ).trim()
 
     // 未設定値は空文字に統一する。
-    if (hasFacilityId && reduxFacilityId !== iniFacilityId) {
-      console.log('[FacilitySync/AppStateProvider] 施設ID差分を検出', {
-        rawIniFacilityId: apiSettings.facilityId,
-        currentFacilityId: redux.FACILITY_ID,
-        nextFacilityId: iniFacilityId,
-      })
+    if (
+      hasFacilityId &&
+      reduxFacilityId !== iniFacilityId
+    ) {
+      console.log(
+        '[FacilitySync/AppStateProvider] 施設ID差分を検出',
+        {
+          rawIniFacilityId:
+            apiSettings.facilityId,
+          currentFacilityId:
+            redux.FACILITY_ID,
+          nextFacilityId:
+            iniFacilityId,
+        }
+      )
 
-      updates.FACILITY_ID = iniFacilityId
+      updates.FACILITY_ID =
+        iniFacilityId
     }
-
-    const rawDbType = apiSettings.databaseType
 
     const dbType = 'laravel'
 
-    if (dbType && redux.DATABASE_TYPE !== dbType) {
-      updates.DATABASE_TYPE = dbType
-
-      console.warn(
-        '[AppStateContext] DATABASE_TYPE 差分検出。iniState から Redux を更新予定:',
-        {
-          reduxDatabaseType: redux.DATABASE_TYPE,
-          iniDatabaseType: dbType,
-          rawIniDatabaseType: rawDbType,
-        }
-      )
+    if (
+      dbType &&
+      redux.DATABASE_TYPE !== dbType
+    ) {
+      updates.DATABASE_TYPE =
+        dbType
     }
 
-    if (apiSettings.useAI != null && redux.USE_AI !== apiSettings.useAI) {
-      updates.USE_AI = apiSettings.useAI
+    const effectiveAiMode = resolveAiMode(aiAuth, apiSettings.useAI)
+    if (redux.USE_AI !== effectiveAiMode) {
+      updates.USE_AI = effectiveAiMode
     }
 
-    if (apiSettings.debugFlg != null) {
+    if (
+      apiSettings.debugFlg != null
+    ) {
       const debugFlg =
-        apiSettings.debugFlg === true || apiSettings.debugFlg === 'true'
+        apiSettings.debugFlg === true ||
+        apiSettings.debugFlg === 'true'
 
-      if (redux.DEBUG_FLG !== debugFlg) {
-        updates.DEBUG_FLG = debugFlg
+      if (
+        redux.DEBUG_FLG !== debugFlg
+      ) {
+        updates.DEBUG_FLG =
+          debugFlg
       }
     }
 
-    const autoSynchronization = toBooleanFlag(
-      apiSettings.autoSynchronization,
-      true
-    )
-
-    if (redux.AUTO_SYNCHRONIZATION !== autoSynchronization) {
-      updates.AUTO_SYNCHRONIZATION = autoSynchronization
-    }
-
-    const autoSwitching = false
-
-    if (redux.AUTO_SWITCHING !== autoSwitching) {
-      updates.AUTO_SWITCHING = autoSwitching
-    }
-
-    if (uiSettings) {
-      const closeButtonsVisible = toBooleanFlag(
-        uiSettings.showCloseButtons,
-        true
+    if (
+      Object.keys(updates).length > 0
+    ) {
+      dispatch(
+        updateAppStateRedux(
+          updates
+        )
       )
-
-      if (redux.appState.closeButtonsVisible !== closeButtonsVisible) {
-        updates.closeButtonsVisible = closeButtonsVisible
-      }
     }
-
-    console.log('[AppStateContext] updates:', updates)
-
-    if (Object.keys(updates).length > 0) {
-      console.warn(
-        '[AppStateContext] iniState から Redux へ dispatch(updateAppStateRedux):',
-        updates
-      )
-
-      dispatch(updateAppStateRedux(updates))
-    } else {
-      console.log('[AppStateContext] Redux反映なし')
-    }
-
-    console.groupEnd()
   }, [
     iniState?.apiSettings,
-    iniState?.appSettings?.ui,
     redux.FACILITY_ID,
     redux.DATABASE_TYPE,
     redux.USE_AI,
     redux.DEBUG_FLG,
-    redux.AUTO_SYNCHRONIZATION,
-    redux.AUTO_SWITCHING,
-    redux.appState.closeButtonsVisible,
+    aiAuth,
     dispatch,
   ])
 
-  // ===== Redux wrappers =====
+  // Once authenticated as a manager, recover the saved preference that was
+  // masked during unauthenticated startup. Other users always remain forced.
+  useEffect(() => {
+    if (canChooseAi) void loadIni()
+  }, [canChooseAi, loadIni])
 
-  // ===== モードスライス =====
+  // ============================================================
+  // modeSlice wrappers
+  // ============================================================
+
   /**
-   * 表示モードを変更
+   * アプリケーションモードを変更
    */
   const setAppMode = useCallback(
     (mode) => {
-      console.log(
-        '[AppStateContext/setAppMode wrapper]',
-        mode
+      dispatch(
+        setModeRedux(
+          mode
+        )
       )
-
-      dispatch(setModeRedux(mode))
     },
-    [dispatch]
+    [
+      dispatch,
+    ]
   )
 
   /**
-   * モード内で選択中の項目を変更
+   * 現在のモード内で表示する画面を変更
    *
-   * modeを省略した場合は、現在のモードへ保存する
+   * modeを省略した場合は、
+   * modeSlice側で現在のモードが使用される
    */
   const setModeSelectedItem = useCallback(
-    (itemId, mode = redux.CURRENT_MODE) => {
-      console.log(
-        '[AppStateContext/setModeSelectedItem wrapper]',
-        {
-          mode,
-          itemId,
-        }
-      )
-
+    (
+      itemId,
+      mode
+    ) => {
       dispatch(
         setSelectedItemRedux({
-          mode,
           itemId,
+          mode,
         })
       )
     },
-    [dispatch, redux.CURRENT_MODE]
+    [
+      dispatch,
+    ]
   )
 
   /**
-   * 指定したモードの選択項目を初期値へ戻す
-   *
-   * modeを省略した場合は、現在のモードを対象にする
+   * AI問い合わせ内の画面を変更
    */
-  const resetAppModeSelection = useCallback(
-    (mode = redux.CURRENT_MODE) => {
-      console.log(
-        '[AppStateContext/resetAppModeSelection wrapper]',
-        mode
+  const setAiInquiryScreen = useCallback(
+    (screen) => {
+      dispatch(
+        setSelectedItemRedux({
+          mode:
+            APP_MODES.AI_INQUIRY,
+
+          itemId:
+            screen,
+        })
       )
-
-      dispatch(resetModeSelectionRedux(mode))
     },
-    [dispatch, redux.CURRENT_MODE]
+    [
+      dispatch,
+    ]
   )
 
   /**
-   * 表示モードと各モードの選択状態をすべて初期化
+   * dashboard内の画面を変更
    */
-  const resetAppModeState = useCallback(() => {
-    console.log(
-      '[AppStateContext/resetAppModeState wrapper]'
-    )
+  const setDashboardScreen = useCallback(
+    (screen) => {
+      dispatch(
+        setSelectedItemRedux({
+          mode:
+            APP_MODES.DASHBOARD,
 
-    dispatch(resetModeStateRedux())
-  }, [dispatch])
+          itemId:
+            screen,
+        })
+      )
+    },
+    [
+      dispatch,
+    ]
+  )
 
   /**
-   * dashboardへ戻す
+   * dashboardモードへ戻す
+   *
+   * 各モードの選択画面は維持
    */
-  const resetAppMode = useCallback(() => {
-    console.log(
-      '[AppStateContext/resetAppMode wrapper]'
+  const resetAppMode = useCallback(
+    () => {
+      dispatch(
+        resetModeRedux()
+      )
+    },
+    [
+      dispatch,
+    ]
+  )
+
+  /**
+   * 指定したモードの選択画面を初期化
+   *
+   * modeを省略した場合は現在のモードを初期化
+   */
+  const resetAppModeSelection =
+    useCallback(
+      (mode) => {
+        dispatch(
+          resetModeSelectionRedux(
+            mode
+          )
+        )
+      },
+      [
+        dispatch,
+      ]
     )
 
-    dispatch(resetModeRedux())
-  }, [dispatch])
+  /**
+   * modeSliceをすべて初期化
+   */
+  const resetAppModeState =
+    useCallback(
+      () => {
+        dispatch(
+          resetModeStateRedux()
+        )
+      },
+      [
+        dispatch,
+      ]
+    )
 
   /**
    * dashboardを表示
    */
-  const showDashboard = useCallback(() => {
-    console.log(
-      '[AppStateContext/showDashboard]'
-    )
-
-    dispatch(
-      setModeRedux(APP_MODES.DASHBOARD)
-    )
-  }, [dispatch])
+  const showDashboard = useCallback(
+    () => {
+      dispatch(
+        setModeRedux(
+          APP_MODES.DASHBOARD
+        )
+      )
+    },
+    [
+      dispatch,
+    ]
+  )
 
   /**
    * AI問い合わせを表示
+   *
+   * 前回AI問い合わせ内で選択していた画面を復元
    */
-  const showAiInquiry = useCallback(() => {
-    console.log(
-      '[AppStateContext/showAiInquiry]'
+  const showAiInquiry = useCallback(
+    () => {
+      dispatch(
+        setModeRedux(
+          APP_MODES.AI_INQUIRY
+        )
+      )
+    },
+    [
+      dispatch,
+    ]
+  )
+
+  /**
+   * AI問い合わせの指定画面を表示
+   */
+  const showAiInquiryScreen =
+    useCallback(
+      (screen) => {
+        dispatch(
+          setModeRedux(
+            APP_MODES.AI_INQUIRY
+          )
+        )
+
+        dispatch(
+          setSelectedItemRedux({
+            mode:
+              APP_MODES.AI_INQUIRY,
+
+            itemId:
+              screen,
+          })
+        )
+      },
+      [
+        dispatch,
+      ]
     )
 
-    dispatch(
-      setModeRedux(APP_MODES.AI_INQUIRY)
-    )
-  }, [dispatch])
-
-  // ===== モードスライス　末尾 =====
+  // ============================================================
+  // appStateSlice wrappers
+  // ============================================================
 
   const updateAppState = useCallback(
     (updates) => {
-      console.log('[AppStateContext/updateAppState wrapper]', updates)
-      dispatch(updateAppStateRedux(updates))
+      dispatch(
+        updateAppStateRedux(
+          updates
+        )
+      )
     },
-    [dispatch]
+    [
+      dispatch,
+    ]
   )
 
   const setDatabaseType = useCallback(
     (databaseType) => {
-      console.group('[AppStateContext/setDatabaseType wrapper]')
-      console.log('databaseType:', databaseType)
-      console.log('before redux.DATABASE_TYPE:', redux.DATABASE_TYPE)
-
-      dispatch(setDatabaseTypeRedux(databaseType))
-
-      console.groupEnd()
+      dispatch(
+        setDatabaseTypeRedux(
+          databaseType
+        )
+      )
     },
-    [dispatch, redux.DATABASE_TYPE]
+    [
+      dispatch,
+    ]
   )
 
   const setUseAI = useCallback(
     (useAI) => {
-      console.log('[AppStateContext/setUseAI wrapper]', useAI)
-      dispatch(setUseAIRedux(useAI))
+      dispatch(
+        setUseAIRedux(
+          useAI
+        )
+      )
     },
-    [dispatch]
+    [
+      dispatch,
+    ]
   )
 
   const setStaffId = useCallback(
     (staffId) => {
-      console.log('[AppStateContext/setStaffId wrapper]', staffId)
-      dispatch(setStaffIdRedux(staffId))
+      dispatch(
+        setStaffIdRedux(
+          staffId
+        )
+      )
     },
-    [dispatch]
+    [
+      dispatch,
+    ]
   )
 
   const setFacilityId = useCallback(
     (facilityId) => {
-      console.log('[AppStateContext/setFacilityId wrapper]', facilityId)
-      dispatch(setFacilityIdRedux(facilityId))
+      dispatch(
+        setFacilityIdRedux(
+          facilityId
+        )
+      )
     },
-    [dispatch]
+    [
+      dispatch,
+    ]
   )
 
   const setDebugFlg = useCallback(
     (debugFlg) => {
-      console.log('[AppStateContext/setDebugFlg wrapper]', debugFlg)
-      dispatch(setDebugFlgRedux(debugFlg))
+      dispatch(
+        setDebugFlgRedux(
+          debugFlg
+        )
+      )
     },
-    [dispatch]
+    [
+      dispatch,
+    ]
   )
 
-  const setServerConnectionState = useCallback(
-    (payload) => {
-      console.log('[AppStateContext/setServerConnectionState wrapper]', payload)
-      dispatch(setServerConnectionStateRedux(payload))
-    },
-    [dispatch]
-  )
+  const setServerConnectionState =
+    useCallback(
+      (payload) => {
+        dispatch(
+          setServerConnectionStateRedux(
+            payload
+          )
+        )
+      },
+      [
+        dispatch,
+      ]
+    )
 
   const setCurrentDate = useCallback(
     (payload) => {
-      console.log('[AppStateContext/setCurrentDate wrapper]', payload)
-      dispatch(setCurrentDateRedux(payload))
+      dispatch(
+        setCurrentDateRedux(
+          payload
+        )
+      )
     },
-    [dispatch]
+    [
+      dispatch,
+    ]
   )
 
   const setCurrentYmd = useCallback(
     (payload) => {
-      console.log('[AppStateContext/setCurrentYmd wrapper]', payload)
-      dispatch(setCurrentYmdRedux(payload))
+      dispatch(
+        setCurrentYmdRedux(
+          payload
+        )
+      )
     },
-    [dispatch]
+    [
+      dispatch,
+    ]
   )
+
+  // ============================================================
+  // 児童作業スペース
+  // ============================================================
 
   const setActiveSpaceId = useCallback(
     (spaceId) => {
-      console.log('[AppStateContext/setActiveSpaceId wrapper]', spaceId)
       dispatch(setActiveSpaceIdRedux(spaceId))
     },
     [dispatch]
@@ -802,29 +927,8 @@ export function AppStateProvider({ children }) {
     [dispatch]
   )
 
-  const setDashboardScreen = useCallback(
-    (screen) => {
-      dispatch(setSelectedItemRedux({ mode: APP_MODES.DASHBOARD, itemId: screen }))
-    },
-    [dispatch]
-  )
-
-  const showAiInquiryScreen = useCallback(
-    (screen) => {
-      dispatch(setModeRedux(APP_MODES.AI_INQUIRY))
-      dispatch(setSelectedItemRedux({ mode: APP_MODES.AI_INQUIRY, itemId: screen }))
-    },
-    [dispatch]
-  )
-
   const setSpaceChild = useCallback(
     (spaceId, childId, childName) => {
-      console.log('[AppStateContext/setSpaceChild wrapper]', {
-        spaceId,
-        childId,
-        childName,
-      })
-
       dispatch(
         setSpaceChildRedux({
           spaceId,
@@ -838,11 +942,6 @@ export function AppStateProvider({ children }) {
 
   const setSpacePcName = useCallback(
     (spaceId, pcName) => {
-      console.log('[AppStateContext/setSpacePcName wrapper]', {
-        spaceId,
-        pcName,
-      })
-
       dispatch(
         setSpacePcNameRedux({
           spaceId,
@@ -855,11 +954,6 @@ export function AppStateProvider({ children }) {
 
   const setSpaceChildColumns = useCallback(
     (spaceId, columns) => {
-      console.log('[AppStateContext/setSpaceChildColumns wrapper]', {
-        spaceId,
-        columns,
-      })
-
       dispatch(
         setSpaceChildColumnsRedux({
           spaceId,
@@ -872,46 +966,22 @@ export function AppStateProvider({ children }) {
 
   const clearSpace = useCallback(
     (spaceId) => {
-      console.log('[AppStateContext/clearSpace wrapper]', spaceId)
       dispatch(clearSpaceRedux(spaceId))
     },
     [dispatch]
   )
 
   const resetChilledspace = useCallback(() => {
-    console.log('[AppStateContext/resetChilledspace wrapper]')
     dispatch(resetChilledspaceRedux())
   }, [dispatch])
 
-  const setAttendanceData = useCallback(
-    (data) => {
-      console.log('[AppStateContext/setAttendanceData wrapper]', data)
-      dispatch(setAttendanceDataRedux(data))
-    },
-    [dispatch]
-  )
-
-  const setSelectChildFilterMode = useCallback(
-    (mode) => {
-      console.log('[AppStateContext/setSelectChildFilterMode wrapper]', mode)
-      dispatch(setSelectChildFilterModeRedux(mode))
-    },
-    [dispatch]
-  )
-
-    /**
-     * AI問い合わせ内の画面を変更
-     */
-    const setAiInquiryScreen = useCallback(
-      (screen) => {
+  const setAttendanceData =
+    useCallback(
+      (data) => {
         dispatch(
-          setSelectedItemRedux({
-            mode:
-              APP_MODES.AI_INQUIRY,
-  
-            itemId:
-              screen,
-          })
+          setAttendanceDataRedux(
+            data
+          )
         )
       },
       [
@@ -919,18 +989,24 @@ export function AppStateProvider({ children }) {
       ]
     )
 
-  // =============================================================
-  // web_automation_rules
-  // =============================================================
+  const setSelectChildFilterMode =
+    useCallback(
+      (mode) => {
+        dispatch(
+          setSelectChildFilterModeRedux(
+            mode
+          )
+        )
+      },
+      [
+        dispatch,
+      ]
+    )
 
-  /**
-   * Laravel API から有効な Web 自動化ルール一覧を取得し、
-   * Redux にキャッシュする。
-   *
-   * 使用例:
-   * await loadWebAutomationRules()
-   * await loadWebAutomationRules({ category: 'attendance' })
-   */
+  // ============================================================
+  // web_automation_rules
+  // ============================================================
+
   const loadWebAutomationRules = useCallback(
     async ({ category } = {}) => {
       console.group('[AppStateContext/loadWebAutomationRules]')
@@ -956,8 +1032,6 @@ export function AppStateProvider({ children }) {
 
         const result = await api(params)
 
-        console.log('result:', result)
-
         if (result?.success === false) {
           throw new Error(
             result?.message ??
@@ -977,8 +1051,6 @@ export function AppStateProvider({ children }) {
           })
         )
 
-        console.groupEnd()
-
         return {
           success: true,
           data: items,
@@ -996,59 +1068,37 @@ export function AppStateProvider({ children }) {
           )
         )
 
-        console.groupEnd()
-
         return {
           success: false,
           data: [],
           meta: {},
-          error:
-            error?.message ?? String(error),
+          error: error?.message ?? String(error),
         }
+      } finally {
+        console.groupEnd()
       }
     },
     [dispatch]
   )
 
-  /**
-   * rule_key を指定して Laravel API から1件取得する。
-   *
-   * force=false の場合は Redux キャッシュを優先する。
-   */
   const loadWebAutomationRule = useCallback(
     async (ruleKey, { force = false } = {}) => {
       const normalizedRuleKey =
-        ruleKey != null
-          ? String(ruleKey).trim()
-          : ''
-
-      console.group('[AppStateContext/loadWebAutomationRule]')
-      console.log('ruleKey:', normalizedRuleKey)
-      console.log('force:', force)
+        ruleKey != null ? String(ruleKey).trim() : ''
 
       if (!normalizedRuleKey) {
-        const result = {
+        return {
           success: false,
           data: null,
           error: 'ruleKey が空です',
         }
-
-        console.warn(result.error)
-        console.groupEnd()
-
-        return result
       }
 
       if (!force) {
         const cached =
-          redux.webAutomationRulesByKey?.[
-            normalizedRuleKey
-          ]
+          redux.webAutomationRulesByKey?.[normalizedRuleKey]
 
         if (cached) {
-          console.log('Redux cache hit:', cached)
-          console.groupEnd()
-
           return {
             success: true,
             data: cached,
@@ -1069,11 +1119,7 @@ export function AppStateProvider({ children }) {
           )
         }
 
-        const result = await api(
-          normalizedRuleKey
-        )
-
-        console.log('result:', result)
+        const result = await api(normalizedRuleKey)
 
         if (result?.success === false) {
           throw new Error(
@@ -1093,8 +1139,6 @@ export function AppStateProvider({ children }) {
 
         dispatch(upsertWebAutomationRule(rule))
 
-        console.groupEnd()
-
         return {
           success: true,
           data: rule,
@@ -1112,25 +1156,16 @@ export function AppStateProvider({ children }) {
           )
         )
 
-        console.groupEnd()
-
         return {
           success: false,
           data: null,
-          error:
-            error?.message ?? String(error),
+          error: error?.message ?? String(error),
         }
       }
     },
-    [
-      dispatch,
-      redux.webAutomationRulesByKey,
-    ]
+    [dispatch, redux.webAutomationRulesByKey]
   )
 
-  /**
-   * Redux にキャッシュ済みのルールを同期的に取得する。
-   */
   const getWebAutomationRule = useCallback(
     (ruleKey) => {
       if (ruleKey == null) {
@@ -1138,9 +1173,7 @@ export function AppStateProvider({ children }) {
       }
 
       return (
-        redux.webAutomationRulesByKey?.[
-          String(ruleKey)
-        ] ?? null
+        redux.webAutomationRulesByKey?.[String(ruleKey)] ?? null
       )
     },
     [redux.webAutomationRulesByKey]
@@ -1150,51 +1183,37 @@ export function AppStateProvider({ children }) {
     dispatch(clearWebAutomationRulesRedux())
   }, [dispatch])
 
-  const setIniStateDirect = useCallback((next) => {
-    console.group('[AppStateContext/setIniStateDirect]')
-    console.log('next:', next)
-    console.log('next databaseType:', next?.apiSettings?.databaseType)
-    console.log(
-      'next autoSynchronization:',
-      next?.apiSettings?.autoSynchronization
-    )
-    console.log('next autoSwitching:', next?.apiSettings?.autoSwitching)
-    console.groupEnd()
+  const setIniStateDirect = useCallback(
+    (next) => {
+      setIniState(
+        next
+      )
+    },
+    []
+  )
 
-    setIniState(next)
-  }, [])
+  // ============================================================
+  // window bridge
+  // ============================================================
 
-  // ===== window bridge =====
   useWindowBridge({
     isInitialized,
+
     appState: {
       ...redux.appState,
+      // 児童選択の正本は chilledspace。window.AppState には互換値を公開する。
       ACTIVE_CHILLEDSPACE_ID: redux.activeSpaceId,
       CHILLEDSPACES: redux.chilledSpaces,
     },
+
     actions: {
       updateAppState,
+
       loadIni,
       saveIni,
       updateIniSetting,
 
       getApiSettings,
-      isAutoSynchronizationEnabled,
-      isAutoSwitchingEnabled,
-      setAutoSynchronization,
-      setAutoSwitching,
-
-      // 表示モード操作も window.AppState に公開する
-      setAppMode,
-      setModeSelectedItem,
-      setAiInquiryScreen,
-      setDashboardScreen,
-      showAiInquiryScreen,
-      resetAppMode,
-      resetAppModeSelection,
-      resetAppModeState,
-      showDashboard,
-      showAiInquiry,
 
       setDatabaseType,
       setUseAI,
@@ -1205,6 +1224,8 @@ export function AppStateProvider({ children }) {
 
       setCurrentDate,
       setCurrentYmd,
+
+      // 児童作業スペース
       setActiveSpaceId,
       addChilledSpace,
       deleteChilledSpace,
@@ -1213,6 +1234,7 @@ export function AppStateProvider({ children }) {
       setSpaceChildColumns,
       clearSpace,
       resetChilledspace,
+
       setAttendanceData,
 
       // Web自動化ルール
@@ -1222,41 +1244,33 @@ export function AppStateProvider({ children }) {
       clearWebAutomationRules,
 
       setActiveSidebarTab,
-      setIniState: setIniStateDirect,
+
+      setIniState:
+        setIniStateDirect,
+
+      // modeSlice
+      setAppMode,
+      setModeSelectedItem,
+      setAiInquiryScreen,
+      setDashboardScreen,
+      resetAppMode,
+      resetAppModeSelection,
+      resetAppModeState,
+      showDashboard,
+      showAiInquiry,
+      showAiInquiryScreen,
     },
   })
-
-  useEffect(() => {
-    console.group('[AppStateContext] useWindowBridge actions snapshot')
-    console.log('isInitialized:', isInitialized)
-    console.log('window.AppState:', window.AppState)
-    console.log('window.loadIni exists:', typeof window.loadIni)
-    console.log('window.updateAppState exists:', typeof window.updateAppState)
-    console.log('window.setDatabaseType exists:', typeof window.setDatabaseType)
-    console.log(
-      'window.AppState.showAiInquiry exists:',
-      typeof window.AppState?.showAiInquiry
-    )
-    console.log(
-      'window.AppState.setModeSelectedItem exists:',
-      typeof window.AppState?.setModeSelectedItem
-    )
-    console.log(
-      'window.AppState.isAutoSynchronizationEnabled exists:',
-      typeof window.AppState?.isAutoSynchronizationEnabled
-    )
-    console.log(
-      'window.AppState.isAutoSwitchingEnabled exists:',
-      typeof window.AppState?.isAutoSwitchingEnabled
-    )
-    console.groupEnd()
-  }, [isInitialized, redux.appState])
 
   return (
     <AppStateContext.Provider
       value={{
         ...redux,
-        SELECT_FACILITY_ID: redux.FACILITY_ID,
+
+        // 現在選択されている施設ID。
+        // 既存のFACILITY_IDも後方互換のためそのまま公開する。
+        SELECT_FACILITY_ID:
+          redux.FACILITY_ID,
 
         isInitialized,
         setIsInitialized,
@@ -1265,13 +1279,11 @@ export function AppStateProvider({ children }) {
         loadIni,
         saveIni,
         updateIniSetting,
-        setIniState: setIniStateDirect,
+
+        setIniState:
+          setIniStateDirect,
 
         getApiSettings,
-        isAutoSynchronizationEnabled,
-        isAutoSwitchingEnabled,
-        setAutoSynchronization,
-        setAutoSwitching,
 
         isFeatureEnabled,
         getUISettings,
@@ -1299,6 +1311,7 @@ export function AppStateProvider({ children }) {
         resetChilledspace,
 
         setAttendanceData,
+
         setSelectChildFilterMode,
 
         // Web自動化ルール
@@ -1307,21 +1320,20 @@ export function AppStateProvider({ children }) {
         getWebAutomationRule,
         clearWebAutomationRules,
 
-        // -- モードの追加 --
+        // modeSlice
         setAppMode,
         setModeSelectedItem,
         setAiInquiryScreen,
         setDashboardScreen,
-        showAiInquiryScreen,
         resetAppMode,
         resetAppModeSelection,
         resetAppModeState,
         showDashboard,
         showAiInquiry,
+        showAiInquiryScreen,
 
         activeSidebarTab,
         setActiveSidebarTab,
-
       }}
     >
       {children}
@@ -1330,11 +1342,16 @@ export function AppStateProvider({ children }) {
 }
 
 export function useAppState() {
-  const ctx = useContext(AppStateContext)
+  const context =
+    useContext(
+      AppStateContext
+    )
 
-  if (!ctx) {
-    throw new Error('useAppState must be used within AppStateProvider')
+  if (!context) {
+    throw new Error(
+      'useAppState must be used within AppStateProvider'
+    )
   }
 
-  return ctx
+  return context
 }

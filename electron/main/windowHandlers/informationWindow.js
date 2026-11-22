@@ -1,71 +1,62 @@
-const { BrowserWindow, app } = require('electron');
-const path = require('path');
-const fs = require('fs');
-
-const { resolvePreloadPath } = require('./windowManager');
+const { BrowserWindow, app } = require("electron");
+const path = require("path");
+const fs = require("fs");
+const { resolvePreloadPath } = require("./windowManager");
 
 let informationWindow = null;
 
 function isDevelopmentMode() {
   const hasProdFlag =
-    process.argv.includes('--prod') ||
-    process.argv.includes('--production');
+    process.argv.includes("--prod") ||
+    process.argv.includes("--production");
 
   const hasDevFlag =
-    process.argv.includes('--dev') ||
-    process.argv.includes('--debug');
+    process.argv.includes("--dev") ||
+    process.argv.includes("--debug");
 
   if (hasProdFlag) return false;
   if (hasDevFlag) return true;
   if (app.isPackaged) return false;
-
   return true;
 }
 
 async function openInformationWindow() {
   if (informationWindow && !informationWindow.isDestroyed()) {
-    if (informationWindow.isMinimized()) {
-      informationWindow.restore();
-    }
-
+    if (informationWindow.isMinimized()) informationWindow.restore();
     informationWindow.show();
     informationWindow.focus();
     return true;
   }
-
-  const preloadPath = resolvePreloadPath();
 
   informationWindow = new BrowserWindow({
     width: 1100,
     height: 820,
     minWidth: 760,
     minHeight: 560,
-    title: 'Q&A・障害対応',
-    icon: path.join(app.getAppPath(), 'assets', 'favicon.ico'),
+    title: "Q&A・障害対応",
+    icon: path.join(app.getAppPath(), "assets", "favicon.ico"),
     webPreferences: {
-      preload: preloadPath,
+      preload: resolvePreloadPath(),
       nodeIntegration: false,
       contextIsolation: true,
       sandbox: false,
     },
   });
 
-  informationWindow.on('closed', () => {
+  informationWindow.on("closed", () => {
     informationWindow = null;
   });
 
-  const isDev = isDevelopmentMode();
-
-  if (isDev) {
+  if (isDevelopmentMode()) {
     await informationWindow.loadURL(
-      'http://localhost:5173/?window=information',
+      "http://localhost:5173/?window=information",
     );
   } else {
     const rendererPath = path.join(
       app.getAppPath(),
-      'renderer',
-      'dist',
-      'index.html',
+      "renderer",
+      "dist",
+      "index.html",
     );
 
     if (!fs.existsSync(rendererPath)) {
@@ -75,9 +66,7 @@ async function openInformationWindow() {
     }
 
     await informationWindow.loadFile(rendererPath, {
-      query: {
-        window: 'information',
-      },
+      query: { window: "information" },
     });
   }
 
@@ -85,16 +74,16 @@ async function openInformationWindow() {
 }
 
 function registerInformationWindow(ipcMain) {
-  ipcMain.removeHandler('open-information-window');
+  try {
+    ipcMain.removeHandler("open-information-window");
+  } catch (_) {}
 
-  ipcMain.handle('open-information-window', async () => {
+  ipcMain.handle("open-information-window", async () => {
     try {
       await openInformationWindow();
-      return {
-        success: true,
-      };
+      return { success: true };
     } catch (error) {
-      console.error('[InformationWindow] 起動エラー:', error);
+      console.error("[InformationWindow] 起動エラー:", error);
       return {
         success: false,
         error: error?.message || String(error),

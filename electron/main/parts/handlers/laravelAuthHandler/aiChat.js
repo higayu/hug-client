@@ -80,8 +80,6 @@ module.exports = {
       return formatError(error, "AI使用量グラフの取得に失敗しました。");
     }
   },
-
-
   settingsHandler: async () => {
     try {
       const result = await executeAuthenticatedOperation(

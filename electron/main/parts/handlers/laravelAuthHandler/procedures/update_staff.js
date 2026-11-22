@@ -4,34 +4,11 @@ const laravelApiClient = require("../../../../../../src/laravelApiClient");
 const { executeAuthenticatedOperation } = require("../auth/authenticated");
 const { formatError, unwrapData } = require("../auth/utils");
 
-function normalizeUpdateStaffPayload(payload = {}) {
-  const staff = payload?.staff ?? {};
-  const hasUseMyPrompt = Object.prototype.hasOwnProperty.call(
-    staff,
-    "use_my_prompt"
-  );
-
-  return {
-    ...payload,
-    staff: {
-      ...staff,
-      use_my_prompt:
-        !hasUseMyPrompt || staff.use_my_prompt == null
-          ? null
-          : [true, 1, "1"].includes(staff.use_my_prompt)
-            ? 1
-            : 0,
-    },
-  };
-}
-
 async function updateStaff(payload = {}) {
-  const normalizedPayload = normalizeUpdateStaffPayload(payload);
-
-  console.log("📤 [Laravel Procedure] updateStaff:", normalizedPayload);
+  console.log("📤 [Laravel Procedure] updateStaff:", payload);
 
   const result = await executeAuthenticatedOperation(
-    () => laravelApiClient.updateStaff(normalizedPayload),
+    () => laravelApiClient.updateStaff(payload),
     "スタッフ情報の更新に失敗しました。"
   );
 
@@ -72,7 +49,6 @@ const handler = async (_event, payload = {}) => {
 };
 
 module.exports = {
-  normalizeUpdateStaffPayload,
   updateStaff,
   handler,
 };

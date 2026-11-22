@@ -8,7 +8,6 @@ import {
   EnterMailDialogCancelledError,
   LeaveMailDialogCancelledError,
 } from '@/components/common/hug_function';
-import { runAttendanceUpdate } from '@/components/common/hug_function/AttendanceAction/attendance/update/runAttendanceUpdate.js';
 
 const normalizeText = (value) => String(value ?? '').replace(/\s+/g, ' ').trim();
 
@@ -196,30 +195,7 @@ export function useSimpleAttendance() {
           );
         }
 
-        const waitingForMailDialog = Boolean(
-          (result?.mailDialogDetected || result?.mailDialog?.detected) &&
-            !result?.mailDialogAutoSelected,
-        );
-
-        let refreshResult = null;
-
-        if (!waitingForMailDialog) {
-          refreshResult = await runAttendanceUpdate({
-            facilityId: String(attendanceFacilityId),
-            dateStr: attendanceDate,
-            targetChildrenId: row.childId,
-            action: kind,
-            verifyUpdated: true,
-            retryCount: 6,
-            retryDelayMs: 500,
-          });
-        }
-
-        return {
-          ...result,
-          refreshResult,
-          attendanceItem: refreshResult?.attendanceItem ?? null,
-        };
+        return result;
       } catch (cause) {
         /**
          * メール通知ダイアログのキャンセルは操作エラーとして表示しない。

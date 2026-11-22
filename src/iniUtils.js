@@ -64,7 +64,7 @@ function getDefaultIni() {
       laravelURL: "https://dev-hug-banso.we-labo.com",
       staffId: "",
       facilityId: "3",
-      databaseType: "mariadb",
+      databaseType: "laravel",
       useAI: "chatGPT",
     },
   };

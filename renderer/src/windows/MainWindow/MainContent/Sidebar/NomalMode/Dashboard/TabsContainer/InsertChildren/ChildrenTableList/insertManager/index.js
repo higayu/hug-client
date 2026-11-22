@@ -1,7 +1,5 @@
 // renderer/src/sql/useManager/insertManager/insertManager.js
 
-import { handleSQLiteInsert } from "./parts/sqlite.js";
-import { handleMariaDBInsert } from "./parts/mariadb.js";
 import { handleLaravelInsert } from "./parts/laravel.js";
 
 /**
@@ -10,14 +8,14 @@ import { handleLaravelInsert } from "./parts/laravel.js";
  * 方針:
  * - activeApi は使わない
  * - Redux / AppState の DATABASE_TYPE を呼び出し元から databaseType として受け取る
- * - databaseType に応じて SQLite / MariaDB / Laravel の処理を分岐する
+ * - Laravel APIで処理する
  * - managers2 に facility_id が追加されたため、施設IDも必須条件として扱う
  *
  * @param {Object|Object[]} selectedChildren 選択された児童、または児童配列
  * @param {Object} params
  * @param {Array} params.childrenData 子どもデータ
  * @param {Array} params.managersData managers2 データ
- * @param {string} params.databaseType "sqlite" | "mariadb" | "laravel"
+ * @param {string} params.databaseType "laravel"
  * @param {string|number} params.FACILITY_ID 施設ID
  * @param {string|number} params.STAFF_ID スタッフID
  * @param {Object} params.CURRENT_DAY_OF_WEEK 現在の曜日情報
@@ -47,29 +45,12 @@ export async function insertManager(
       return false;
     }
 
-    const resolvedDatabaseType = String(databaseType).trim().toLowerCase();
-
-    const handlers = {
-      sqlite: {
-        handler: handleSQLiteInsert,
-        label: "SQLite",
-      },
-      mariadb: {
-        handler: handleMariaDBInsert,
-        label: "MariaDB",
-      },
-      laravel: {
-        handler: handleLaravelInsert,
-        label: "Laravel",
-      },
-    };
-
-    const selectedHandler = handlers[resolvedDatabaseType];
-
-    if (!selectedHandler) {
-      console.warn("⚠️ 不明な databaseType:", databaseType);
+    if (String(databaseType).toLowerCase() !== "laravel") {
+      console.warn("register_manager_assignment is available only through Laravel.");
       return false;
     }
+
+    const resolvedDatabaseType = databaseType;
 
     console.log("databaseType:", databaseType);
     console.log("resolvedDatabaseType:", resolvedDatabaseType);
@@ -88,7 +69,7 @@ export async function insertManager(
     // =============================================================
     // 必須値チェック
     // =============================================================
-    if (!Number.isFinite(facilityId)) {
+    if (!Number.isInteger(facilityId) || facilityId <= 0) {
       console.warn("⚠️ FACILITY_ID が不正です", {
         FACILITY_ID,
         facilityId,
@@ -97,7 +78,7 @@ export async function insertManager(
       return false;
     }
 
-    if (!Number.isFinite(staffId)) {
+    if (!Number.isInteger(staffId) || staffId <= 0) {
       console.warn("⚠️ STAFF_ID が不正です", {
         STAFF_ID,
         staffId,
@@ -106,7 +87,7 @@ export async function insertManager(
       return false;
     }
 
-    if (!Number.isFinite(weekId)) {
+    if (!Number.isInteger(weekId) || weekId <= 0 || weekId > 127) {
       console.warn("⚠️ CURRENT_DAY_OF_WEEK.weekdayId が取得できません", {
         CURRENT_DAY_OF_WEEK,
         weekId,
@@ -132,6 +113,16 @@ export async function insertManager(
       return false;
     }
 
+    const invalidChild = childrenList.find((child) => {
+      const childId = Number(child?.children_id);
+      return !Number.isInteger(childId) || childId <= 0;
+    });
+
+    if (invalidChild) {
+      console.warn("children_id must be a positive integer.", invalidChild);
+      return false;
+    }
+
     console.log("選択された児童数:", childrenList.length);
     console.log("施設ID:", facilityId);
     console.log("スタッフID:", staffId);
@@ -140,8 +131,8 @@ export async function insertManager(
     // =============================================================
     // DB種別ごとの処理関数を決定
     // =============================================================
-    const insertHandler = selectedHandler.handler;
-    const dbLabel = selectedHandler.label;
+    const insertHandler = handleLaravelInsert;
+    const dbLabel = resolvedDatabaseType;
 
     // =============================================================
     // 児童ごとに登録処理
@@ -153,7 +144,7 @@ export async function insertManager(
 
       const childId = Number(child?.children_id);
 
-      if (!Number.isFinite(childId)) {
+      if (!Number.isInteger(childId) || childId <= 0) {
         console.warn("⚠️ children_id が不正なため、この児童をスキップします:", {
           child,
           childId,
@@ -163,7 +154,7 @@ export async function insertManager(
         continue;
       }
 
-      const result = await insertHandler(child, {
+      await insertHandler(child, {
         childrenData,
         managersData,
 
@@ -176,11 +167,6 @@ export async function insertManager(
         FACILITY_ID: facilityId,
         STAFF_ID: staffId,
       });
-
-      if (!result) {
-        console.error(`❌ ${dbLabel} 処理失敗:`, childId);
-        return false;
-      }
 
       console.log(`✔ ${dbLabel} 処理完了:`, childId);
       console.log("▶ 児童処理終了:", childId);

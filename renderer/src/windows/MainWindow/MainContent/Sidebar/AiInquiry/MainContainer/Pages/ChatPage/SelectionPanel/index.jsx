@@ -22,6 +22,7 @@ export default function SelectionPanel({
             disabled={facilitiesLoading}
             onChange={(e) => onFacilityChange?.(Number(e.target.value))}
           >
+            {facilities.length === 0 && <option value="">施設がありません</option>}
             {facilities.map((facility, index) => {
               const facilityOptionId = toSelectId(facility, 'facility_id');
               const facilityKey = facilityOptionId === '' ? `facility-${index}` : facilityOptionId;
@@ -39,9 +40,10 @@ export default function SelectionPanel({
           <select
             className="input-field"
             value={toSelectValue(childId)}
-            disabled={childrenLoading}
+            disabled={childrenLoading || children.length === 0}
             onChange={(e) => onChildChange?.(Number(e.target.value))}
           >
+            {children.length === 0 && <option value="">該当する児童がいません</option>}
             {children.map((child, index) => {
               const childOptionId = toSelectId(child, 'child_id');
               const childKey = childOptionId === '' ? `child-${index}` : childOptionId;

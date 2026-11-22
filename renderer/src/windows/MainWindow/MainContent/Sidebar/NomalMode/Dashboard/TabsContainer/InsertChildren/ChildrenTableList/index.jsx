@@ -1,7 +1,7 @@
 // renderer/src/components/Sidebar/Tools/InsertManageChildren/ChildrenTableList/index.jsx
 
 import React, { useState, useEffect, useMemo } from "react";
-import { useToast } from '@/utils/notifications.jsx'
+import { useToast } from "@/utils/notifications.jsx";
 import { useAppState } from "@/AppStateContext";
 import ConfirmModal from "./ConfirmModal";
 import { insertManager } from "./insertManager";
@@ -270,6 +270,7 @@ function ChildrenTableList() {
         });
 
         setSelectedIds([]);
+        setShowConfirmModal(false);
 
         if (typeof setActiveTab === "function") {
           setActiveTab("FanContent");
@@ -283,8 +284,6 @@ function ChildrenTableList() {
       console.error("❌ ChildrenTableList handleConfirm エラー:", err);
       showErrorToast("失敗しました");
       return false;
-    } finally {
-      setShowConfirmModal(false);
     }
   };
 

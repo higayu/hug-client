@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { useAppState } from '@/AppStateContext';
-
 import { loadConfig } from '@/utils/config/configUtils'
 
 export function useSettingsModal(isOpen) {

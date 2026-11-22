@@ -1,32 +1,51 @@
 // renderer/src/store/slices/modeSlice.js
-// アプリケーションの表示モード・選択項目管理
+// アプリケーションの表示モード・選択画面管理
 
 import { createSlice } from '@reduxjs/toolkit'
 
+/**
+ * アプリケーション全体の表示モード
+ */
 export const APP_MODES = Object.freeze({
   DASHBOARD: 'dashboard',
   AI_INQUIRY: 'aiInquiry',
 })
 
+/**
+ * モード内で表示する画面
+ *
+ * AppRouterのswitch文と一致させる
+ */
+export const APP_SCREENS = Object.freeze({
+  DASHBOARD: 'dashboard',
+  AI_RECORD_EDITER: 'aiRecordEditer',
+  CHAT: 'chat',
+  PERSONAL_RECORD: 'personalRecord',
+  HEALTH_ANALYSIS: 'healthAnalysis',
+})
+
 const VALID_MODES = Object.values(APP_MODES)
 
 /**
- * 各モードの初期選択項目
+ * 各モードの初期表示画面
  */
 export const DEFAULT_SELECTED_ITEM_BY_MODE =
   Object.freeze({
-    [APP_MODES.DASHBOARD]: 'home',
-    [APP_MODES.AI_INQUIRY]: 'chat',
+    [APP_MODES.DASHBOARD]:
+      APP_SCREENS.DASHBOARD,
+
+    [APP_MODES.AI_INQUIRY]:
+      APP_SCREENS.CHAT,
   })
 
 const createInitialState = () => ({
+  /**
+   * 現在のアプリケーションモード
+   */
   currentMode: APP_MODES.DASHBOARD,
 
   /**
-   * モードごとの選択項目ID
-   *
-   * dashboardへ戻ったときはhomeなど、
-   * 各モードで最後に選択した項目を保持する
+   * モードごとに最後に選択した画面を保持
    */
   selectedItemIdByMode: {
     ...DEFAULT_SELECTED_ITEM_BY_MODE,
@@ -36,7 +55,7 @@ const createInitialState = () => ({
 const initialState = createInitialState()
 
 /**
- * 有効なモードを取得
+ * 有効なモードへ変換
  */
 const resolveMode = (
   requestedMode,
@@ -49,18 +68,20 @@ const resolveMode = (
 
 const modeSlice = createSlice({
   name: 'mode',
+
   initialState,
 
   reducers: {
     /**
-     * 表示モードを変更
+     * アプリケーションモードを変更
      */
     setMode: (state, action) => {
-      const mode = resolveMode(action.payload)
+      const mode = resolveMode(
+        action.payload
+      )
 
       state.currentMode = mode
 
-      // 古い永続化データなどに項目が存在しない場合の補完
       if (!state.selectedItemIdByMode) {
         state.selectedItemIdByMode = {
           ...DEFAULT_SELECTED_ITEM_BY_MODE,
@@ -74,7 +95,7 @@ const modeSlice = createSlice({
     },
 
     /**
-     * モード内の選択項目を変更
+     * モード内の表示画面を変更
      *
      * payload:
      * {
@@ -82,10 +103,11 @@ const modeSlice = createSlice({
      *   itemId: string
      * }
      *
-     * modeを省略した場合は現在のモードを使用
+     * modeを省略した場合は現在のモードへ保存
      */
     setSelectedItem: (state, action) => {
-      const itemId = action.payload?.itemId
+      const itemId =
+        action.payload?.itemId
 
       if (
         typeof itemId !== 'string' ||
@@ -105,25 +127,27 @@ const modeSlice = createSlice({
         }
       }
 
-      state.selectedItemIdByMode[mode] = itemId
+      state.selectedItemIdByMode[mode] =
+        itemId.trim()
     },
 
     /**
-     * 初期モードへ戻す
+     * dashboardモードへ戻す
      *
-     * 各モードの選択状態は維持
+     * 各モードで選択していた画面は維持
      */
     resetMode: (state) => {
-      state.currentMode = APP_MODES.DASHBOARD
+      state.currentMode =
+        APP_MODES.DASHBOARD
     },
 
     /**
-     * 指定したモードの選択項目を初期値へ戻す
-     *
-     * payloadにモードを指定しない場合は、
-     * 現在のモードを対象にする
+     * 指定モードの表示画面を初期値へ戻す
      */
-    resetModeSelection: (state, action) => {
+    resetModeSelection: (
+      state,
+      action
+    ) => {
       const mode = resolveMode(
         action.payload,
         state.currentMode
@@ -140,7 +164,7 @@ const modeSlice = createSlice({
     },
 
     /**
-     * モードと選択状態をすべて初期化
+     * モードと表示画面をすべて初期化
      */
     resetModeState: () => {
       return createInitialState()
@@ -157,48 +181,45 @@ export const {
 } = modeSlice.actions
 
 /**
- * mode Slice全体
+ * modeSlice全体
  */
 export const selectModeState = (state) =>
   state.mode ?? initialState
 
 /**
- * 現在のモード
+ * 現在のアプリケーションモード
  */
 export const selectCurrentMode = (state) =>
   state.mode?.currentMode ??
   APP_MODES.DASHBOARD
 
 /**
- * 指定したモードの選択項目ID
- *
- * 使用例:
- * useSelector((state) =>
- *   selectSelectedItemIdByMode(
- *     state,
- *     APP_MODES.DASHBOARD
- *   )
- * )
+ * 指定モードで選択中の画面
  */
 export const selectSelectedItemIdByMode = (
   state,
   requestedMode
 ) => {
-  const mode = resolveMode(requestedMode)
+  const mode = resolveMode(
+    requestedMode
+  )
 
   return (
-    state.mode?.selectedItemIdByMode?.[mode] ??
+    state.mode?.selectedItemIdByMode?.[
+      mode
+    ] ??
     DEFAULT_SELECTED_ITEM_BY_MODE[mode]
   )
 }
 
 /**
- * 現在のモードで選択されている項目ID
+ * 現在のモードで選択中の画面
  */
 export const selectCurrentSelectedItemId = (
   state
 ) => {
-  const currentMode = selectCurrentMode(state)
+  const currentMode =
+    selectCurrentMode(state)
 
   return selectSelectedItemIdByMode(
     state,
@@ -206,28 +227,46 @@ export const selectCurrentSelectedItemId = (
   )
 }
 
+/**
+ * dashboardモードで選択中の画面
+ */
 export const selectDashboardSelectedItemId = (
   state
-) =>
-  selectSelectedItemIdByMode(
+) => {
+  return selectSelectedItemIdByMode(
     state,
     APP_MODES.DASHBOARD
   )
+}
 
+/**
+ * AI問い合わせモードで選択中の画面
+ */
 export const selectAiInquirySelectedItemId = (
   state
-) =>
-  selectSelectedItemIdByMode(
+) => {
+  return selectSelectedItemIdByMode(
     state,
     APP_MODES.AI_INQUIRY
   )
+}
 
-export const selectIsDashboardMode = (state) =>
-  selectCurrentMode(state) ===
-  APP_MODES.DASHBOARD
+export const selectIsDashboardMode = (
+  state
+) => {
+  return (
+    selectCurrentMode(state) ===
+    APP_MODES.DASHBOARD
+  )
+}
 
-export const selectIsAiInquiryMode = (state) =>
-  selectCurrentMode(state) ===
-  APP_MODES.AI_INQUIRY
+export const selectIsAiInquiryMode = (
+  state
+) => {
+  return (
+    selectCurrentMode(state) ===
+    APP_MODES.AI_INQUIRY
+  )
+}
 
 export default modeSlice.reducer

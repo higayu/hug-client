@@ -7,10 +7,6 @@
  * 同じテーブル名に揃える。
  */
 const TABLE_NAMES = [
-  "companies",
-  "roles",
-  "company_roles",
-  "company_staff",
   "children",
   "children_type",
   "day_of_week",
@@ -25,10 +21,8 @@ const TABLE_NAMES = [
   "staffs",
   "service_record",
   "temp_notes",
-  "child_records",
   "m_service_items",
   "staff_facility_roles",
-
   "memo",
 ];
 
@@ -117,7 +111,6 @@ const normalizeTables = (data) => {
     tableData,
   ] of Object.entries(data)) {
     if (
-      tableName !== "record_types" &&
       !Object.prototype.hasOwnProperty.call(
         normalized,
         tableName,
@@ -130,6 +123,8 @@ const normalizeTables = (data) => {
     }
   }
 
+  // record_types は施設別APIで取得するため __all の結果を使用しない。
+  delete normalized.record_types;
   return normalized;
 };
 
@@ -149,40 +144,34 @@ const createTableCounts = (tables) =>
   );
 
 export const laravelApi = {
-  /**
-   * 指定施設の児童課題タイプだけ取得する。
-   * 成功: 配列、失敗: Errorをthrow（ChildKadaiのエラー表示へ伝える）。
-   */
+  /** 指定施設の課題タイプを個別取得する。失敗時は例外を投げる。 */
   async getRecordTypes(facilityId) {
     const id = Number(facilityId);
-    if (!Number.isSafeInteger(id) || id <= 0) {
-      throw new Error("有効な施設IDを指定してください。");
+    if (!Number.isInteger(id) || id <= 0) {
+      throw new Error("課題タイプ取得には有効な施設IDが必要です。");
     }
 
-    const bridge = window.electronAPI;
-    const fetchRecordTypes =
-      bridge?.laravel_recordTypes_getAll ??
-      bridge?.laravel_record_types_getAll;
-    if (typeof fetchRecordTypes !== "function") {
-      throw new Error("児童課題タイプの取得APIがPreloadに公開されていません。");
+    const fetcher = window.electronAPI?.laravel_recordTypes_getAll
+      ?? window.electronAPI?.laravel_record_types_getAll;
+    if (typeof fetcher !== "function") {
+      throw new Error("RecordType個別取得APIがPreloadに公開されていません。");
     }
 
-    const result = await fetchRecordTypes({ facility_id: id });
+    const result = await fetcher({ facility_id: id });
     if (result?.success === false) {
-      throw new Error(result.message || result.error?.message || "課題タイプの取得に失敗しました。");
+      throw new Error(result.message || result.error || "課題タイプ取得に失敗しました。");
     }
 
-    const data = unwrapTableData(result);
+    const data = result?.success === true ? result.data : result;
     if (!Array.isArray(data)) {
-      throw new Error("児童課題タイプの取得結果が配列ではありません。");
+      throw new Error("課題タイプAPIのレスポンスが配列ではありません。");
     }
-    return data.filter((type) => Number(type?.facility_id) === id);
+    return data;
   },
 
   /**
    * Laravel APIから全テーブルを取得する。
    *
-   * sqliteApi.getAllTables()と同様に、
    * 成功時はテーブルオブジェクトを直接返す。
    * 失敗時はnullを返す。
    */

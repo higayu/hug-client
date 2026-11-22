@@ -49,7 +49,9 @@ export default function PersonalRecordPrompt({
   // =============================================================
   // 個人記録プロンプト選択
   // =============================================================
-  const selectedPromptKey = DEFAULT_PERSONAL_RECORD_PROMPT_KEY;
+  const [selectedPromptKey, setSelectedPromptKey] = useState(
+    DEFAULT_PERSONAL_RECORD_PROMPT_KEY
+  );
 
   // =============================================================
   // DB保存済みメモ
@@ -145,7 +147,7 @@ export default function PersonalRecordPrompt({
       PROMPTS?.[selectedPromptKey]?.content ??
       "";
 
-    // 計画とプロンプトはLaravelがDBから取得する。入力文章だけを送る。
+    // 計画付きの場合、計画とプロンプトはLaravelがDBから取得する。
     const message = aiText;
 
     const textValue = `${selectedPrompt}\n\n\n${message}`;
@@ -179,6 +181,7 @@ export default function PersonalRecordPrompt({
           message,
           promptKey,
           childId: selectedChildId,
+          personalRecordMode: useDbNote ? "with-plan" : "standard",
         });
 
       dispatch(
@@ -247,9 +250,9 @@ export default function PersonalRecordPrompt({
       ===================================================== */}
       <PersonalRecordPromptBox
         prompts={PROMPTS}
-        selectedPromptKey={
-          selectedPromptKey
-        }
+        selectedPromptKey={selectedPromptKey}
+        onChange={setSelectedPromptKey}
+        disabled={sending}
       />
 
       {/* =====================================================
@@ -382,7 +385,8 @@ export default function PersonalRecordPrompt({
           {/* 右側：実行 */}
           <button
             type="button"
-            className="w-[70%] bg-green-500 hover:bg-green-600 p-2 rounded text-white disabled:opacity-50 disabled:cursor-not-allowed"
+            aria-busy={sending}
+            className="flex min-h-10 w-[70%] items-center justify-center gap-2 bg-green-500 p-2 rounded text-white enabled:hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={
               clickEnterButton
             }
@@ -393,9 +397,17 @@ export default function PersonalRecordPrompt({
               sending
             }
           >
-            {sending
-              ? "送信中…"
-              : `${aiName}実行`}
+            {sending ? (
+              <>
+                <span
+                  aria-hidden="true"
+                  className="h-5 w-5 shrink-0 animate-spin rounded-full border-2 border-white/40 border-t-white"
+                />
+                <span>送信中…</span>
+              </>
+            ) : (
+              `${aiName}実行`
+            )}
           </button>
         </div>
 

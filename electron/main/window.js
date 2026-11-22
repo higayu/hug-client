@@ -8,10 +8,7 @@ function createMainWindow() {
   // preload.js の絶対パス
   // const preloadPath = path.join(__dirname, "../preload.js");
   // bundle 済み preload のパス
-  const preloadPath = path.join(
-    __dirname,
-    "../preload/preload.bundle.cjs"
-  );
+  const preloadPath = path.join(__dirname, "../preload/preload.bundle.cjs");
  // const preloadPath = path.join(app.getAppPath(), "preload.bundle.cjs");
 
   // renderer の本番ビルド済み HTML
@@ -31,25 +28,6 @@ function createMainWindow() {
     "[main/window] renderer dist exists =",
     fs.existsSync(rendererDistPath)
   );
-
-  const mainWindow = new BrowserWindow({
-    width: 1200,
-    height: 800,
-    icon: path.join(__dirname, "../../assets/favicon.ico"),
-    webPreferences: {
-      preload: preloadPath,
-      nodeIntegration: false,
-      contextIsolation: true,
-      webviewTag: true,
-
-      // preload は bundle 済みファイルを読み込む
-      sandbox: false,
-    },
-  });
-
-  // ============================================================
-  // 開発環境と本番環境で読み込み方法を切り替え
-  // ============================================================
 
   const hasProdFlag =
     process.argv.includes("--prod") ||
@@ -71,6 +49,26 @@ function createMainWindow() {
   } else {
     isDev = true;
   }
+
+  // Preload は process.argv の --dev で開発APIの公開を判断する。
+  // 本番パッケージでは開発用APIを有効化しない。
+  const enableDevDiagnostics = isDev && !app.isPackaged;
+
+  const mainWindow = new BrowserWindow({
+    width: 1200,
+    height: 800,
+    icon: path.join(__dirname, "../../assets/favicon.ico"),
+    webPreferences: {
+      preload: preloadPath,
+      nodeIntegration: false,
+      contextIsolation: true,
+      webviewTag: true,
+      sandbox: false,
+      additionalArguments: enableDevDiagnostics ? ["--dev"] : [],
+    },
+  });
+
+  console.log("[main/window] preload dev API enabled =", enableDevDiagnostics);
 
   console.log("[main/window] isDev =", isDev);
 
@@ -104,11 +102,6 @@ function createMainWindow() {
   if (isDebugMode) {
     mainWindow.webContents.openDevTools();
   }
-
-  // Rendererの状態に関係なく、ウィンドウを閉じる際は確認を表示する。
-  // main.js 側でも登録されている場合、登録関数内で二重登録を防止する。
-  const { registerCloseConfirmation } = require("./closeConfirmation");
-  registerCloseConfirmation(mainWindow);
 
   return mainWindow;
 }

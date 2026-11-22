@@ -124,24 +124,6 @@ function UrlTab() {
       <div className="mb-6">
         <div className="mb-3 flex items-center py-2">
           <label
-            htmlFor="api-base-url"
-            className="min-w-[140px] font-medium text-gray-700"
-          >
-            APIベースURL:
-          </label>
-
-          <input
-            type="url"
-            id="api-base-url"
-            name="baseURL"
-            value={form.baseURL}
-            onChange={handleInputChange}
-            className="max-w-[500px] flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm transition-all focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-200"
-          />
-        </div>
-
-        <div className="mb-3 flex items-center py-2">
-          <label
             htmlFor="api-laravel-url"
             className="min-w-[140px] font-medium text-gray-700"
           >

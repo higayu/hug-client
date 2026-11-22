@@ -6,8 +6,7 @@ import {
   useRef,
 } from 'react'
 import { useSelector } from 'react-redux'
-import { selectActiveSpaceId } from '@/store/slices/chilledspaceSlice.js'
-import { selectSpace } from '@/store/workSpaceSelectors.js'
+import { selectActiveSpaceId, selectSpace } from '@/store/slices/chilledspaceSlice.js'
 
 import {
   useAppState,
@@ -30,11 +29,6 @@ import {
 import {
   addPersonalRecordTabAction4,
 } from '@/components/common/hug_function/PersonalRecord/OpenPersonalRecord'
-
-import {
-  addMonitoringTabAction,
-} from './actions/monitoring'
-
 import {
   addProfessionalSupportListAction,
 } from '@/components/common/hug_function/ProfessionalSupport/OpenList'
@@ -46,6 +40,11 @@ import {
 
 import { addOpenAiTabAction,} from '@/components/common/AiContents/OpenTab/openAi';
 import { addDeepseekTabAction,} from '@/components/common/AiContents/OpenTab/deepseek';
+
+
+import {
+  addMonitoringTabAction,
+} from './actions/monitoring'
 
 // useTabs() は複数コンポーネントから呼ばれるため、
 // 初期化はアプリ全体で1回だけ行う

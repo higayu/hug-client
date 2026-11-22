@@ -10,12 +10,8 @@ const DEFAULT_API_SETTINGS = {
   laravelURL: 'https://dev-hug-banso.we-labo.com',
   facilityId: '3',
   databaseType: 'laravel',
-  useAI: 'chatGPT',
-
-  // 自動同期 / 自動切替
-  autoSynchronization: 'true',
-  autoSwitching: 'false',
-  professionalSupportSaveMode: 'draft',
+  useAI: 'LaravelApi',
+  normalModeView: 'simpleBoard',
 }
 
 // 必須キーが欠けている場合にデフォルトで補完
@@ -53,6 +49,10 @@ export async function loadIni() {
   }
 }
 
+/**
+ * ini.jsonを読み込み
+ * @returns {Promise<Object|null>} 読み込んだ設定データ、失敗時はnull
+ */
 /**
  * ini.json を保存（全体上書き）
  * @param {Object} data

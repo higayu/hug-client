@@ -4,11 +4,28 @@ const laravelApiClient = require("../../../../../../src/laravelApiClient");
 const { executeAuthenticatedOperation } = require("../auth/authenticated");  // 修正
 const { formatError, unwrapData } = require("../auth/utils");
 
+function normalizeStatus(value) {
+  if (value === 1 || value === "1" || value === "公開" || value === "公開中") {
+    return 1;
+  }
+
+  if (value === 2 || value === "2" || value === "下書き") {
+    return 2;
+  }
+
+  return null;
+}
+
 async function upsertServiceRecord(payload = {}) {
-  console.log("📤 [Laravel Procedure] upsertServiceRecord:", payload);
+  const normalizedPayload = {
+    ...payload,
+    status: normalizeStatus(payload?.status),
+  };
+
+  console.log("📤 [Laravel Procedure] upsertServiceRecord:", normalizedPayload);
 
   const result = await executeAuthenticatedOperation(
-    () => laravelApiClient.upsertServiceRecord(payload),
+    () => laravelApiClient.upsertServiceRecord(normalizedPayload),
     "サービス記録の保存に失敗しました。"
   );
 
@@ -49,6 +66,7 @@ const handler = async (_event, payload = {}) => {
 };
 
 module.exports = {
+  normalizeStatus,
   upsertServiceRecord,
   handler,
 };

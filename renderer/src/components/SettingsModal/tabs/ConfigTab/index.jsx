@@ -7,7 +7,7 @@ import {
 import ToggleContainer from '@/components/ui/ToggleContainer'
 import { useAppState } from '@/AppStateContext'
 import { useToast } from '@/utils/notifications.jsx'
-import { useDataBase } from '@/hooks/useDataBase'
+import { useDataBase } from '@/hooks/useDataBase'  // ← 追加
 
 import {
   saveConfig,
@@ -21,45 +21,22 @@ import {
 function ConfigTab() {
   const [isSaving, setIsSaving] = useState(false)
 
-  /*
-   * ConfigTabで必要なのは主に
-   * appState と updateAppState。
-   *
-   * databaseState / iniState / loadIni / saveIni / setIniState は
-   * ini.jsonやDB設定用なので、このタブでは変更しない。
-   */
   const {
     appState,
-    databaseState,
-    iniState,
-    loadIni,
-    saveIni,
-    setIniState,
     updateAppState,
   } = useAppState()
+
+  // 🔥 useDataBase フックから reloadData を取得
+  const { reloadData } = useDataBase()
 
   const {
     showSuccessToast,
     showErrorToast,
   } = useToast()
 
-  // Config.json の変更反映後にDBデータを再取得するために使用
-  // autoLoad は使わず、保存後に明示的に実行する
-  const { loadDataBase } = useDataBase()
-
   const [form, setForm] = useState(() => {
     return createConfigFormState(appState)
   })
-
-  /*
-   * 上記のContext値のうち、ConfigTabでは使用しない値。
-   * 将来的に共通構造を維持するため取得だけ行う。
-   */
-  void databaseState
-  void iniState
-  void loadIni
-  void saveIni
-  void setIniState
 
   /*
    * config.jsonの値がRedux側で変更された場合、
@@ -111,21 +88,14 @@ function ConfigTab() {
     setIsSaving(true)
 
     try {
-      const configData =
-        normalizeConfigData(form)
+      const configData = normalizeConfigData(form)
       if (configData.APP_LOCK_ENABLED && !configData.APP_LOCK_PASSCODE) {
         throw new Error('ロックをONにする場合はパスコードを入力してください')
       }
 
+      console.log('[ConfigTab] Config.json保存内容:', configData)
 
-
-      console.log(
-        '[ConfigTab] Config.json保存内容:',
-        configData
-      )
-
-      const result =
-        await saveConfig(configData)
+      const result = await saveConfig(configData)
 
       if (
         result === false ||
@@ -139,65 +109,41 @@ function ConfigTab() {
         )
       }
 
-      /*
-       * 保存成功後にReduxへ反映する。
-       */
+      // 保存成功後にReduxへ反映
       updateAppState(configData)
-
-      /*
-       * trimやデフォルト値補完後の値を
-       * フォームにも反映する。
-       */
       setForm(configData)
 
-      /*
-       * 保存内容を AppState に反映した後、
-       * 現在選択中のDB/APIから全テーブルを再取得する。
-       *
-       * ConfigTabではDB種別自体は変更しないため、
-       * forceDatabaseType は指定しない。
-       * AUTO_SWITCHING は初回起動時のみ使用するため false。
-       */
-      console.log(
-        '[ConfigTab] Config.json保存後のDBデータ再取得開始'
-      )
-
-      const reloadSuccess = await loadDataBase({
-        reason: 'config-saved',
-        useAutoSwitching: false,
-      })
-
-      if (!reloadSuccess) {
-        console.warn(
-          '[ConfigTab] Config.jsonは保存しましたが、DBデータの再取得に失敗しました'
-        )
-
-        showErrorToast(
-          'Config.jsonは保存しましたが、データの再取得に失敗しました'
-        )
-      } else {
-        console.log(
-          '[ConfigTab] Config.json保存後のDBデータ再取得完了'
-        )
-
-        showSuccessToast(
-          'Config.jsonを保存し、データを再読み込みしました'
-        )
+      // 🔥 データベースを再取得
+      let dbSuccess = false
+      try {
+        console.log('[ConfigTab] データベースを再取得します...')
+        if (typeof reloadData === 'function') {
+          dbSuccess = await reloadData({ reason: 'config-saved' })
+          if (dbSuccess) {
+            console.log('[ConfigTab] データベース再取得成功')
+          } else {
+            console.warn('[ConfigTab] データベース再取得失敗')
+          }
+        } else {
+          console.warn('[ConfigTab] reloadData関数が利用できません')
+        }
+      } catch (reloadError) {
+        console.error('[ConfigTab] データ再取得エラー:', reloadError)
       }
 
-      console.log(
-        '[ConfigTab] Config.json保存完了:',
-        configData
-      )
-    } catch (error) {
-      console.error(
-        '[ConfigTab] Config.json保存エラー:',
-        error
-      )
+      // トーストメッセージを表示
+      if (dbSuccess) {
+        showSuccessToast('Config.jsonを保存し、データを再取得しました')
+      } else {
+        // config保存は成功したが、データ再取得に失敗した場合
+        showSuccessToast('Config.jsonの保存は成功しましたが、データ再取得に失敗しました')
+      }
 
+      console.log('[ConfigTab] Config.json保存完了:', configData)
+    } catch (error) {
+      console.error('[ConfigTab] Config.json保存エラー:', error)
       showErrorToast(
-        error?.message ||
-        'Config.jsonの保存に失敗しました'
+        error?.message || 'Config.jsonの保存に失敗しました'
       )
     } finally {
       setIsSaving(false)
@@ -264,9 +210,8 @@ function ConfigTab() {
           className="rounded border border-gray-300 px-3 py-2" />
         <p className="mt-2 text-sm text-gray-600">保存後、次回のアプリ起動から適用されます。</p>
       </div>
+
       <div className="mb-6">
-
-
         <div className="mb-2 flex flex-col gap-2 rounded-lg border border-gray-500 bg-slate-50 p-2">
           <p className="font-bold">
             【 AIの設定 】

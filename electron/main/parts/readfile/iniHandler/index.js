@@ -3,23 +3,30 @@ const fs = require("fs");
 const path = require("path");
 const { getIniPath } = require("../../utils/pathResolver");
 const { DEFAULT_INI, getDefaultIni, normalizeMemoAutoSaveSettings } = require("./defaultIni");
+const { enforceAiMode } = require("./aiModePolicy");
+
+const INI_IPC_CHANNELS = [
+  "read-ini",
+  "save-ini",
+  "reset-ini",
+  "update-ini-setting",
+];
 
 function removeHandlerIfRegistered(ipcMain, channel) {
   try {
     ipcMain.removeHandler(channel);
   } catch (error) {
     console.warn(
-      `⚠️ IPCハンドラーを解除できませんでした: ${channel}`,
+      `⚠️ [INI IPC] ハンドラー解除失敗: ${channel}`,
       error?.message ?? error,
     );
   }
 }
 
 function handleIniAccess(ipcMain) {
-  removeHandlerIfRegistered(ipcMain, "read-ini");
-  removeHandlerIfRegistered(ipcMain, "save-ini");
-  removeHandlerIfRegistered(ipcMain, "reset-ini");
-  removeHandlerIfRegistered(ipcMain, "update-ini-setting");
+  for (const channel of INI_IPC_CHANNELS) {
+    removeHandlerIfRegistered(ipcMain, channel);
+  }
 
   // ============================================================
   // 📖 ini.json 読み込み
@@ -43,10 +50,14 @@ function handleIniAccess(ipcMain) {
         "staffId"
       );
       if (jsonData.apiSettings) delete jsonData.apiSettings.staffId;
-
+      const hadLegacyCustomButtons = Object.prototype.hasOwnProperty.call(
+        jsonData,
+        "customButtons"
+      );
+      if (hadLegacyCustomButtons) delete jsonData.customButtons;
+      
       // バージョンにかかわらず不足キーを補完し、未知の既存キーは保持する
       const normalizedData = mergeDeep(DEFAULT_INI, jsonData);
-      normalizedData.apiSettings.databaseType = "laravel";
       normalizeMemoAutoSaveSettings(normalizedData);
       normalizedData.version = DEFAULT_INI.version;
 
@@ -56,11 +67,16 @@ function handleIniAccess(ipcMain) {
 
       if (
         hadLegacyStaffId ||
+        hadLegacyCustomButtons ||
         JSON.stringify(normalizedData) !== JSON.stringify(jsonData)
       ) {
         fs.writeFileSync(filePath, JSON.stringify(normalizedData, null, 2), "utf8");
       }
-      return { success: true, data: normalizedData };
+
+
+      // Keep a manager's saved preference on disk, but never expose it as the
+      // effective selection before Laravel confirms the current account's role.
+      return { success: true, data: await enforceAiMode(normalizedData) };
     } catch (err) {
       console.error("❌ ini.json 読み込み失敗:", err);
       // 破損時はデフォルトを返す
@@ -89,19 +105,25 @@ function handleIniAccess(ipcMain) {
       if (fs.existsSync(filePath)) {
         currentData = JSON.parse(fs.readFileSync(filePath, "utf8"));
         if (currentData.apiSettings) delete currentData.apiSettings.staffId;
+        if (Object.prototype.hasOwnProperty.call(currentData, "customButtons")) {
+          delete currentData.customButtons;
+        }
       }
-      const saveData = mergeDeep(
+      const incomingData = { ...(data || {}) };
+      if (Object.prototype.hasOwnProperty.call(incomingData, "customButtons")) {
+        delete incomingData.customButtons;
+      }
+      const saveData = await enforceAiMode(mergeDeep(
         mergeDeep(DEFAULT_INI, currentData),
-        data || {}
-      );
-      saveData.apiSettings.databaseType = "laravel";
+        incomingData
+      ));
       normalizeMemoAutoSaveSettings(saveData);
       saveData.version = data?.version || DEFAULT_INI.version;
 
       const jsonString = JSON.stringify(saveData, null, 2);
       fs.writeFileSync(filePath, jsonString, "utf8");
 
-      return { success: true };
+      return { success: true, data: saveData };
     } catch (err) {
       console.error("❌ ini.json 保存エラー:", err);
       return { success: false, error: err.message };
@@ -131,6 +153,10 @@ function handleIniAccess(ipcMain) {
   // ============================================================
   ipcMain.handle("update-ini-setting", async (event, settingPath, value) => {
     try {
+      if (settingPath === "customButtons" || settingPath.startsWith("customButtons.")) {
+        return { success: false, error: "customButtons は廃止されています" };
+      }
+
       const filePath = getIniPath();
 
       const dir = path.dirname(filePath);
@@ -142,6 +168,9 @@ function handleIniAccess(ipcMain) {
       if (fs.existsSync(filePath)) {
         try {
           data = JSON.parse(fs.readFileSync(filePath, "utf8"));
+          if (Object.prototype.hasOwnProperty.call(data, "customButtons")) {
+            delete data.customButtons;
+          }
         } catch (e) {
           console.error("⚠️ ini.json が破損していたため初期化します");
           data = getDefaultIni();
@@ -165,9 +194,9 @@ function handleIniAccess(ipcMain) {
       }
 
       obj[keys[keys.length - 1]] = value;
-
-      data.apiSettings = { ...data.apiSettings, databaseType: "laravel" };
+      data.apiSettings = { ...data.apiSettings };
       normalizeMemoAutoSaveSettings(data);
+      data = await enforceAiMode(data);
 
       // 原子的書き込み
       fs.writeFileSync(filePath, JSON.stringify(data, null, 2), "utf8");

@@ -1,9 +1,10 @@
-import UsageCharts from './UsageCharts'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useSelector } from 'react-redux'
 import { useAppState } from '@/AppStateContext'
 import { selectLaravelAuth } from '@/store/slices/authSlice'
 import { useToast } from '@/utils/notifications.jsx'
+import { FORCED_AI_MODE, resolveAiMode, selectCanChooseAiMode } from '@/utils/aiModePolicy'
+import UsageCharts from './UsageCharts'
 
 const AI_OPTIONS = [
   ['gemini', 'Gemini'], ['chatGPT', 'ChatGPT'], ['LaravelApi', 'Laravel API'],
@@ -15,18 +16,21 @@ const date = (value) => value ? new Date(value).toLocaleString('ja-JP', { timeZo
 export default function AiSetting({ isActive = true }) {
   const { iniState, appState, setIniState, updateAppState } = useAppState()
   const auth = useSelector(selectLaravelAuth)
+  //AI校正は、基本はLaravel APIで固定。AI種別の変更は管理者のみ可能です。
+  const canChooseAi = useSelector(selectCanChooseAiMode)
   const accountId = auth.user?.staff_id ?? auth.user?.id
   const { showSuccessToast, showErrorToast } = useToast()
-  const [selected, setSelected] = useState(iniState?.apiSettings?.useAI ?? appState?.USE_AI ?? 'gemini')
+  const [selected, setSelected] = useState(() => resolveAiMode(auth, iniState?.apiSettings?.useAI ?? appState?.USE_AI))
   const [saving, setSaving] = useState(false)
   const [loading, setLoading] = useState(false)
   const [data, setData] = useState(null)
   const [error, setError] = useState('')
   const sequence = useRef(0)
+  
 
   useEffect(() => {
-    setSelected(iniState?.apiSettings?.useAI ?? appState?.USE_AI ?? 'gemini')
-  }, [iniState?.apiSettings?.useAI, appState?.USE_AI])
+    setSelected(resolveAiMode(auth, iniState?.apiSettings?.useAI ?? appState?.USE_AI))
+  }, [auth, iniState?.apiSettings?.useAI, appState?.USE_AI])
 
   const refresh = useCallback(async () => {
     const requestId = ++sequence.current
@@ -56,13 +60,14 @@ export default function AiSetting({ isActive = true }) {
   }, [isActive, refresh])
 
   async function save() {
-    if (saving) return
+    if (saving || !canChooseAi) return
     setSaving(true)
     try {
       const result = await window.electronAPI.updateIniSetting('apiSettings.useAI', selected)
       if (!result?.success) throw new Error(result?.error || 'AI種別の保存に失敗しました。')
-      setIniState((previous) => ({ ...previous, apiSettings: { ...previous?.apiSettings, useAI: selected } }))
-      updateAppState({ USE_AI: selected })
+      const savedMode = result.data?.apiSettings?.useAI ?? FORCED_AI_MODE
+      setIniState((previous) => ({ ...previous, apiSettings: { ...previous?.apiSettings, useAI: savedMode } }))
+      updateAppState({ USE_AI: savedMode })
       showSuccessToast('AI種別を保存しました')
     } catch (cause) {
       showErrorToast(cause.message)
@@ -79,11 +84,12 @@ export default function AiSetting({ isActive = true }) {
       <div className="rounded-lg border border-gray-200 bg-white p-4">
         <label htmlFor="settings-ai-type" className="mb-2 block font-semibold">AI種別</label>
         <div className="flex flex-wrap gap-3">
-          <select id="settings-ai-type" value={selected} onChange={(event) => setSelected(event.target.value)} disabled={saving} className="rounded-md border border-gray-300 px-3 py-2">
-            {AI_OPTIONS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+          <select id="settings-ai-type" value={canChooseAi ? selected : FORCED_AI_MODE} onChange={(event) => setSelected(event.target.value)} disabled={saving || !canChooseAi} className="rounded-md border border-gray-300 px-3 py-2 disabled:bg-gray-100">
+            {(canChooseAi ? AI_OPTIONS : [[FORCED_AI_MODE, 'Laravel API']]).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
           </select>
-          <button type="button" onClick={save} disabled={saving} className="rounded-md bg-blue-600 px-4 py-2 text-white disabled:opacity-50">{saving ? '保存中…' : 'AI種別を保存'}</button>
+          {canChooseAi && <button type="button" onClick={save} disabled={saving} className="rounded-md bg-blue-600 px-4 py-2 text-white disabled:opacity-50">{saving ? '保存中…' : 'AI種別を保存'}</button>}
         </div>
+      
       </div>
 
       <div className="rounded-lg border border-gray-200 bg-white p-4" aria-busy={loading}>

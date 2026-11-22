@@ -14,6 +14,7 @@ function formatValue(value) {
   if (typeof value === 'string') return value || '(empty)'
   return JSON.stringify(value, null, 2)
 }
+
 export default function DebugTab() {
   const auth = useSelector(selectLaravelAuth)
   const companyStaff = useSelector(selectStaffCompanyRoles)

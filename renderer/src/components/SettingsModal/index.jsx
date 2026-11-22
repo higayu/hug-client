@@ -259,7 +259,7 @@ export default function SettingsModal({
                   isCompanyAutomationEnabled ? 'bg-green-700' : 'bg-red-700'
                 }`}
               >
-                モード：{isCompanyAutomationEnabled ? 'グレー版' : 'ホワイト版'}
+                モード：{isCompanyAutomationEnabled ? 'G' : 'F'}
               </span>
 
               {DEBUG_FLG && (

@@ -1,0 +1,5 @@
+{
+  "defaultMode": "LaravelApi",
+  "managementRoles": ["admin", "mentor", "franchise_mentor"],
+  "allowedModes": ["LaravelApi", "gemini", "chatGPT", "ollama", "deepseek", "openrouter"]
+}

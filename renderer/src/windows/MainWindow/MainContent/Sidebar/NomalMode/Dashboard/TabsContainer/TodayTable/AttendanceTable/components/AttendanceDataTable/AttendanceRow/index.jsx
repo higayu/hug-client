@@ -1,4 +1,3 @@
-import { useProfessionalSupportPanelData } from '@/hooks/useProfessionalSupportPanelData'
 import {
   PersonalRecordButton,
   ProfessionalSupportManagerPanel,
@@ -16,7 +15,6 @@ import {
 import { useAppState } from '@/AppStateContext';
 export default function AttendanceRow({ row, busy, onAction }) {
   const { appState, CURRENT_YMD, FACILITY_ID } = useAppState();
-  const supportPanelData = useProfessionalSupportPanelData(row.childId);
   const canOpenPersonalRecord = Boolean(row.childId);
   const recordId = String(row.rId ?? '').startsWith('attendance-')
     ? ''
@@ -88,7 +86,6 @@ export default function AttendanceRow({ row, busy, onAction }) {
       </td>
       <td className="border border-slate-300 p-2 align-top">
         <ProfessionalSupportManagerPanel
-          {...supportPanelData}
           facilityId={FACILITY_ID}
           currentYmd={CURRENT_YMD}
           selectedChildId={row.childId}

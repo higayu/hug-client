@@ -11,14 +11,14 @@ import {
 } from 'react-redux'
 
 import * as s from '@/store/slices/appStateSlice'
-import { selectIsCompanyAutomationEnabled } from '@/store/slices/authSlice'
 
 import {
   selectChildren,
-  selectChildrenType,
-  selectChildRecords,
   selectCompanies,
+  selectRoles,
   selectCompanyRoles,
+  selectStaffCompanyRoles,
+  selectChildrenType,
   selectDatabaseError,
   selectDatabaseLoading,
   selectDatabaseMetadata,
@@ -35,14 +35,25 @@ import {
   selectPronunciation,
   selectRecordTypes,
   selectRefreshTokens,
-  selectRoles,
   selectServiceRecord,
   selectStaffFacilityRoles,
-  selectStaffCompanyRoles,
   selectStaffs,
   selectTempNotes,
   selectUsers,
 } from '@/store/slices/databaseSlice'
+
+import {
+  selectCurrentStaffCompanies,
+  selectCurrentCompanyRole,
+  selectCanManageCompanyStaff,
+  selectAssignableCompanyRoles,
+  selectCanAccessFacility,
+} from '@/store/roleSelectors'
+
+import {
+  selectAuthenticatedRoleCode,
+  selectIsCompanyAutomationEnabled,
+} from '@/store/slices/authSlice'
 
 import {
   selectActiveSpaceId,
@@ -73,16 +84,10 @@ import {
 } from '@/AppStateContext/splitChildrenData'
 
 export function useReduxBindings() {
-  const isCompanyAutomationEnabled = useSelector(selectIsCompanyAutomationEnabled)
   // ============================================================
   // appStateSlice
   // ============================================================
 
-  /**
-   * appState全体
-   *
-   * Slice全体が必要な場所でのみ使用します。
-   */
   const appState = useSelector(
     s.selectAppState,
     shallowEqual
@@ -92,9 +97,6 @@ export function useReduxBindings() {
   // databaseSlice
   // ============================================================
 
-  /**
-   * databaseSlice全体
-   */
   const databaseState = useSelector(
     selectDatabaseState,
     shallowEqual
@@ -124,28 +126,38 @@ export function useReduxBindings() {
     shallowEqual
   )
 
+  const dbCompanies = useSelector(selectCompanies, shallowEqual)
+  const dbRoles = useSelector(selectRoles, shallowEqual)
+  const dbCompanyRoles = useSelector(selectCompanyRoles, shallowEqual)
+  const dbStaffCompanyRoles = useSelector(selectStaffCompanyRoles, shallowEqual)
+
+  // ログイン情報を権限の正本にする。旧role_idからは推測しない。
+  const authRoleCode = useSelector(selectAuthenticatedRoleCode)
+  const isCompanyAutomationEnabled = useSelector(selectIsCompanyAutomationEnabled)
+  const currentStaffCompanies = useSelector(selectCurrentStaffCompanies, shallowEqual)
+  const currentCompanyId = useSelector((state) => {
+    const selectedFacilityId = s.selectFacilityId(state)
+    const facility = selectFacilitys(state).find(
+      (item) => String(item.id) === String(selectedFacilityId)
+    )
+    const companyId = facility?.company_id
+    return companyId == null ? null : companyId
+  })
+  const currentCompanyRole = useSelector((state) =>
+    selectCurrentCompanyRole(state, currentCompanyId)
+  )
+  const canManageCurrentCompanyStaff = useSelector((state) =>
+    selectCanManageCompanyStaff(state, currentCompanyId)
+  )
+  const assignableCurrentCompanyRoles = useSelector((state) =>
+    selectAssignableCompanyRoles(state, currentCompanyId), shallowEqual
+  )
+  const canAccessCurrentFacility = useSelector((state) =>
+    selectCanAccessFacility(state, s.selectFacilityId(state))
+  )
+
   const dbFacilitys = useSelector(
     selectFacilitys,
-    shallowEqual
-  )
-
-  const dbCompanies = useSelector(
-    selectCompanies,
-    shallowEqual
-  )
-
-  const dbRoles = useSelector(
-    selectRoles,
-    shallowEqual
-  )
-
-  const dbCompanyRoles = useSelector(
-    selectCompanyRoles,
-    shallowEqual
-  )
-
-  const dbStaffCompanyRoles = useSelector(
-    selectStaffCompanyRoles,
     shallowEqual
   )
 
@@ -189,11 +201,6 @@ export function useReduxBindings() {
 
   const dbServiceRecord = useSelector(
     selectServiceRecord,
-    shallowEqual
-  )
-
-  const dbChildRecords = useSelector(
-    selectChildRecords,
     shallowEqual
   )
 
@@ -258,7 +265,7 @@ export function useReduxBindings() {
   )
 
   // ============================================================
-  // appStateSliceの基本設定
+  // primitives
   // ============================================================
 
   const HUG_USERNAME = useSelector(
@@ -269,10 +276,7 @@ export function useReduxBindings() {
     s.selectHugPassword
   )
 
-  // ============================================================
   // Gemini
-  // ============================================================
-
   const GEMINI_API_KEY = useSelector(
     s.selectGeminiApiKey
   )
@@ -281,10 +285,7 @@ export function useReduxBindings() {
     s.selectGeminiModel
   )
 
-  // ============================================================
   // OpenRouter
-  // ============================================================
-
   const OPEN_ROUTER_API_KEY = useSelector(
     s.selectOpenRouterApiKey
   )
@@ -293,10 +294,7 @@ export function useReduxBindings() {
     s.selectOpenRouterModel
   )
 
-  // ============================================================
   // DeepSeek
-  // ============================================================
-
   const DEEPSEEK_MAIL = useSelector(
     s.selectDeepSeekMail
   )
@@ -305,10 +303,7 @@ export function useReduxBindings() {
     s.selectDeepSeekPassword
   )
 
-  // ============================================================
   // ChatGPT
-  // ============================================================
-
   const OPENAI_MAIL = useSelector(
     s.selectOpenaiMail
   )
@@ -317,10 +312,7 @@ export function useReduxBindings() {
     s.selectOpenaiPassword
   )
 
-  // ============================================================
   // Ollama
-  // ============================================================
-
   const OLLAMA_URL = useSelector(
     s.selectOllamaUrl
   )
@@ -329,24 +321,12 @@ export function useReduxBindings() {
     s.selectOllamaModel
   )
 
-  // ============================================================
-  // アプリケーション設定
-  // ============================================================
-
   const USE_AI = useSelector(
     s.selectUseAI
   )
 
   const DATABASE_TYPE = useSelector(
     s.selectDatabaseType
-  )
-
-  const AUTO_SYNCHRONIZATION = useSelector(
-    s.selectAutoSynchronization
-  )
-
-  const AUTO_SWITCHING = useSelector(
-    s.selectAutoSwitching
   )
 
   const STAFF_ID = useSelector(
@@ -359,6 +339,7 @@ export function useReduxBindings() {
 
   // ============================================================
   // chilledspaceSlice
+  // 児童選択状態の正本。旧 SELECT_* はアクティブ枠の互換値として返す。
   // ============================================================
 
   const activeSpaceId = useSelector(
@@ -444,7 +425,7 @@ export function useReduxBindings() {
   // ============================================================
 
   /**
-   * 現在表示しているモード
+   * 現在のアプリケーションモード
    *
    * dashboard
    * aiInquiry
@@ -454,40 +435,36 @@ export function useReduxBindings() {
   )
 
   /**
-   * 現在のモードで選択している項目ID
-   *
-   * 例:
-   * dashboardモードの場合は home
-   * aiInquiryモードの場合は chat
+   * 現在のモードで選択されている画面
    */
   const CURRENT_SELECTED_ITEM_ID = useSelector(
     selectCurrentSelectedItemId
   )
 
   /**
-   * dashboardモードで最後に選択した項目ID
+   * dashboardモードで選択されている画面
    */
   const DASHBOARD_SELECTED_ITEM_ID = useSelector(
     selectDashboardSelectedItemId
   )
 
   /**
-   * aiInquiryモードで最後に選択した項目ID
+   * aiInquiryモードで選択されている画面
+   *
+   * dashboard
+   * aiRecordEditer
+   * chat
+   * personalRecord
+   * healthAnalysis
    */
   const AI_INQUIRY_SELECTED_ITEM_ID = useSelector(
     selectAiInquirySelectedItemId
   )
 
-  /**
-   * dashboardモードかどうか
-   */
   const IS_DASHBOARD_MODE = useSelector(
     selectIsDashboardMode
   )
 
-  /**
-   * AI問い合わせモードかどうか
-   */
   const IS_AI_INQUIRY_MODE = useSelector(
     selectIsAiInquiryMode
   )
@@ -532,9 +509,6 @@ export function useReduxBindings() {
       service_record:
         dbServiceRecord,
 
-      child_records:
-        dbChildRecords,
-
       record_types:
         dbRecordTypes,
 
@@ -545,7 +519,8 @@ export function useReduxBindings() {
       temp_notes:
         dbTempNotes,
 
-      memo: dbMemo,
+      memo:
+        dbMemo,
 
       staff_facility_roles:
         dbStaffFacilityRoles,
@@ -574,7 +549,6 @@ export function useReduxBindings() {
       dbPcToChildren,
       dbDayOfWeek,
       dbServiceRecord,
-      dbChildRecords,
       dbRecordTypes,
       dbMServiceItems,
       dbTempNotes,
@@ -584,7 +558,6 @@ export function useReduxBindings() {
       dbRefreshTokens,
     ]
   )
-
 
   // ============================================================
   // databaseSliceから児童データを抽出
@@ -711,10 +684,14 @@ export function useReduxBindings() {
       try {
         const result =
           await splitChildrenData({
-            tables: databaseTables,
+            tables:
+              databaseTables,
+
             staffId,
+
             weekdayId:
               resolvedWeekdayId,
+
             facility_id:
               facilityId,
           })
@@ -774,7 +751,6 @@ export function useReduxBindings() {
 
   return {
     appState,
-    isCompanyAutomationEnabled,
 
     // ==========================================================
     // databaseSlice
@@ -794,6 +770,16 @@ export function useReduxBindings() {
     dbCompanyRoles,
     dbStaffCompanyRoles,
 
+    // 現在の認証・選択施設を基準に計算した表示用権限
+    authRoleCode,
+    isCompanyAutomationEnabled,
+    currentStaffCompanies,
+    currentCompanyId,
+    currentCompanyRole,
+    canManageCurrentCompanyStaff,
+    assignableCurrentCompanyRoles,
+    canAccessCurrentFacility,
+
     // 関連テーブル
     dbFacilityChildren,
     dbFacilityStaff,
@@ -804,7 +790,6 @@ export function useReduxBindings() {
 
     // 記録系
     dbServiceRecord,
-    dbChildRecords,
     dbRecordTypes,
     dbMServiceItems,
 
@@ -822,7 +807,6 @@ export function useReduxBindings() {
     databaseError,
     databaseMetadata,
 
-    // databaseSliceから必要時に抽出する関数
     getChildrenDataByDay,
 
     // ==========================================================
@@ -850,16 +834,12 @@ export function useReduxBindings() {
     USE_AI,
     DATABASE_TYPE,
 
-    AUTO_SYNCHRONIZATION,
-    AUTO_SWITCHING,
-
     STAFF_ID,
     FACILITY_ID,
 
     activeSpaceId,
     chilledSpaces,
 
-    // web_automation_rules
     webAutomationRuleState,
     webAutomationRules,
     webAutomationRulesByKey,
@@ -867,6 +847,8 @@ export function useReduxBindings() {
     webAutomationRulesLoading,
     webAutomationRulesError,
     webAutomationRulesLoadedAt,
+
+    // 旧コード向け互換値。実体は activeSpace から取得する。
 
     CURRENT_DAY_OF_WEEK,
     CURRENT_YMD,
@@ -877,27 +859,19 @@ export function useReduxBindings() {
     SELECT_CHILD_FILTER_MODE,
 
     // ==========================================================
-    // 表示モード
+    // modeSlice
     // ==========================================================
 
     CURRENT_MODE,
 
-    /**
-     * 現在のモードで選択中の項目ID
-     */
     CURRENT_SELECTED_ITEM_ID,
 
-    /**
-     * dashboardで最後に選択した項目ID
-     */
     DASHBOARD_SELECTED_ITEM_ID,
 
-    /**
-     * aiInquiryで最後に選択した項目ID
-     */
     AI_INQUIRY_SELECTED_ITEM_ID,
 
     IS_DASHBOARD_MODE,
+
     IS_AI_INQUIRY_MODE,
   }
 }

@@ -3,16 +3,17 @@ import TabsContainer from "./TabsContainer"
 import DashboardHeader from "./DashboardHeader"
 
 function Dashboard() {
-  const DashboardRef = useRef(null)
+  const sidebarRef = useRef(null)
 
   return (
     <div
-      ref={DashboardRef}
-      className="relative isolate text-black bg-gray-50 flex flex-col h-full min-h-0"
+      ref={sidebarRef}
+      className="text-black bg-gray-50 flex flex-col h-full"
     >
       <DashboardHeader />
 
-      <div className="relative z-0 flex flex-1 min-h-0 overflow-hidden">
+      {/* メインコンテンツ */}
+      <div className="flex flex-1 min-h-0 overflow-hidden">
         <TabsContainer />
       </div>
     </div>

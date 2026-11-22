@@ -18,7 +18,7 @@ contextBridge.exposeInMainWorld(
 
 contextBridge.exposeInMainWorld(
   "api",
-  createDevApi(ipcRenderer)
+  createDevApi(ipcRenderer, isDebugMode)
 );
 
 contextBridge.exposeInMainWorld(

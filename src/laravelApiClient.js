@@ -18,6 +18,10 @@ const DEFAULT_API_PATH =
 const DEFAULT_TIMEOUT =
   30000;
 
+// AIによる健康分析は通常のAPIより処理時間が長いため、個別に待機時間を確保する。
+const HEALTH_ANALYSIS_TIMEOUT =
+  300000;
+
 const HEALTH_TIMEOUT =
   5000;
 
@@ -938,6 +942,10 @@ const laravelApiClient = {
           await laravelAxiosInstance.post(
             "/health-analysis/analyze",
             payload,
+            {
+              timeout:
+                HEALTH_ANALYSIS_TIMEOUT,
+            },
           );
 
         return response.data;
@@ -1269,22 +1277,6 @@ const laravelApiClient = {
       }
     },
 
-  /** PATCH /api/admin/staffs/{staff}/login */
-  updateStaffLogin:
-    async (
-      staffId,
-      payload,
-    ) => {
-      prepareRequest();
-
-      const response = await laravelAxiosInstance.patch(
-        `/admin/staffs/${Number(staffId)}/login`,
-        payload,
-      );
-
-      return response.data;
-    },
-
   /**
    * UpsertServiceRecord プロシージャ実行
    *
@@ -1358,37 +1350,57 @@ const laravelApiClient = {
 
   /** POST /api/__procedure/get-child-kadai-graph */
   getChildKadaiGraph:
+    async (
+      payload = {},
+    ) => {
+      prepareRequest();
+
+      try {
+        const response =
+          await laravelAxiosInstance.post(
+            "/__procedure/get-child-kadai-graph",
+            payload,
+          );
+
+        return response.data;
+      } catch (error) {
+        console.error(
+          "[laravelApiClient] getChildKadaiGraph failed:",
+          error?.response
+            ?.data ||
+            error?.message ||
+            error,
+        );
+
+        throw error;
+      }
+    },
+
+  /** POST /api/__procedure/upsert-child-kadai-graph */
+  upsertChildKadaiGraph:
     async (payload = {}) => {
       prepareRequest();
 
       try {
         const response = await laravelAxiosInstance.post(
-          "/__procedure/get-child-kadai-graph",
+          "/__procedure/upsert-child-kadai-graph",
           payload,
         );
+
         return response.data;
       } catch (error) {
         console.error(
-          "[laravelApiClient] getChildKadaiGraph failed:",
+          "[laravelApiClient] upsertChildKadaiGraph failed:",
           error?.response?.data || error?.message || error,
         );
         throw error;
       }
     },
 
-  upsertChildKadaiGraph: async (payload = {}) => {
-    prepareRequest();
-    try {
-      const response = await laravelAxiosInstance.post("/__procedure/upsert-child-kadai-graph", payload);
-      return response.data;
-    } catch (error) {
-      console.error("[laravelApiClient] upsertChildKadaiGraph failed:", error?.response?.data || error?.message || error);
-      throw error;
-    }
-  },
-
+  /** DELETE /api/child-records/{id} */
   deleteChildRecord: async (id) => {
     prepareRequest();
+
     const response = await laravelAxiosInstance.delete(`/child-records/${id}`);
     return response.data;
   },

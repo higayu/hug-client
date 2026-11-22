@@ -35,7 +35,6 @@ async function handler(params = {}) {
 
   const {
     service_record: _serviceRecord,
-    record_types: _recordTypes,
     ...syncTables
   } = tables;
 

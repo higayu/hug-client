@@ -3,9 +3,10 @@
 const laravelApiClient = require("../../../../../../src/laravelApiClient");
 const { executeAuthenticatedOperation } = require("../auth/authenticated");
 const { formatError, unwrapData } = require("../auth/utils");
+const { normalizeStatus } = require("./upsertServiceRecord");
 
 /**
- * 複数児童・複数日分のサービス記録をLaravelへ一括保存する。
+ * 複数児童・複数日分のサービス記録を一括保存する。
  *
  * payload:
  * {
@@ -13,9 +14,10 @@ const { formatError, unwrapData } = require("../auth/utils");
  *     {
  *       children_id: number,
  *       item_id: number,
- *       served_date: string,
+ *       served_date: "YYYY-MM-DD",
  *       facility_id: number,
- *       note: string,
+ *       note: string|null,
+ *       status?: 1|2|null,
  *       is_fsoaip_corrected?: number,
  *       is_deleted?: number,
  *     }
@@ -29,13 +31,17 @@ const { formatError, unwrapData } = require("../auth/utils");
  * }
  */
 async function upsertServiceRecordsBulk(payload = {}) {
+  const records = Array.isArray(payload?.records) ? payload.records : [];
   const saveSyncHistory = [true, 1, "1"].includes(
     payload?.save_sync_history,
   );
 
-  const requestPayload = {
+  const normalizedPayload = {
     ...payload,
-    records: Array.isArray(payload?.records) ? payload.records : [],
+    records: records.map((record) => ({
+      ...record,
+      status: normalizeStatus(record?.status),
+    })),
     save_sync_history: saveSyncHistory ? 1 : 0,
     sync_facility_id: saveSyncHistory
       ? Number(payload?.sync_facility_id) || null
@@ -49,20 +55,20 @@ async function upsertServiceRecordsBulk(payload = {}) {
   };
 
   console.log("📤 [Laravel Procedure] upsertServiceRecordsBulk:", {
-    recordCount: requestPayload.records.length,
-    recorded_staff_id: requestPayload.recorded_staff_id,
-    updated_staff_id: requestPayload.updated_staff_id,
-    save_sync_history: requestPayload.save_sync_history,
-    sync_facility_id: requestPayload.sync_facility_id,
-    target_year: requestPayload.target_year,
-    target_month: requestPayload.target_month,
+    recordCount: records.length,
+    recorded_staff_id: normalizedPayload.recorded_staff_id,
+    updated_staff_id: normalizedPayload.updated_staff_id,
+    save_sync_history: normalizedPayload.save_sync_history,
+    sync_facility_id: normalizedPayload.sync_facility_id,
+    target_year: normalizedPayload.target_year,
+    target_month: normalizedPayload.target_month,
   });
 
   const result = await executeAuthenticatedOperation(
     () =>
       laravelApiClient.post(
         "/__procedure/upsert-service-records-bulk",
-        requestPayload,
+        normalizedPayload,
       ),
     "サービス記録の一括保存に失敗しました。",
   );
@@ -77,9 +83,9 @@ async function upsertServiceRecordsBulk(payload = {}) {
     message: "サービス記録を一括保存しました。",
     data: unwrapData(result),
     meta: {
-      ...(result?.meta ?? {}),
       authenticated: true,
       reauthenticated: result?.meta?.reauthenticated ?? false,
+      requestedCount: records.length,
     },
     error: null,
   };

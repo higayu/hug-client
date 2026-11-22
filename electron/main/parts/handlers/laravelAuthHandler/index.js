@@ -3,11 +3,11 @@
 const auth = require("./auth");
 const tempNotes = require("./tempNotes");
 const procedures = require("./procedures");
-const updateStaffLogin = require("./admin/updateStaffLogin");
 const managers2 = require("./managers2");
 const children = require("./children");
-const aiRecordEditer = require("./aiRecordEditer");
 const aiChat = require("./aiChat");
+const aiRecordEditer = require("./aiRecordEditer");
+const healthAnalysis = require("./healthAnalysis");
 const webAutomationV2 = require("./webAutomationV2");
 const troubleshootingKnowledge = require("./troubleshootingKnowledge");
 const personalRecordSyncs = require("./personalRecordSyncs");
@@ -32,35 +32,8 @@ const IPC_CHANNELS = [
   // ============================================================
 
   "laravel-fetch-table-all",
-  "laravel:record-types:list",
   "laravel-fetch-role-tables",
-
-  // Web自動化 V2
-  "laravel:web-automation-v2:flow-bundle:get",
-  "laravel:web-automation-v2:flow-bundle:draft-test",
-  "laravel:web-automation-v2:execution-log:start",
-  "laravel:web-automation-v2:execution-log:finish",
-
-  // Web自動化 V2 管理者用
-  "laravel:web-automation-v2:admin:flows:list",
-  "laravel:web-automation-v2:admin:flow:get",
-  "laravel:web-automation-v2:admin:flow:update",
-  "laravel:web-automation-v2:admin:execution-logs:list",
-  "laravel:web-automation-v2:admin:execution-log:delete",
-
-  // ============================================================
-  // Q&A・障害対応ナレッジ
-  // ============================================================
-
-  "laravel:troubleshooting-knowledge:list",
-  "laravel:troubleshooting-knowledge:get",
-  "laravel:troubleshooting-knowledge:update",
-
-  // ============================================================
-  // 個人記録一括同期履歴
-  // ============================================================
-
-  "laravel:personal-record-syncs:get-month",
+  "laravel:record-types:list",
 
   // ============================================================
   // 一時メモ
@@ -80,7 +53,6 @@ const IPC_CHANNELS = [
   "laravel:procedure:register-manager-assignment",
   "laravel:procedure:sync-hug-staffs",
   "laravel:procedure:update-staff",
-  "laravel:admin:update-staff-login",
   "laravel:procedure:upsert-service-record",
   "laravel:procedure:upsert-service-records-bulk",
   "laravel:procedure:sync-professional-support-month",
@@ -92,21 +64,42 @@ const IPC_CHANNELS = [
   "laravel:procedure:get-active-ai-prompt",
   "laravel:procedure:upsert-ai-prompt",
   "laravel:procedure:upsert-managers2",
+  "laravel:ai-chat:message",
+  "laravel:ai:settings",
+  "laravel:ai:usage-charts",
+  "laravel:ai-chat:check-connection",
+  "laravel:ai-record-editer:personal-record:correct",
+  "laravel:ai-record-editer:personal-record:with-plan:correct",
+  "laravel:ai-record-editer:professional-support:correct",
+  "laravel:health-analysis:analyze",
+  "laravel:health-analysis:statistics",
+  "laravel:health-analysis:abnormal-children",
+  "laravel:health-analysis:logs",
+  "laravel:health-analysis:log-detail",
 
   "laravel:managers2:delete",  // 追加
   "laravel:children:update",
 
   // ============================================================
-  // AI文章校正
+  // Web Automation
   // ============================================================
-  "laravel:ai-record-editer:personal-record:correct",
-  "laravel:ai-record-editer:personal-record:with-plan:correct",
-  "laravel:ai-record-editer:professional-support:two-stage:correct",
-  "laravel:ai:settings",
-  "laravel:ai:usage-charts",
-  "laravel:ai-chat:message",
-  "laravel:ai-chat:check-connection",
-  "laravel:ai-record-editer:professional-support:correct",
+  "laravel:web-automation-v2:flow-bundle:get",
+  "laravel:web-automation-v2:draft-test-bundle:get",
+  "laravel:web-automation-v2:execution-log:start",
+  "laravel:web-automation-v2:execution-log:finish",
+  "laravel:web-automation-v2:admin:flows:list",
+  "laravel:web-automation-v2:admin:flow:get",
+  "laravel:web-automation-v2:admin:flow:update",
+  "laravel:web-automation-v2:admin:execution-logs:list",
+  "laravel:web-automation-v2:admin:execution-log:delete",
+
+  // Q&A・障害対応ナレッジ
+  "laravel:troubleshooting-knowledge:list",
+  "laravel:troubleshooting-knowledge:get",
+  "laravel:troubleshooting-knowledge:update",
+
+  // 個人記録一括同期履歴
+  "laravel:personal-record-syncs:get-month",
 ];
 
 /**
@@ -235,26 +228,6 @@ function registerLaravelAuthHandlers(
   );
 
   // ============================================================
-  // AI文章校正
-  // ============================================================
-
-  ipcMain.handle(
-    "laravel:ai-record-editer:personal-record:correct",
-    aiRecordEditer.personalHandler
-  );
-
-  ipcMain.handle(
-    "laravel:ai-record-editer:professional-support:correct",
-    aiRecordEditer.professionalHandler
-  );
-  ipcMain.handle("laravel:ai-record-editer:personal-record:with-plan:correct", aiRecordEditer.personalWithPlanHandler);
-  ipcMain.handle("laravel:ai-record-editer:professional-support:two-stage:correct", aiRecordEditer.professionalTwoStageHandler);
-  ipcMain.handle("laravel:ai:settings", aiChat.settingsHandler);
-  ipcMain.handle("laravel:ai:usage-charts", aiChat.chartsHandler);
-  ipcMain.handle("laravel:ai-chat:message", aiChat.messageHandler);
-  ipcMain.handle("laravel:ai-chat:check-connection", aiChat.checkConnectionHandler);
-
-  // ============================================================
   // 全テーブル取得
   // ============================================================
 
@@ -268,22 +241,19 @@ function registerLaravelAuthHandlers(
     fetchTableAllHandler
   );
 
-  // 児童課題タイプは施設別専用APIから取得する。
-  ipcMain.handle("laravel:record-types:list", recordTypes.handler);
-
-  // 会社別権限マスタを読み取り専用で返す。
-  // 認証・会社単位のデータ制限はLaravel /api/__all 側に委ねる。
+  // 権限マスタの読み取り専用取得。既存の認証付き一括APIを使用し、
+  // Laravelが許可した範囲だけを返す（Electron側で対象範囲を拡張しない）。
   ipcMain.handle("laravel-fetch-role-tables", async (_event, params = {}) => {
     const result = await fetchTableAllHandler(_event, params);
-    if (result?.success !== true) return result;
+    if (!result?.success) return result;
 
-    const roleTables = ["companies", "roles", "company_roles", "company_staff"];
-    const missing = roleTables.filter((key) => !Array.isArray(result.data?.[key]));
+    const keys = ["companies", "roles", "company_roles", "company_staff"];
+    const missing = keys.filter((key) => !Array.isArray(result.data?.[key]));
     if (missing.length > 0) {
       return {
         success: false,
         connected: true,
-        message: `Laravel APIの権限データが不足しています: ${missing.join(", ")}`,
+        message: `Laravel APIの権限テーブルが不足しています: ${missing.join(", ")}`,
         data: null,
         meta: { authenticated: true },
         error: { code: "MISSING_ROLE_TABLES", missingTables: missing },
@@ -292,80 +262,15 @@ function registerLaravelAuthHandlers(
 
     return {
       ...result,
-      data: Object.fromEntries(roleTables.map((key) => [key, result.data[key]])),
-      meta: { ...(result.meta ?? {}), tableCount: roleTables.length },
+      data: Object.fromEntries(keys.map((key) => [key, result.data[key]])),
+      meta: { ...result.meta, tableCount: keys.length },
     };
   });
 
-  // ============================================================
-  // Web自動化 V2
-  // ============================================================
-
+  // 施設指定の課題タイプ一覧を個別取得
   ipcMain.handle(
-    "laravel:web-automation-v2:flow-bundle:get",
-    webAutomationV2.getFlowBundleHandler
-  );
-  ipcMain.handle(
-    "laravel:web-automation-v2:flow-bundle:draft-test",
-    webAutomationV2.getDraftTestFlowBundleHandler
-  );
-
-  ipcMain.handle(
-    "laravel:web-automation-v2:execution-log:start",
-    webAutomationV2.executionLogStartHandler
-  );
-
-  ipcMain.handle(
-    "laravel:web-automation-v2:execution-log:finish",
-    webAutomationV2.executionLogFinishHandler
-  );
-
-  // ============================================================
-  // Web自動化 V2 管理者用
-  // ============================================================
-
-  ipcMain.handle(
-    "laravel:web-automation-v2:admin:flows:list",
-    webAutomationV2.adminFlowsGetAllHandler
-  );
-
-  ipcMain.handle(
-    "laravel:web-automation-v2:admin:flow:get",
-    webAutomationV2.adminFlowGetHandler
-  );
-
-  ipcMain.handle(
-    "laravel:web-automation-v2:admin:flow:update",
-    webAutomationV2.adminFlowUpdateHandler
-  );
-
-  ipcMain.handle(
-    "laravel:web-automation-v2:admin:execution-logs:list",
-    webAutomationV2.adminExecutionLogsGetAllHandler
-  );
-
-  ipcMain.handle(
-    "laravel:web-automation-v2:admin:execution-log:delete",
-    webAutomationV2.adminExecutionLogDeleteHandler
-  );
-
-  // ============================================================
-  // Q&A・障害対応ナレッジ
-  // ============================================================
-
-  ipcMain.handle(
-    "laravel:troubleshooting-knowledge:list",
-    troubleshootingKnowledge.listHandler
-  );
-
-  ipcMain.handle(
-    "laravel:troubleshooting-knowledge:get",
-    troubleshootingKnowledge.getHandler
-  );
-
-  ipcMain.handle(
-    "laravel:troubleshooting-knowledge:update",
-    troubleshootingKnowledge.updateHandler
+    "laravel:record-types:list",
+    recordTypes.getAllHandler
   );
 
   // ============================================================
@@ -446,18 +351,10 @@ function registerLaravelAuthHandlers(
       .syncHugStaffsHandler
   );
 
-  /**
-   * スタッフ情報の更新。
-   */
   ipcMain.handle(
     "laravel:procedure:update-staff",
     procedures
       .updateStaffHandler
-  );
-
-  ipcMain.handle(
-    "laravel:admin:update-staff-login",
-    updateStaffLogin.handler
   );
 
   /**
@@ -468,13 +365,16 @@ function registerLaravelAuthHandlers(
     procedures.upsertServiceRecordHandler
   );
 
+  /**
+   * 複数児童・複数日分のサービス記録を一括登録・更新。
+   */
   ipcMain.handle(
     "laravel:procedure:upsert-service-records-bulk",
     procedures.upsertServiceRecordsBulkHandler
   );
 
   /**
-   * 専門的支援 月次データ保存。
+   * 専門的支援 月次データ同期。
    */
   ipcMain.handle(
     "laravel:procedure:sync-professional-support-month",
@@ -531,6 +431,56 @@ function registerLaravelAuthHandlers(
     procedures
       .upsertManagers2Handler
   );
+
+  ipcMain.handle(
+    "laravel:ai-chat:message",
+    aiChat.messageHandler
+  );
+
+  ipcMain.handle("laravel:ai:settings", aiChat.settingsHandler);
+  ipcMain.handle("laravel:ai:usage-charts", aiChat.chartsHandler);
+
+  ipcMain.handle(
+    "laravel:ai-chat:check-connection",
+    aiChat.checkConnectionHandler
+  );
+
+  ipcMain.handle(
+    "laravel:ai-record-editer:personal-record:correct",
+    aiRecordEditer.personalHandler
+  );
+  ipcMain.handle("laravel:ai-record-editer:personal-record:with-plan:correct", aiRecordEditer.personalWithPlanHandler);
+
+  ipcMain.handle(
+    "laravel:ai-record-editer:professional-support:correct",
+    aiRecordEditer.professionalHandler
+  );
+
+  ipcMain.handle(
+    "laravel:health-analysis:analyze",
+    healthAnalysis.analyzeHandler
+  );
+
+  ipcMain.handle(
+    "laravel:health-analysis:statistics",
+    healthAnalysis.statisticsHandler
+  );
+
+  ipcMain.handle(
+    "laravel:health-analysis:abnormal-children",
+    healthAnalysis.abnormalChildrenHandler
+  );
+
+  ipcMain.handle(
+    "laravel:health-analysis:logs",
+    healthAnalysis.logsHandler
+  );
+
+  ipcMain.handle(
+    "laravel:health-analysis:log-detail",
+    healthAnalysis.showLogHandler
+  );
+
   /**
    * managers2の担当情報を削除。
    */
@@ -542,6 +492,72 @@ function registerLaravelAuthHandlers(
   ipcMain.handle(
     "laravel:children:update",
     children.updateHandler
+  );
+
+  // ============================================================
+  // Web Automation
+  // ============================================================
+
+  ipcMain.handle(
+    "laravel:web-automation-v2:flow-bundle:get",
+    webAutomationV2.getFlowBundleHandler
+  );
+  ipcMain.handle(
+    "laravel:web-automation-v2:draft-test-bundle:get",
+    webAutomationV2.getDraftTestFlowBundleHandler
+  );
+
+  ipcMain.handle(
+    "laravel:web-automation-v2:execution-log:start",
+    webAutomationV2.executionLogStartHandler
+  );
+
+  ipcMain.handle(
+    "laravel:web-automation-v2:execution-log:finish",
+    webAutomationV2.executionLogFinishHandler
+  );
+
+  ipcMain.handle(
+    "laravel:web-automation-v2:admin:flows:list",
+    webAutomationV2.adminFlowsGetAllHandler
+  );
+
+  ipcMain.handle(
+    "laravel:web-automation-v2:admin:flow:get",
+    webAutomationV2.adminFlowGetHandler
+  );
+
+  ipcMain.handle(
+    "laravel:web-automation-v2:admin:flow:update",
+    webAutomationV2.adminFlowUpdateHandler
+  );
+
+  ipcMain.handle(
+    "laravel:web-automation-v2:admin:execution-logs:list",
+    webAutomationV2.adminExecutionLogsGetAllHandler
+  );
+  ipcMain.handle(
+    "laravel:web-automation-v2:admin:execution-log:delete",
+    webAutomationV2.adminExecutionLogDeleteHandler
+  );
+
+  // ============================================================
+  // Q&A・障害対応ナレッジ
+  // ============================================================
+
+  ipcMain.handle(
+    "laravel:troubleshooting-knowledge:list",
+    troubleshootingKnowledge.listHandler
+  );
+
+  ipcMain.handle(
+    "laravel:troubleshooting-knowledge:get",
+    troubleshootingKnowledge.getHandler
+  );
+
+  ipcMain.handle(
+    "laravel:troubleshooting-knowledge:update",
+    troubleshootingKnowledge.updateHandler
   );
 
   console.log(

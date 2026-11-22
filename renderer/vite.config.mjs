@@ -1,29 +1,42 @@
-import { fileURLToPath } from "node:url";
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+import autoprefixer from 'autoprefixer'
+import path from 'path'
+import tailwindcss from 'tailwindcss'
+import { fileURLToPath } from 'url'
+import tailwindConfig from './tailwind.config.cjs'
 
-const rendererDir = fileURLToPath(new URL(".", import.meta.url));
-const sourceDir = fileURLToPath(new URL("./src", import.meta.url));
+const rendererDir = path.dirname(fileURLToPath(import.meta.url))
+const resolvedTailwindConfig = {
+  ...tailwindConfig,
+  content: [
+    path.join(rendererDir, 'index.html'),
+    path.join(rendererDir, 'src/**/*.{vue,js,ts,jsx,tsx}'),
+  ],
+}
 
 export default defineConfig({
   plugins: [react()],
-  base: "./",
+  base: './',
   root: rendererDir,
   resolve: {
     alias: {
-      "@": sourceDir,
-      "@assets": fileURLToPath(
-        new URL("./src/assets", import.meta.url),
-      ),
+      '@': path.resolve(rendererDir, 'src'),
+      '@assets': path.resolve(rendererDir, 'src/assets'),
+    },
+  },
+  css: {
+    postcss: {
+      plugins: [tailwindcss(resolvedTailwindConfig), autoprefixer()],
     },
   },
   build: {
-    outDir: "dist",
+    outDir: 'dist',
     emptyOutDir: true,
-    assetsDir: "assets",
+    assetsDir: 'assets',
     rollupOptions: {
       output: {
-        assetFileNames: "assets/[name]-[hash][extname]",
+        assetFileNames: 'assets/[name]-[hash][extname]',
       },
     },
   },
@@ -31,11 +44,5 @@ export default defineConfig({
     port: 5173,
     strictPort: true,
   },
-  assetsInclude: [
-    "**/*.png",
-    "**/*.jpg",
-    "**/*.jpeg",
-    "**/*.gif",
-    "**/*.svg",
-  ],
-});
+  assetsInclude: ['**/*.png', '**/*.jpg', '**/*.jpeg', '**/*.gif', '**/*.svg'],
+})

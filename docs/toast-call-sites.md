@@ -1,21 +1,8 @@
-# Toast呼び出し元調査
+# Toast呼び出し元
 
-50ファイル、196呼び出し。呼び出し内容は移行前後で維持。表にはタイトル・本文・詳細・種別・個別時間を含む実引数を記録。変数の内容は実行時に決定される。
+53ファイル・207呼び出し。既存の実引数を維持してSonnerへ接続。
 
-| API | 種別 | 既定時間 | タイトル・詳細 | 閉じる処理 |
-| --- | --- | --- | --- | --- |
-| showToast | 引数 / info | 3000ms | options.title/details、object形式対応 | Sonnerで削除 |
-| showSuccessToast | success | 3000ms | 完了 / 本文 | 同上 |
-| showErrorToast | error | 4000ms | エラー / 本文 | 同上 |
-| showWarningToast | warning | 3500ms | 確認 / 本文 | 同上 |
-| showInfoToast | info | 3000ms | お知らせ / 本文 | 同上 |
-| showResultToast | success引数でsuccess/error | 5000ms | title（既定:処理結果）/ message / details | 同上 |
-
-既存onCloseの利用はProvider内部のstate削除のみ。新APIのonCloseは引数なしで手動終了・自動終了の300ms後に一度呼ぶ。
-
-併発時: 従来は全件を縦並び、新実装は最大4件を展開表示し、残りをSonnerが管理。ホバー・ページ非表示中はSonnerの標準仕様で時間計測が一時停止する。
-
-| 呼び出し元 | API | 実引数 |
+| 呼び出し元 | API | 実引数（title/message/details/type/duration） |
 | --- | --- | --- |
 | renderer/src/components/common/AiContents/common/PersonalRecordPrompt/index.jsx:136 | showSuccessToast | showSuccessToast("一時メモをAI入力欄へ移しました") |
 | renderer/src/components/common/AiContents/common/PersonalRecordPrompt/index.jsx:197 | showInfoToast | showInfoToast( `${aiName} に送信中…` ) |
@@ -84,11 +71,11 @@
 | renderer/src/components/common/Synchronization/StaffUpdateButton/index.jsx:56 | showInfoToast | showInfoToast( 'HUGから職員データを取得しています', 2000, ) |
 | renderer/src/components/common/Synchronization/StaffUpdateButton/index.jsx:120 | showResultToast | showResultToast({ title: 'HUG職員同期 完了', message: `${result.fetched_count}件の職員データを同期しました`, details: [ result.total_count != null ? `HUG登録件数: ${result.total_count}件` : '', `取得件数: ${result.fetched_count}件`, responseSummary ? `DB応答:\n${responseSummary}` : '', ].filter(Boolean), duration: 7000, }) |
 | renderer/src/components/common/Synchronization/StaffUpdateButton/index.jsx:141 | showResultToast | showResultToast({ title: 'HUG職員同期 エラー', message: '職員データを同期できませんでした', details: error?.message &#124;&#124; String(error), success: false, duration: 7000, }) |
-| renderer/src/components/FacilitySelector/index.jsx:154 | showInfoToast | showInfoToast( '❌ 設定フォルダーを開く機能が見つかりません', ) |
-| renderer/src/components/FacilitySelector/index.jsx:169 | showInfoToast | showInfoToast( '📁 設定フォルダーを開きました', ) |
-| renderer/src/components/FacilitySelector/index.jsx:181 | showInfoToast | showInfoToast( `❌ 設定フォルダーを開けませんでした: ${ result?.error &#124;&#124; '不明なエラー' }`, ) |
-| renderer/src/components/FacilitySelector/index.jsx:193 | showInfoToast | showInfoToast( '❌ 設定フォルダーを開く際にエラーが発生しました', ) |
-| renderer/src/components/FacilitySelector/index.jsx:264 | showInfoToast | showInfoToast(TITLE) |
+| renderer/src/components/FacilitySelector/index.jsx:146 | showInfoToast | showInfoToast( '❌ 設定フォルダーを開く機能が見つかりません', ) |
+| renderer/src/components/FacilitySelector/index.jsx:161 | showInfoToast | showInfoToast( '📁 設定フォルダーを開きました', ) |
+| renderer/src/components/FacilitySelector/index.jsx:173 | showInfoToast | showInfoToast( `❌ 設定フォルダーを開けませんでした: ${ result?.error &#124;&#124; '不明なエラー' }`, ) |
+| renderer/src/components/FacilitySelector/index.jsx:185 | showInfoToast | showInfoToast( '❌ 設定フォルダーを開く際にエラーが発生しました', ) |
+| renderer/src/components/FacilitySelector/index.jsx:256 | showInfoToast | showInfoToast(TITLE) |
 | renderer/src/components/SettingsModal/tabs/Admin/StaffManagement/Login/index.jsx:25 | showErrorToast | showErrorToast('ログインIDを入力してください。') |
 | renderer/src/components/SettingsModal/tabs/Admin/StaffManagement/Login/index.jsx:30 | showErrorToast | showErrorToast('パスワードは8文字以上で入力してください。') |
 | renderer/src/components/SettingsModal/tabs/Admin/StaffManagement/Login/index.jsx:35 | showErrorToast | showErrorToast('確認用パスワードが一致しません。') |
@@ -107,19 +94,23 @@
 | renderer/src/components/SettingsModal/tabs/Admin/WebAutomation/components/WebAutomationInstruction.jsx:34 | showErrorToast | showErrorToast('出力する指示書がありません') |
 | renderer/src/components/SettingsModal/tabs/Admin/WebAutomation/components/WebAutomationInstruction.jsx:46 | showSuccessToast | showSuccessToast('指示書の出力を開始しました') |
 | renderer/src/components/SettingsModal/tabs/Admin/WebAutomation/components/WebAutomationInstruction.jsx:49 | showErrorToast | showErrorToast('指示書の出力に失敗しました') |
-| renderer/src/components/SettingsModal/tabs/ApiTab/index.jsx:300 | showErrorToast | showErrorToast(result?.error &#124;&#124; 'デバッグフラグの更新に失敗しました') |
-| renderer/src/components/SettingsModal/tabs/ApiTab/index.jsx:320 | showSuccessToast | showSuccessToast(`デバッグモードを${newValue ? '有効' : '無効'}にしました`) |
-| renderer/src/components/SettingsModal/tabs/ApiTab/index.jsx:325 | showErrorToast | showErrorToast(error?.message &#124;&#124; 'デバッグフラグの更新に失敗しました') |
-| renderer/src/components/SettingsModal/tabs/ApiTab/index.jsx:334 | showErrorToast | showErrorToast('自分に登録されている施設を選択してください') |
-| renderer/src/components/SettingsModal/tabs/ApiTab/index.jsx:462 | showErrorToast | showErrorToast( 'API設定は保存しましたが、データの再取得に失敗しました' ) |
-| renderer/src/components/SettingsModal/tabs/ApiTab/index.jsx:470 | showSuccessToast | showSuccessToast( 'API設定を保存し、データを再読み込みしました' ) |
-| renderer/src/components/SettingsModal/tabs/ApiTab/index.jsx:485 | showErrorToast | showErrorToast( error?.message &#124;&#124; 'API設定の保存に失敗しました' ) |
-| renderer/src/components/SettingsModal/tabs/ApiTab/index.jsx:538 | showErrorToast | showErrorToast('ini.jsonは初期化しましたが、データの再取得に失敗しました') |
-| renderer/src/components/SettingsModal/tabs/ApiTab/index.jsx:540 | showSuccessToast | showSuccessToast('ini.jsonを初期値に戻しました') |
-| renderer/src/components/SettingsModal/tabs/ApiTab/index.jsx:544 | showErrorToast | showErrorToast(error?.message &#124;&#124; 'ini.jsonの初期化に失敗しました') |
-| renderer/src/components/SettingsModal/tabs/ConfigTab/index.jsx:175 | showErrorToast | showErrorToast( 'Config.jsonは保存しましたが、データの再取得に失敗しました' ) |
-| renderer/src/components/SettingsModal/tabs/ConfigTab/index.jsx:183 | showSuccessToast | showSuccessToast( 'Config.jsonを保存し、データを再読み込みしました' ) |
-| renderer/src/components/SettingsModal/tabs/ConfigTab/index.jsx:198 | showErrorToast | showErrorToast( error?.message &#124;&#124; 'Config.jsonの保存に失敗しました' ) |
+| renderer/src/components/SettingsModal/tabs/ApiTab/index.jsx:277 | showErrorToast | showErrorToast('所属していない施設は選択できません') |
+| renderer/src/components/SettingsModal/tabs/ApiTab/index.jsx:318 | showErrorToast | showErrorToast(result?.error &#124;&#124; 'デバッグフラグの更新に失敗しました') |
+| renderer/src/components/SettingsModal/tabs/ApiTab/index.jsx:338 | showSuccessToast | showSuccessToast(`デバッグモードを${newValue ? '有効' : '無効'}にしました`) |
+| renderer/src/components/SettingsModal/tabs/ApiTab/index.jsx:343 | showErrorToast | showErrorToast(error?.message &#124;&#124; 'デバッグフラグの更新に失敗しました') |
+| renderer/src/components/SettingsModal/tabs/ApiTab/index.jsx:356 | showErrorToast | showErrorToast('認証情報または施設所属データを取得できていません') |
+| renderer/src/components/SettingsModal/tabs/ApiTab/index.jsx:361 | showErrorToast | showErrorToast('自分が所属する施設を選択してください') |
+| renderer/src/components/SettingsModal/tabs/ApiTab/index.jsx:489 | showErrorToast | showErrorToast( 'API設定は保存しましたが、データの再取得に失敗しました' ) |
+| renderer/src/components/SettingsModal/tabs/ApiTab/index.jsx:497 | showSuccessToast | showSuccessToast( 'API設定を保存し、データを再読み込みしました' ) |
+| renderer/src/components/SettingsModal/tabs/ApiTab/index.jsx:512 | showErrorToast | showErrorToast( error?.message &#124;&#124; 'API設定の保存に失敗しました' ) |
+| renderer/src/components/SettingsModal/tabs/ApiTab/index.jsx:566 | showErrorToast | showErrorToast('ini.jsonは初期化しましたが、データの再取得に失敗しました') |
+| renderer/src/components/SettingsModal/tabs/ApiTab/index.jsx:568 | showSuccessToast | showSuccessToast('ini.jsonを初期値に戻しました') |
+| renderer/src/components/SettingsModal/tabs/ApiTab/index.jsx:572 | showErrorToast | showErrorToast(error?.message &#124;&#124; 'ini.jsonの初期化に失敗しました') |
+| renderer/src/components/SettingsModal/tabs/ApiTab/index.jsx:591 | showSuccessToast | showSuccessToast('API設定を再読み込みしました') |
+| renderer/src/components/SettingsModal/tabs/ApiTab/index.jsx:593 | showErrorToast | showErrorToast(error?.message &#124;&#124; 'API設定の再読み込みに失敗しました') |
+| renderer/src/components/SettingsModal/tabs/ConfigTab/index.jsx:136 | showSuccessToast | showSuccessToast('Config.jsonを保存し、データを再取得しました') |
+| renderer/src/components/SettingsModal/tabs/ConfigTab/index.jsx:139 | showSuccessToast | showSuccessToast('Config.jsonの保存は成功しましたが、データ再取得に失敗しました') |
+| renderer/src/components/SettingsModal/tabs/ConfigTab/index.jsx:145 | showErrorToast | showErrorToast( error?.message &#124;&#124; 'Config.jsonの保存に失敗しました' ) |
 | renderer/src/components/SettingsModal/tabs/FeaturesTab/index.jsx:188 | showSuccessToast | showSuccessToast( 'URLをクリップボードにコピーしました' ) |
 | renderer/src/components/SettingsModal/tabs/FeaturesTab/index.jsx:214 | showSuccessToast | showSuccessToast( 'URLをクリップボードにコピーしました' ) |
 | renderer/src/components/SettingsModal/tabs/FeaturesTab/index.jsx:218 | showErrorToast | showErrorToast( fallbackError?.message &#124;&#124; 'URLのコピーに失敗しました' ) |
@@ -132,15 +123,15 @@
 | renderer/src/components/SettingsModal/tabs/PromptTab/index.jsx:97 | showSuccessToast | showSuccessToast( 'プロンプトを初期値に戻しました。保存するとデータベースに反映されます。' ) |
 | renderer/src/components/SettingsModal/tabs/PromptTab/index.jsx:137 | showSuccessToast | showSuccessToast( 'プロンプトをデータベースに保存しました。' ) |
 | renderer/src/components/SettingsModal/tabs/PromptTab/index.jsx:146 | showErrorToast | showErrorToast( error?.message &#124;&#124; 'プロンプトの保存に失敗しました。' ) |
-| renderer/src/components/SettingsModal/tabs/StaffTab/index.jsx:332 | showErrorToast | showErrorToast( 'スタッフが選択されていません。', ) |
-| renderer/src/components/SettingsModal/tabs/StaffTab/index.jsx:342 | showErrorToast | showErrorToast( 'スタッフ名を入力してください。', ) |
-| renderer/src/components/SettingsModal/tabs/StaffTab/index.jsx:353 | showErrorToast | showErrorToast( '少なくとも1つの施設を選択してください。', ) |
-| renderer/src/components/SettingsModal/tabs/StaffTab/index.jsx:464 | showSuccessToast | showSuccessToast( '職員情報を更新しました。', ) |
-| renderer/src/components/SettingsModal/tabs/StaffTab/index.jsx:478 | showErrorToast | showErrorToast( error?.response?.data ?.message &#124;&#124; error?.message &#124;&#124; '職員情報の更新に失敗しました。', ) |
-| renderer/src/components/SettingsModal/tabs/UITab/index.jsx:242 | showSuccessToast | showSuccessToast( 'UI設定を保存しました' ) |
-| renderer/src/components/SettingsModal/tabs/UITab/index.jsx:251 | showErrorToast | showErrorToast( error?.message &#124;&#124; 'UI設定の保存に失敗しました' ) |
-| renderer/src/components/SettingsModal/tabs/UITab/index.jsx:281 | showSuccessToast | showSuccessToast( 'UI設定を再読み込みしました' ) |
-| renderer/src/components/SettingsModal/tabs/UITab/index.jsx:290 | showErrorToast | showErrorToast( error?.message &#124;&#124; 'UI設定の再読み込みに失敗しました' ) |
+| renderer/src/components/SettingsModal/tabs/StaffTab/index.jsx:333 | showErrorToast | showErrorToast( 'スタッフが選択されていません。', ) |
+| renderer/src/components/SettingsModal/tabs/StaffTab/index.jsx:343 | showErrorToast | showErrorToast( 'スタッフ名を入力してください。', ) |
+| renderer/src/components/SettingsModal/tabs/StaffTab/index.jsx:354 | showErrorToast | showErrorToast( '少なくとも1つの施設を選択してください。', ) |
+| renderer/src/components/SettingsModal/tabs/StaffTab/index.jsx:465 | showSuccessToast | showSuccessToast( '職員情報を更新しました。', ) |
+| renderer/src/components/SettingsModal/tabs/StaffTab/index.jsx:479 | showErrorToast | showErrorToast( error?.response?.data ?.message &#124;&#124; error?.message &#124;&#124; '職員情報の更新に失敗しました。', ) |
+| renderer/src/components/SettingsModal/tabs/UITab/index.jsx:223 | showSuccessToast | showSuccessToast( 'UI設定を保存しました' ) |
+| renderer/src/components/SettingsModal/tabs/UITab/index.jsx:232 | showErrorToast | showErrorToast( error?.message &#124;&#124; 'UI設定の保存に失敗しました' ) |
+| renderer/src/components/SettingsModal/tabs/UITab/index.jsx:262 | showSuccessToast | showSuccessToast( 'UI設定を再読み込みしました' ) |
+| renderer/src/components/SettingsModal/tabs/UITab/index.jsx:271 | showErrorToast | showErrorToast( error?.message &#124;&#124; 'UI設定の再読み込みに失敗しました' ) |
 | renderer/src/components/SettingsModal/tabs/UrlTab/index.jsx:77 | showSuccessToast | showSuccessToast('URL設定を保存しました') |
 | renderer/src/components/SettingsModal/tabs/UrlTab/index.jsx:81 | showErrorToast | showErrorToast( error?.message &#124;&#124; 'URL設定の保存に失敗しました' ) |
 | renderer/src/components/SettingsModal/tabs/UrlTab/index.jsx:104 | showSuccessToast | showSuccessToast('URL設定を再読み込みしました') |
@@ -152,8 +143,6 @@
 | renderer/src/components/ui/CopyButton/index.jsx:55 | showSuccessToast | showSuccessToast("コピーしました") |
 | renderer/src/components/ui/CopyButton/index.jsx:58 | showErrorToast | showErrorToast("コピーに失敗しました") |
 | renderer/src/components/ui/DateSelect/index.jsx:41 | showInfoToast | showInfoToast( `📅 日付を ${selectedDate} に設定しました` ) |
-| renderer/src/components/ui/InstructionDocument/index.jsx:19 | showSuccessToast | showSuccessToast('指示書の出力を開始しました') |
-| renderer/src/components/ui/InstructionDocument/index.jsx:22 | showErrorToast | showErrorToast('指示書の出力に失敗しました') |
 | renderer/src/components/ui/WeekdaySelect/index.jsx:59 | showInfoToast | showInfoToast( `📅 曜日を ${weekdayObj.label_jp} に設定しました` ) |
 | renderer/src/hooks/useHugActions.js:122 | showErrorToast | showErrorToast('❌ WebViewが見つかりません') |
 | renderer/src/hooks/useHugActions.js:130 | showErrorToast | showErrorToast('❌ URLが取得できませんでした') |
@@ -161,6 +150,15 @@
 | renderer/src/hooks/useHugActions.js:148 | showErrorToast | showErrorToast('❌ WebViewが見つかりません') |
 | renderer/src/hooks/useHugActions.js:161 | showSuccessToast | showSuccessToast('✅ URLをクリップボードにコピーしました（フォールバック）') |
 | renderer/src/hooks/useHugActions.js:165 | showErrorToast | showErrorToast('❌ URLのコピーに失敗しました') |
+| renderer/src/utils/attendance/actions/absence.js:64 | showSuccessToast | window.showSuccessToast?.("✅ 欠席モーダルを開きました", 2000) |
+| renderer/src/utils/attendance/actions/absence.js:71 | showErrorToast | window.showErrorToast?.(`❌ 欠席モーダル表示失敗\n${err.message}`, 3000) |
+| renderer/src/utils/attendance/actions/enter.js:71 | showSuccessToast | window.showSuccessToast?.(result.statusMessage, 3000) |
+| renderer/src/utils/attendance/actions/enter.js:78 | showErrorToast | window.showErrorToast?.(`❌ 入室処理失敗\n${err.message}`, 3000) |
+| renderer/src/utils/attendance/actions/exit.js:72 | showSuccessToast | window.showSuccessToast?.(result.statusMessage, 3000) |
+| renderer/src/utils/attendance/actions/exit.js:79 | showErrorToast | window.showErrorToast?.(`❌ 退室処理失敗\n${err.message}`, 3000) |
+| renderer/src/utils/attendance/attendanceTable/fetchAttendanceTableData/index.js:28 | showInfoToast | window.showInfoToast("📥 データ取得中...", 2000) |
+| renderer/src/utils/attendance/attendanceTable/fetchAttendanceTableData/index.js:41 | showSuccessToast | window.showSuccessToast(`✅ データ取得完了\n行数: ${result.rowCount}`, 3000) |
+| renderer/src/utils/attendance/attendanceTable/fetchAttendanceTableData/index.js:58 | showErrorToast | window.showErrorToast(`❌ データ取得失敗\n${error.message}`, 4000) |
 | renderer/src/utils/ToDayChildrenList/attendancePageHandler.js:127 | showInfoToast | showInfoToast(`✅ 利用者データを抽出・保存しました。\n行数: ${attendanceData.rowCount &#124;&#124; "不明"}`) |
 | renderer/src/utils/ToDayChildrenList/attendancePageHandler.js:129 | showInfoToast | showInfoToast("⚠️ データ抽出に失敗しました（テーブルは取得済み）") |
 | renderer/src/utils/ToDayChildrenList/attendancePageHandler.js:132 | showInfoToast | showInfoToast(`⚠️ 取得失敗: ${result?.error &#124;&#124; "不明なエラー"}`) |
@@ -169,8 +167,8 @@
 | renderer/src/utils/ToDayChildrenList/_fetchAttendanceTableData.js:117 | showSuccessToast | window.showSuccessToast(`✅ データ取得完了\n行数: ${tableHTML.rowCount}`, 3000) |
 | renderer/src/utils/ToDayChildrenList/_fetchAttendanceTableData.js:133 | showErrorToast | window.showErrorToast(`❌ データ取得失敗\n${error.message}`, 4000) |
 | renderer/src/windows/MainWindow/Header/Tabs.jsx:29 | showSuccessToast | showSuccessToast('アクティブを切り替える') |
-| renderer/src/windows/MainWindow/Header/ToolsListNavi/index.jsx:47 | showInfoToast | showInfoToast( result ? '🧹 キャッシュ削除完了！' : '⚠ キャッシュの削除に失敗しました', ) |
-| renderer/src/windows/MainWindow/Header/ToolsListNavi/index.jsx:58 | showInfoToast | showInfoToast( '⚠ キャッシュの削除に失敗しました', ) |
+| renderer/src/windows/MainWindow/Header/ToolsListNavi/index.jsx:55 | showInfoToast | showInfoToast( result ? '🧹 キャッシュ削除完了！' : '⚠ キャッシュの削除に失敗しました', ) |
+| renderer/src/windows/MainWindow/Header/ToolsListNavi/index.jsx:66 | showInfoToast | showInfoToast( '⚠ キャッシュの削除に失敗しました', ) |
 | renderer/src/windows/MainWindow/Header/ToolsListNavi/SleepButton/index.jsx:22 | showErrorToast | showErrorToast(error?.message &#124;&#124; 'ロックに失敗しました') |
 | renderer/src/windows/MainWindow/MainContent/Sidebar/AiInquiry/MainContainer/Pages/PersonalRecordPage/PersonSwitchPanel/DayControls/PersonalRecordGetDayBtn/index.jsx:15 | showSuccessToast | showSuccessToast( posted === 1 ? "個人記録を保存しました" : `${posted}件の個人記録を保存しました` ) |
 | renderer/src/windows/MainWindow/MainContent/Sidebar/AiInquiry/MainContainer/Pages/PersonalRecordPage/PersonSwitchPanel/DayControls/PersonalRecordGetDayBtn/index.jsx:20 | showErrorToast | showErrorToast("個人記録の保存に失敗しました") |
@@ -199,8 +197,8 @@
 | renderer/src/windows/MainWindow/MainContent/Sidebar/NomalMode/Dashboard/TabsContainer/InsertChildren/ChildrenTableList/index.jsx:244 | showErrorToast | showErrorToast("職員IDが取得できません") |
 | renderer/src/windows/MainWindow/MainContent/Sidebar/NomalMode/Dashboard/TabsContainer/InsertChildren/ChildrenTableList/index.jsx:250 | showErrorToast | showErrorToast("曜日IDが取得できません") |
 | renderer/src/windows/MainWindow/MainContent/Sidebar/NomalMode/Dashboard/TabsContainer/InsertChildren/ChildrenTableList/index.jsx:266 | showSuccessToast | showSuccessToast("追加完了しました") |
-| renderer/src/windows/MainWindow/MainContent/Sidebar/NomalMode/Dashboard/TabsContainer/InsertChildren/ChildrenTableList/index.jsx:278 | showErrorToast | showErrorToast("失敗しました") |
-| renderer/src/windows/MainWindow/MainContent/Sidebar/NomalMode/Dashboard/TabsContainer/InsertChildren/ChildrenTableList/index.jsx:284 | showErrorToast | showErrorToast("失敗しました") |
+| renderer/src/windows/MainWindow/MainContent/Sidebar/NomalMode/Dashboard/TabsContainer/InsertChildren/ChildrenTableList/index.jsx:279 | showErrorToast | showErrorToast("失敗しました") |
+| renderer/src/windows/MainWindow/MainContent/Sidebar/NomalMode/Dashboard/TabsContainer/InsertChildren/ChildrenTableList/index.jsx:285 | showErrorToast | showErrorToast("失敗しました") |
 | renderer/src/windows/MainWindow/MainContent/Sidebar/NomalMode/Dashboard/TabsContainer/UpdateManager/UpdateManagerTable/index.jsx:281 | showInfoToast | showInfoToast(`${payloads.length}件を更新しました。`) |
 | renderer/src/windows/MainWindow/MainContent/Sidebar/NomalMode/Dashboard/TabsContainer/UpdateManager/UpdateManagerTable/index.jsx:285 | showErrorToast | showErrorToast(error?.message &#124;&#124; "一括更新に失敗しました。") |
 | renderer/src/windows/MainWindow/MainContent/Sidebar/NomalMode/Dashboard/TabsContainer/UpdateManager/UpdateManagerTable/index.jsx:323 | showInfoToast | showInfoToast("削除しました。") |

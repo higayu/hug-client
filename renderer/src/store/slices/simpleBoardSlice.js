@@ -2,7 +2,15 @@ import { createSlice } from '@reduxjs/toolkit';
 
 export const MAX_SELECTED_CHILDREN = 2;
 export const SIMPLE_BOARD_SPACE_PREFIX = 'simpleBoard:';
+export const isSimpleBoardSpaceId = (spaceId) =>
+  typeof spaceId === 'string' && spaceId.startsWith(SIMPLE_BOARD_SPACE_PREFIX);
 export const getSimpleBoardSpaceId = (rowId) => `${SIMPLE_BOARD_SPACE_PREFIX}${rowId}`;
+
+const createSpace = () => ({
+  childId: '', childName: '', pcName: '', activeFanContentPanel: 'ai',
+  selectedChildColumn5: null, selectedChildColumn5Html: null,
+  selectedChildColumn6: null, selectedChildColumn6Html: null,
+});
 
 const simpleBoardSlice = createSlice({
   name: 'simpleBoard',
@@ -20,7 +28,7 @@ const simpleBoardSlice = createSlice({
         if (state.selectedRowIds.length < MAX_SELECTED_CHILDREN) {
           state.selectedRowIds.push(rowId);
           const spaceId = getSimpleBoardSpaceId(rowId);
-          state.spaces[spaceId] = { childId: '', childName: '', activeFanContentPanel: 'ai' };
+          state.spaces[spaceId] = createSpace();
           state.activeSpaceId = spaceId;
         }
       } else {
@@ -42,6 +50,9 @@ const simpleBoardSlice = createSlice({
       for (const row of action.payload) {
         const space = state.spaces[getSimpleBoardSpaceId(row.rId)];
         if (!space) continue;
+        if (space.childId !== row.childId) {
+          Object.assign(space, createSpace());
+        }
         space.childId = row.childId;
         space.childName = row.name;
       }
@@ -64,6 +75,45 @@ const simpleBoardSlice = createSlice({
         state.spaces[spaceId].activeFanContentPanel = panelId;
       }
     },
+  },
+  // Shared panels dispatch chilledspace actions; route prefixed IDs here.
+  extraReducers: (builder) => {
+    builder.addMatcher(
+      (action) => action.type.startsWith('chilledspace/') &&
+        isSimpleBoardSpaceId(action.payload?.spaceId ?? action.payload),
+      (state, action) => {
+        const spaceId = action.payload?.spaceId ?? action.payload;
+        const space = state.spaces[spaceId];
+        if (!space) return;
+        switch (action.type) {
+          case 'chilledspace/setActiveSpaceId':
+            state.activeSpaceId = spaceId;
+            break;
+          case 'chilledspace/setSpaceChild':
+            Object.assign(space, createSpace(), {
+              childId: String(action.payload.childId ?? ''),
+              childName: action.payload.childName || '',
+            });
+            break;
+          case 'chilledspace/setSpacePcName':
+            space.pcName = action.payload.pcName || '';
+            break;
+          case 'chilledspace/setSpaceChildColumns':
+            for (const key of ['column5', 'column5Html', 'column6', 'column6Html']) {
+              space[`selectedChild${key[0].toUpperCase()}${key.slice(1)}`] = action.payload[key] ?? null;
+            }
+            break;
+          case 'chilledspace/setSpaceActiveFanContentPanel':
+            if (['ai', 'child-kadai', 'personal-record'].includes(action.payload.panelId)) {
+              space.activeFanContentPanel = action.payload.panelId;
+            }
+            break;
+          case 'chilledspace/clearSpace':
+            state.spaces[spaceId] = createSpace();
+            break;
+        }
+      },
+    );
   },
 });
 

@@ -16,12 +16,13 @@ function registerAuthenticationHandler() {
   app.on('login', (
     event,
     webContents,
-    _authenticationResponseDetails,
-    _authInfo,
+    authenticationResponseDetails,
+    authInfo,
     callback,
   ) => {
     const phpMyAdminSession = session.fromPartition(PHP_MY_ADMIN_PARTITION);
     if (webContents.session !== phpMyAdminSession) return;
+
     event.preventDefault();
 
     if (typeof callback !== 'function') {
@@ -33,7 +34,7 @@ function registerAuthenticationHandler() {
     pendingAuthenticationCallback = callback;
 
     phpMyAdminWindow?.webContents.send('php-my-admin-auth-request', {
-      host: _authInfo?.host || _authenticationResponseDetails?.url || '',
+      host: authInfo?.host || authenticationResponseDetails?.url || '',
     });
   });
 }

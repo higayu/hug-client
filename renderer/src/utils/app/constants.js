@@ -74,7 +74,6 @@ export const ELEMENT_IDS = {
   
   // ボタン
   EDIT_SETTINGS: "Edit-Settings",
-  ADDITION_COMPARE_BTN: "addition-compare-btn",
   CHECK_UPDATES_BTN: "checkUpdatesBtn",
   SHOW_UPDATE_INFO_BTN: "showUpdateInfoBtn",
   

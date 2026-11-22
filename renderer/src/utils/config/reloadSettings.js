@@ -12,21 +12,7 @@ import {
   setUseAI,
   setFacilityId,
   setDebugFlg,
-  setAutoSynchronization,
-  setAutoSwitching,
 } from '@/store/slices/appStateSlice.js'
-
-const toBooleanFlag = (value, defaultValue = true) => {
-  if (value === true || value === 'true') return true
-  if (value === false || value === 'false') return false
-  return defaultValue
-}
-
-const applyCloseButtonsVisibility = (visible) => {
-  document.querySelectorAll('.close-btn').forEach((button) => {
-    button.style.display = visible ? 'inline' : 'none'
-  })
-}
 
 const syncFormValue = (elementId, value) => {
   const element = document.getElementById(elementId)
@@ -49,7 +35,7 @@ const syncFormValue = (elementId, value) => {
  *
  * 方針:
  * - activeApi は使わない
- * - sqliteApi / mariadbApi はここでは import しない
+ * - DB API はここでは import しない
  * - DATABASE_TYPE を Redux の正本にする
  * - reloadSettings は「設定ファイルを読み込んで Redux に反映するだけ」にする
  *
@@ -72,7 +58,7 @@ export async function loadAllReload() {
     console.log('📄 [reloadSettings] config.json:', configData)
 
     // =============================================================
-    // 2) config.json → Redux
+    // 3) config.json → Redux
     // =============================================================
     store.dispatch(
       updateAppState({
@@ -109,10 +95,9 @@ export async function loadAllReload() {
     console.log('📄 [reloadSettings] ini.json:', iniData)
 
     const apiSettings = iniData.apiSettings || {}
-    const uiSettings = iniData.appSettings?.ui || {}
 
     const databaseType = 'laravel'
-    const useAI = apiSettings.useAI || 'gemini'
+    const useAI = apiSettings.useAI || 'LaravelApi'
     const facilityId =
       apiSettings.facilityId != null ? String(apiSettings.facilityId) : ''
     const baseURL = apiSettings.baseURL || ''
@@ -120,27 +105,12 @@ export async function loadAllReload() {
     const debugFlg =
       apiSettings.debugFlg === true || apiSettings.debugFlg === 'true'
 
-    const autoSynchronization = toBooleanFlag(
-      apiSettings.autoSynchronization,
-      true
-    )
-
-    const autoSwitching = false
-
-    const closeButtonsVisible = toBooleanFlag(
-      uiSettings.showCloseButtons,
-      true
-    )
-
     console.log('[reloadSettings] apiSettings normalized:', {
       databaseType,
       useAI,
       facilityId,
       baseURL,
       debugFlg,
-      autoSynchronization,
-      autoSwitching,
-      closeButtonsVisible,
     })
 
     // =============================================================
@@ -150,8 +120,6 @@ export async function loadAllReload() {
     store.dispatch(setUseAI(useAI))
     store.dispatch(setFacilityId(facilityId))
     store.dispatch(setDebugFlg(debugFlg))
-    store.dispatch(setAutoSynchronization(autoSynchronization))
-    store.dispatch(setAutoSwitching(autoSwitching))
 
     store.dispatch(
       updateAppState({
@@ -160,13 +128,8 @@ export async function loadAllReload() {
         FACILITY_ID: facilityId,
         VITE_API_BASE_URL: baseURL,
         DEBUG_FLG: debugFlg,
-        AUTO_SYNCHRONIZATION: autoSynchronization,
-        AUTO_SWITCHING: autoSwitching,
-        closeButtonsVisible,
       })
     )
-
-    applyCloseButtonsVisibility(closeButtonsVisible)
 
     // =============================================================
     // 6) Context 側の iniState も同期
@@ -187,11 +150,6 @@ export async function loadAllReload() {
     syncFormValue('api-facility-id', facilityId)
     syncFormValue('api-base-url', baseURL)
 
-    // 画面側に同名IDの input / checkbox がある場合だけ同期されます
-    syncFormValue('api-auto-synchronization', autoSynchronization)
-    syncFormValue('api-auto-switching', autoSwitching)
-    syncFormValue('show-close-buttons', closeButtonsVisible)
-
     // =============================================================
     // 8) DB種別変更イベントを発火
     // useDataBase 側で再取得するため
@@ -200,8 +158,6 @@ export async function loadAllReload() {
       new CustomEvent('database-type-changed', {
         detail: {
           databaseType,
-          autoSynchronization,
-          autoSwitching,
           message: `設定再読み込みにより ${databaseType} に切り替えました`,
           checkedAt: new Date().toISOString(),
           source: 'reloadSettings.loadAllReload',
@@ -219,9 +175,6 @@ export async function loadAllReload() {
           iniData,
           databaseType,
           useAI,
-          autoSynchronization,
-          autoSwitching,
-          closeButtonsVisible,
         },
       })
     )

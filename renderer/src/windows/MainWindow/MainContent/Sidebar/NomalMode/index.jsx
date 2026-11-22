@@ -9,9 +9,14 @@ import SimpleBoard from './SimpleBoard';
 function NormalMode() {
   const { iniState } = useAppState();
 
-  const normalModeView = iniState?.apiSettings?.normalModeView;
+  if (
+    iniState?.apiSettings?.normalModeView ===
+    'dashboard'
+  ) {
+    return <Dashboard />;
+  }
 
-  return normalModeView === 'simpleBoard' ? <SimpleBoard /> : <Dashboard />;
+  return <SimpleBoard />;
 }
 
 export default NormalMode;

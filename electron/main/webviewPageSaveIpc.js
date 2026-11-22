@@ -1,42 +1,40 @@
-// 指定されたWebViewのページをHTMLComplete形式で保存するIPC
-const { ipcMain, webContents, dialog, BrowserWindow } = require("electron");
+// main/webviewPageSaveIpc.js
+// Save the requested guest WebView as a complete HTML page.
+const { ipcMain, webContents, dialog, BrowserWindow } = require('electron');
 
-const CHANNEL = "webview:save-complete-page";
+const CHANNEL = 'webview:save-complete-page';
 
 function registerWebviewPageSaveIpc() {
+  // Follow the same replacement semantics as main/ipcHandlers.js.
   ipcMain.removeHandler(CHANNEL);
-  ipcMain.handle(CHANNEL, async (event, requestedId) => {
-    if (!Number.isSafeInteger(requestedId) || requestedId <= 0) {
-      throw new Error("有効なWebContents IDを指定してください。");
+  ipcMain.handle(CHANNEL, async (event, guestId) => {
+    if (!Number.isSafeInteger(guestId) || guestId <= 0) {
+      throw new Error('WebView IDが不正です。');
     }
-
-    const sender = event.sender;
-    const target = webContents.fromId(requestedId);
-    if (!target || target.isDestroyed() || target.getType() !== "webview") {
-      throw new Error("保存対象のWebViewが見つかりません。");
+    const guest = webContents.fromId(guestId);
+    if (!guest || guest.isDestroyed() || guest.getType() !== 'webview') {
+      throw new Error('保存対象のWebViewが見つかりません。');
     }
-    // 他のウィンドウが保持するWebViewを指定できないようにする
-    if (!target.hostWebContents || target.hostWebContents.id !== sender.id) {
-      throw new Error("このWebViewを保存する権限がありません。");
+    const host = guest.hostWebContents;
+    if (!host || host.isDestroyed() || host.id !== event.sender.id) {
+      throw new Error('このWebViewへのアクセス権限がありません。');
     }
-
-    const ownerWindow = BrowserWindow.fromWebContents(sender);
-    const options = {
-      title: "WebViewをHTMLと関連ファイル一式で保存",
-      defaultPath: "webview-page.html",
-      filters: [{ name: "HTML", extensions: ["html"] }],
-    };
-    const result = ownerWindow
-      ? await dialog.showSaveDialog(ownerWindow, options)
-      : await dialog.showSaveDialog(options);
-    if (result.canceled || !result.filePath) return { canceled: true };
-
-    // 保存ダイアログ操作中に対象WebViewが破棄された場合
-    if (target.isDestroyed() || target.hostWebContents?.id !== sender.id) {
-      throw new Error("保存前に対象WebViewが閉じられました。");
+    const ownerWindow = BrowserWindow.fromWebContents(event.sender);
+    if (!ownerWindow || ownerWindow.isDestroyed()) {
+      throw new Error('呼び出し元ウィンドウを確認できません。');
     }
-    await target.savePage(result.filePath, "HTMLComplete");
-    return { canceled: false, path: result.filePath };
+    const { canceled, filePath } = await dialog.showSaveDialog(ownerWindow, {
+      title: 'WebViewのHTML一式を保存',
+      defaultPath: 'webview-page.html',
+      filters: [{ name: 'HTML', extensions: ['html'] }],
+    });
+    if (canceled || !filePath) return { canceled: true };
+    // Re-check ownership after the dialog is dismissed.
+    if (guest.isDestroyed() || guest.hostWebContents?.id !== event.sender.id) {
+      throw new Error('保存対象のWebViewが閉じられました。');
+    }
+    await guest.savePage(filePath, 'HTMLComplete');
+    return { canceled: false, path: filePath };
   });
 }
 

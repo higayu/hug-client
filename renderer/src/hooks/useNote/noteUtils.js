@@ -45,16 +45,6 @@ async function getTempNoteApiNames() {
     };
   }
 
-  if (databaseType === "mariadb") {
-    return {
-      databaseType,
-      save: "mariadb_saveTempNote",
-      save1: "mariadb_saveTempNote1",
-      save2: "mariadb_saveTempNote2",
-      get: "mariadb_getTempNote",
-    };
-  }
-
   return {
     databaseType,
     save: "sqlite_saveTempNote",

@@ -8,7 +8,9 @@ async function getChildKadaiGraph(payload = {}) {
     '児童の課題グラフデータ取得に失敗しました。',
   )
 
-  if (result?.success === false) return result
+  if (result?.success === false) {
+    return result
+  }
 
   return {
     success: true,
@@ -28,8 +30,15 @@ async function handler(_event, payload = {}) {
     return await getChildKadaiGraph(payload)
   } catch (error) {
     console.error('[Laravel Procedure] getChildKadaiGraph error:', error)
-    return formatError(error, '児童の課題グラフデータ取得に失敗しました。')
+
+    return formatError(
+      error,
+      '児童の課題グラフデータ取得に失敗しました。',
+    )
   }
 }
 
-module.exports = { getChildKadaiGraph, handler }
+module.exports = {
+  getChildKadaiGraph,
+  handler,
+}

@@ -1,34 +1,36 @@
 // main/confirmDialog.js
 //
-// window.confirm() の代替。
-// window.confirm() は renderer の JS スレッドを完全に止めてしまい、
-// webview構成のアプリでは「ダイアログがwebviewの裏に隠れる」
-// 「押すまで数秒間、他の操作も入力も一切効かなくなる」問題の原因になる。
-//
-// dialog.showMessageBox は Electron の native ダイアログで、
-// - 必ず親ウィンドウ(mainWindow)の前面に表示される
-// - 呼び出し側は ipcRenderer.invoke で「非同期」に待てるので
-//   結果を待っている間も renderer の JS は止まらない
-//
-// main.js から下記のように呼び出して登録する:
-//
-//   const { registerConfirmDialog } = require("./confirmDialog")
-//   registerConfirmDialog(mainWindow)
+// renderer から呼び出された確認ダイアログを、
+// 常に「呼び出し元の BrowserWindow」を親として表示する。
+// MainWindow / ProfessionalSupportWindow など複数ウィンドウで共通利用可能。
 
-const { ipcMain, dialog } = require("electron")
+const { ipcMain, dialog, BrowserWindow } = require("electron")
 
 function registerConfirmDialog(mainWindow) {
-  ipcMain.handle("confirm-dialog", async (_event, message) => {
-    const result = await dialog.showMessageBox(mainWindow, {
+  ipcMain.handle("confirm-dialog", async (event, message) => {
+    // invoke してきた renderer を所有するウィンドウを優先する。
+    // 取得できないケースだけ MainWindow をフォールバックとして使う。
+    const senderWindow = BrowserWindow.fromWebContents(event.sender)
+    const parentWindow =
+      senderWindow && !senderWindow.isDestroyed()
+        ? senderWindow
+        : mainWindow && !mainWindow.isDestroyed()
+          ? mainWindow
+          : undefined
+
+    const options = {
       type: "question",
       buttons: ["はい", "キャンセル"],
       defaultId: 1,
       cancelId: 1,
       message: message ?? "よろしいですか？",
       noLink: true,
-    })
+    }
 
-    // buttons[0] = "はい" が押された場合のみ true
+    const result = parentWindow
+      ? await dialog.showMessageBox(parentWindow, options)
+      : await dialog.showMessageBox(options)
+
     return result.response === 0
   })
 }

@@ -136,6 +136,57 @@ function normalizeString(
   return String(value);
 }
 
+function normalizeRequiredInteger(value, fieldName) {
+  if (
+    value === undefined ||
+    value === null ||
+    String(value).trim() === ""
+  ) {
+    throw new Error(`${fieldName} is required.`);
+  }
+
+  const normalized = Number(value);
+  if (!Number.isInteger(normalized)) {
+    throw new Error(`${fieldName} must be an integer.`);
+  }
+
+  return normalized;
+}
+
+function normalizeBinaryInteger(value, defaultValue, fieldName) {
+  const normalized = normalizeInteger(value, defaultValue, fieldName);
+
+  if (normalized !== 0 && normalized !== 1) {
+    throw new Error(`${fieldName} must be 0 or 1.`);
+  }
+
+  return normalized;
+}
+
+function normalizeNullableDate(value, fieldName) {
+  if (
+    value === undefined ||
+    value === null ||
+    String(value).trim() === ""
+  ) {
+    return null;
+  }
+
+  const normalized = String(value).trim();
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(normalized);
+
+  if (!match) {
+    throw new Error(`${fieldName} must use YYYY-MM-DD format.`);
+  }
+
+  const date = new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])));
+  if (date.toISOString().slice(0, 10) !== normalized) {
+    throw new Error(`${fieldName} is not a valid date.`);
+  }
+
+  return normalized;
+}
+
 /**
  * MySQLのTIME型へ渡す時刻を正規化する。
  *
@@ -226,6 +277,19 @@ function buildProcedureParams(
       "day_of_week_id"
     );
 
+  if (dayOfWeekId > 127) {
+    throw new Error("day_of_week_id exceeds the TINYINT range.");
+  }
+
+  const childrenName = normalizeString(
+    payload.children_name ?? payload.name,
+    ""
+  );
+
+  if (childrenName.length > 255) {
+    throw new Error("children_name must be 255 characters or fewer.");
+  }
+
   const supportStartTime =
     normalizeNullableTime(
       payload.support_start_time,
@@ -251,11 +315,7 @@ function buildProcedureParams(
   return [
     childrenId,
 
-    normalizeString(
-      payload.children_name ??
-        payload.name,
-      ""
-    ),
+    childrenName,
 
     normalizeNullableString(
       payload.notes
@@ -274,27 +334,27 @@ function buildProcedureParams(
       "pronunciation_id"
     ),
 
-    normalizeInteger(
+    normalizeRequiredInteger(
       payload.children_type_id,
-      1,
       "children_type_id"
     ),
 
-    normalizeInteger(
+    normalizeBinaryInteger(
       payload.is_delete,
       0,
       "is_delete"
     ),
 
-    normalizeNullableString(
-      payload.leaving_at
+    normalizeNullableDate(
+      payload.leaving_at,
+      "leaving_at"
     ),
 
     facilityId,
     staffId,
     dayOfWeekId,
 
-    normalizeInteger(
+    normalizeBinaryInteger(
       payload.priority,
       0,
       "priority"

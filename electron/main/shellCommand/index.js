@@ -95,4 +95,3 @@ function runHugPlanResolver(payload) {
 }
 
 module.exports = { runHugPlanResolver };
-

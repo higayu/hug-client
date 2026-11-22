@@ -7,18 +7,29 @@ async function upsertChildKadaiGraph(payload = {}) {
     () => laravelApiClient.upsertChildKadaiGraph(payload),
     '児童課題記録の保存に失敗しました。',
   )
+
   if (result?.success === false) return result
+
   return {
-    success: true, connected: true, message: '児童課題記録を保存しました。',
+    success: true,
+    connected: true,
+    message: '児童課題記録を保存しました。',
     data: unwrapData(result),
-    meta: { authenticated: true, reauthenticated: result?.meta?.reauthenticated ?? false },
+    meta: {
+      authenticated: true,
+      reauthenticated: result?.meta?.reauthenticated ?? false,
+    },
     error: null,
   }
 }
 
 async function handler(_event, payload = {}) {
-  try { return await upsertChildKadaiGraph(payload) }
-  catch (error) { return formatError(error, '児童課題記録の保存に失敗しました。') }
+  try {
+    return await upsertChildKadaiGraph(payload)
+  } catch (error) {
+    console.error('[Laravel Procedure] upsertChildKadaiGraph error:', error)
+    return formatError(error, '児童課題記録の保存に失敗しました。')
+  }
 }
 
 module.exports = { upsertChildKadaiGraph, handler }

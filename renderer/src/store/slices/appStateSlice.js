@@ -4,13 +4,13 @@
 import { createSlice } from '@reduxjs/toolkit'
 import { getDateString, getTodayWeekdayId } from '@/utils/date/dateUtils.js'
 import { getTodayYmdString } from '@/utils/date/dateYMD.js'
+import { resolveAiMode } from '../../utils/aiModePolicy.js'
 
 const toBooleanFlag = (value, defaultValue = true) => {
   if (value === true || value === 'true') return true
   if (value === false || value === 'false') return false
   return defaultValue
 }
-
 
 // ✅ 修正: モード4を許可
 const normalizeSelectChildFilterMode = (value) => {
@@ -52,12 +52,8 @@ const initialState = {
   DEBUG_FLG: false,
 
   VITE_API_BASE_URL: "",
-  USE_AI: "chatGPT",
+  USE_AI: "LaravelApi",
   DATABASE_TYPE: "laravel",
-
-  // ini.json apiSettings 自動設定
-  AUTO_SYNCHRONIZATION: true,
-  AUTO_SWITCHING: true,
 
   // サーバ接続状態
   SERVER_CONNECTED: false,
@@ -77,7 +73,7 @@ const initialState = {
 
   // UI状態
   closeButtonsVisible: true,
-  SELECT_CHILD_FILTER_MODE: 1,
+  SELECT_CHILD_FILTER_MODE: 0,
 
   // マスターデータ
   STAFF_DATA: [],
@@ -196,22 +192,12 @@ const appStateSlice = createSlice({
 
     // AI種別を設定
     setUseAI: (state, action) => {
-      state.USE_AI = action.payload || "ollama"
+      state.USE_AI = action.payload || "LaravelApi"
     },
 
     // DB種別を設定
     setDatabaseType: (state, action) => {
-      state.DATABASE_TYPE = "laravel"
-    },
-
-    // 自動同期を設定
-    setAutoSynchronization: (state, action) => {
-      state.AUTO_SYNCHRONIZATION = toBooleanFlag(action.payload, true)
-    },
-
-    // 自動切替を設定
-    setAutoSwitching: (state, action) => {
-      state.AUTO_SWITCHING = toBooleanFlag(action.payload, true)
+      state.DATABASE_TYPE = action.payload || "laravel"
     },
 
     // サーバ接続状態を設定
@@ -276,8 +262,6 @@ const appStateSlice = createSlice({
       if (updates.APP_LOCK_PASSCODE !== undefined) {
         state.APP_LOCK_PASSCODE = String(updates.APP_LOCK_PASSCODE ?? '')
       }
-
-
 
       // デバッグフラグ
       if (updates.DEBUG_FLG !== undefined) {
@@ -412,37 +396,7 @@ const appStateSlice = createSlice({
       }
 
       if (updates.DATABASE_TYPE !== undefined) {
-        state.DATABASE_TYPE = "laravel"
-      }
-
-      // 自動同期 / 自動切替
-      if (updates.AUTO_SYNCHRONIZATION !== undefined) {
-        state.AUTO_SYNCHRONIZATION = toBooleanFlag(
-          updates.AUTO_SYNCHRONIZATION,
-          true
-        )
-      }
-
-      if (updates.AUTO_SWITCHING !== undefined) {
-        state.AUTO_SWITCHING = toBooleanFlag(
-          updates.AUTO_SWITCHING,
-          true
-        )
-      }
-
-      // apiSettings のキー名そのままで渡された場合にも対応
-      if (updates.autoSynchronization !== undefined) {
-        state.AUTO_SYNCHRONIZATION = toBooleanFlag(
-          updates.autoSynchronization,
-          true
-        )
-      }
-
-      if (updates.autoSwitching !== undefined) {
-        state.AUTO_SWITCHING = toBooleanFlag(
-          updates.autoSwitching,
-          true
-        )
+        state.DATABASE_TYPE = updates.DATABASE_TYPE
       }
 
       // プロンプト
@@ -494,8 +448,6 @@ export const {
 
   setUseAI,
   setDatabaseType,
-  setAutoSynchronization,
-  setAutoSwitching,
 
   setServerConnectionState,
   updateAppState,
@@ -541,16 +493,10 @@ export const selectViteApiBaseUrl = (state) =>
   state.appState.VITE_API_BASE_URL
 
 export const selectUseAI = (state) =>
-  state.appState.USE_AI
+  resolveAiMode(state.auth, state.appState.USE_AI)
 
 export const selectDatabaseType = (state) =>
   state.appState.DATABASE_TYPE
-
-export const selectAutoSynchronization = (state) =>
-  state.appState.AUTO_SYNCHRONIZATION
-
-export const selectAutoSwitching = (state) =>
-  state.appState.AUTO_SWITCHING
 
 export const selectServerConnected = (state) =>
   state.appState.SERVER_CONNECTED
@@ -575,9 +521,6 @@ export const selectCurrentDate = (state) =>
 
 export const selectCurrentYmd = (state) =>
   state.appState.CURRENT_YMD
-
-export const selectCloseButtonsVisible = (state) =>
-  state.appState.closeButtonsVisible
 
 export const selectSelectChildFilterMode = (state) =>
   state.appState.SELECT_CHILD_FILTER_MODE
