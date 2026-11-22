@@ -11,6 +11,7 @@ import {
 } from "@/store/slices/aiChatSlice.js";
 
 import ChildNotesTabs from "../ChildNotesTabs";
+import MemoInputBox from "@/components/ui/MemoInputBox";
 
 const DBG = "ProfessionalPrompt1";
 
@@ -20,7 +21,7 @@ export default function ProfessionalPrompt1({
   aiName = "AI",
   promptKey = "professional1",
   renderResultArea = null,
-  resultAreaLabel = "API 返却値（専門1）",
+  resultAreaLabel = "API 返却値（専門的支援）",
   showSupportCheck = true,
 }) {
   const appState = useAppState();
@@ -165,7 +166,7 @@ export default function ProfessionalPrompt1({
       ===================================================== */}
       <div>
         <label className="font-semibold">
-          専門的支援加算用プロンプト1
+          専門的支援加算用プロンプト
         </label>
 
         <textarea
@@ -249,6 +250,15 @@ export default function ProfessionalPrompt1({
             })}
           </div>
         )}
+
+        <MemoInputBox
+          childId={selectedChildId}
+          childName={selectedChildName}
+          spaceId={spaceId}
+          memoType={2}
+          label="一時メモ２（編集可能）"
+          minHeight={200}
+        />
       </div>
     </div>
   );

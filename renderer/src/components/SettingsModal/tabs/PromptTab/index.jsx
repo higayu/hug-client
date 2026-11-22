@@ -63,8 +63,13 @@ function PromptTab() {
 
   const companyOnlyIds = useMemo(() => new Set([50, 51, 100, 150]), [])
 
+  // 現在使用していないプロンプトは管理画面に表示しない
+  const hiddenPromptIds = useMemo(() => new Set([3, 150]), [])
+
   const visibleDefinitions = PROMPT_DEFINITIONS.filter(
-    ({ itemId }) => !companyOnlyIds.has(itemId) || canViewCompanyOnly
+    ({ itemId }) =>
+      !hiddenPromptIds.has(Number(itemId)) &&
+      (!companyOnlyIds.has(Number(itemId)) || canViewCompanyOnly)
   )
 
   const expectedScope =
@@ -341,7 +346,13 @@ function PromptTab() {
           htmlFor={`prompt-${key}`}
           className="mb-2 block font-semibold text-gray-700"
         >
-          {label}（item_id: {itemId}）
+          {label}
+          {Number(itemId) === 51 && (
+            <span className="mr-2 text-red-600">
+              （※個別支援計画とF-SOAIPの使用）
+            </span>
+          )}
+          （item_id: {itemId}）
           <span className="ml-2 text-xs font-normal text-gray-600">
             {scope === 'company'
               ? '会社共有'

@@ -31,7 +31,9 @@ export default function PromptPanel({
     }
 
     if (!activeKey || !componentMap?.[activeKey]) {
-      const nextKey = keys[0];
+      const nextKey = activeKey === "professional2" && componentMap?.professional1
+        ? "professional1"
+        : keys[0];
 
       if (isControlled) {
         onActiveKeyChange?.(nextKey);
