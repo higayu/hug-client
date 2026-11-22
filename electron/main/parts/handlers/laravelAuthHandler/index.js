@@ -1,3 +1,4 @@
+const promptHistories = require("./promptHistories");
 // main/parts/handlers/laravelAuthHandler/index.js
 
 const auth = require("./auth");
@@ -18,6 +19,9 @@ const laravelApiClient = require("../../../../../src/laravelApiClient");
  * このファイルで登録するIPCチャンネル。
  */
 const IPC_CHANNELS = [
+  "laravel:ai-prompt-histories:list",
+  "laravel:ai-prompt-histories:show",
+  "laravel:ai-prompt-histories:restore",
   // ============================================================
   // 認証関連
   // ============================================================
@@ -559,6 +563,10 @@ function registerLaravelAuthHandlers(
     "laravel:troubleshooting-knowledge:update",
     troubleshootingKnowledge.updateHandler
   );
+
+  ipcMain.handle("laravel:ai-prompt-histories:list", promptHistories.listHandler);
+  ipcMain.handle("laravel:ai-prompt-histories:show", promptHistories.showHandler);
+  ipcMain.handle("laravel:ai-prompt-histories:restore", promptHistories.restoreHandler);
 
   console.log(
     "✅ [registerLaravelAuthHandlers] Laravel IPC registered:",

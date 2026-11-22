@@ -46,3 +46,13 @@ test('updates preserve the existing prompt ID and edited content', async () => {
   assert.equal(payload.content, 'Updated content');
   assert.equal(Object.hasOwn(payload, 'scope'), false);
 });
+
+
+test('updates include the displayed history ID for optimistic locking', async () => {
+  const payload = await save({ promptId: 12, expectedHistoryId: '24' });
+  assert.equal(payload.expected_history_id, 24);
+});
+
+test('invalid displayed history IDs are rejected before saving', async () => {
+  await assert.rejects(save({ promptId: 12, expectedHistoryId: -1 }), /バージョン/);
+});

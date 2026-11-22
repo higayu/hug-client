@@ -27,6 +27,8 @@ export function normalizeActiveAiPrompts(rows) {
       success: true,
       content: typeof row.content === "string" ? row.content : "",
       promptId: row.prompt_id,
+      currentHistoryId: row.current_history_id ?? null,
+      version: row.current_history?.version ?? row.currentHistory?.version ?? null,
       staffId: row.staff_id,
       companyId: row.company_id ?? null,
       scope: row.company_id != null && row.staff_id == null ? "company" : row.staff_id != null && row.company_id == null ? "personal" : "unknown",

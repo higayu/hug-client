@@ -4,7 +4,7 @@ import React from 'react'
  * プロンプトの種類ごとに編集欄をまとめる表示用コンテナ。
  * 権限判定・保存処理は親のPromptTabで管理する。
  */
-export default function PromptSection({ title, description, count, children }) {
+export default function PromptSection({ title, description, count, actions = null, children }) {
   return (
     <section className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
       <div className="border-b border-gray-200 bg-gray-50 px-4 py-3 sm:px-5">
@@ -13,6 +13,7 @@ export default function PromptSection({ title, description, count, children }) {
           <span className="rounded-full border border-gray-200 bg-white px-2 py-0.5 text-xs text-gray-600">
             {count}項目
           </span>
+          {actions && <div className="ml-auto">{actions}</div>}
         </div>
         {description && <p className="mt-1 text-sm leading-6 text-gray-600">{description}</p>}
       </div>

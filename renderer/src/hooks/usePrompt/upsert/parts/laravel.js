@@ -20,6 +20,7 @@ const COMPANY_ONLY_ITEM_IDS = new Set([50, 51, 100, 150]);
 
 export async function upsertAiPrompt({
   promptId = null,
+  expectedHistoryId,
   staffId, // 互換性維持。Laravelには送信しない。
   companyId = null,
   itemId,
@@ -45,6 +46,9 @@ export async function upsertAiPrompt({
       ? null
       : Number(promptId);
 
+  if (expectedHistoryId != null && (!Number.isSafeInteger(Number(expectedHistoryId)) || Number(expectedHistoryId) < 1)) {
+    throw new Error("現在のプロンプトのバージョンを確認できませんでした。再読み込みしてください。");
+  }
   const normalizedItemId = Number(itemId);
 
   const normalizedCompanyId =
@@ -195,6 +199,7 @@ export async function upsertAiPrompt({
 
   const payload = {
     prompt_id: normalizedPromptId,
+    ...(expectedHistoryId != null ? { expected_history_id: Number(expectedHistoryId) } : {}),
     company_id: normalizedCompanyId,
     item_id: normalizedItemId,
     content,

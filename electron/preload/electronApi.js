@@ -330,6 +330,10 @@ function createElectronApi(ipcRenderer, isDebugMode) {
     laravel_procedure_getActiveAiPrompt: (data) =>
       ipcRenderer.invoke("laravel:procedure:get-active-ai-prompt", data),
 
+    laravel_aiPromptHistories_list: (data) => ipcRenderer.invoke("laravel:ai-prompt-histories:list", data),
+    laravel_aiPromptHistories_show: (data) => ipcRenderer.invoke("laravel:ai-prompt-histories:show", data),
+    laravel_aiPromptHistories_restore: (data) => ipcRenderer.invoke("laravel:ai-prompt-histories:restore", data),
+
     laravel_procedure_upsertAiPrompt: (data) =>
       ipcRenderer.invoke("laravel:procedure:upsert-ai-prompt", data),
 

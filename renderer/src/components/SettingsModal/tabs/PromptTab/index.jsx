@@ -1,5 +1,5 @@
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useSelector } from 'react-redux'
 import { selectLaravelAuth } from '@/store/slices/authSlice'
 import { selectStaffs } from '@/store/slices/databaseSlice'
@@ -14,9 +14,11 @@ import {
   PROMPT_DEFINITIONS,
 } from './const'
 import PromptSection from './PromptSection'
+import PromptHistoryPanel from './PromptHistoryPanel'
+import { restorePromptHistory } from '@/hooks/usePrompt/history'
 
 function PromptTab() {
-  const { DATABASE_TYPE, STAFF_ID, updateAppState } = useAppState()
+  const { DATABASE_TYPE, STAFF_ID, PROMPTS: activePrompts, updateAppState } = useAppState()
 
   const auth = useSelector(selectLaravelAuth)
   const staffRows = useSelector(selectStaffs)
@@ -149,8 +151,10 @@ function PromptTab() {
   const [promptRecords, setPromptRecords] = useState({})
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
+  const loadSequence = useRef(0)
 
   const loadPrompts = useCallback(async (showToast = false) => {
+    const sequence = ++loadSequence.current
     setIsLoading(true)
 
     try {
@@ -178,6 +182,7 @@ function PromptTab() {
         nextPrompts[key] = nextRecords[key]?.content ?? ''
       }
 
+      if (sequence !== loadSequence.current) return
       setPromptRecords(nextRecords)
       setPrompts(nextPrompts)
       setSavedPrompts(nextPrompts)
@@ -192,13 +197,14 @@ function PromptTab() {
         )
       }
     } catch (error) {
+      if (sequence !== loadSequence.current) return
       console.error('[PromptTab] DB読み込みエラー:', error)
 
       showErrorToast(
         error?.message || 'プロンプトの取得に失敗しました。'
       )
     } finally {
-      setIsLoading(false)
+      if (sequence === loadSequence.current) setIsLoading(false)
     }
   }, [
     DATABASE_TYPE,
@@ -214,13 +220,18 @@ function PromptTab() {
 
   useEffect(() => {
     loadPrompts()
+    return () => { loadSequence.current++ }
   }, [loadPrompts])
 
-  const editablePromptCount = visibleDefinitions.filter(
+  const personalAllowedDefinitions = visibleDefinitions.filter(
+    ({ itemId }) => !companyOnlyIds.has(itemId)
+  )
+  const companyOnlyDefinitions = visibleDefinitions.filter(
+    ({ itemId }) => companyOnlyIds.has(itemId)
+  )
+  const hasEditableBasicPrompts = personalAllowedDefinitions.some(
     ({ key, itemId }) => canEditRecord(promptRecords[key], itemId)
-  ).length
-
-  const hasEditablePrompts = editablePromptCount > 0
+  )
 
   const changedDefinitions = visibleDefinitions.filter(
     ({ key }) => prompts[key] !== savedPrompts[key]
@@ -233,16 +244,16 @@ function PromptTab() {
   )
 
   /**
-   * プロンプトを初期値に戻す。
+   * 基本プロンプトだけを初期値に戻す。会社共有専用項目は対象外。
    * DBへの保存は行わない。
    */
   const handleReset = () => {
-    if (isLoading || isSaving || !hasEditablePrompts) return
+    if (isLoading || isSaving || !hasEditableBasicPrompts) return
 
     setPrompts((previous) => {
       const next = { ...previous }
 
-      for (const { key, itemId } of visibleDefinitions) {
+      for (const { key, itemId } of personalAllowedDefinitions) {
         if (canEditRecord(promptRecords[key], itemId)) {
           next[key] = DEFAULT_PROMPTS[key] ?? ''
         }
@@ -252,13 +263,61 @@ function PromptTab() {
     })
 
     showSuccessToast(
-      '編集可能なプロンプトを初期値に戻しました。保存するとデータベースに反映されます。'
+      '編集可能な基本プロンプトを初期値に戻しました。保存するとデータベースに反映されます。'
     )
+  }
+
+  // Only update the saved prompt; other editors may still contain unsaved drafts.
+  const applySavedVersions = (entries) => {
+    const records = {}
+    const texts = {}
+    const activeUpdates = {}
+    for (const { key, row, content } of entries) {
+      const record = {
+        ...promptRecords[key],
+        success: true,
+        promptId: row.prompt_id,
+        companyId: row.company_id ?? null,
+        staffId: row.staff_id ?? null,
+        itemId: row.item_id,
+        scope: row.company_id != null ? 'company' : 'personal',
+        currentHistoryId: row.current_history_id,
+        version: row.version,
+        content,
+      }
+      records[key] = record
+      texts[key] = content
+      if (!activePrompts?.[key] || String(activePrompts[key].promptId) === String(row.prompt_id)) {
+        activeUpdates[key] = record
+      }
+    }
+    setPromptRecords((previous) => ({ ...previous, ...records }))
+    setPrompts((previous) => ({ ...previous, ...texts }))
+    setSavedPrompts((previous) => ({ ...previous, ...texts }))
+    if (Object.keys(activeUpdates).length) updateAppState({ PROMPTS: { ...activePrompts, ...activeUpdates } })
+  }
+
+  const handleRestore = async (key, itemId, historyId, expectedHistoryId) => {
+    if (isSaving || isLoading) throw new Error('処理が完了してから操作してください。')
+    const record = promptRecords[key]
+    if (!canEditRecord(record, itemId)) throw new Error('復元する権限がありません。')
+    const sequence = loadSequence.current
+    setIsSaving(true)
+    try {
+      const row = await restorePromptHistory({ promptId: record.promptId, historyId, expectedHistoryId })
+      if (sequence === loadSequence.current) {
+        applySavedVersions([{ key, row, content: row.content }])
+        showSuccessToast(`選択した内容を復元しました（使用中: Ver.${row.version}）。`)
+      }
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   const handleSave = async () => {
     if (isLoading || isSaving || !hasChanges) return
 
+    const sequence = loadSequence.current
     setIsSaving(true)
 
     try {
@@ -292,8 +351,10 @@ function PromptTab() {
           }
 
           return {
+            key,
             databaseType: DATABASE_TYPE,
             promptId: record?.promptId ?? null,
+            expectedHistoryId: record?.currentHistoryId,
             companyId:
               scope === 'company'
                 ? targetCompanyId
@@ -305,17 +366,23 @@ function PromptTab() {
         }
       )
 
-      await Promise.all(
-        saveDefinitions.map((payload) =>
-          upsertAiPrompt(payload)
-        )
-      )
-
-      await loadPrompts()
-
-      showSuccessToast(
-        'プロンプトをデータベースに保存しました。'
-      )
+      const results = await Promise.allSettled(saveDefinitions.map((payload) => upsertAiPrompt(payload)))
+      if (sequence !== loadSequence.current) return
+      const saved = []
+      const failures = []
+      results.forEach((result, index) => {
+        const definition = saveDefinitions[index]
+        if (result.status === 'fulfilled') {
+          const row = Array.isArray(result.value) ? result.value[0] : result.value
+          if (row?.prompt_id && row?.current_history_id) saved.push({ key: definition.key, content: definition.content, row })
+          else failures.push('保存結果のバージョンを確認できません。再読み込みしてください。')
+        } else {
+          failures.push(result.reason?.message || '保存に失敗しました。')
+        }
+      })
+      if (saved.length) applySavedVersions(saved)
+      if (failures.length) throw new Error(`${saved.length ? `${saved.length}件は保存済みです。` : ''}${failures.join(' ')}`)
+      showSuccessToast('変更したプロンプトをバージョン履歴に保存しました。')
     } catch (error) {
       console.error('[PromptTab] DB保存エラー:', error)
 
@@ -327,13 +394,6 @@ function PromptTab() {
       setIsSaving(false)
     }
   }
-
-  const personalAllowedDefinitions = visibleDefinitions.filter(
-    ({ itemId }) => !companyOnlyIds.has(itemId)
-  )
-  const companyOnlyDefinitions = visibleDefinitions.filter(
-    ({ itemId }) => companyOnlyIds.has(itemId)
-  )
 
   const renderPromptEditor = ({ key, itemId, label }) => {
     const record = promptRecords[key]
@@ -353,6 +413,7 @@ function PromptTab() {
             </span>
           )}
           （item_id: {itemId}）
+          {record?.version != null && <span className="ml-2 text-xs text-indigo-700">使用中: Ver.{record.version}</span>}
           <span className="ml-2 text-xs font-normal text-gray-600">
             {scope === 'company'
               ? '会社共有'
@@ -377,6 +438,20 @@ function PromptTab() {
           disabled={isSaving}
           className="w-full resize-y rounded-md border border-gray-300 px-3 py-2 text-sm leading-6 text-gray-900 transition focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-200 read-only:bg-gray-100 disabled:bg-gray-100"
         />
+        {record?.promptId && auth?.authenticated && String(DATABASE_TYPE).toLowerCase() === 'laravel' ? (
+          <PromptHistoryPanel
+            key={`${authStaffId}:${record.promptId}`}
+            promptId={record.promptId}
+            currentHistoryId={record.currentHistoryId}
+            canEdit={canEdit}
+            disabled={isSaving || isLoading}
+            hasDraft={prompts[key] !== savedPrompts[key]}
+            onUseContent={(content) => {
+              if (canEdit && !isSaving) setPrompts((previous) => ({ ...previous, [key]: content }))
+            }}
+            onRestore={(historyId, expectedHistoryId) => handleRestore(key, itemId, historyId, expectedHistoryId)}
+          />
+        ) : !record?.promptId && canEdit ? <p className="mt-1 text-xs text-gray-500">初回保存後にバージョン履歴を利用できます。</p> : null}
       </div>
     )
   }
@@ -399,6 +474,20 @@ function PromptTab() {
               ? '選択中のスタッフの個人用プロンプトを表示しています。'
               : '会社共有プロンプトを表示しています。会社共有の編集には権限が必要です。'}
             count={personalAllowedDefinitions.length}
+            actions={(
+                <button
+                  type="button"
+                  onClick={handleReset}
+                  disabled={
+                    isLoading ||
+                    isSaving ||
+                    !hasEditableBasicPrompts
+                  }
+                  className="rounded-md bg-amber-600 px-5 py-2.5 text-white transition-colors hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  基本プロンプトを初期化
+                </button>
+            )}
           >
             {personalAllowedDefinitions.map(renderPromptEditor)}
           </PromptSection>
@@ -423,19 +512,6 @@ function PromptTab() {
           className="rounded-md bg-gray-600 px-5 py-2.5 text-white transition-colors hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-60"
         >
           再読み込み
-        </button>
-
-        <button
-          type="button"
-          onClick={handleReset}
-          disabled={
-            isLoading ||
-            isSaving ||
-            !hasEditablePrompts
-          }
-          className="rounded-md bg-amber-600 px-5 py-2.5 text-white transition-colors hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          初期化
         </button>
 
         <button
