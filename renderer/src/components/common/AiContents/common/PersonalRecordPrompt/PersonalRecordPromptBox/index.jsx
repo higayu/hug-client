@@ -1,15 +1,17 @@
 import React from "react";
 
+export const DEFAULT_PERSONAL_RECORD_PROMPT_KEY = "personalRecord2";
+
 export const PERSONAL_RECORD_PROMPTS = [
   {
     key: "personalRecord",
-    label: "個人記録1",
-    useDbNote: true, // false → true
+    label: "通常校正",
+    useDbNote: false,
   },
   {
     key: "personalRecord2",
-    label: "個人記録2",
-    useDbNote: false, // true → false
+    label: "個別支援計画付き",
+    useDbNote: true,
   },
 ];
 
@@ -20,17 +22,15 @@ export const getPersonalRecordPromptConfig = (
     PERSONAL_RECORD_PROMPTS.find(
       (prompt) =>
         prompt.key === key
-    ) ?? {
-      key,
-      label: key,
-      useDbNote: false,
-    }
+    ) ?? PERSONAL_RECORD_PROMPTS.find(
+      (prompt) => prompt.key === DEFAULT_PERSONAL_RECORD_PROMPT_KEY
+    )
   );
 };
 
 export default function PersonalRecordPromptBox({
   prompts,
-  selectedPromptKey,
+  selectedPromptKey = DEFAULT_PERSONAL_RECORD_PROMPT_KEY,
   onChange,
   minHeight = 80,
 }) {
@@ -51,7 +51,7 @@ export default function PersonalRecordPromptBox({
         <div
           className="flex rounded-lg border border-gray-300 bg-gray-100 p-0.5"
           role="group"
-          aria-label="個人記録用プロンプトの切替"
+          aria-label="個人記録の書き方"
         >
           {PERSONAL_RECORD_PROMPTS.map(
             (prompt) => {

@@ -22,6 +22,7 @@ import MemoInputBox from "@/components/ui/MemoInputBox";
 import MemoToAiTransferButton from "../MemoToAiTransferButton";
 
 import PersonalRecordPromptBox, {
+  DEFAULT_PERSONAL_RECORD_PROMPT_KEY,
   getPersonalRecordPromptConfig,
 } from "./PersonalRecordPromptBox";
 
@@ -46,7 +47,7 @@ export default function PersonalRecordPrompt({
   // =============================================================
   // 個人記録プロンプト選択
   // =============================================================
-  const [selectedPromptKey, setSelectedPromptKey] = useState("personalRecord");
+  const [selectedPromptKey, setSelectedPromptKey] = useState(DEFAULT_PERSONAL_RECORD_PROMPT_KEY);
 
   // =============================================================
   // DB保存済みメモ
