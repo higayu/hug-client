@@ -1,12 +1,12 @@
 // main/closeConfirmation.js
-const { dialog } = require("electron");
+const { app, dialog } = require("electron");
 
 function registerCloseConfirmation(mainWindow) {
   let shouldClose = false;
   let isShowingDialog = false;
 
   mainWindow.on("close", async (event) => {
-    if (shouldClose) return;
+    if (shouldClose || app.isQuittingForUpdate) return;
 
     event.preventDefault();
 

@@ -4,6 +4,7 @@ const { autoUpdater } = require("electron-updater");
 const log = require("electron-log");
 
 let isAutoUpdaterSetup = false;
+let checkPromise = null;
 
 const updateDebugInfo = {
   isChecking: false,
@@ -25,16 +26,24 @@ function setupAutoUpdater() {
   autoUpdater.logger = log;
   autoUpdater.logger.transports.file.level = "info";
 
+  autoUpdater.on("before-quit-for-update", () => {
+    app.isQuittingForUpdate = true;
+  });
+
   autoUpdater.on("checking-for-update", () => {
     updateDebugInfo.isChecking = true;
   });
 
   autoUpdater.on("update-available", (info) => {
+    updateDebugInfo.isChecking = false;
+    updateDebugInfo.downloadComplete = false;
+    updateDebugInfo.downloadProgress = 0;
     updateDebugInfo.updateAvailable = true;
     updateDebugInfo.newVersion = info.version;
   });
 
   autoUpdater.on("update-not-available", () => {
+    updateDebugInfo.newVersion = null;
     updateDebugInfo.updateAvailable = false;
     updateDebugInfo.isChecking = false;
   });
@@ -64,23 +73,34 @@ function setupAutoUpdater() {
   });
 }
 
-function scheduleUpdateCheck(delayMs = 5000) {
-  setTimeout(() => {
-    try {
-      updateDebugInfo.isChecking = true;
-      updateDebugInfo.lastCheckTime = new Date().toISOString();
-      updateDebugInfo.checkCount++;
+function checkForUpdates() {
+  setupAutoUpdater();
+  if (checkPromise) return checkPromise;
+  updateDebugInfo.isChecking = true;
+  updateDebugInfo.lastCheckTime = new Date().toISOString();
+  updateDebugInfo.checkCount++;
+  updateDebugInfo.lastError = null;
 
-      autoUpdater.checkForUpdatesAndNotify();
-    } catch (err) {
-      updateDebugInfo.lastError = err.message;
+  checkPromise = Promise.resolve().then(() => autoUpdater.checkForUpdates())
+    .then(result => ({ success: true, data: result }))
+    .catch(error => {
+      updateDebugInfo.lastError = error.message;
+      return { success: false, error: error.message, message: error.message };
+    })
+    .finally(() => {
       updateDebugInfo.isChecking = false;
-    }
-  }, delayMs);
+      checkPromise = null;
+    });
+  return checkPromise;
+}
+
+function scheduleUpdateCheck(delayMs = 5000) {
+  setTimeout(() => { void checkForUpdates(); }, delayMs);
 }
 
 module.exports = {
   setupAutoUpdater,
+  checkForUpdates,
   scheduleUpdateCheck,
   updateDebugInfo,
 };

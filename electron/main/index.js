@@ -37,6 +37,8 @@ const {
   handleApiCalls,
 } = require("./parts/handlers");
 
+const { setupAutoUpdater, scheduleUpdateCheck } = require("./updateManager");
+
 // ✅ 対策: window.confirm() の代わりに使う非ブロッキングな確認ダイアログ
 const { registerConfirmDialog } = require("./confirmDialog");
 
@@ -85,6 +87,9 @@ app.whenReady().then(
       // ========================================================
 
       setAppMenu();
+
+      setupAutoUpdater();
+      scheduleUpdateCheck(5000);
 
       // ========================================================
       // マイク権限
