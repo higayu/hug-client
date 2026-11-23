@@ -93,6 +93,7 @@ function createElectronApi(ipcRenderer, isDebugMode) {
     checkLaravelConnection: () => ipcRenderer.invoke("laravel:connection:check"),
 
     // ---- Laravel AI文章校正 ----
+    laravel_aiRecordEditer_models: () => ipcRenderer.invoke("laravel:ai-record-editer:models"),
     laravel_aiRecordEditer_correctPersonalRecord: (data = {}) =>
       ipcRenderer.invoke(
         "laravel:ai-record-editer:personal-record:correct",

@@ -1,5 +1,5 @@
 
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useToast } from "@/utils/notifications.jsx";
 import PromptPanel from "./PromptPanel";
 import { AI_PROMPT_COMPONENT_MAP } from "./PromptBox";
@@ -191,6 +191,34 @@ export default function LaravelApiContent({
   } = useToast();
 
   const [laravelApiResults, setLaravelApiResults] = useState({});
+  const [selectedModelId, setSelectedModelId] = useState("");
+  const [modelSettings, setModelSettings] = useState(null);
+  const [modelBusy, setModelBusy] = useState(true);
+  const [modelError, setModelError] = useState("");
+
+  const loadModels = useCallback(async () => {
+    setModelBusy(true);
+    setModelError("");
+    try {
+      const api = window.electronAPI?.laravel_aiRecordEditer_models;
+      if (!api) throw new Error("モデル選択を利用するにはアプリを再起動してください。");
+      const result = await api();
+      const data = result?.data?.data ?? result?.data;
+      if (!result?.success || data?.success === false || !data?.selected) {
+        throw new Error(result?.message || data?.message || "AIモデルを取得できませんでした。");
+      }
+      setModelSettings(data);
+      setSelectedModelId("");
+    } catch (error) {
+      setModelError(error.message);
+    } finally {
+      setModelBusy(false);
+    }
+  }, []);
+
+  useEffect(() => { loadModels(); }, [loadModels]);
+
+  const selectModel = (event) => setSelectedModelId(event.target.value);
 
   // ==========================================
   // Laravel API送信
@@ -209,6 +237,7 @@ export default function LaravelApiContent({
       // 送信開始通知
       // ------------------------------------------
 
+      if (modelBusy) throw new Error("AIモデルの設定が完了するまでお待ちください。");
       showInfoToast("Laravel API に送信中…");
 
       try {
@@ -217,6 +246,7 @@ export default function LaravelApiContent({
         // ------------------------------------------
 
         const text = await sendPromptToLaravelApi({
+          aiTypeId: selectedModelId ? Number(selectedModelId) : null,
           textValue,
           prompt,
           message,
@@ -301,7 +331,7 @@ export default function LaravelApiContent({
         throw propagatedError;
       }
     },
-    [showErrorToast, showInfoToast, showSuccessToast]
+    [modelBusy, selectedModelId, showErrorToast, showInfoToast, showSuccessToast]
   );
 
   // ==========================================
@@ -337,6 +367,25 @@ export default function LaravelApiContent({
 
   return (
     <div className="flex flex-col items-center justify-center w-full p-2 space-y-3">
+      <div className="w-full flex flex-col gap-2">
+        <label className="text-sm font-bold text-gray-700">
+          文書校正モデル（個人記録・専門的支援）
+          <select
+            className="text-black bg-white ml-2 p-2 border rounded-lg disabled:opacity-60"
+            value={selectedModelId}
+            disabled={modelBusy || !modelSettings}
+            onChange={selectModel}
+          >
+            {!modelSettings && <option value="">{modelBusy ? "読み込み中…" : "取得できませんでした"}</option>}
+            {modelSettings && <option value="">{modelSettings.default_model.display_name}（標準）</option>}
+            {modelSettings?.models.map((model) => (
+              <option key={model.id} value={model.id}>{model.display_name}（{model.provider}）</option>
+            ))}
+          </select>
+        </label>
+        <p className="text-xs text-gray-600">選択はこの画面での一時利用です。標準モデルはFilamentで設定します。</p>
+        {modelError && <p role="alert" className="text-sm text-red-600">{modelError} <button type="button" disabled={modelBusy} onClick={loadModels} className="underline">再取得</button></p>}
+      </div>
       <PromptPanel
         spaceId={spaceId}
         componentMap={AI_PROMPT_COMPONENT_MAP}

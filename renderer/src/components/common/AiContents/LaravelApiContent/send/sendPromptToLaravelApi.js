@@ -101,6 +101,7 @@ function normalizeCaughtError(error) {
 // ==========================================
 
 export async function sendPromptToLaravelApi({
+  aiTypeId,
   textValue,
   prompt,
   message,
@@ -150,6 +151,7 @@ export async function sendPromptToLaravelApi({
       const payload = usesStoredPlan
         ? { child_id: childId, message: message.trim() }
         : { prompt: prompt.trim(), message: message.trim() };
+      if (aiTypeId != null) payload.ai_type_id = aiTypeId;
       const result = await api(payload);
 
       const data = result?.data?.data ?? result?.data;

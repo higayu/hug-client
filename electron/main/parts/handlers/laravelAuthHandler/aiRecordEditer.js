@@ -271,6 +271,12 @@ async function correctByType(type, payload = {}) {
     ? normalizeStoredPlanPayload(payload)
     : normalizePayload(payload);
 
+  if (payload.ai_type_id != null) {
+    const modelId = Number(payload.ai_type_id);
+    if (!Number.isSafeInteger(modelId) || modelId < 1) throw new Error("AIモデルの指定が不正です。");
+    normalizedPayload.ai_type_id = modelId;
+  }
+
   const timeoutMs = getTimeoutMs(type);
 
   // ------------------------------------------
@@ -428,7 +434,21 @@ function createHandler(type) {
 // エクスポート
 // ==========================================
 
+async function modelOperation() {
+  try {
+    const result = await executeAuthenticatedOperation(
+      () => laravelApiClient.get("/ai-record-editer/models"),
+      "AIモデル設定の取得・更新に失敗しました。",
+    );
+    if (result?.success === false) return result;
+    return { success: true, data: unwrapData(result) };
+  } catch (error) {
+    return formatError(error, "AIモデル設定の取得・更新に失敗しました。");
+  }
+}
+
 module.exports = {
+  modelsHandler: () => modelOperation(),
   personalHandler: createHandler("personal"),
 
   personalWithPlanHandler:

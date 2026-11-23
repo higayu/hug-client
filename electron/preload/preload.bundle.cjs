@@ -113,6 +113,7 @@ var require_electronApi = __commonJS({
         // ---- Laravel 接続確認 ----
         checkLaravelConnection: () => ipcRenderer2.invoke("laravel:connection:check"),
         // ---- Laravel AI文章校正 ----
+        laravel_aiRecordEditer_models: () => ipcRenderer2.invoke("laravel:ai-record-editer:models"),
         laravel_aiRecordEditer_correctPersonalRecord: (data = {}) => ipcRenderer2.invoke(
           "laravel:ai-record-editer:personal-record:correct",
           data

@@ -69,6 +69,7 @@ const IPC_CHANNELS = [
   "laravel:procedure:upsert-ai-prompt",
   "laravel:procedure:upsert-managers2",
   "laravel:ai-chat:message",
+  "laravel:ai-record-editer:models",
   "laravel:ai:settings",
   "laravel:ai:usage-charts",
   "laravel:ai-chat:check-connection",
@@ -441,6 +442,7 @@ function registerLaravelAuthHandlers(
     aiChat.messageHandler
   );
 
+  ipcMain.handle("laravel:ai-record-editer:models", aiRecordEditer.modelsHandler);
   ipcMain.handle("laravel:ai:settings", aiChat.settingsHandler);
   ipcMain.handle("laravel:ai:usage-charts", aiChat.chartsHandler);
 
