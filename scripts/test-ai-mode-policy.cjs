@@ -17,34 +17,31 @@ vm.runInNewContext(code, { module: compiled, exports: compiled.exports });
 const { canChooseAiMode, resolveAiMode, withAiModePolicy } = compiled.exports;
 const auth = (role) => ({ authenticated: true, hasAccessToken: true, status: 'authenticated', user: { role_code: role } });
 
-test('only authenticated admin, mentor and franchise_mentor may choose another AI', () => {
-  for (const role of ['admin', 'mentor', 'franchise_mentor']) {
+test('all users may choose an allowed AI mode regardless of authentication or role', () => {
+  for (const role of ['admin', 'mentor', 'franchise_mentor', 'staff', 'franchise_staff', '', null]) {
     assert.equal(canChooseAiMode(auth(role)), true);
     assert.equal(resolveAiMode(auth(role), 'gemini'), 'gemini');
   }
-  for (const role of ['staff', 'franchise_staff', 'menter', '', null]) {
-    assert.equal(canChooseAiMode(auth(role)), false);
-    assert.equal(resolveAiMode(auth(role), 'chatGPT'), 'LaravelApi');
+  for (const value of [null, {}, { ...auth('admin'), authenticated: false }, { ...auth('admin'), hasAccessToken: false }, { ...auth('admin'), status: 'loading' }]) {
+    assert.equal(canChooseAiMode(value), true);
+    assert.equal(resolveAiMode(value, 'gemini'), 'gemini');
   }
 });
 
-test('missing authentication, loading and invalid selections fail closed', () => {
-  for (const value of [null, {}, { ...auth('admin'), authenticated: false }, { ...auth('admin'), hasAccessToken: false }, { ...auth('admin'), status: 'loading' }]) {
-    assert.equal(resolveAiMode(value, 'gemini'), 'LaravelApi');
-  }
+test('invalid selections fall back to the default mode', () => {
   assert.equal(resolveAiMode(auth('admin'), 'unknown'), 'LaravelApi');
 });
 
-test('root reducer enforces direct writes and account role changes', () => {
+test('root reducer preserves valid selections across account role changes', () => {
   const reducer = withAiModePolicy((state, action) => ({ ...state, ...action.payload }));
   let state = { auth: auth('staff'), appState: { USE_AI: 'gemini', keep: 1 } };
   state = reducer(state, {});
-  assert.equal(state.appState.USE_AI, 'LaravelApi');
+  assert.equal(state.appState.USE_AI, 'gemini');
   assert.equal(state.appState.keep, 1);
   state = reducer(state, { payload: { auth: auth('admin'), appState: { USE_AI: 'gemini' } } });
   assert.equal(state.appState.USE_AI, 'gemini');
   state = reducer(state, { payload: { auth: auth('franchise_staff') } });
-  assert.equal(state.appState.USE_AI, 'LaravelApi');
+  assert.equal(state.appState.USE_AI, 'gemini');
 });
 
 function mainPolicy(role, { token = true, failure = false } = {}) {
@@ -63,18 +60,19 @@ function mainPolicy(role, { token = true, failure = false } = {}) {
   return module.exports;
 }
 
-test('Main verifies server role and ignores role claims in settings', async () => {
+test('Main preserves allowed modes without checking the account role', async () => {
   const settings = { apiSettings: { useAI: 'gemini' }, role_code: 'admin' };
   for (const role of ['admin', 'mentor', 'franchise_mentor', 'staff', 'franchise_staff']) {
     const result = await mainPolicy(role).enforceAiMode(settings);
-    assert.equal(result.apiSettings.useAI, ['admin', 'mentor', 'franchise_mentor'].includes(role) ? 'gemini' : 'LaravelApi');
+    assert.equal(result.apiSettings.useAI, 'gemini');
   }
-  assert.equal((await mainPolicy('admin', { token: false }).enforceAiMode(settings)).apiSettings.useAI, 'LaravelApi');
-  assert.equal((await mainPolicy('admin', { failure: true }).enforceAiMode(settings)).apiSettings.useAI, 'LaravelApi');
+  assert.equal((await mainPolicy('admin', { token: false }).enforceAiMode(settings)).apiSettings.useAI, 'gemini');
+  assert.equal((await mainPolicy('admin', { failure: true }).enforceAiMode(settings)).apiSettings.useAI, 'gemini');
+  assert.equal((await mainPolicy('staff').enforceAiMode({ apiSettings: { useAI: 'unknown' } })).apiSettings.useAI, 'LaravelApi');
   assert.equal(settings.apiSettings.useAI, 'gemini');
 });
 
-test('INI read masks saved mode; full and individual saves persist the forced mode', async () => {
+test('INI read and writes preserve allowed AI modes for every user', async () => {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'hug-ai-policy-'));
   const filename = path.join(directory, 'ini.json');
   try {
@@ -87,21 +85,21 @@ test('INI read masks saved mode; full and individual saves persist the forced mo
         if (id === 'fs') return fs;
         if (id === 'path') return path;
         if (id === '../../utils/pathResolver') return { getIniPath: () => filename };
-        if (id === './defaultIni') return { DEFAULT_INI: defaults, getDefaultIni: () => JSON.parse(JSON.stringify(defaults)) };
+        if (id === './defaultIni') return { DEFAULT_INI: defaults, getDefaultIni: () => JSON.parse(JSON.stringify(defaults)), normalizeMemoAutoSaveSettings() {} };
         if (id === './aiModePolicy') return mainPolicy('staff');
         throw new Error(`Unexpected module ${id}`);
       },
     });
     const handlers = {};
     module.exports.handleIniAccess({ removeHandler() {}, handle(name, handler) { handlers[name] = handler; } });
-    assert.equal((await handlers['read-ini']()).data.apiSettings.useAI, 'LaravelApi');
+    assert.equal((await handlers['read-ini']()).data.apiSettings.useAI, 'gemini');
     assert.equal(JSON.parse(fs.readFileSync(filename)).apiSettings.useAI, 'gemini');
     await handlers['save-ini'](null, { apiSettings: { useAI: 'openrouter' } });
-    assert.equal(JSON.parse(fs.readFileSync(filename)).apiSettings.useAI, 'LaravelApi');
+    assert.equal(JSON.parse(fs.readFileSync(filename)).apiSettings.useAI, 'openrouter');
     const result = await handlers['update-ini-setting'](null, 'apiSettings.useAI', 'chatGPT');
-    assert.equal(result.data.apiSettings.useAI, 'LaravelApi');
+    assert.equal(result.data.apiSettings.useAI, 'chatGPT');
     assert.equal(result.data.apiSettings.facilityId, '3');
-    assert.equal(JSON.parse(fs.readFileSync(filename)).apiSettings.useAI, 'LaravelApi');
+    assert.equal(JSON.parse(fs.readFileSync(filename)).apiSettings.useAI, 'chatGPT');
   } finally {
     if (fs.existsSync(filename)) fs.unlinkSync(filename);
     fs.rmdirSync(directory);
