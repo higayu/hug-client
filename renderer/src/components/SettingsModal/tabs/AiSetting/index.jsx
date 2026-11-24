@@ -16,7 +16,6 @@ const date = (value) => value ? new Date(value).toLocaleString('ja-JP', { timeZo
 export default function AiSetting({ isActive = true }) {
   const { iniState, appState, setIniState, updateAppState } = useAppState()
   const auth = useSelector(selectLaravelAuth)
-  //AI校正は、基本はLaravel APIで固定。AI種別の変更は管理者のみ可能です。
   const canChooseAi = useSelector(selectCanChooseAiMode)
   const accountId = auth.user?.staff_id ?? auth.user?.id
   const { showSuccessToast, showErrorToast } = useToast()
