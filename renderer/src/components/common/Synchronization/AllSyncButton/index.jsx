@@ -8,6 +8,11 @@ import { selectFacilityId } from '@/store/slices/appStateSlice'
 
 import { executeFlowV2 } from '@/components/WebAutomationV2'
 
+import {
+  usePersonalRecordRange,
+  PersonalRecordRangeControls,
+} from '@/components/common/hug_function/PersonalRecord/PersonalRecordRange'
+
 
 const PERSONAL_RECORD_ITEM_ID = 1
 const TOTAL_STEPS = 5
@@ -177,6 +182,8 @@ export default function AllSyncButton({
   setSendError,
   setSendResult,
 }) {
+  const localRange = usePersonalRecordRange(year, month, facilityIdProp)
+  const range = localRange
   const [isRunning, setIsRunning] = useState(false)
   const [label, setLabel] = useState(DEFAULT_LABEL)
   const labelResetTimerRef = useRef(null)
@@ -316,17 +323,20 @@ export default function AllSyncButton({
     setLabel(formatStepLabel(3, '個人記録一覧取得中...'))
 
     const listResult = await executeFlowV2(
-      'personal_record_list_fetch',
-      {
-        facilityId,
-        year,
-        month,
-      },
+      range.flowKey,
+      { facilityId, ...range.input },
     )
 
     const listRecords = Array.isArray(listResult?.records)
       ? listResult.records
       : []
+
+    if (!range.monthly && listRecords.some(record => {
+      const date = String(record?.date ?? '')
+      return !/^\d{4}-\d{2}-\d{2}$/.test(date) || date < range.start || date > range.end
+    })) {
+      throw new Error('指定期間外の個人記録が返されたため取得を停止しました。')
+    }
 
     setLabel(
       formatStepLabel(
@@ -362,7 +372,7 @@ export default function AllSyncButton({
         staffFlowEngine: 'v2',
         childrenFlowKey: 'children_fetch',
         childrenFlowEngine: 'v2',
-        listFlowKey: 'personal_record_list_fetch',
+        listFlowKey: range.flowKey,
         listFlowEngine: 'v2',
         detailFlowKey: 'personal_record_detail_fetch',
         detailFlowEngine: 'v2',
@@ -418,8 +428,8 @@ export default function AllSyncButton({
 
     const staffId = Number(STAFF_ID)
     const syncFacilityId = Number(facilityId)
-    const targetYear = Number(year)
-    const targetMonth = Number(month)
+    const targetYear = Number(range.monthly ? year : range.start.slice(0, 4))
+    const targetMonth = Number(range.monthly ? month : range.start.slice(5, 7))
 
     if (!Number.isInteger(syncFacilityId) || syncFacilityId <= 0) {
       throw new Error('同期履歴に保存する施設IDが不正です。')
@@ -435,7 +445,7 @@ export default function AllSyncButton({
 
     const payload = {
       records: bulkRecords,
-      save_sync_history: 1,
+      save_sync_history: range.monthly ? 1 : 0,
       sync_facility_id: syncFacilityId,
       target_year: targetYear,
       target_month: targetMonth,
@@ -496,7 +506,7 @@ export default function AllSyncButton({
   }
 
   const handleClick = async () => {
-    if (disabled || isRunning) return
+    if (disabled || isRunning || !range.valid) return
 
     clearLabelResetTimer()
 
@@ -598,9 +608,11 @@ export default function AllSyncButton({
     }
   }
 
-  const isDisabled = disabled || isRunning || !facilityId
+  const isDisabled = disabled || isRunning || !facilityId || !range.valid
 
   return (
+    <div className="flex flex-wrap items-center gap-2">
+      <PersonalRecordRangeControls range={range} disabled={disabled || isRunning} />
     <button
       type="button"
       onClick={handleClick}
@@ -632,5 +644,6 @@ export default function AllSyncButton({
       />
       <span>{label}</span>
     </button>
+    </div>
   )
 }

@@ -1,3 +1,7 @@
+import { validatePersonalRecordFlow } from "@/components/common/hug_function/PersonalRecord/PersonalRecordRange/policy";
+import { store } from "@/store/store";
+import { selectDebugFlg } from "@/store/slices/appStateSlice";
+import { selectIsGlobalAdmin, selectIsLaravelAuthenticated } from "@/store/slices/authSlice";
 import { executeVirtualEntry } from "./moduleLoader";
 import { createWebAutomationV2Helpers } from "./helpers";
 
@@ -37,26 +41,73 @@ function getApi() {
   return api;
 }
 
+// APIエラーを文字列化し、認証情報やレスポンス本文の無条件出力を避ける。
+function formatApiError(response, fallback) {
+  const raw = response?.error ?? response?.message ?? response;
+  const body = raw?.response?.data ?? raw?.data ?? response?.data;
+  const status = raw?.response?.status ?? raw?.status ?? response?.status ?? response?.statusCode;
+  const messages = [];
+  const add = (value) => {
+    if (typeof value === "string" && value.trim() && !messages.includes(value)) {
+      messages.push(value);
+    }
+  };
+  add(typeof raw === "string" ? raw : raw?.message);
+  add(body?.message);
+  add(response?.message);
+  const errors = body?.errors ?? raw?.errors ?? response?.errors;
+  if (errors && typeof errors === "object") {
+    for (const [field, values] of Object.entries(errors)) {
+      for (const value of Array.isArray(values) ? values : [values]) {
+        if (typeof value === "string") add(`${field}: ${value}`);
+      }
+    }
+  }
+  if (!messages.length) {
+    add(typeof raw?.error === "string" ? raw.error : null);
+    add(raw?.code);
+  }
+  return [fallback, status ? `HTTP ${status}` : null,
+    ...messages].filter(Boolean).join(" | ");
+}
+
+function createFlowApiError(response, label) {
+  const error = new Error(formatApiError(response, label));
+  const raw = response?.error ?? response?.message ?? response;
+  const body = raw?.response?.data ?? raw?.data ?? response?.data;
+  error.httpStatus = Number(raw?.response?.status ?? raw?.status ?? response?.status ?? response?.statusCode);
+  error.draftMissing = error.httpStatus === 409 &&
+    [raw, raw?.message, body?.message, response?.message].some(
+      value => typeof value === "string" && /^下書きリビジョンがありません[。.]?$/.test(value.trim())
+    );
+  return error;
+}
+
+async function requestFlowBundle(api, method, params, label) {
+  let response;
+  try {
+    response = await api[method](params);
+  } catch (error) {
+    throw createFlowApiError(error, label);
+  }
+  if (!response || response.ok === false || response.success === false) {
+    const error = createFlowApiError(response, label);
+    const message = error.message;
+    console.error("[WebAutomationV2] Flow取得失敗", {
+      ...params, method, message,
+    });
+    throw error;
+  }
+  return response;
+}
+
 async function loadPublishedFlowBundle({ appKey, flowKey }) {
   const api = getApi();
 
-  const response = await api.webAutomationV2_getFlowBundle({
-    appKey,
-    flowKey,
-  });
-
-  if (!response) {
-    throw new Error(
-      `[WebAutomationV2] Flow取得結果が空です: ${flowKey}`
-    );
-  }
-
-  if (response.ok === false) {
-    throw new Error(
-      response.error ||
-        `[WebAutomationV2] Flow取得に失敗しました: ${flowKey}`
-    );
-  }
+  const response = await requestFlowBundle(
+    api, "webAutomationV2_getFlowBundle", { appKey, flowKey },
+    `[WebAutomationV2] 公開版Flow取得失敗: ${flowKey}`
+  );
 
   const flow = response.flow || response.data?.flow;
   const files = response.files || response.data?.files || [];
@@ -91,10 +142,10 @@ async function loadDraftFlowBundle({ appKey, flowKey }) {
   if (typeof api.webAutomationV2_getDraftTestFlowBundle !== "function") {
     throw new Error("下書きテスト用preload APIがありません");
   }
-  const response = await api.webAutomationV2_getDraftTestFlowBundle({ appKey, flowKey });
-  if (!response || response.ok === false || response.success === false) {
-    throw new Error(response?.error || response?.message || "下書きの取得に失敗しました");
-  }
+  const response = await requestFlowBundle(
+    api, "webAutomationV2_getDraftTestFlowBundle", { appKey, flowKey },
+    `[WebAutomationV2] 下書きFlow取得失敗: ${flowKey}`
+  );
   const meta = response.meta || response.data?.meta || {};
   if (meta.status !== "draft" || !Number.isInteger(Number(meta.revision_id)) || Number(meta.revision_id) <= 0) {
     throw new Error("下書きリビジョンではありません。公開版の代替実行を拒否しました");
@@ -199,15 +250,34 @@ export async function executeFlowV2(
   let files;
   let debugLogMode = "failed_only";
   let logStarted = false;
-  const draftTest = options.revisionMode === "draft";
+  // adminのデバッグ時は全Flowで下書きを優先する。
+  const state = store.getState();
+  const admin = selectIsLaravelAuthenticated(state) && selectIsGlobalAdmin(state);
+  const debug = selectDebugFlg(state) === true;
+  const autoDraft = options.revisionMode == null && admin && debug;
+  let draftTest = options.revisionMode === "draft" || autoDraft;
+  if (draftTest && !admin) {
+    throw new Error("下書きテストは管理者のみ利用できます");
+  }
 
   console.info("[WebAutomationV2] 実行開始", { flowKey, executionUuid });
   try {
+    if (appKey === DEFAULT_APP_KEY) validatePersonalRecordFlow(store.getState(), flowKey, input);
     api = getApi();
     stage = "load-flow";
-    ({ flow, files } = draftTest
-      ? await loadDraftFlowBundle({ appKey, flowKey })
-      : await loadPublishedFlowBundle({ appKey, flowKey }));
+    if (draftTest) {
+      try {
+        ({ flow, files } = await loadDraftFlowBundle({ appKey, flowKey }));
+      } catch (error) {
+        // 明示的な下書き指定や、権限・通信・その他の409エラーは代替しない。
+        if (!autoDraft || error?.draftMissing !== true) throw error;
+        console.info("[WebAutomationV2] 下書きなし: 公開版へ切り替え", { appKey, flowKey, executionUuid });
+        draftTest = false;
+        ({ flow, files } = await loadPublishedFlowBundle({ appKey, flowKey }));
+      }
+    } else {
+      ({ flow, files } = await loadPublishedFlowBundle({ appKey, flowKey }));
+    }
     debugLogMode = getDebugLogMode(flow);
     stage = "prepare-runtime";
     const config = parseJson(flow.config_json, {});

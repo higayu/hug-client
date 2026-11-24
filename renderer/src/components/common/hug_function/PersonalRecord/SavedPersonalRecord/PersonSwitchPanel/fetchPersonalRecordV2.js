@@ -1,3 +1,5 @@
+import { store } from "@/store/store";
+import { validatePersonalRecordFlow } from "../../PersonalRecordRange/policy";
 import { executeFlowV2 } from "@/components/WebAutomationV2";
 
 const CONTACT_BOOK_URL = "https://www.hug-ayumu.link/hug/wm/contact_book.php";
@@ -36,6 +38,7 @@ export async function fetchPersonalRecordV2({
   facilityId,
   yearMonth,
   dateStr = "",
+  range = null,
 }) {
   if (!childId) {
     return { ok: false, error: "児童IDが指定されていません" };
@@ -46,12 +49,22 @@ export async function fetchPersonalRecordV2({
   }
 
   const [year, month] = yearMonth.split("-");
-
-  const listResult = await executeFlowV2("personal_record_list_fetch", {
-    facilityId,
-    year,
-    month,
-  });
+  const targetDate = normalizeDate(dateStr);
+  const monthly = !dateStr && range?.monthly === true && range?.admin === true;
+  const startDate = dateStr ? targetDate : range?.start;
+  const endDate = dateStr ? targetDate : range?.end;
+  try {
+    validatePersonalRecordFlow(store.getState(),
+      monthly ? "personal_record_list_fetch" : "personal_record_weekly_list_fetch",
+      { facilityId, startDate, endDate });
+  } catch (error) {
+    return { ok: false, error: error.message };
+  }
+  const listResult = await executeFlowV2(
+    monthly ? "personal_record_list_fetch" : "personal_record_weekly_list_fetch",
+    monthly ? { facilityId, year, month } : { facilityId, startDate, endDate }
+  );
+  if (listResult?.ok === false) return listResult;
 
   const targetChild = Array.isArray(listResult?.hugChildren)
     ? listResult.hugChildren.find(
@@ -66,15 +79,14 @@ export async function fetchPersonalRecordV2({
   }
 
   const targetChildName = normalizeChildName(targetChild?.name);
-  const targetDate = normalizeDate(dateStr);
-
   const filteredListRecords = Array.isArray(listResult?.records)
     ? listResult.records.filter((record) => {
         if (normalizeChildName(record?.childName) !== targetChildName) {
           return false;
         }
 
-        if (targetDate && normalizeDate(record?.date) !== targetDate) {
+        const date = normalizeDate(record?.date);
+        if (!monthly && (!date || date < startDate || date > endDate)) {
           return false;
         }
 

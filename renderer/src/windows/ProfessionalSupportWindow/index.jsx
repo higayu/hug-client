@@ -11,6 +11,7 @@ import {
 } from './dbProfessionalSupport'
 import ResizableSplitPane from '@/components/ui/ResizableSplitPane'
 import { AppStateProvider, useAppState } from '@/AppStateContext'
+import DataBaseAutoLoader from '@/provider/DataBaseAutoLoader'
 
 const getInitialYearMonth = (targetDate) => {
   const matched = String(targetDate ?? '').match(/^(\d{4})-(\d{2})/)
@@ -443,6 +444,12 @@ const leftContent = (
 export default function ProfessionalSupportWindow() {
   return (
     <AppStateProvider>
+      {/*
+        ProfessionalSupportWindow は別 BrowserWindow のため Redux store も別。
+        MainWindow で取得済みの認証・会社ロール・施設所属は共有されないので、
+        このウィンドウでも権限判定に必要なDB/Auth情報を初期化する。
+      */}
+      <DataBaseAutoLoader />
       <ProfessionalSupportWindowContent />
     </AppStateProvider>
   )

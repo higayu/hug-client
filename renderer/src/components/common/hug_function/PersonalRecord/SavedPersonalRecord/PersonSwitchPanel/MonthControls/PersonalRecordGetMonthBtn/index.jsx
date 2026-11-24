@@ -1,3 +1,4 @@
+import { usePersonalRecordRange, PersonalRecordRangeControls } from "../../../../PersonalRecordRange";
 import { useCallback, useRef, useState } from "react";
 import { useAppState } from "@/AppStateContext";
 import { useSelector } from "react-redux";
@@ -79,9 +80,13 @@ export default function PersonalRecordGetMonthBtn({
   const isFetchingRef = useRef(false);
   const { loadDataBase } = useDataBase();
 
+  const selectedMonth = monthStr || toMonthStr(CURRENT_YMD);
+  const [rangeYear, rangeMonth] = selectedMonth.split("-");
+  const range = usePersonalRecordRange(rangeYear, rangeMonth);
+
   const runFetch = useCallback(async () => {
     // 親コンポーネントから使用不可にされている場合
-    if (disabled) {
+    if (disabled || !range.valid) {
       console.warn(`[${LOG_TAG}] 使用不可のため処理を中止しました`);
       return;
     }
@@ -123,6 +128,7 @@ export default function PersonalRecordGetMonthBtn({
         childId: selectedChildId,
         facilityId,
         yearMonth,
+        range,
       });
 
       onDebugResult?.(result);
@@ -219,6 +225,8 @@ export default function PersonalRecordGetMonthBtn({
       setFetching(false);
     }
   }, [
+    range,
+    selectedChildId,
     disabled,
     FACILITY_ID,
     STAFF_ID,
@@ -234,12 +242,14 @@ export default function PersonalRecordGetMonthBtn({
 
   const isDisabled =
     disabled ||
+    !range.valid ||
     !selectedChildId ||
     !(monthStr || CURRENT_YMD) ||
     fetching;
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex flex-wrap items-center gap-2">
+      <PersonalRecordRangeControls range={range} disabled={disabled || fetching} />
       <button
         type="button"
         id="personal-record-get"
