@@ -1,6 +1,6 @@
 import { resolveAiMode } from '../utils/aiModePolicy.js'
 
-// Enforce on every action, including auth changes and direct appState updates.
+// Validate the AI mode on every action, including direct appState updates.
 export function withAiModePolicy(reducer) {
   return (state, action) => {
     const next = reducer(state, action)

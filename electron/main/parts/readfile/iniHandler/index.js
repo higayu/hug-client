@@ -74,8 +74,7 @@ function handleIniAccess(ipcMain) {
       }
 
 
-      // Keep a manager's saved preference on disk, but never expose it as the
-      // effective selection before Laravel confirms the current account's role.
+      // 保存済みのAI種別を返す。未知の値だけデフォルトへ補正する。
       return { success: true, data: await enforceAiMode(normalizedData) };
     } catch (err) {
       console.error("❌ ini.json 読み込み失敗:", err);

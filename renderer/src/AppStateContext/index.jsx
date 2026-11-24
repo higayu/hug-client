@@ -583,8 +583,7 @@ export function AppStateProvider({
     dispatch,
   ])
 
-  // Once authenticated as a manager, recover the saved preference that was
-  // masked during unauthenticated startup. Other users always remain forced.
+  // 認証状態が確定したときにも端末に保存されたAI設定を同期する。
   useEffect(() => {
     if (canChooseAi) void loadIni()
   }, [canChooseAi, loadIni])
