@@ -29,9 +29,11 @@ async function withTimeout(promise, ms, label) {
  */
 export function createWebAutomationV2Helpers({
   defaultTimeoutMs = 30000,
+  targetWebview = null,
 } = {}) {
   const getHugWebview = async () => {
-    const webview = await getHugWebviewForCache();
+    const webview = targetWebview || await getHugWebviewForCache();
+    if (targetWebview && !targetWebview.isConnected) throw new Error("対象タブが閉じられました");
 
     if (!webview) {
       throw new Error(
@@ -53,16 +55,17 @@ export function createWebAutomationV2Helpers({
       );
     }
 
-    const targetWebview = webview || (await getHugWebview());
+    if (targetWebview && webview && webview !== targetWebview) throw new Error("対象WebViewの変更は禁止されています");
+    const executionWebview = webview || (await getHugWebview());
 
-    if (typeof targetWebview.executeJavaScript !== "function") {
+    if (typeof executionWebview.executeJavaScript !== "function") {
       throw new Error(
         "[WebAutomationV2] 対象WebViewでexecuteJavaScriptを使用できません"
       );
     }
 
     return withTimeout(
-      targetWebview.executeJavaScript(scriptText),
+      executionWebview.executeJavaScript(scriptText),
       timeoutMs,
       "WebView JavaScript実行"
     );

@@ -1,2 +1,4 @@
 export { default as ProfessionalSupportManagerPanel } from './ProfessionalSupportManagerPanel'
 export { addProfessionalSupportListAction } from './ProfessionalSupportManagerPanel/professionalList.js'
+
+export { addProfessionalSupportTabAction } from "./OpenProfessionalSupport/index.jsx"

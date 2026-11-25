@@ -284,7 +284,8 @@ export async function executeFlowV2(
     const timeoutMs = Number(flow.timeout_ms) > 0
       ? Number(flow.timeout_ms)
       : 30000;
-    const helpers = createWebAutomationV2Helpers({ defaultTimeoutMs: timeoutMs });
+    if (((/^(personal_record|professional_support)_dom_/.test(String(flowKey)) || String(flowKey) === "professional_support_draft_save")) && !options.webview) throw new Error("対象WebViewが必要です");
+    const helpers = createWebAutomationV2Helpers({ defaultTimeoutMs: timeoutMs, targetWebview: options.webview || null });
 
     stage = "execution-log-start";
     // テスト実行のログを通常公開版と混同させない。
@@ -300,7 +301,7 @@ export async function executeFlowV2(
         flowVersion: flow.version,
         entryFile: flow.entry_file,
         entryExport: flow.entry_export,
-        input,
+        input: ((/^(personal_record|professional_support)_dom_/.test(String(flowKey)) || String(flowKey) === "professional_support_draft_save")) ? { redacted: true } : input,
         ...(draftTest ? { executionMode: "draft-test" } : {}),
       }
     );
@@ -341,7 +342,7 @@ export async function executeFlowV2(
       {
         executionUuid,
         status: "success",
-        result,
+        result: ((/^(personal_record|professional_support)_dom_/.test(String(flowKey)) || String(flowKey) === "professional_support_draft_save")) ? { redacted: true } : result,
         durationMs: Date.now() - startedAt,
         ...(debugLogMode === "always"
           ? { debug: buildDebugLog({ flow, executionUuid, startedAt, status: "success" }) }

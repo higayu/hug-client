@@ -8,9 +8,7 @@ import {
   closeTab,
 } from '@/hooks/useTabs/common/index.js'
 
-import { runInitialSearch } from './parts/runInitialSearch.js'
-import { openPersonalRecordEdit } from './parts/openPersonalRecordEdit.js'
-import { setupRecordStaff } from './parts/setupRecordStaff.js'
+import { executeFlowV2 } from "@/components/WebAutomationV2/executeFlowV2"
 import { mountPersonalRecordControls } from './PersonalRecordModal.jsx'
 
 export function addPersonalRecordTabAction4(appState, space) {
@@ -75,74 +73,17 @@ export function addPersonalRecordTabAction4(appState, space) {
   }
 
   let controls = null
-  let phase = 'INIT'
-  let newPersonalFlg = false
-
-  // 初期検索
-  newWebview.addEventListener(
-    'did-finish-load',
-    async () => {
-      if (phase !== 'INIT') return
-
-      phase = 'SEARCHING'
-
-      await runInitialSearch(newWebview, recordDate)
-
-      phase = 'SEARCHED'
-    },
-    { once: true }
-  )
-
-  // 一覧から編集画面へ
-  newWebview.addEventListener('did-stop-loading', async () => {
-    if (phase !== 'SEARCHED') return
-
-    const url = await newWebview.getURL()
-
-    if (!url.includes('contact_book.php')) {
-      return
-    }
-
-    const result = await openPersonalRecordEdit(newWebview)
-
-    if (!result) {
-      return
-    }
-
-    newPersonalFlg = result.newFlg
-
-    console.log('📌 newPersonalFlg =', newPersonalFlg)
-
-    phase = 'EDIT_CLICKED'
-  })
-
-  // 編集画面の初期化
-  newWebview.addEventListener('did-stop-loading', async () => {
-    if (phase !== 'EDIT_CLICKED') return
-
-    const url = await newWebview.getURL()
-
-    if (
-      !url.includes('contact_book.php?mode=edit') &&
-      !url.includes('record_proceedings.php?mode=edit')
-    ) {
-      return
-    }
-
-    phase = 'EDIT_LOADED'
-
-    if (newPersonalFlg) {
-      console.log('📝 新規作成のため record_staff を自動設定します')
-
-      await setupRecordStaff(newWebview, appState.STAFF_ID)
-    } else {
-      console.log('⏩ 既存データのため record_staff 設定スキップ')
-    }
-
-    // rendererで操作UIを表示（WebViewのDOMへボタンは挿入しない）
-    if (!controls) controls = mountPersonalRecordControls(newWebview, space?.childName, space?.childId, recordDate, true, memoContext)
-    // 初回モーダルはmount後に自動表示
-  })
+  newWebview.addEventListener('did-finish-load', async () => {
+    try {
+      const result = await executeFlowV2('personal_record_dom_edit', {
+        action: 'open', currentYmd: recordDate, staffId: memoContext.STAFF_ID,
+        childId: space.childId,
+      }, { webview: newWebview })
+      if (!result?.found) throw new Error('記録欄が見つかりません')
+      if (!newWebview.isConnected) return
+      controls = mountPersonalRecordControls(newWebview, space.childName, space.childId, recordDate, true, memoContext)
+    } catch (error) { alert('個人記録の初期設定に失敗しました: ' + error.message) }
+  }, { once: true })
 
   activateTab(newId)
 }

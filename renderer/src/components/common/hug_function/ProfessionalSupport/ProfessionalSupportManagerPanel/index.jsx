@@ -4,10 +4,9 @@ import { useSelector } from 'react-redux'
 import { useNote } from '@/hooks/useNote'
 import { selectProfessionalSupportStatus } from '@/store/slices/recordStatusSlice.js'
 import { useProfessionalSupportStatusCheck } from './useProfessionalSupportStatusCheck'
-import ProfessionalSupportPostModal from './ProfessionalSupportPostModal'
-import { postProfessionalSupportDraft } from './postProfessionalSupportDraft.js'
+import { addProfessionalSupportTabAction } from '../OpenProfessionalSupport/index.jsx'
+import store from '@/store/store.js'
 import { useProfessionalSupportPlusCheck } from './useProfessionalSupportPlusCheck'
-import { registerProfessionalSupportPlus } from './checks/professionalSupportPlusCheck.js'
 import {
   getProfessionalSupportRegisteredLabel,
   hasTodayProfessionalSupportRecord,
@@ -18,7 +17,7 @@ import {
  * 計画本文・職員ID・保存方式は呼び出し側から props で受け取る。
  *
  * 閉じた状態:
- * - 専門的支援（下書き保存成功 → 専門＋自動登録）
+ * - 専門的支援（新規タブで編集・下書き保存）
  * - 保存件数 / 本日ステータス
  * - 入退室時刻が揃わない場合、専門的支援ボタンだけグレースケール
  *
@@ -38,7 +37,6 @@ export default function ProfessionalSupportManagerPanel({
   selectedChildName = '',
   professionalPlanNotes = '',
   staffId,
-  saveMode = 'draft',
   enterTime = '',
   leaveTime = '',
   onOpenProfessionalSupportList = null,
@@ -55,9 +53,6 @@ export default function ProfessionalSupportManagerPanel({
   const [linkedLoading, setLinkedLoading] = useState(false)
   const [actionMessage, setActionMessage] = useState('')
   const [actionKind, setActionKind] = useState('idle')
-  const [postModalOpen, setPostModalOpen] = useState(false)
-  const [postModalError, setPostModalError] = useState('')
-  const [postModalInitialContents, setPostModalInitialContents] = useState('')
   const [postModalPreparing, setPostModalPreparing] = useState(false)
 
   const isExpandDown = expandDirection === 'down'
@@ -73,7 +68,6 @@ export default function ProfessionalSupportManagerPanel({
       ? 'rotate-0'
       : 'rotate-180'
 
-  const professionalSupportSaveMode = saveMode === 'created' ? 'created' : 'draft'
 
   const childId = selectedChildId ? String(selectedChildId) : ''
   const dateStr = currentYmd || ''
@@ -229,114 +223,21 @@ export default function ProfessionalSupportManagerPanel({
 
   const openLinkedModal = async () => {
     if (linkedDisabled || postModalPreparing) return
-
-    setPostModalError('')
     setPostModalPreparing(true)
-    setAction('working', '一時メモ2 読込中')
-
-    try {
-      let loadedNote = { memo1: '', memo2: '' }
-
-      const proxy = {
-        get value() {
-          return loadedNote
-        },
-        set value(nextValue) {
-          loadedNote = nextValue || { memo1: '', memo2: '' }
-        },
-      }
-
-      await loadTemp(childId, proxy)
-
-      setPostModalInitialContents(loadedNote?.memo2 || '')
-      setPostModalOpen(true)
-      setAction('idle', '')
-    } catch (error) {
-      console.error('[ProfessionalSupportManagerPanel] temp memo2 load error:', error)
-      setPostModalInitialContents('')
-      setPostModalOpen(true)
-      setPostModalError(
-        `一時メモ2の読込に失敗しました: ${error?.message || error}`,
-      )
-      setAction('warning', '一時メモ2 読込失敗')
-    } finally {
-      setPostModalPreparing(false)
-    }
-  }
-
-  const closeLinkedModal = () => {
-    if (linkedLoading) return
-    setPostModalOpen(false)
-    setPostModalError('')
-  }
-
-  const runLinked = async (
-    {
-      dateStr: modalDateStr,
-      startTime,
-      endTime,
-      title,
-      contents,
-    },
-    saveMode = 'draft',
-  ) => {
-    if (linkedDisabled) return
-
-    const isCreated = saveMode === 'created'
-    const saveLabel = isCreated ? '保存' : '下書き保存'
-
     setLinkedLoading(true)
-    setPostModalError('')
-    setAction('working', `専門的支援 ${saveLabel}POST中`)
-
     try {
-      const supportResult = await postProfessionalSupportDraft({
-        childId,
-        facilityId: resolvedFacilityId,
-        dateStr: modalDateStr || dateStr,
-        startTime,
-        endTime,
-        staffId,
-        title,
-        contents,
-        saveMode,
+      let note = { memo1: '', memo2: '' }
+      const proxy = { get value() { return note }, set value(v) { note = v || {} } }
+      await loadTemp(childId, proxy)
+      addProfessionalSupportTabAction(store.getState().appState, {
+        childId, childName: selectedChildName, facilityId: resolvedFacilityId,
+        staffId, dateStr, startTime: enterTime, endTime: leaveTime,
+        contents: note.memo2 || '', professionalPlanNotes,
       })
-
-      if (!supportResult?.ok || supportResult?.saved !== true) {
-        throw new Error(
-          supportResult?.error || `専門的支援の${saveLabel}に失敗しました`,
-        )
-      }
-
-      setAction('working', `${saveLabel}OK → 専門＋登録中`)
-
-      const plusResult = await registerProfessionalSupportPlus({
-        childId,
-        facilityId: resolvedFacilityId,
-        dateStr: modalDateStr || dateStr,
-      })
-
-      setPostModalOpen(false)
-      setAction('success', '連動OK')
-
-      await runStatusCheck()
-
-      return {
-        ok: true,
-        saved: true,
-        linked: true,
-        supportResult,
-        plusResult,
-      }
+      setAction('idle', 'HUGタブで編集・保存してください')
     } catch (error) {
-      console.error('[ProfessionalSupportManagerPanel] linked error:', error)
-      const message = error?.message || String(error)
-      setPostModalError(message)
-      setAction('error', `失敗: ${message}`)
-      return { ok: false, linked: false, error: message }
-    } finally {
-      setLinkedLoading(false)
-    }
+      setAction('error', error?.message || String(error))
+    } finally { setPostModalPreparing(false); setLinkedLoading(false) }
   }
 
   const getLinkedTitle = () => {
@@ -348,10 +249,7 @@ export default function ProfessionalSupportManagerPanel({
     if (!childId) return '児童が選択されていません'
     if (!dateStr) return '日付が指定されていません'
     if (!resolvedFacilityId) return '施設が指定されていません'
-    const saveLabel = professionalSupportSaveMode === 'created'
-      ? '保存'
-      : '下書き保存'
-    return `入力モーダルを開き、${saveLabel}後に専門＋を自動登録します`
+    return '新しいHUGタブで記録を編集します。保存後は専門＋を個別に登録してください'
   }
 
   const actionClass = {
@@ -528,22 +426,7 @@ export default function ProfessionalSupportManagerPanel({
         </button>
       </div>
 
-      <ProfessionalSupportPostModal
-        open={postModalOpen}
-        submitting={linkedLoading}
-        childName={selectedChildName || ''}
-        childId={childId}
-        professionalPlanNotes={professionalPlanNotes}
-        facilityId={resolvedFacilityId}
-        initialDate={dateStr}
-        initialStartTime={enterTime || ''}
-        initialEndTime={leaveTime || ''}
-        initialContents={postModalInitialContents}
-        errorMessage={postModalError}
-        saveMode={professionalSupportSaveMode}
-        onCancel={closeLinkedModal}
-        onSubmit={runLinked}
-      />
+
     </div>
   )
 }
