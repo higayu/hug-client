@@ -7,7 +7,6 @@ import UrlContent from '@/components/ui/UrlContent';
 import FacilitySelector from '@/components/FacilitySelector';
 import ActiveApiStatus from '@/components/common/Synchronization/ActiveApiStatus';
 
-import SupportPlanNavigation from './SupportPlanNavigation';
 import ToolsListNavi from './ToolsListNavi';
 import SettingsEditButton from './SettingsEditButton';
 import BansoNavi from './BansoNavi';
@@ -93,11 +92,6 @@ export default function Toolbar() {
         {/* Q&A・障害対応 */}
         <div className="flex-shrink-0">
           <InformationButton />
-        </div>
-
-        {/* 専門的支援計画 */}
-        <div className="flex-shrink-0">
-          <SupportPlanNavigation />
         </div>
 
         {/* ツールメニュー */}
