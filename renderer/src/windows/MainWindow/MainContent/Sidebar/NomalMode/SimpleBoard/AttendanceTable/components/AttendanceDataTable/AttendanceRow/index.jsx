@@ -14,6 +14,8 @@ import {
 } from '@/components/common/hug_function';
 
 import { useAppState } from '@/AppStateContext';
+import ChilledNamePanel from './ChilledNamePanel';
+
 export default function AttendanceRow({ row, busy, onAction, selected, onToggle, selectionDisabled }) {
   const { appState, CURRENT_YMD, FACILITY_ID } = useAppState();
   const supportPanelData = useProfessionalSupportPanelData(row.childId);
@@ -101,12 +103,13 @@ export default function AttendanceRow({ row, busy, onAction, selected, onToggle,
       </td>
       <td className="border border-slate-300 p-1">
         {canOpenPersonalRecord ? (
-          <PersonalRecordButton
+          <ChilledNamePanel
             selectedChildId={row.childId}
             selectedChildName={row.name}
             currentYmd={CURRENT_YMD}
-            label={nameContent}
-            className="block w-full border border-green-500 rounded px-1 py-0.5 text-left text-slate-900 bg-transparent hover:bg-sky-50 hover:text-sky-700 hover:scale-100 focus:outline-none focus:ring-2 focus:ring-sky-400"
+            labelName={nameContent}
+            panelClassName="min-w-[220px] text-center text-2xl"
+            className="block w-full border border-green-500 rounded-full px-1 py-0.5 text-left text-slate-900 bg-transparent hover:bg-sky-50 hover:text-sky-700 hover:scale-100 focus:outline-none focus:ring-2 focus:ring-sky-400"
           />
         ) : (
           nameContent
