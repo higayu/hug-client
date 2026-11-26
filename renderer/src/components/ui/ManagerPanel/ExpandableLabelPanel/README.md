@@ -11,3 +11,8 @@ import ExpandableLabelPanel from './ExpandableLabelPanel'
 ```
 
 Props: label, className, buttonClassName, panelClassName, disabled, expandDirection (up/down, default up), children.
+
+
+## 自動閉鎖
+
+展開領域の有効なボタンをクリックすると閉じます。`closeOnButtonClick={false}` で無効化できます。個別のボタンまたは親要素に `data-keep-panel-open` を指定すると閉じません。

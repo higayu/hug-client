@@ -11,6 +11,7 @@ export default function ExpandableManagerPanel({
   onStatusClick,
   statusDisabled = false,
   expandDirection = 'up',
+  closeOnButtonClick = true,
   children = null,
 }) {
   const [isOpen, setIsOpen] = useState(false)
@@ -77,10 +78,19 @@ export default function ExpandableManagerPanel({
     return () => observer.disconnect()
   }, [isOpen, isExpandDown, Boolean(overlayStyle)])
 
+  function handlePanelClick(event) {
+    if (!closeOnButtonClick) return
+    const button = event.target?.closest?.('button, input[type="button"], input[type="submit"], [role="button"]')
+    if (!button || !event.currentTarget.contains(button)) return
+    if (button.matches(':disabled, [aria-disabled="true"]')) return
+    if (button.closest('[data-keep-panel-open]')) return
+    setIsOpen(false)
+  }
+
   return (
     <div ref={menuRef} className={`relative flex flex-col ${isOpen ? 'z-[120]' : 'z-0'} ${className}`}>
       {isOpen && overlayStyle && createPortal(
-        <div ref={overlayRef} style={overlayStyle} className="min-h-12 rounded-md bg-gray-900 p-1.5 shadow-xl">
+        <div ref={overlayRef} onClick={handlePanelClick} style={overlayStyle} className="min-h-12 rounded-md bg-gray-900 p-1.5 shadow-xl">
           {children}
         </div>, document.body
       )}
