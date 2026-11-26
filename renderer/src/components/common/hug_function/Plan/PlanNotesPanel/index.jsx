@@ -80,7 +80,7 @@ export default function PlanNotesPanel({
           onClick={toggleExpanded}
           aria-expanded={expanded}
           aria-controls={contentId}
-          className="flex min-w-0 items-center gap-1 rounded text-xs font-medium text-gray-700 hover:text-sky-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-sky-500"
+          className="bg-white p-1 flex min-w-0 items-center gap-1 rounded text-xs font-medium text-gray-700 hover:text-sky-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-sky-500"
         >
           <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" className={`h-4 w-4 shrink-0 transition-transform duration-200 motion-reduce:transition-none ${expanded ? "rotate-180" : ""}`}>
             <path d="m5 7.5 5 5 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
