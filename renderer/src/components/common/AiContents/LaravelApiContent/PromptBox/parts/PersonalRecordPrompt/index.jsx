@@ -222,6 +222,7 @@ export default function PersonalRecordPrompt({
           defaultTab={"notes"}
           displayMode="single"
           noteKey="notes"
+          defaultExpanded={false}
           onNotesChange={(
             notes,
             noteNo,
