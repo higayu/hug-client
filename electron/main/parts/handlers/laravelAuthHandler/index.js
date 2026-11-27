@@ -11,6 +11,7 @@ const aiRecordEditer = require("./aiRecordEditer");
 const healthAnalysis = require("./healthAnalysis");
 const webAutomationV2 = require("./webAutomationV2");
 const troubleshootingKnowledge = require("./troubleshootingKnowledge");
+const inquiries = require("./inquiries");
 const personalRecordSyncs = require("./personalRecordSyncs");
 const recordTypes = require("./recordTypes");
 const laravelApiClient = require("../../../../../src/laravelApiClient");
@@ -102,6 +103,7 @@ const IPC_CHANNELS = [
   "laravel:troubleshooting-knowledge:list",
   "laravel:troubleshooting-knowledge:get",
   "laravel:troubleshooting-knowledge:update",
+  "laravel:inquiries:store",
 
   // 個人記録一括同期履歴
   "laravel:personal-record-syncs:get-month",
@@ -551,6 +553,8 @@ function registerLaravelAuthHandlers(
     "laravel:troubleshooting-knowledge:update",
     troubleshootingKnowledge.updateHandler
   );
+
+  ipcMain.handle("laravel:inquiries:store", inquiries.storeHandler);
 
   ipcMain.handle("laravel:ai-prompt-histories:list", promptHistories.listHandler);
   ipcMain.handle("laravel:ai-prompt-histories:show", promptHistories.showHandler);

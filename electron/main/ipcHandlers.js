@@ -134,7 +134,7 @@ function registerIpcHandlers(
   });
 
   safeRegister("information window", () => {
-    registerInformationWindow(ipcMain);
+    registerInformationWindow(ipcMain, mainWindow);
   });
 
   safeRegister("phpMyAdmin window", () => {

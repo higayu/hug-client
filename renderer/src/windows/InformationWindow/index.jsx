@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import InquiriesBox from './InquiriesBox'
 
 const CATEGORY_LABELS = {
   database: 'データベース',
@@ -261,6 +262,8 @@ export default function InformationWindow() {
       </header>
 
       <main className="mx-auto max-w-5xl px-5 py-6">
+        <InquiriesBox />
+
         <div className="mb-5 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
           <div className="grid gap-3 md:grid-cols-[1fr_180px_220px_auto]">
             <input

@@ -581,6 +581,15 @@ function createElectronApi(ipcRenderer, isDebugMode) {
     openInformationWindow: () =>
       ipcRenderer.invoke("open-information-window"),
 
+    inquiryGetAppVersion: () =>
+      ipcRenderer.invoke("inquiry:get-app-version"),
+
+    inquiryCaptureScreen: () =>
+      ipcRenderer.invoke("inquiry:capture-screen"),
+
+    inquirySubmit: (payload) =>
+      ipcRenderer.invoke("laravel:inquiries:store", payload),
+
     openPhpMyAdminWindow: () =>
       ipcRenderer.invoke("open-php-my-admin-window"),
 

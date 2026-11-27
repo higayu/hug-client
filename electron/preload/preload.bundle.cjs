@@ -422,6 +422,9 @@ var require_electronApi = __commonJS({
         sendConfirmCloseResponse: (shouldClose) => ipcRenderer2.send("confirm-close-response", shouldClose),
         // ---- UI / Window ----
         openInformationWindow: () => ipcRenderer2.invoke("open-information-window"),
+        inquiryGetAppVersion: () => ipcRenderer2.invoke("inquiry:get-app-version"),
+        inquiryCaptureScreen: () => ipcRenderer2.invoke("inquiry:capture-screen"),
+        inquirySubmit: (payload) => ipcRenderer2.invoke("laravel:inquiries:store", payload),
         openPhpMyAdminWindow: () => ipcRenderer2.invoke("open-php-my-admin-window"),
         respondToPhpMyAdminAuth: (response) => ipcRenderer2.invoke("respond-php-my-admin-auth", response),
         onPhpMyAdminAuthRequest: (callback) => {
