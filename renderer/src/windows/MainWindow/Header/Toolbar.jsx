@@ -11,7 +11,7 @@ import ToolsListNavi from './ToolsListNavi';
 import SettingsEditButton from './SettingsEditButton';
 import BansoNavi from './BansoNavi';
 import InformationButton from './InformationButton';
-
+import SleepButton from '@/components/common/Synchronization/SleepButton';
 import { useAppState } from '@/AppStateContext';
 
 export default function Toolbar() {
@@ -54,6 +54,12 @@ export default function Toolbar() {
         <BansoNavi />
       </div>
 
+      {DEBUG_FLG && (
+        <span className="ml-2 rounded bg-yellow-400 px-2 py-0.5 text-sm font-normal text-black">
+          DEBUG
+        </span>
+      )}
+
       {/* 設定編集 */}
       <nav className="relative z-[1001] flex-shrink-0">
         <SettingsEditButton
@@ -77,6 +83,11 @@ export default function Toolbar() {
         <div className="min-w-0 flex-1">
           <UrlContent />
         </div>
+
+        <SleepButton
+          label=""
+          className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border-none bg-slate-600 text-white hover:bg-slate-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-600 disabled:opacity-50"
+        />
 
         {/* 施設名 */}
         <div className="flex-shrink-0">
