@@ -124,15 +124,15 @@ autoUpdater.logger = log;
 autoUpdater.logger.transports.file.level = "info";
 
 app.whenReady().then(async () => {
-  console.log("🚀 [MAIN] Electronアプリが起動しました");
+  false && ("🚀 [MAIN] Electronアプリが起動しました");
 
   // 🔹 5秒後にアップデートチェック（GitHub通信の安定化のため）
-  console.log("⏰ [UPDATE] 5秒後にアップデートチェックを開始します...");
+  false && ("⏰ [UPDATE] 5秒後にアップデートチェックを開始します...");
   setTimeout(() => {
     try {
-      console.log("🔄 [UPDATE] アップデートチェック開始");
-      console.log("🔧 [UPDATE DEBUG] 現在のバージョン:", app.getVersion());
-      console.log("🔧 [UPDATE DEBUG] パッケージ状態:", app.isPackaged ? "パッケージ済み" : "開発中");
+      false && ("🔄 [UPDATE] アップデートチェック開始");
+      false && ("🔧 [UPDATE DEBUG] 現在のバージョン:", app.getVersion());
+      false && ("🔧 [UPDATE DEBUG] パッケージ状態:", app.isPackaged ? "パッケージ済み" : "開発中");
       
       updateDebugInfo.isChecking = true;
       updateDebugInfo.lastCheckTime = new Date().toISOString();
@@ -154,18 +154,18 @@ app.whenReady().then(async () => {
 
 // 🔧 詳細なアップデートイベントハンドラー
 autoUpdater.on("checking-for-update", () => {
-  console.log("🔍 [UPDATE] アップデート確認中...");
+  false && ("🔍 [UPDATE] アップデート確認中...");
   updateDebugInfo.isChecking = true;
 });
 
 autoUpdater.on("update-available", (info) => {
-  console.log("✅ [UPDATE] アップデート利用可能:", info);
+  false && ("✅ [UPDATE] アップデート利用可能:", info);
   updateDebugInfo.updateAvailable = true;
   updateDebugInfo.newVersion = info.version;
 });
 
 autoUpdater.on("update-not-available", (info) => {
-  console.log("ℹ️ [UPDATE] アップデートなし（最新版）:", info);
+  false && ("ℹ️ [UPDATE] アップデートなし（最新版）:", info);
   updateDebugInfo.updateAvailable = false;
   updateDebugInfo.isChecking = false;
 });
@@ -178,12 +178,12 @@ autoUpdater.on("error", (err) => {
 
 autoUpdater.on("download-progress", (progressObj) => {
   const log_message = `📥 [UPDATE] ダウンロード進捗: ${progressObj.percent}%`;
-  console.log(log_message);
+  false && (log_message);
   updateDebugInfo.downloadProgress = progressObj.percent;
 });
 
 autoUpdater.on("update-downloaded", (info) => {
-  console.log("✅ [UPDATE] アップデートダウンロード完了:", info);
+  false && ("✅ [UPDATE] アップデートダウンロード完了:", info);
   updateDebugInfo.downloadComplete = true;
   
   const response = dialog.showMessageBoxSync({
@@ -193,7 +193,7 @@ autoUpdater.on("update-downloaded", (info) => {
     buttons: ["今すぐ再起動", "後で"]
   });
   if (response === 0) {
-    console.log("🔄 [UPDATE] アプリケーション再起動開始");
+    false && ("🔄 [UPDATE] アプリケーション再起動開始");
     autoUpdater.quitAndInstall();
   }
 });

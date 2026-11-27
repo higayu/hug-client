@@ -189,20 +189,7 @@ export default function ChildNotesTabs({
   // DEBUG
   // =============================================================
   useEffect(() => {
-    console.log(`[${DBG}]`, {
-      selectedChildId,
-      activeTab,
-      found: Boolean(selectedChild),
-      childId:
-        selectedChild?.id ??
-        selectedChild?.children_id ??
-        null,
-      childName:
-        selectedChild?.name ??
-        null,
-      notesLength:
-        activeNotes.length,
-    });
+    void 0;
   }, [
     selectedChildId,
     activeTab,

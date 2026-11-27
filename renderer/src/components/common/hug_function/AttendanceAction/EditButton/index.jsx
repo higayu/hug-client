@@ -91,7 +91,7 @@ export default function EditButton({
 
       const parsed = parseAttendanceEditHtml(result.html)
 
-      console.log('[Attendance Edit] HTML解析結果:', parsed)
+      void 0
 
       setEditWebview(result.webview || webview || null)
       setEditData(parsed)
@@ -154,18 +154,14 @@ export default function EditButton({
         webview: editWebview || webview,
       })
 
-      console.log('[Attendance Edit] 保存処理実行:', result)
+      void 0
 
       const refreshFacilityId =
         editData?.facilityId || FACILITY_ID || '1'
       const refreshDateStr =
         editData?.date || CURRENT_YMD || new Date().toISOString().slice(0, 10)
 
-      console.log('[Attendance Edit] 保存後の利用者一覧を再取得:', {
-        facilityId: refreshFacilityId,
-        dateStr: refreshDateStr,
-        childId: editData?.childId,
-      })
+      void 0
 
       await runAttendanceUpdate({
         facilityId: refreshFacilityId,
@@ -174,7 +170,7 @@ export default function EditButton({
         silent: false,
       })
 
-      console.log('[Attendance Edit] 保存後の利用者一覧再取得完了')
+      void 0
 
       setIsModalOpen(false)
 

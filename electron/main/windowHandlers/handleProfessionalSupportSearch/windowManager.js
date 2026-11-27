@@ -64,8 +64,8 @@ function createDoubleWebviewWindow(
   }
 
   win.webContents.once("did-finish-load", () => {
-    console.log(`${label} window loaded`);
-    console.log("targetFacility:", targetFacility);
+    void 0;
+    void 0;
   });
 
   return win;
@@ -77,14 +77,8 @@ function createDoubleWebviewWindow(
 function resolvePreloadPath() {
   const bundlePath = path.join(app.getAppPath(), "electron", "preload", "preload.bundle.cjs");
 
-  console.log(
-    "[handleProfessionalSupportSearch/windowManager] preload bundlePath =",
-    bundlePath
-  );
-  console.log(
-    "[handleProfessionalSupportSearch/windowManager] preload bundle exists =",
-    fs.existsSync(bundlePath)
-  );
+  void 0;
+  void 0;
 
   if (fs.existsSync(bundlePath)) {
     return bundlePath;

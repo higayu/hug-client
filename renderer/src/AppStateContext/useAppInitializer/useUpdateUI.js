@@ -16,15 +16,15 @@ export function useUpdateUI() {
     isInitializedRef.current = true
 
     const init = async () => {
-      console.log("🔄 アップデートUI機能を初期化中...")
+      void 0
       
       // 起動時に1回だけアップデートチェック
       await checkForUpdates()
       const debugInfo = await getUpdateInfo()
       displayUpdateInfo(debugInfo)
-      console.log("🔄 起動時: アップデートチェック完了")
+      void 0
       
-      console.log("✅ アップデートUI機能初期化完了")
+      void 0
     }
 
     init()
@@ -73,7 +73,7 @@ export function useUpdateUI() {
     // イベントリスナーを設定
     setupEventListeners()
     
-    console.log("✅ アップデートUIボタンを追加しました")
+    void 0
   }
 
   // イベントリスナーを設定
@@ -83,13 +83,13 @@ export function useUpdateUI() {
 
     if (checkBtn) {
       checkBtn.addEventListener('click', async () => {
-        console.log("🔄 手動アップデートチェック開始")
+        void 0
         try {
           const result = await checkForUpdates()
           if (result) {
-            console.log("✅ 手動チェック成功:", result)
+            void 0
           } else {
-            console.log("⚠️ 手動チェック結果なし")
+            void 0
           }
         } catch (err) {
           console.error("❌ 手動チェックエラー:", err)
@@ -102,14 +102,14 @@ export function useUpdateUI() {
     
     if (infoBtn) {
       infoBtn.addEventListener('click', async () => {
-        console.log("🔄 アップデート情報表示")
+        void 0
         const debugInfo = await getUpdateInfo()
         displayUpdateInfo(debugInfo)
         await updateInfoDisplay()
       })
     }
 
-    console.log("✅ アップデートUIイベントリスナーを設定しました")
+    void 0
   }
 
   // アップデート情報表示を更新

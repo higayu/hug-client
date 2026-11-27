@@ -33,16 +33,7 @@ export default function EnterButton({
   const inFlightRef = useRef(false)
 
   const executeEnter = useCallback(async (mailFlg = 0) => {
-    console.log('[EnterButton] 入室処理を実行', {
-      childId,
-      childName,
-      recordId,
-      rowSelector,
-      dateStr,
-      hasMail,
-      mailFlg,
-      hasOnEnter: typeof onEnter === 'function',
-    })
+    void 0
 
     return handleEnterClick({
       onEnter,
@@ -56,16 +47,7 @@ export default function EnterButton({
   }, [onEnter, childId, childName, recordId, rowSelector, dateStr, hasMail])
 
   const onClick = useCallback(() => {
-    console.log('[EnterButton] renderer click', {
-      childId,
-      childName,
-      recordId,
-      rowSelector,
-      dateStr,
-      hasMail,
-      disabled,
-      loading,
-    })
+    void 0
 
     if (inFlightRef.current || disabled || loading || mailModalOpen) return undefined
 
@@ -94,15 +76,11 @@ export default function EnterButton({
 
     setMailModalLoading(true)
     try {
-      console.log('[EnterButton] Rendererメール選択 → HUG入室ボタン実行', {
-        mailFlg,
-        childId,
-        recordId,
-      })
+      void 0
 
       const result = await executeEnter(mailFlg)
 
-      console.log('[EnterButton] 入室メール選択反映結果', result)
+      void 0
 
       if (result?.success !== false) {
         setMailModalOpen(false)

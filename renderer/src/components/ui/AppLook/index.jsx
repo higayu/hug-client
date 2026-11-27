@@ -18,12 +18,12 @@ export default function AppLook({ children }) {
   }, [status])
 
   const lock = async () => {
-    const result = await window.electronAPI.getAppLockStatus()
+    const result = await window.electronAPI.lockApp()
     if (!result.success) throw new Error(result.error)
-    if (!result.enabled) return false
+    if (!result.locked) return false
     setPasscode('')
     setError('')
-    setStatus(result.configured ? 'locked' : 'unconfigured')
+    setStatus('locked')
     return true
   }
 
@@ -32,13 +32,23 @@ export default function AppLook({ children }) {
     window.electronAPI.getAppLockStatus().then((result) => {
       if (!active) return
       if (!result.success) throw new Error(result.error)
-      setStatus(result.enabled ? (result.configured ? 'locked' : 'unconfigured') : 'unlocked')
+      setStatus(result.enabled
+        ? (result.configured ? (result.locked ? 'locked' : 'unlocked') : 'unconfigured')
+        : 'unlocked')
     }).catch((err) => {
       if (!active) return
       setStatus('error')
       setError(err.message || 'ロック設定を読み込めませんでした。アプリを再起動してください。')
     })
     return () => { active = false }
+  }, [])
+
+  useEffect(() => {
+    return window.electronAPI.onAppLockStateChanged(({ locked }) => {
+      setPasscode('')
+      setError('')
+      setStatus(locked ? 'locked' : 'unlocked')
+    })
   }, [])
 
   const unlock = async (event) => {

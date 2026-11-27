@@ -375,14 +375,7 @@ async function registerManagerAssignment(
   const params =
     buildProcedureParams(payload);
 
-  console.log(
-    "📤 [Laravel Procedure] registerManagerAssignment:",
-    {
-      procedure: PROCEDURE_NAME,
-      payload,
-      params,
-    }
-  );
+  void 0;
 
   const result =
     await callProcedure(
@@ -420,10 +413,7 @@ const handler = async (
   payload = {}
 ) => {
   try {
-    console.log(
-      "📤 [Laravel Procedure] IPC registerManagerAssignment:",
-      payload
-    );
+    void 0;
 
     const result =
       await registerManagerAssignment(
@@ -431,16 +421,7 @@ const handler = async (
       );
 
     if (result.success) {
-      console.log(
-        "✅ [Laravel Procedure] registerManagerAssignment DONE:",
-        {
-          data: result.data,
-          reauthenticated:
-            result.meta
-              ?.reauthenticated ??
-            false,
-        }
-      );
+      void 0;
     } else {
       console.error(
         "❌ [Laravel Procedure] registerManagerAssignment failed:",

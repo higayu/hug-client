@@ -71,9 +71,7 @@ export async function runAttendanceUpdate({
   }
 
   if (!silent) {
-    console.log("[ATTENDANCE] runAttendanceUpdate 完了", {
-      rowCount: extracted?.rowCount,
-    });
+    void 0;
   }
 
   return { tableData, extracted };

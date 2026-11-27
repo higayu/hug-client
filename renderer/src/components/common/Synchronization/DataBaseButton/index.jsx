@@ -27,7 +27,7 @@ export default function DataBaseButton({ className = "" }) {
       console.error("❌ DataBaseButton 再取得エラー:", error)
       showErrorToast("エラー")
     } finally {
-      console.log("取得処理終了")
+      void 0
     }
   }
 

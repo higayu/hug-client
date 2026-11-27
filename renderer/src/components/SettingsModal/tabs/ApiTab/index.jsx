@@ -289,16 +289,12 @@ function ApiTab() {
   */
   const handleDebugFlgChange = useCallback(async (newValue) => {
     // 現在の値をログ出力（デバッグ用）
-    console.log('[ApiTab] handleDebugFlgChange called:', {
-      currentFormValue: form.debugFlg,
-      newValue,
-      type: typeof newValue,
-    })
+    void 0
 
     // フォームの状態を即時更新（UI反映用）
     setForm(prev => {
       const updated = { ...prev, debugFlg: newValue }
-      console.log('[ApiTab] setForm updated:', updated)
+      void 0
       return updated
     })
 
@@ -309,7 +305,7 @@ function ApiTab() {
         String(newValue)
       )
 
-      console.log('[ApiTab] updateIniSetting result:', result)
+      void 0
 
       if (!result?.success) {
         console.error('[ApiTab] updateIniSetting failed:', result?.error)
@@ -328,7 +324,7 @@ function ApiTab() {
             debugFlg: String(newValue)
           }
         }
-        console.log('[ApiTab] setIniState updated:', updated)
+        void 0
         return updated
       })
 
@@ -412,10 +408,7 @@ function ApiTab() {
           nextApiSettings,
       }
 
-      console.log(
-        '[ApiTab] ini.json保存内容:',
-        nextIniState
-      )
+      void 0
 
       const result = await saveIni(
         nextIniState
@@ -467,10 +460,7 @@ function ApiTab() {
        *
        * AUTO_SWITCHING は初回起動時だけ使うため、ここでは false。
        */
-      console.log(
-        '[ApiTab] 保存後のDBデータ再取得開始:',
-        nextApiSettings.databaseType
-      )
+      void 0
 
       const reloadSuccess = await loadDataBase({
         reason: 'api-settings-saved',
@@ -488,19 +478,14 @@ function ApiTab() {
           'API設定は保存しましたが、データの再取得に失敗しました'
         )
       } else {
-        console.log(
-          '[ApiTab] 保存後のDBデータ再取得完了'
-        )
+        void 0
 
         showSuccessToast(
           'API設定を保存し、データを再読み込みしました'
         )
       }
 
-      console.log(
-        '[ApiTab] API設定保存完了:',
-        nextApiSettings
-      )
+      void 0
     } catch (error) {
       console.error(
         '[ApiTab] API設定保存エラー:',

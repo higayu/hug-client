@@ -79,15 +79,7 @@ export default function ProfessionalPrompt1({
   );
 
   const logDbg = (field, msg, extra = {}) => {
-    console.log(`[${DBG}:${field}]`, msg, {
-      childId: selectedChildId,
-      date: CURRENT_YMD,
-      aiName,
-      promptKey,
-      aiTextLen: aiText.length,
-      dbNoteLen: dbNote.length,
-      ...extra,
-    });
+    void 0;
   };
 
   // =============================================================

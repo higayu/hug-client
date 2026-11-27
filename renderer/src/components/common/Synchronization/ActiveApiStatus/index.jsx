@@ -99,9 +99,7 @@ const ActiveApiStatus = ({ className = '' }) => {
             return
           }
 
-          console.log(
-            '[ActiveApiStatus] Laravel認証情報の更新完了'
-          )
+          void 0
         } catch (authError) {
           if (requestId !== requestIdRef.current) {
             return

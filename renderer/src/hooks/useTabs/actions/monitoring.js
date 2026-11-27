@@ -143,7 +143,7 @@ export function addMonitoringTabAction(appState,selectedChildId, selectedChildNa
 
             target.scrollIntoView()
 
-            console.log(
+            false && (
               '✅ #target までスクロールしました'
             )
           })();

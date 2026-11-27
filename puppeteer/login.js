@@ -30,7 +30,7 @@ async function loginHug() {
     page.click("input.btn-login"),
   ]);
 
-  console.log("login success");
+  void 0;
   return page;
 }
 

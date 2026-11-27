@@ -16,7 +16,7 @@ export function useNote() {
       const result = await saveTempNote(childId, memo1, memo2, appState);
 
       if (result) {
-        console.log("✅ 一時メモ保存成功");
+        void 0;
         return true;
       }
 
@@ -36,7 +36,7 @@ export function useNote() {
       const result = await saveTempNote1(childId, memo1, appState);
 
       if (result) {
-        console.log("✅ 一時メモ1保存成功");
+        void 0;
         return true;
       }
 
@@ -56,7 +56,7 @@ export function useNote() {
       const result = await saveTempNote2(childId, memo2, appState);
 
       if (result) {
-        console.log("✅ 一時メモ2保存成功");
+        void 0;
         return true;
       }
 

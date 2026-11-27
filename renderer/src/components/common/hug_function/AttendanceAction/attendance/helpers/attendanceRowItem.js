@@ -115,18 +115,7 @@ export function buildRowItemFromColumns({
     rIdFromEnterOnclick ||
     extractRIdFromRowClass(column5Html);
 
-  console.log("[attendanceRowItem] buildRowItemFromColumns", {
-    children_id,
-    children_name,
-    resolvedRId,
-    rIdFromLeaveOnclick,
-    rIdFromEnterOnclick,
-    enterOnclick,
-    leaveOnclick,
-    leaveArgs,
-    column5,
-    column6,
-  });
+  void 0;
 
   return {
     c_id: String(children_id),

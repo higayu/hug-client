@@ -26,10 +26,7 @@ export default function Toolbar() {
 
   // 施設IDの同期状態を追跡する診断ログ。ここでは値を更新しない。
   useEffect(() => {
-    console.log('[FacilitySync/Toolbar] 現在値', {
-      facilityId,
-      isEmpty: !facilityId,
-    });
+    void 0;
   }, [facilityId]);
 
   return (

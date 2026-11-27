@@ -66,7 +66,7 @@ export async function Get_waiting_children_pc({ tables, facility_id = null }) {
         })
         .sort((a, b) => a.children_name.localeCompare(b.children_name, "ja"));
 
-      console.log(`✅ [Get_waiting_children_pc] 待機児童: ${waitingChildren.length}件`);
+      void 0;
       return waitingChildren;
 
   } catch (error) {

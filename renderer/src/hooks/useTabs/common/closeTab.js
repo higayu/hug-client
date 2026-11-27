@@ -58,12 +58,6 @@ export function closeTab(targetId) {
     // ★ Redux 管理の URL をログ出力
     const { ACTIVE_WEBVIEW_URL } = store.getState().appState
 
-    console.log(
-      '🔗 [closeTab] active webview URL (from Redux):',
-      ACTIVE_WEBVIEW_URL || '(empty)',
-      '(id:',
-      nextActiveId,
-      ')'
-    )
+    void 0
   }
 }

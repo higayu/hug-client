@@ -9,7 +9,7 @@ export function getClipboardScript() {
           const text = await navigator.clipboard.readText()
 
           if (text && text.length > 0) {
-            console.log("✅ クリップボードAPIで読み取り成功")
+            false && ("✅ クリップボードAPIで読み取り成功")
 
             return {
               text,
@@ -51,7 +51,7 @@ export function getClipboardScript() {
           }
 
           if (text && text.length > 0) {
-            console.log("✅ execCommandで読み取り成功")
+            false && ("✅ execCommandで読み取り成功")
 
             return {
               text,
@@ -296,7 +296,7 @@ export function getClipboardScript() {
       pasteBtn.addEventListener(
         "click",
         async function () {
-          console.log(
+          false && (
             "📋 貼り付けボタンがクリックされました"
           )
 
@@ -410,7 +410,7 @@ export function getClipboardScript() {
               )
             }
 
-            console.log(
+            false && (
               "✅ テキストを追記しました"
             )
 

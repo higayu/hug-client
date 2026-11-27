@@ -92,15 +92,7 @@ export default function MemoInputBox({
 
   const log = useCallback(
     (...args) => {
-      console.log(
-        "[MemoInputBox]",
-        {
-          label,
-          memoType,
-          selectedChildId,
-        },
-        ...args,
-      );
+      void 0;
     },
     [label, memoType, selectedChildId],
   );

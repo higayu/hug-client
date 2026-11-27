@@ -137,27 +137,13 @@ function createFetchTableAllHandler(
     params = {}
   ) => {
     try {
-      console.log(
-        "🔄 [Laravel API] fetchTableAll START"
-      );
+      void 0;
 
       const result =
         await fetchAllTables(params);
 
       if (result?.success) {
-        console.log(
-          "✅ [Laravel API] fetchTableAll DONE:",
-          {
-            tableCount:
-              result.meta?.tableCount ??
-              0,
-
-            reauthenticated:
-              result.meta
-                ?.reauthenticated ??
-              false,
-          }
-        );
+        void 0;
       } else {
         console.error(
           "❌ [Laravel API] fetchTableAll failed:",
@@ -570,10 +556,7 @@ function registerLaravelAuthHandlers(
   ipcMain.handle("laravel:ai-prompt-histories:show", promptHistories.showHandler);
   ipcMain.handle("laravel:ai-prompt-histories:restore", promptHistories.restoreHandler);
 
-  console.log(
-    "✅ [registerLaravelAuthHandlers] Laravel IPC registered:",
-    IPC_CHANNELS
-  );
+  void 0;
 }
 
 module.exports = {

@@ -650,7 +650,7 @@ export function addProfessionalSupportNewAction3(appState, space) {
             if (navigator.clipboard && navigator.clipboard.readText) {
               const text = await navigator.clipboard.readText();
               if (text && text.length > 0) {
-                console.log("✅ クリップボードAPIで読み取り成功");
+                false && ("✅ クリップボードAPIで読み取り成功");
                 return text;
               }
             }
@@ -677,7 +677,7 @@ export function addProfessionalSupportNewAction3(appState, space) {
               document.body.removeChild(textarea);
               if (activeElement) activeElement.focus();
               if (text && text.length > 0) {
-                console.log("✅ execCommandで読み取り成功");
+                false && ("✅ execCommandで読み取り成功");
                 return text;
               }
             }
@@ -696,7 +696,7 @@ export function addProfessionalSupportNewAction3(appState, space) {
             let existingValue = '';
             if (targetTextarea) {
               existingValue = targetTextarea.value || '';
-              console.log("📝 既存の値を初期値として設定:", existingValue.substring(0, 50) + (existingValue.length > 50 ? "..." : ""));
+              false && ("📝 既存の値を初期値として設定:", existingValue.substring(0, 50) + (existingValue.length > 50 ? "..." : ""));
             }
 
             const overlay = document.createElement('div');
@@ -793,7 +793,7 @@ export function addProfessionalSupportNewAction3(appState, space) {
             clearBtn.addEventListener('click', () => {
               textarea.value = '';
               textarea.focus();
-              console.log("🗑️ テキストをクリアしました");
+              false && ("🗑️ テキストをクリアしました");
             });
 
             // 確認ボタン
@@ -838,7 +838,7 @@ export function addProfessionalSupportNewAction3(appState, space) {
           const existingPasteBtn = document.getElementById("customizePasteBtn");
           if (existingPasteBtn) {
             existingPasteBtn.remove();
-            console.log("🗑️ 既存の貼り付けボタンを削除しました");
+            false && ("🗑️ 既存の貼り付けボタンを削除しました");
           }
 
           const pasteBtn = document.createElement("button");
@@ -874,7 +874,7 @@ export function addProfessionalSupportNewAction3(appState, space) {
           });
 
           pasteBtn.addEventListener("click", async function() {
-            console.log("📋 自由項目貼り付けボタンがクリックされました");
+            false && ("📋 自由項目貼り付けボタンがクリックされました");
             
             this.style.backgroundColor = "#FF9800";
             this.innerText = "⏳ 貼り付け中...";
@@ -920,7 +920,7 @@ export function addProfessionalSupportNewAction3(appState, space) {
               highlightElement(textarea);
               textarea.focus();
               
-              console.log("✅ 自由項目にテキストを貼り付けました");
+              false && ("✅ 自由項目にテキストを貼り付けました");
               this.style.backgroundColor = "#4CAF50";
               this.innerText = "✅ 完了！";
               setTimeout(() => {
@@ -942,7 +942,7 @@ export function addProfessionalSupportNewAction3(appState, space) {
           });
 
           document.body.appendChild(pasteBtn);
-          console.log("✅ 自由項目貼り付けボタン生成完了（サイズ調整版 + 初期値設定対応 + 改行対応）");
+          false && ("✅ 自由項目貼り付けボタン生成完了（サイズ調整版 + 初期値設定対応 + 改行対応）");
         })();
 
         // ============================================
@@ -952,7 +952,7 @@ export function addProfessionalSupportNewAction3(appState, space) {
           const existingDraftBtn = document.getElementById("professionalDraftBtn");
           if (existingDraftBtn) {
             existingDraftBtn.remove();
-            console.log("🗑️ 既存の下書き保存ボタンを削除しました");
+            false && ("🗑️ 既存の下書き保存ボタンを削除しました");
           }
 
           const draftBtn = document.createElement("button");
@@ -988,7 +988,7 @@ export function addProfessionalSupportNewAction3(appState, space) {
           });
 
           draftBtn.addEventListener("click", function() {
-            console.log("💾 専門的加算 下書き保存ボタンがクリックされました");
+            false && ("💾 専門的加算 下書き保存ボタンがクリックされました");
             
             this.style.backgroundColor = "#FF9800";
             this.innerText = "⏳ 保存中...";
@@ -1030,7 +1030,7 @@ export function addProfessionalSupportNewAction3(appState, space) {
                 return;
               }
 
-              console.log("✅ 下書き保存ボタンを発見:", saveButton);
+              false && ("✅ 下書き保存ボタンを発見:", saveButton);
               
               scrollToElement(saveButton);
               highlightElement(saveButton);
@@ -1038,7 +1038,7 @@ export function addProfessionalSupportNewAction3(appState, space) {
               setTimeout(() => {
                 try {
                   saveButton.click();
-                  console.log("✅ 標準クリック実行");
+                  false && ("✅ 標準クリック実行");
                 } catch (e) {
                   console.warn("⚠️ 標準クリック失敗:", e);
                   try {
@@ -1048,7 +1048,7 @@ export function addProfessionalSupportNewAction3(appState, space) {
                       cancelable: true
                     });
                     saveButton.dispatchEvent(clickEvent);
-                    console.log("✅ dispatchEventクリック実行");
+                    false && ("✅ dispatchEventクリック実行");
                   } catch (e2) {
                     console.error("❌ すべてのクリック方法が失敗:", e2);
                   }
@@ -1076,19 +1076,19 @@ export function addProfessionalSupportNewAction3(appState, space) {
           });
 
           document.body.appendChild(draftBtn);
-          console.log("✅ 専門的加算 下書き保存ボタン生成完了（サイズ調整版）");
+          false && ("✅ 専門的加算 下書き保存ボタン生成完了（サイズ調整版）");
         })();
 
         // ===============================
         // ③ デバッグ情報
         // ===============================
-        console.log("=== ボタン生成完了（サイズ調整版 + 初期値設定対応 + 改行対応） ===");
-        console.log("📋 自由項目貼り付けボタン: 右から180px（サイズ: 10px 18px, 14px）");
-        console.log("💾 専門的加算保存ボタン: 右から20px（サイズ: 10px 18px, 14px）");
-        console.log("自由項目テキストエリアの有無:", 
+        false && ("=== ボタン生成完了（サイズ調整版 + 初期値設定対応 + 改行対応） ===");
+        false && ("📋 自由項目貼り付けボタン: 右から180px（サイズ: 10px 18px, 14px）");
+        false && ("💾 専門的加算保存ボタン: 右から20px（サイズ: 10px 18px, 14px）");
+        false && ("自由項目テキストエリアの有無:", 
           document.querySelector('textarea[name="customize[contents][]"]') ? "あり" : "なし"
         );
-        console.log("下書き保存ボタンの有無:", 
+        false && ("下書き保存ボタンの有無:", 
           document.querySelector('button.save[value="draft"]') ? "あり" : "なし"
         );
 

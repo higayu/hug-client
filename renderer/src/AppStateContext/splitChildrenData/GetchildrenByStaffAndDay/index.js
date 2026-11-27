@@ -90,9 +90,9 @@ export async function GetchildrenByStaffAndDay({
   } = tables
 
   console.group("🔗 [GetchildrenByStaffAndDay / managers2] JOIN処理開始")
-  console.log("🔍 staffId:", staffId)
-  console.log("🔍 weekdayId:", weekdayId)
-  console.log("🔍 managers2 count:", managers2.length)
+  void 0
+  void 0
+  void 0
 
   const staffIdText = String(staffId)
   const weekdayIdNum = Number(weekdayId)
@@ -218,18 +218,14 @@ export async function GetchildrenByStaffAndDay({
     (c) => String(c.staff_id) === staffIdText
   )
 
-  console.log(`✅ 自分の担当: ${myChildren.length} 件（全 ${joined.length} 件中）`)
+  void 0
   
   // facility_id が含まれているか確認
   if (myChildren.length > 0) {
-    console.log("🔍 戻り値のサンプル（facility_id含む）:", {
-      children_name: myChildren[0].children_name,
-      facility_id: myChildren[0].facility_id,
-      staff_name: myChildren[0].staff_name,
-    })
+    void 0
   }
 
-  console.log("✅ [GetchildrenByStaffAndDay] 抽出結果:", myChildren)
+  void 0
 
   console.groupEnd()
 

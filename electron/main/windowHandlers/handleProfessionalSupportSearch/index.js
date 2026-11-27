@@ -55,8 +55,8 @@ function handleProfessionalSupportSearch(ipcMain, defaultFacilityId, defaultDate
       ? facilities
       : [targetFacility, ...facilities]
 
-    console.log('✅ ProfessionalSupport initial facility', targetFacility)
-    console.log('✅ ProfessionalSupport facilities', availableFacilities)
+    void 0
+    void 0
 
     try {
       const url1 =

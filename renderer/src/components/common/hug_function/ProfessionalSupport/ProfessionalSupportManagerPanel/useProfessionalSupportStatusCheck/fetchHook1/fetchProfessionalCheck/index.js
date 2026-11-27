@@ -46,8 +46,8 @@ export async function fetchProfessionalSupportUseDaysInWebview(webview, opts) {
   const interviewDateEndForLog = String(interviewDate || '')
   const interviewDateStartForLog = `${interviewDateEndForLog.slice(0, 8)}01`
 
-  console.log('[HUG WM] 専門的支援 利用日数 DB Flow 始め日', interviewDateStartForLog)
-  console.log('[HUG WM] 専門的支援 利用日数 DB Flow 終わり日', interviewDateEndForLog)
+  void 0
+  void 0
 
   try {
     return await executeProfessionalSupportUseDaysCheckInWebview(webview, {

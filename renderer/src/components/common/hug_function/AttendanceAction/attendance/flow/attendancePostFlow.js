@@ -449,17 +449,7 @@ export async function executeAttendancePostFlow(webview, params = {}) {
 
     validateAttendanceDataList(dataList, expectedAttendanceType);
 
-    console.log("[AttendancePostFlow] POST dataList:", {
-      flowKey: flow.flow_key,
-      stepKey: step.step_key,
-      ruleKey: rule.rule_key,
-      mailFlg,
-      stepInput,
-      postConfig: post,
-      parsedArgs,
-      patch,
-      dataList,
-    });
+    void 0;
 
     const postResult = await postAttendanceDataListInWebview(
       webview,

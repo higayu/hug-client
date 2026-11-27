@@ -18,7 +18,7 @@ function parseFacilitiesFromSelect(select: Element): HugFacility[] {
 
 /** attendance.php の施設 select から事業所一覧を取得 */
 export async function fetchFacilitiesFromHugWm(): Promise<HugFacility[]> {
-  console.log('[HUG WM] 施設データ取得 fetch開始:', HUG_WM_ATTENDANCE_URL);
+  void 0;
 
   const html = await hugWmFetchText(HUG_WM_ATTENDANCE_URL);
   const doc = new DOMParser().parseFromString(html, 'text/html');
@@ -31,6 +31,6 @@ export async function fetchFacilitiesFromHugWm(): Promise<HugFacility[]> {
   }
 
   const facilities = parseFacilitiesFromSelect(facilitySelect);
-  console.log('[HUG WM] 施設データ:', facilities);
+  void 0;
   return facilities;
 }

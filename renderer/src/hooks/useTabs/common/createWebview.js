@@ -29,7 +29,7 @@ export function createWebview(id, src, attributes = {}) {
   
   // consoleメッセージを転送
   webview.addEventListener('console-message', (e) => {
-    console.log(`🪶 [${webview.id}] ${e.message}`)
+    void 0
   })
   
   return webview

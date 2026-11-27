@@ -12,7 +12,7 @@ export async function handleAttendancePageLoad({
   updateAppState,
   showInfoToast,
 }) {
-  console.log("✅ 利用者ページロード完了:", targetUrl);
+  void 0;
   try {
     const selector = "table";
     let result;
@@ -100,7 +100,7 @@ export async function handleAttendancePageLoad({
       }
 
       const { tableData, extractedData } = reduxResult.payload;
-      console.log("✅ [ATTENDANCE] 抽出成功:", tableData);
+      void 0;
 
       // === appStateへ保存 ===
       if (extractedData) {

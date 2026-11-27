@@ -64,7 +64,7 @@ export async function Experience_children_v({ tables, facility_id = null }) {
         })
         .sort((a, b) => a.children_name.localeCompare(b.children_name, "ja"));
 
-      console.log(`✅ [Experience_children_v] 体験児童: ${experienceChildren.length}件`);
+      void 0;
       return experienceChildren;
 
   } catch (error) {

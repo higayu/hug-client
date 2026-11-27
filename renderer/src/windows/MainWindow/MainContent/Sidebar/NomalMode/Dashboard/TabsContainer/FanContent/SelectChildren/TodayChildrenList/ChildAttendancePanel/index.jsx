@@ -333,68 +333,32 @@ export default function ChildAttendancePanel({ spaceId }) {
   useEffect(() => {
     console.group('[ChildAttendancePanel] 入退室ボタン調査')
 
-    console.log('selectChild:', selectChild)
-    console.log('spaceId:', spaceId)
-    console.log('selectChild:', selectChild)
-    console.log('selectedChildName:', selectedChildName)
-    console.log('childName:', childName)
-    console.log('dateStr:', dateStr)
-    console.log('facilityId:', facilityId)
+    void 0
+    void 0
+    void 0
+    void 0
+    void 0
+    void 0
+    void 0
 
-    console.log('attendanceData raw:', attendanceData)
-    console.log('attendanceList count:', attendanceList.length)
-    console.log('attendanceItem:', attendanceItem)
+    void 0
+    void 0
+    void 0
 
-    console.log('selectedChildData:', selectedChildData)
-    console.log('selectedChildForDisplay:', selectedChildForDisplay)
+    void 0
+    void 0
 
-    console.log('children list counts:', {
-      weekChildrenDataCount: weekChildrenData.length,
-      waitingChildrenDataCount: waitingChildrenData.length,
-      experienceChildrenDataCount: experienceChildrenData.length,
-    })
+    void 0
 
-    console.log('AppState selected columns:', {
-      selectedColumn5,
-      selectedColumn5Html,
-      selectedColumn6,
-      selectedColumn6Html,
-    })
+    void 0
 
-    console.log('attendanceItem columns:', {
-      attendanceColumn5: attendanceItem?.column5,
-      attendanceColumn5Html: attendanceItem?.column5Html,
-      attendanceColumn6: attendanceItem?.column6,
-      attendanceColumn6Html: attendanceItem?.column6Html,
-    })
+    void 0
 
-    console.log('final columns:', {
-      column5,
-      column5Html,
-      column6,
-      column6Html,
-    })
+    void 0
 
-    console.log('status flags:', {
-      isAttendanceLoaded,
-      hasChildAttendance,
-      isUIEnabled,
-      isAbsent,
-      hasEntered,
-      hasExited,
-      loadingAction,
-    })
+    void 0
 
-    console.log('button source check:', {
-      hasColumn5Html: Boolean(column5Html),
-      hasColumn6Html: Boolean(column6Html),
-      column5HtmlType: typeof column5Html,
-      column6HtmlType: typeof column6Html,
-      column5HtmlLength:
-        typeof column5Html === 'string' ? column5Html.length : null,
-      column6HtmlLength:
-        typeof column6Html === 'string' ? column6Html.length : null,
-    })
+    void 0
 
     console.groupEnd()
   }, [
@@ -528,14 +492,14 @@ export default function ChildAttendancePanel({ spaceId }) {
 
     try {
       console.group('[ChildAttendancePanel/runEnter] START')
-      console.log('selectChild:', selectChild)
-      console.log('childName:', childName)
-      console.log('column5:', column5)
-      console.log('column5Html:', column5Html)
-      console.log('column6:', column6)
-      console.log('column6Html:', column6Html)
-      console.log('facilityId:', facilityId)
-      console.log('dateStr:', dateStr)
+      void 0
+      void 0
+      void 0
+      void 0
+      void 0
+      void 0
+      void 0
+      void 0
 
       const res = await clickEnterButton(column5Html, targetChildId, {
         children_name: childName,
@@ -553,7 +517,7 @@ export default function ChildAttendancePanel({ spaceId }) {
         skipMailPrompt: enterOptions?.skipMailPrompt === true,
       })
 
-      console.log('clickEnterButton result:', res)
+      void 0
       console.groupEnd()
 
       if (res?.cancelled) return
@@ -615,14 +579,14 @@ export default function ChildAttendancePanel({ spaceId }) {
 
     try {
       console.group('[ChildAttendancePanel/runLeave] START')
-      console.log('selectChild:', selectChild)
-      console.log('childName:', childName)
-      console.log('column5:', column5)
-      console.log('column5Html:', column5Html)
-      console.log('column6:', column6)
-      console.log('column6Html:', column6Html)
-      console.log('facilityId:', facilityId)
-      console.log('dateStr:', dateStr)
+      void 0
+      void 0
+      void 0
+      void 0
+      void 0
+      void 0
+      void 0
+      void 0
 
       const res = await clickExitButton(column6Html, targetChildId, {
         enterTime: column5,
@@ -640,7 +604,7 @@ export default function ChildAttendancePanel({ spaceId }) {
         skipMailPrompt: leaveOptions?.skipMailPrompt === true,
       })
 
-      console.log('clickExitButton result:', res)
+      void 0
       console.groupEnd()
 
       if (res?.cancelled) return
@@ -701,14 +665,14 @@ export default function ChildAttendancePanel({ spaceId }) {
 
     try {
       console.group('[ChildAttendancePanel/runAbsence] START')
-      console.log('selectChild:', selectChild)
-      console.log('childName:', childName)
-      console.log('column5:', column5)
-      console.log('column5Html:', column5Html)
+      void 0
+      void 0
+      void 0
+      void 0
 
       const res = await clickAbsenceButton(column5Html, targetChildId)
 
-      console.log('clickAbsenceButton result:', res)
+      void 0
       console.groupEnd()
 
       if (res?.success) {

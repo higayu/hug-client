@@ -4,7 +4,7 @@ import { createWebview, createTabButton, activateTab, closeTab } from '../common
 import { confirmDialog } from '@/utils/dialog/confirmDialog.js'
 
 export function addNormalTabAction(appState) {
-  console.log('🔍 [useTabs] ＋ボタンがクリックされました')
+  void 0
 
   const tabsContainer = document.getElementById('tabs')
   const webviewContainer = document.getElementById('webview-panel-content')

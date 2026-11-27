@@ -77,7 +77,7 @@ function buildChildPostParams(facilityId, targetDate) {
   // ターゲット日付（児童同期は本日固定）
   params.set("target_date", targetDate);
 
-  console.log(`[fetchChildrenData] POSTパラメータ:`, Object.fromEntries(params));
+  void 0;
 
   return params;
 }
@@ -112,7 +112,7 @@ function parseChildrenFromResponse(text) {
   if (trimmed.startsWith("[") || trimmed.startsWith("{")) {
     try {
       const data = JSON.parse(trimmed);
-      console.log("[fetchChildrenData] JSON応答:", data);
+      void 0;
 
       // エラーレスポンスをチェック
       if (data.error || data.status === "error") {
@@ -130,7 +130,7 @@ function parseChildrenFromResponse(text) {
         : data.parent || data.parent_list || [];
 
       if (parentList.length > 0) {
-        console.log("[fetchChildrenData] 親リスト:", parentList);
+        void 0;
       }
 
       if (!Array.isArray(childrenList) || childrenList.length === 0) {
@@ -341,8 +341,8 @@ async function fetchInHugWebview(webview, { url, method = "GET", body, headers =
 
   const response = await webview.executeJavaScript(script);
 
-  console.log(`[fetchInHugWebview] ステータス: ${response.status}, OK: ${response.ok}`);
-  console.log(`[fetchInHugWebview] レスポンス先頭200文字:`, response.text?.slice(0, 200));
+  void 0;
+  void 0;
 
   if (!response.ok) {
     throw new Error(`HUG児童一覧の取得に失敗しました (HTTP ${response.status})`);
@@ -353,7 +353,7 @@ async function fetchInHugWebview(webview, { url, method = "GET", body, headers =
 
 export async function fetchChildrenData(onProgress, facilityId, _targetDate, webviewOverride = null, options = {}) {
   const { config = {} } = options;
-  console.log(`[fetchChildrenData] 開始 - facilityId: ${facilityId} (${typeof facilityId})`);
+  void 0;
 
   const webview = webviewOverride ?? await getHugWebviewForCache();
 
@@ -365,7 +365,7 @@ export async function fetchChildrenData(onProgress, facilityId, _targetDate, web
   const day = String(today.getDate()).padStart(2, '0');
   const targetDate = `${year}-${month}-${day}`;
 
-  console.log(`[fetchChildrenData] 本日を対象日として使用: ${targetDate}`);
+  void 0;
 
   // 施設IDに基づいてPOSTパラメータを動的に生成
   const body = buildChildPostParams(facilityId, targetDate);
@@ -390,11 +390,11 @@ export async function fetchChildrenData(onProgress, facilityId, _targetDate, web
       },
     });
 
-    console.log(`[fetchChildrenData] レスポンス長: ${responseText.length}文字`);
+    void 0;
 
     // レスポンスをパース
     const children = parseChildrenFromResponse(responseText);
-    console.log(`[fetchChildrenData] パース結果: ${children.length}件`, children.slice(0, 3));
+    void 0;
 
     // 発音テーブルを取得（モック）
     const pronunciationTable = getMockPronunciationTable();

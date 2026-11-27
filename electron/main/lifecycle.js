@@ -3,7 +3,7 @@ const { app } = require("electron");
 
 function registerAppLifecycleHandlers() {
   app.on("before-quit", () => {
-    console.log("application start");
+    void 0;
   });
 
   app.on("window-all-closed", () => {

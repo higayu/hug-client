@@ -95,11 +95,7 @@ export default function HugAuthSyncBridge() {
           isHugLoggedIn(automationWebview).catch(() => false),
         ])
 
-        console.log('[HugAuthSyncBridge] auth state', {
-          source,
-          visibleLoggedIn,
-          automationLoggedIn,
-        })
+        void 0
 
         // ユーザーが表示用WebViewで直接ログインした場合。
         // Cookieは共有済みなので、裏WebViewをreloadしてログイン済みDOMへ更新する。

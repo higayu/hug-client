@@ -61,8 +61,8 @@ const toNumberOrNull = (value) => {
  * - support_end_time
  */
 export async function handleSQLiteUpdate(payload) {
-  console.log("====== SQLite: handleSQLiteUpdate START ======");
-  console.log("[handleSQLiteUpdate] 処理する担当:", payload);
+  void 0;
+  void 0;
 
   try {
     if (!payload || typeof payload !== "object") {
@@ -154,31 +154,9 @@ export async function handleSQLiteUpdate(payload) {
       support_end_time: resolvedSupportEndTime,
     };
 
-    console.log("[handleSQLiteUpdate] UPDATE args:", request);
+    void 0;
 
-    console.log(
-      "[handleSQLiteUpdate] SQL preview:",
-      `
-      UPDATE managers2
-      SET
-        priority = ${data.priority},
-        support_start_time = ${
-          data.support_start_time == null
-            ? "NULL"
-            : `'${data.support_start_time}'`
-        },
-        support_end_time = ${
-          data.support_end_time == null
-            ? "NULL"
-            : `'${data.support_end_time}'`
-        }
-      WHERE
-        facility_id = ${values[0]}
-        AND children_id = ${values[1]}
-        AND staff_id = ${values[2]}
-        AND day_of_week_id = ${values[3]};
-      `
-    );
+    void 0;
 
     if (typeof window.electronAPI?.sqlite_managers2_update !== "function") {
       console.error(
@@ -190,7 +168,7 @@ export async function handleSQLiteUpdate(payload) {
 
     const result = await window.electronAPI.sqlite_managers2_update(request);
 
-    console.log("[handleSQLiteUpdate] sqlite_managers2_update result:", result);
+    void 0;
 
     if (result === false) {
       console.error("❌ SQLite: managers2_update が false を返しました");
@@ -202,12 +180,12 @@ export async function handleSQLiteUpdate(payload) {
       return false;
     }
 
-    console.log("✅ SQLite: managers2_update 成功");
+    void 0;
     return true;
   } catch (error) {
     console.error("❌ SQLite: managers2_update エラー:", error);
     return false;
   } finally {
-    console.log("====== SQLite: handleSQLiteUpdate END ======");
+    void 0;
   }
 }

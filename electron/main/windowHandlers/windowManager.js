@@ -47,7 +47,7 @@ function createDoubleWebviewWindow(
   win.loadURL("data:text/html;charset=utf-8," + encodeURIComponent(html));
 
   win.webContents.once("did-finish-load", () => {
-    console.log(`${label} window loaded`);
+    void 0;
   });
 
   return win;
@@ -62,8 +62,8 @@ function resolvePreloadPath() {
  // const prodPath = path.join(process.resourcesPath, "preload.js");
   const preloadPath = path.join(app.getAppPath(), "electron", "preload", "preload.bundle.cjs");
 
-  console.log("[windowManager] preloadPath =", preloadPath);
-  console.log("[windowManager] preload exists =", fs.existsSync(preloadPath));
+  void 0;
+  void 0;
 
   if (fs.existsSync(preloadPath)) {
     return preloadPath;

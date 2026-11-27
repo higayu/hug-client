@@ -264,10 +264,7 @@ export async function extractColumnData(tableHTML) {
       }
     })
 
-    console.log('✅ [ATTENDANCE] 列データ抽出完了:', {
-      extractedCount: extractedData.length,
-      sample: extractedData
-    })
+    void 0
 
     return {
       success: true,

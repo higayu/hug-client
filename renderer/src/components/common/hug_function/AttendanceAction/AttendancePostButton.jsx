@@ -55,15 +55,7 @@ export default function AttendancePostButton({
       title={title}
       aria-label={ariaLabel}
       onClick={(event) => {
-        console.log('[AttendancePostButton] click', {
-          action,
-          label,
-          hasMail,
-          disabled,
-          loading,
-          title,
-          nativeEventType: event?.nativeEvent?.type,
-        })
+        void 0
 
         return onClick?.(event)
       }}

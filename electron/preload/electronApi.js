@@ -495,7 +495,15 @@ function createElectronApi(ipcRenderer, isDebugMode) {
 
     // ---- 設定 ----
     getAppLockStatus: () => ipcRenderer.invoke("app-lock-status"),
+    lockApp: () => ipcRenderer.invoke("app-lock-lock"),
     unlockApp: (passcode) => ipcRenderer.invoke("app-lock-unlock", passcode),
+    onAppLockStateChanged: (callback) => {
+      if (typeof callback !== "function") return () => {};
+
+      const listener = (_event, state) => callback(state);
+      ipcRenderer.on("app-lock-state-changed", listener);
+      return () => ipcRenderer.removeListener("app-lock-state-changed", listener);
+    },
     readConfig: () =>
       ipcRenderer.invoke("read-config"),
 

@@ -1,8 +1,8 @@
 // renderer/src/sql/useManager/deleteManager/parts/Laravel API.js
 
 export async function handleLaravelDelete(payload) {
-  console.log("====== laravel: handleLaravel APIDelete START ======");
-  console.log("処理する担当:", payload);
+  void 0;
+  void 0;
 
   try {
     const { children_id, staff_id, day_of_week_id,facility_id } = payload;
@@ -22,7 +22,7 @@ export async function handleLaravelDelete(payload) {
       values: [children_id, staff_id, day_of_week_id,facility_id],
     });
 
-    console.log("✅ laravel: managers2_delete 成功");
+    void 0;
     return true;
 
   } catch (error) {
@@ -30,6 +30,6 @@ export async function handleLaravelDelete(payload) {
     return false;
 
   } finally {
-    console.log("====== laravel: handleLaravel APIDelete END ======");
+    void 0;
   }
 }

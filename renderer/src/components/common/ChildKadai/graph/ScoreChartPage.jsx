@@ -24,7 +24,7 @@ function ScoreChartPage() {
 
   // ▼ Redux から kadai を取得
   const selectedKadai = useSelector((state) => state.kadai.selectedKadai);
-  console.log("選択中の課題:", selectedKadai?.record_type_id);
+  void 0;
 
 
   // --------------------
@@ -66,12 +66,12 @@ function ScoreChartPage() {
           (c) => c.children_id === parseInt(selectedKadai.children_id, 10)
         );
 
-        console.log("選択中子供id:", selectedKadai?.children_id);
-        console.log("子どもデータ:", childs);
-        console.log("記録タイプ:", types);
-        console.log("グラフデータ:", res);
-        console.log("選択中の記録タイプ:", seleType);
-        console.log("選択中の子ども:", seleChild);
+        void 0;
+        void 0;
+        void 0;
+        void 0;
+        void 0;
+        void 0;
 
         setSelectedChild(seleChild);
         setSelectedType(seleType);
@@ -87,7 +87,7 @@ function ScoreChartPage() {
             )
           : [];
 
-        console.log("グラフデータ（フィルター）:", filtered);
+        void 0;
 
         const chartData = filtered.map((r) => ({
           date: formatDateJP(r.date),

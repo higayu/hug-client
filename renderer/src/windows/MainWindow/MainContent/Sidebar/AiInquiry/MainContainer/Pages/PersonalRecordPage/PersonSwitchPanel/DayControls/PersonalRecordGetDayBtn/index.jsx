@@ -49,7 +49,7 @@ export default function PersonalRecordGetDayBtn({
     }
 
     if (isFetchingRef.current) {
-      console.log(`[${LOG_TAG}] 取得中のためスキップ`);
+      void 0;
       return;
     }
 
@@ -60,11 +60,7 @@ export default function PersonalRecordGetDayBtn({
     setFetching(true);
     setPermissionErrorCount(0);
 
-    console.log(`[${LOG_TAG}] 取得開始`, {
-      childId: childId,
-      facilityId,
-      currentYmd,
-    });
+    void 0;
 
     try {
       const result = await fetchPersonalRecord({
@@ -79,21 +75,11 @@ export default function PersonalRecordGetDayBtn({
         return;
       }
 
-      console.log(`[${LOG_TAG}] 取得完了`, {
-        listUrl: result.listUrl,
-        rowCount: result.rowCount,
-        presentCount: result.presentCount,
-      });
-      console.log(`[${LOG_TAG}] records:`, result.records);
+      void 0;
+      void 0;
 
       result.records?.forEach((row) => {
-        console.log(`[${LOG_TAG}] ${row.date} ${row.childName}`, {
-          attendance: row.attendance,
-          note: row.note,
-          noteError: row.noteError,
-          permissionError: row.permissionError === true,
-          editPath: row.editPath,
-        });
+        void 0;
       });
 
       const fetchedPermissionErrorCount =
@@ -110,7 +96,7 @@ export default function PersonalRecordGetDayBtn({
         databaseType: DATABASE_TYPE,
       });
 
-      console.log(`[${LOG_TAG}] ローカルDB保存`, postResult);
+      void 0;
 
       const savedPermissionErrorCount =
         postResult?.permissionErrors?.length ??
@@ -124,7 +110,7 @@ export default function PersonalRecordGetDayBtn({
       });
       postResult.results?.forEach((row) => {
         if (row.ok) {
-          console.log(`[${LOG_TAG}] Upsert成功 ${row.date}`, row.payload);
+          void 0;
         } else if (row.skipped) {
           console.warn(`[${LOG_TAG}] Upsertスキップ ${row.date}:`, row.error);
         } else {

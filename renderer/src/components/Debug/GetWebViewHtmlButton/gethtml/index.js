@@ -24,7 +24,7 @@ export async function getActiveWebviewHtml(getWebview) {
     if (typeof html !== 'string' || !html.trim()) {
       throw new Error('WebViewからHTMLが取得できませんでした')
     }
-    console.log('[GetWebViewHtmlButton] selected webview HTML:', html)
+    void 0
     return html
   } catch (error) {
     console.warn('[GetWebViewHtmlButton] HTMLを取得できませんでした。', error)

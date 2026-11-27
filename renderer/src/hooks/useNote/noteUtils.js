@@ -75,10 +75,10 @@ export async function saveTempNote(childId, memo1, memo2, appState) {
   console.group("📝 saveTempNote() 呼び出し");
 
   try {
-    console.log("📌 childId:", childId);
-    console.log("📌 memo1:", memo1);
-    console.log("📌 memo2:", memo2);
-    console.log("📌 appState:", appState);
+    void 0;
+    void 0;
+    void 0;
+    void 0;
 
     if (!childId || !appState?.STAFF_ID || !appState?.CURRENT_DAY_OF_WEEK) {
       throw new Error("必須パラメータ不足");
@@ -100,9 +100,9 @@ export async function saveTempNote(childId, memo1, memo2, appState) {
 
     const apiNames = await getTempNoteApiNames();
 
-    console.log("🗄️ 使用DB:", apiNames.databaseType);
-    console.log("📤 送信データ(saveTempNote):", data);
-    console.log("📡 使用API:", apiNames.save);
+    void 0;
+    void 0;
+    void 0;
 
     const fn = window.electronAPI?.[apiNames.save];
 
@@ -112,10 +112,10 @@ export async function saveTempNote(childId, memo1, memo2, appState) {
 
     const result = await fn(data);
 
-    console.log("📥 受信結果(saveTempNote):", result);
+    void 0;
 
     if (result?.success || result?.affectedRows || result?.id || result?.changes) {
-      console.log("✅ TEMP_NOTE 保存成功");
+      void 0;
       return true;
     }
 
@@ -135,9 +135,9 @@ export async function saveTempNote1(childId, memo1, appState) {
   console.group("📝 saveTempNote1() 呼び出し");
 
   try {
-    console.log("📌 childId:", childId);
-    console.log("📌 memo1:", memo1);
-    console.log("📌 appState:", appState);
+    void 0;
+    void 0;
+    void 0;
 
     if (!childId || !appState?.STAFF_ID || !appState?.CURRENT_DAY_OF_WEEK) {
       throw new Error("必須パラメータ不足");
@@ -158,9 +158,9 @@ export async function saveTempNote1(childId, memo1, appState) {
 
     const apiNames = await getTempNoteApiNames();
 
-    console.log("🗄️ 使用DB:", apiNames.databaseType);
-    console.log("📤 送信データ(saveTempNote1):", data);
-    console.log("📡 使用API:", apiNames.save1);
+    void 0;
+    void 0;
+    void 0;
 
     const fn = window.electronAPI?.[apiNames.save1];
 
@@ -170,10 +170,10 @@ export async function saveTempNote1(childId, memo1, appState) {
 
     const result = await fn(data);
 
-    console.log("📥 受信結果(saveTempNote1):", result);
+    void 0;
 
     if (result?.success || result?.affectedRows || result?.id || result?.changes) {
-      console.log("✅ TEMP_NOTE 保存成功");
+      void 0;
       return true;
     }
 
@@ -193,9 +193,9 @@ export async function saveTempNote2(childId, memo2, appState) {
   console.group("📝 saveTempNote2() 呼び出し");
 
   try {
-    console.log("📌 childId:", childId);
-    console.log("📌 memo2:", memo2);
-    console.log("📌 appState:", appState);
+    void 0;
+    void 0;
+    void 0;
 
     if (!childId || !appState?.STAFF_ID || !appState?.CURRENT_DAY_OF_WEEK) {
       throw new Error("必須パラメータ不足");
@@ -216,9 +216,9 @@ export async function saveTempNote2(childId, memo2, appState) {
 
     const apiNames = await getTempNoteApiNames();
 
-    console.log("🗄️ 使用DB:", apiNames.databaseType);
-    console.log("📤 送信データ(saveTempNote2):", data);
-    console.log("📡 使用API:", apiNames.save2);
+    void 0;
+    void 0;
+    void 0;
 
     const fn = window.electronAPI?.[apiNames.save2];
 
@@ -228,10 +228,10 @@ export async function saveTempNote2(childId, memo2, appState) {
 
     const result = await fn(data);
 
-    console.log("📥 受信結果(saveTempNote2):", result);
+    void 0;
 
     if (result?.success || result?.affectedRows || result?.id || result?.changes) {
-      console.log("✅ TEMP_NOTE 保存成功");
+      void 0;
       return true;
     }
 
@@ -251,9 +251,9 @@ export async function loadTempNote(childId, proxy, appState, { throwOnError = fa
   console.group("📄 loadTempNote() 呼び出し");
 
   try {
-    console.log("📌 childId:", childId);
-    console.log("📌 proxy:", proxy);
-    console.log("📌 appState:", appState);
+    void 0;
+    void 0;
+    void 0;
 
     if (!childId || !appState?.STAFF_ID || !appState?.CURRENT_DAY_OF_WEEK) {
       throw new Error("必須パラメータ不足");
@@ -273,9 +273,9 @@ export async function loadTempNote(childId, proxy, appState, { throwOnError = fa
 
     const apiNames = await getTempNoteApiNames();
 
-    console.log("🗄️ 使用DB:", apiNames.databaseType);
-    console.log("📤 送信データ(getTempNote):", data);
-    console.log("📡 使用API:", apiNames.get);
+    void 0;
+    void 0;
+    void 0;
 
     const fn = window.electronAPI?.[apiNames.get];
 
@@ -285,7 +285,7 @@ export async function loadTempNote(childId, proxy, appState, { throwOnError = fa
 
     const result = await fn(data);
 
-    console.log("📥 受信結果(getTempNote):", result);
+    void 0;
 
     if (result?.success !== true) {
       throw new Error(getTempNoteErrorMessage(result, "一時メモの取得に失敗しました。"));
@@ -296,12 +296,12 @@ export async function loadTempNote(childId, proxy, appState, { throwOnError = fa
         memo1: result.data.memo1 ?? "",
         memo2: result.data.memo2 ?? "",
       };
-      console.log("✅ TEMP_NOTE 読込成功");
+      void 0;
       return true;
     }
 
     proxy.value = { memo1: "", memo2: "" };
-    console.log("ℹ️ TEMP_NOTE なし");
+    void 0;
     return false;
   } catch (error) {
     console.error("❌ TEMP_NOTE 読込失敗:", error);

@@ -580,78 +580,21 @@ export function useReduxBindings() {
         '[useReduxBindings/getChildrenDataByDay] START'
       )
 
-      console.log(
-        'staffId:',
-        staffId
-      )
+      void 0
 
-      console.log(
-        'weekdayId:',
-        weekdayId
-      )
+      void 0
 
-      console.log(
-        'resolvedWeekdayId:',
-        resolvedWeekdayId
-      )
+      void 0
 
-      console.log(
-        'facilityId:',
-        facilityId
-      )
+      void 0
 
-      console.log(
-        'databaseLoading:',
-        databaseLoading
-      )
+      void 0
 
-      console.log(
-        'databaseError:',
-        databaseError
-      )
+      void 0
 
-      console.log(
-        'databaseMetadata:',
-        databaseMetadata
-      )
+      void 0
 
-      console.log(
-        'table counts:',
-        {
-          children:
-            databaseTables.children.length,
-
-          children_type:
-            databaseTables.children_type.length,
-
-          pronunciation:
-            databaseTables.pronunciation.length,
-
-          staffs:
-            databaseTables.staffs.length,
-
-          facilitys:
-            databaseTables.facilitys.length,
-
-          facility_children:
-            databaseTables.facility_children.length,
-
-          facility_staff:
-            databaseTables.facility_staff.length,
-
-          managers2:
-            databaseTables.managers2.length,
-
-          pc:
-            databaseTables.pc.length,
-
-          pc_to_children:
-            databaseTables.pc_to_children.length,
-
-          day_of_week:
-            databaseTables.day_of_week.length,
-        }
-      )
+      void 0
 
       if (!staffId) {
         console.warn(
@@ -696,10 +639,7 @@ export function useReduxBindings() {
               facilityId,
           })
 
-        console.log(
-          '[useReduxBindings/getChildrenDataByDay] result:',
-          result
-        )
+        void 0
 
         return {
           week_children:

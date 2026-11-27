@@ -365,9 +365,7 @@ export default function DebugConsoleFooter({
         text,
       )
 
-      console.log(
-        '[DebugFooter] ログをコピーしました',
-      )
+      void 0
     } catch (error) {
       console.error(
         '[DebugFooter] ログのコピーに失敗しました',

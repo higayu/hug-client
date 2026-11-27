@@ -69,11 +69,8 @@ export default function StaffUpdateButton({
       console.groupCollapsed(
         `[HUG職員同期] HUG取得データ (${result.fetched_count}件)`,
       );
-      console.log('取得データ:', result);
-      console.log(
-        '取得データ JSON:',
-        JSON.stringify(result, null, 2),
-      );
+      void 0;
+      void 0;
       console.table(result.staff ?? []);
       console.groupEnd();
 
@@ -92,12 +89,9 @@ export default function StaffUpdateButton({
       console.groupCollapsed(
         `[HUG職員同期] Laravel送信データ (${result.fetched_count}件)`,
       );
-      console.log('送信先API:', 'syncHugStaffs');
-      console.log('送信データ:', result);
-      console.log(
-        '送信データ JSON:',
-        JSON.stringify(result, null, 2),
-      );
+      void 0;
+      void 0;
+      void 0;
       console.table(result.staff ?? []);
       console.groupEnd();
 

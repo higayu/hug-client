@@ -73,10 +73,7 @@ function runHugPlanResolver(payload) {
               ? "専門的支援計画"
               : "個別支援計画";
 
-          console.log(
-            `[HUG ${label}] 検索結果URL:`,
-            result.targetUrl
-          );
+          void 0;
         }
 
         resolve(result);

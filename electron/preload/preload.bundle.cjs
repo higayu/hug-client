@@ -369,7 +369,15 @@ var require_electronApi = __commonJS({
         }),
         // ---- 設定 ----
         getAppLockStatus: () => ipcRenderer2.invoke("app-lock-status"),
+        lockApp: () => ipcRenderer2.invoke("app-lock-lock"),
         unlockApp: (passcode) => ipcRenderer2.invoke("app-lock-unlock", passcode),
+        onAppLockStateChanged: (callback) => {
+          if (typeof callback !== "function") return () => {
+          };
+          const listener = (_event, state) => callback(state);
+          ipcRenderer2.on("app-lock-state-changed", listener);
+          return () => ipcRenderer2.removeListener("app-lock-state-changed", listener);
+        },
         readConfig: () => ipcRenderer2.invoke("read-config"),
         saveConfig: (data) => ipcRenderer2.invoke("save-config", data),
         readIni: () => ipcRenderer2.invoke("read-ini"),
@@ -528,7 +536,6 @@ var require_webviewPageSaveBridge = __commonJS({
 
 // electron/preload/index.js
 var { contextBridge, ipcRenderer } = require("electron");
-console.log("[preload.bundle.cjs] start");
 var { createElectronApi } = require_electronApi();
 var { createDevApi } = require_devApi();
 var { createWhisperApi } = require_whisperApi();

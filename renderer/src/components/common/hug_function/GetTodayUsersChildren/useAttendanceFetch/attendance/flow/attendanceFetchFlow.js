@@ -180,7 +180,7 @@ export async function executeAttendanceFetchFlow({
         };
 
         try {
-          console.log(
+          false && (
             "[HUG WM][DIRECT] 今日の利用者取得開始:",
             targetUrl
           );
@@ -280,16 +280,7 @@ export async function executeAttendanceFetchFlow({
       );
     }
 
-    console.log(
-      "[Attendance Fetch][DIRECT] 取得完了:",
-      {
-        facilityId: input.facilityId,
-        dateStr: input.dateStr,
-        rowCount: result.rowCount,
-        pageTitle: result.pageTitle,
-        pageUrl: result.pageUrl,
-      }
-    );
+    void 0;
 
     return {
       ...result,

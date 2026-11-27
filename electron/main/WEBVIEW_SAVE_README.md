@@ -9,7 +9,7 @@ Renderer使用例:
 ```js
 const webview = /* TaskWindowが選択中として保持するWebView */;
 const result = await window.electronWebviewPageSave.saveCompletePage(webview.getWebContentsId());
-console.log(result);
+false && (result);
 ```
 
 選択中WebViewの特定はRenderer側で行います。Main側はWebViewの所有元を検証します。キャンセル時は `{ canceled: true }` を返します。実際のElectronでの保存実行は未検証です。

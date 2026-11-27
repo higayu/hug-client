@@ -72,10 +72,7 @@ export default function PersonalRecordLaravelLoader({
             ? result.data
             : []
 
-        console.log(
-          '[PersonalRecordLaravelLoader] Laravel個人記録 全件:',
-          rows,
-        )
+        void 0
 
         setRecords(rows)
         dispatch(setServiceRecord(rows))

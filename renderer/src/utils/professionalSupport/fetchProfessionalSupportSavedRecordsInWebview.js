@@ -68,7 +68,7 @@ export async function fetchProfessionalSupportSavedRecordsInWebview(
       };
 
       const fetchSearchFormDoc = async () => {
-        console.log("[HUG WM] 保存済み確認 GET URL:", RECORD_PROCEEDINGS_URL);
+        false && ("[HUG WM] 保存済み確認 GET URL:", RECORD_PROCEEDINGS_URL);
         const response = await fetch(RECORD_PROCEEDINGS_URL, {
           method: "GET",
           credentials: "include",
@@ -163,8 +163,8 @@ export async function fetchProfessionalSupportSavedRecordsInWebview(
         const formDoc = await fetchSearchFormDoc();
         const body = buildSearchParams(formDoc);
 
-        console.log("[HUG WM] 保存済み確認 POST URL:", RECORD_PROCEEDINGS_URL);
-        console.log(
+        false && ("[HUG WM] 保存済み確認 POST URL:", RECORD_PROCEEDINGS_URL);
+        false && (
           "[HUG WM] 保存済み確認 POST params:",
           Object.fromEntries(body)
         );
@@ -189,7 +189,7 @@ export async function fetchProfessionalSupportSavedRecordsInWebview(
         const rowCount = rows.length;
         const registered = rowCount > 0;
 
-        console.log(
+        false && (
           "[HUG WM] 保存済み確認:",
           registered ? "保存済み" : "保存なし",
           "(" + rowCount + "件)"

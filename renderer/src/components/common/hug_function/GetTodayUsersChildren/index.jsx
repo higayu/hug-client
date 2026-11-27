@@ -229,10 +229,7 @@ export default function GetTodayUsersChildren({
   const handleDateChange = async (selectedDate) => {
     if (!selectedDate) return;
 
-    console.log(
-      "[GetTodayUsersChildren] 日付変更による利用者再取得",
-      { selectedDate }
-    );
+    void 0;
 
     // runFetch 内で useHugCache -> isHugLoggedIn を使って
     // 常駐HUG WebViewのログイン状態を確認する。

@@ -17,10 +17,7 @@ function MainContent({ preloadPath }) {
      */
     window.preloadPath = preloadPath
 
-    console.log(
-      '✅ [MainContent] preloadPathを設定:',
-      preloadPath,
-    )
+    void 0
   }, [preloadPath])
 
   return (

@@ -11,7 +11,7 @@ async function installDownloadedUpdateHandler() {
     const openError = await shell.openPath(installerPath);
     if (openError) throw new Error(openError);
     setTimeout(() => {
-      console.log('[AppUpdate] インストーラー起動後、アプリを終了します。');
+      void 0;
       app.quit();
     }, 1000);
     return {

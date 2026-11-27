@@ -45,22 +45,14 @@ async function correct(type, payload = {}) {
 
   const normalizedPayload = normalizePayload(payload);
 
-  console.log("📤 [Laravel AiRecordEditer] correct request:", {
-    type,
-    path,
-    promptLength: normalizedPayload.prompt.length,
-    messageLength: normalizedPayload.message.length,
-  });
+  void 0;
 
   const result = await executeAuthenticatedOperation(
     () => laravelApiClient.post(path, normalizedPayload, { timeout: 120000 }),
     "AI文章校正に失敗しました。"
   );
 
-  console.log("📥 [Laravel AiRecordEditer] correct response:", {
-    type,
-    success: result?.success,
-  });
+  void 0;
 
   if (result?.success === false) {
     return result;

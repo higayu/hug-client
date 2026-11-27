@@ -57,7 +57,7 @@ async function main() {
     await page.waitForFunction(()=>![...document.querySelectorAll('button')].find(b=>b.textContent.startsWith('Ver.1')).disabled);
     await page.evaluate(()=>{window.delayPreview=false;window.finishPreview()});
     assert.deepEqual(errors,[]);
-    console.log('PASS: history preview, editing, restore confirmation/payload, draft guard, pagination, stale versions, read-only access, preview cancellation');
+    void 0;
   } finally { await browser.close(); }
 }
 main().catch(error=>{console.error(error);process.exitCode=1});

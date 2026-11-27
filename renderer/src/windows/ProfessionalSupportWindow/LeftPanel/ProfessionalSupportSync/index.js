@@ -55,7 +55,7 @@ export default function useProfessionalSupportSync({
         { facilityId, targetDate },
       )
 
-      console.log('加算一覧のデータ一括取得結果',additionListData);
+      void 0;
 
       if (!attendanceData || !additionListData) {
         throw new Error(

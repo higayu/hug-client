@@ -26,13 +26,7 @@ export default function PersonalRecordButton({
       return;
     }
 
-    console.log(
-      '[PersonalRecordButton] 個人記録を開きます',
-      {
-        childId,
-        childName: selectedChildName,
-      }
-    );
+    void 0;
 
     openPersonalRecordTab({
       appState,

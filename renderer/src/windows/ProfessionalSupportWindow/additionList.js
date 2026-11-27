@@ -516,7 +516,7 @@ export const buildAdditionListFetchScript = ({
       const maxPage =
         parseMaxPage(searchDoc);
 
-      console.log(
+      false && (
         '[ProfessionalSupportAdditionList] 検索条件設定完了',
         {
           facilityId:
@@ -590,7 +590,7 @@ export const buildAdditionListFetchScript = ({
             pageDoc
           );
 
-        console.log(
+        false && (
           '[ProfessionalSupportAdditionList] page=' +
             page +
             ' 取得件数:',
@@ -653,7 +653,7 @@ export const buildAdditionListFetchScript = ({
       const fetchedCount =
         uniqueRecords.length;
 
-      console.log(
+      false && (
         '[ProfessionalSupportAdditionList] 一覧取得結果',
         {
           hugTotal:

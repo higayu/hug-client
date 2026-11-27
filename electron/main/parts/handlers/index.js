@@ -59,9 +59,7 @@ function registerDatabaseTypeHandlers(
  * Renderer起動前にLaravel IPC登録を完了させる。
  */
 function handleApiCalls(ipcMain) {
-  console.log(
-    "🔥 [handleApiCalls] START",
-  );
+  void 0;
 
   if (
     !ipcMain ||
@@ -84,10 +82,7 @@ function handleApiCalls(ipcMain) {
   registerLaravelAuthHandlers(ipcMain);
   registerDatabaseTypeHandlers(ipcMain);
 
-  console.log(
-    "✅ [handleApiCalls] IPC handlers registered:",
-    getDatabaseType(),
-  );
+  void 0;
 }
 
 module.exports = {

@@ -10,14 +10,7 @@ export function useActiveWebviewLogger() {
     const handler = (e) => {
       const { webview, url, reason } = e?.detail || {}
 
-      console.log(
-        '🧭 [active-webview-changed]',
-        {
-          id: webview?.id || '(none)',
-          url: url || '(empty)',
-          reason,
-        }
-      )
+      void 0
     }
 
     document.addEventListener('active-webview-changed', handler)

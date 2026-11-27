@@ -15,22 +15,12 @@ export default function BrowserOpenButton({
       e.preventDefault()
       e.stopPropagation()
 
-      console.log('[BrowserOpenButton] disabled click blocked', {
-        switch_id,
-        path,
-        disabled_flg,
-        title,
-      })
+      void 0
 
       return
     }
 
-    console.log('[BrowserOpenButton] clicked', {
-      switch_id,
-      path,
-      appState,
-      iniState,
-    })
+    void 0
 
     addWebManagerAction_OutWindow(appState, iniState, switch_id, path)
   }

@@ -76,7 +76,7 @@ export async function openAttendanceEditPage(options = {}) {
 
   const absoluteUrl = new URL(targetUrl, HUG_WM_BASE_URL).href;
 
-  console.log("[Attendance Edit] GET開始:", absoluteUrl);
+  void 0;
 
   const loadedPromise = new Promise((resolve, reject) => {
     const timeoutId = setTimeout(() => {
@@ -97,7 +97,7 @@ export async function openAttendanceEditPage(options = {}) {
           (() => document.documentElement.outerHTML)();
         `);
 
-        console.log("[Attendance Edit] GET完了 HTML:", html);
+        void 0;
         resolve(html);
       } catch (error) {
         reject(error);
@@ -110,7 +110,7 @@ export async function openAttendanceEditPage(options = {}) {
   await webview.executeJavaScript(`
     (() => {
       const targetUrl = ${JSON.stringify(absoluteUrl)};
-      console.log("[Attendance Edit] location.href GET:", targetUrl);
+      false && ("[Attendance Edit] location.href GET:", targetUrl);
       location.href = targetUrl;
       return targetUrl;
     })();
@@ -150,7 +150,7 @@ export async function saveAttendanceEditTimes({
     e_min: String(endMinute ?? ""),
   };
 
-  console.log("[Attendance Edit] 保存開始:", values);
+  void 0;
 
   // requestSubmit() は送信開始直後に制御が戻るため、
   // HUG側のPOST完了（ページ再読込）を待ってから呼び出し元へ返す。
@@ -209,7 +209,7 @@ export async function saveAttendanceEditTimes({
         throw new Error('HUG編集フォーム #form が見つかりません');
       }
 
-      console.log('[Attendance Edit] HUGフォームへ時間反映:', values);
+      false && ('[Attendance Edit] HUGフォームへ時間反映:', values);
 
       if (typeof form.requestSubmit === 'function') {
         form.requestSubmit();
@@ -236,7 +236,7 @@ export async function saveAttendanceEditTimes({
 
   const savePage = await saveCompletedPromise;
 
-  console.log("[Attendance Edit] HUG保存完了:", savePage);
+  void 0;
 
   return {
     ...result,

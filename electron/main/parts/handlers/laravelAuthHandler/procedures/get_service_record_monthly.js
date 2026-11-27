@@ -5,7 +5,7 @@ const { executeAuthenticatedOperation } = require("../auth/authenticated");
 const { formatError, unwrapData } = require("../auth/utils");
 
 async function getServiceRecordMonthly(payload = {}) {
-  console.log("📤 [Laravel Procedure] getServiceRecordMonthly:", payload);
+  void 0;
 
   const result = await executeAuthenticatedOperation(
     () => laravelApiClient.getServiceRecordMonthly(payload),

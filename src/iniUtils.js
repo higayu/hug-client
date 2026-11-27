@@ -77,10 +77,10 @@ function getDefaultIni() {
 function loadIni() {
   try {
     const iniPath = resolveIniPath();
-    console.log("ini.json path:", iniPath);
+    void 0;
     
     if (!fs.existsSync(iniPath)) {
-      console.log("ini.json not found. writing defaults.");
+      void 0;
       const def = getDefaultIni();
       const dir = path.dirname(iniPath);
       if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
@@ -90,16 +90,11 @@ function loadIni() {
     
     const raw = fs.readFileSync(iniPath, "utf8");
     const json = JSON.parse(raw);
-    console.log("ini.json loaded:", {
-      baseURL: json?.apiSettings?.baseURL,
-      laravelURL: json?.apiSettings?.laravelURL,
-      databaseType: json?.apiSettings?.databaseType,
-      useAI: json?.apiSettings?.useAI
-    });
+    void 0;
     return json;
   } catch (err) {
     console.error("error: ini.json load failed:", err);
-    console.log("default settings used.");
+    void 0;
     const def = getDefaultIni();
     try {
       const iniPath = resolveIniPath();

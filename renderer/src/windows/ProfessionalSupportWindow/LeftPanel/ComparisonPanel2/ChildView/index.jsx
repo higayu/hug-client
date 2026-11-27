@@ -69,7 +69,7 @@ export default function ChildView({
             ? result.data
             : []
 
-        console.log('[ChildView] Laravel個人記録 全件:', loadedRows)
+        void 0
 
         setPersonalRecords(loadedRows)
         dispatch(setServiceRecord(loadedRows))

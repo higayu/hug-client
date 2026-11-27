@@ -61,14 +61,7 @@ export default function OpenProfessionalSupportButton({
       return
     }
 
-    console.log(
-      '[ProfessionalSupportSearch] 専門的支援検索を開きます',
-      {
-        facilityId,
-        targetFacility,
-        targetDate,
-      },
-    )
+    void 0
 
     window.electronAPI.handleProfessionalSupportSearch(
       facilityId,

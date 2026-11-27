@@ -23,23 +23,11 @@ export async function handleLeaveClick({
       rendererMailResolved: true,
     }
 
-    console.log('[LeaveButton] onLeave呼び出し', {
-      childId,
-      childName,
-      dateStr,
-      payload,
-    })
+    void 0
 
     const result = await onLeave(payload)
 
-    console.log('[LeaveButton] 退室処理結果', {
-      childId,
-      childName,
-      recordId,
-      rowSelector,
-      mailFlg: normalizedMailFlg,
-      result,
-    })
+    void 0
 
     return result
   } catch (error) {

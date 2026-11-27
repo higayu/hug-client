@@ -54,7 +54,7 @@ function normalizeParams(params = {}) {
 async function getPersonalRecordSyncMonth(params = {}) {
   const query = normalizeParams(params);
 
-  console.log("📥 [Laravel PersonalRecordSync] get month:", query);
+  void 0;
 
   const result = await executeAuthenticatedOperation(
     () => laravelApiClient.get("/personal-record-syncs", { params: query }),
@@ -84,13 +84,7 @@ async function getMonthHandler(_event, params = {}) {
     const result = await getPersonalRecordSyncMonth(params);
 
     if (result?.success) {
-      console.log("✅ [Laravel PersonalRecordSync] get month DONE:", {
-        exists: result?.meta?.exists ?? Boolean(result?.data),
-        syncedAt:
-          result?.data?.synced_at ??
-          result?.meta?.synced_at ??
-          null,
-      });
+      void 0;
     } else {
       console.error(
         "❌ [Laravel PersonalRecordSync] get month failed:",

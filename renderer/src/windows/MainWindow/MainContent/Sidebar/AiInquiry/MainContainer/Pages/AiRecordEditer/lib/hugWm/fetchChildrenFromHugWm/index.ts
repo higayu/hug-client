@@ -81,10 +81,7 @@ export async function fetchChildrenFromHugWm(params: {
   }
 
   const body = buildChildAgreementFilterParams(facilityId, targetDate);
-  console.log(
-    '[HUG WM] ajax_child_agreement_filter POST:',
-    Object.fromEntries(Array.from(body.entries())),
-  );
+  void 0;
 
   const text = await hugWmFetch(HUG_WM_CHILD_AGREEMENT_FILTER_URL, {
     method: 'POST',

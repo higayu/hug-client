@@ -101,27 +101,7 @@ export default function PersonalRecordPrompt({
   // DEBUG
   // =============================================================
   const logDbg = (field, msg, extra = {}) => {
-    console.log(`[${DBG}:${field}]`, msg, {
-      childId: selectedChildId,
-      date: CURRENT_YMD,
-      PROMPT_KEY,
-      selectedPromptKey,
-      useDbNote,
-      aiName,
-      promptKey,
-
-      aiTextLen:
-        typeof aiText === "string"
-          ? aiText.length
-          : -1,
-
-      dbNoteLen:
-        typeof dbNote === "string"
-          ? dbNote.length
-          : -1,
-
-      ...extra,
-    });
+    void 0;
   };
 
   // メモの値をReduxで管理するAI入力欄へ反映。DBは変更しない。

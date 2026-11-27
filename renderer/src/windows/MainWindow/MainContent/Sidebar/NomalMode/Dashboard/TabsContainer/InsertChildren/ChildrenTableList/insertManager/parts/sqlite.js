@@ -16,8 +16,8 @@ export async function handleSQLiteInsert(
     priority = 0,
   }
 ) {
-  console.log("====== SQLite: handleSQLiteInsert START ======");
-  console.log("処理する児童:", child);
+  void 0;
+  void 0;
 
   try {
     // -----------------------------------------
@@ -28,10 +28,10 @@ export async function handleSQLiteInsert(
     const targetWeekId = Number(weekId);
     const targetChildId = Number(child?.children_id);
 
-    console.log("targetFacilityId:", targetFacilityId);
-    console.log("targetStaffId:", targetStaffId);
-    console.log("targetWeekId:", targetWeekId);
-    console.log("targetChildId:", targetChildId);
+    void 0;
+    void 0;
+    void 0;
+    void 0;
 
     if (!Number.isFinite(targetFacilityId)) {
       console.warn("⚠️ SQLite: facility_id が不正です", {
@@ -70,16 +70,16 @@ export async function handleSQLiteInsert(
     // -----------------------------------------
     // ① children テーブルのチェック
     // -----------------------------------------
-    console.log("SQLite: children テーブル検索中...");
+    void 0;
 
     const existingChild = childrenData?.find(
       (c) => String(c.id) === String(targetChildId)
     );
 
-    console.log("SQLite: existingChild 結果:", existingChild);
+    void 0;
 
     if (!existingChild) {
-      console.log("SQLite: 児童が children テーブルに存在しません:", targetChildId);
+      void 0;
 
       const childPayload = {
         id: targetChildId,
@@ -93,28 +93,28 @@ export async function handleSQLiteInsert(
         leaving_at: child.leaving_at ?? null,
       };
 
-      console.log("SQLite: children_insert 実行 →", childPayload);
+      void 0;
 
       const result = await window.electronAPI.sqlite_children_insert(
         childPayload
       );
 
-      console.log("SQLite: children_insert 完了:", result);
+      void 0;
 
       const facilityPayload = {
         children_id: targetChildId,
         facility_id: targetFacilityId,
       };
 
-      console.log("SQLite: facility_children_insert 実行 →", facilityPayload);
+      void 0;
 
       const result2 = await window.electronAPI.sqlite_facility_children_insert(
         facilityPayload
       );
 
-      console.log("SQLite: facility_children_insert 完了:", result2);
+      void 0;
     } else {
-      console.log("SQLite: 児童はすでに children テーブルに存在します:", existingChild);
+      void 0;
     }
 
     // -----------------------------------------
@@ -136,19 +136,19 @@ export async function handleSQLiteInsert(
       support_end_time: child.support_end_time ?? null,
     };
 
-    console.log("SQLite: managers2_insert 実行 →", managerPayload);
+    void 0;
 
     const result3 = await window.electronAPI.sqlite_managers2_insert(
       managerPayload
     );
 
-    console.log("SQLite: managers2_insert 完了:", result3);
+    void 0;
 
     return true;
   } catch (error) {
     console.error("❌ SQLite: handleSQLiteInsert エラー:", error);
     return false;
   } finally {
-    console.log("====== SQLite: handleSQLiteInsert END ======");
+    void 0;
   }
 }

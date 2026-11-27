@@ -9,7 +9,7 @@ import { restoreFocusAfterWebviewAction } from './restoreFocusAfterWebviewAction
  * @param {string} targetId - アクティブにするwebviewのID
  */
 export function activateTab(targetId) {
-  console.log('🔵 タブをアクティブにする実行');
+  void 0;
   const tabsContainer = document.getElementById('tabs')
   const content = document.getElementById('content')
 
@@ -37,14 +37,14 @@ export function activateTab(targetId) {
     try {
       const maybe = targetView.getURL?.()
       if (typeof maybe === 'string') {
-        console.log(`🔵 activateTab: ${targetId} URL =`, maybe)
+        void 0
       } else if (maybe && typeof maybe.then === 'function') {
         maybe.then(url => {
-          console.log(`🔵 activateTab: ${targetId} URL =`, url)
+          void 0
         })
       } else {
         const fallback = targetView.getAttribute?.('src')
-        console.log(`🔵 activateTab: ${targetId} URL (fallback) =`, fallback)
+        void 0
       }
     } catch (e) {
       console.warn('⚠️ activateTab URL 取得失敗:', e)
@@ -69,7 +69,7 @@ export function activateTab(targetId) {
  * 強制的にアクティブにする関数
  */
 export function activateHugViewFirstButton() {
-  console.log('🔵 強制で今日の利用者タブをアクティブにする実行');
+  void 0;
   const hugButton = document.getElementById('hugview-first-button')
 
   if (!hugButton) {

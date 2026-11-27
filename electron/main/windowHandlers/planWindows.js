@@ -40,8 +40,8 @@ async function openPlanInExternalBrowser(pageType, args) {
   try {
     const hugSession = session.defaultSession;
     const cookies = await hugSession.cookies.get({ domain: "www.hug-ayumu.link" });
-    console.log(`[HUG ${label}] Cookie取得件数: ${cookies.length}`);
-    console.log(`[HUG ${label}] PowerShell開始・対象ページGET・児童検索開始`);
+    void 0;
+    void 0;
     const result = await runHugPlanResolver({
       pageType,
       childId: String(childId),
@@ -49,7 +49,7 @@ async function openPlanInExternalBrowser(pageType, args) {
       cookies: cookies.map(({ name, value, path: cookiePath, secure, httpOnly }) => ({ name, value, path: cookiePath, secure, httpOnly })),
       ...readHugCredentials(),
     });
-    console.log(`[HUG ${label}] セッション: ${result.loginRequired ? "再ログイン実施/必要" : "既存セッション有効"}`);
+    void 0;
     if (!result.success) {
       console.error(`[HUG ${label}] ${result.code}: ${result.message}`);
       return;
@@ -66,10 +66,10 @@ async function openPlanInExternalBrowser(pageType, args) {
         ...(cookie.expires ? { expirationDate: cookie.expires } : {}),
       });
     }
-    console.log(`[HUG ${label}] 検索成功・対象URL取得成功`);
-    console.log(`[HUG ${label}] 検索結果URL: ${result.targetUrl}`);
+    void 0;
+    void 0;
     await shell.openExternal(result.targetUrl);
-    console.log(`[HUG ${label}] ブラウザ起動成功`);
+    void 0;
   } catch (error) {
     console.error(`[HUG ${label}] PowerShell実行またはブラウザ起動失敗:`, error.message);
   }
@@ -83,7 +83,7 @@ function openSimpleWindow(facilityId, dateStr, label = "当日の利用画面") 
   const url = `https://www.hug-ayumu.link/hug/wm/attendance.php?mode=detail&f_id=${encodeURIComponent(facilityId)}&date=${encodeURIComponent(dateStr)}`;
   const win = new BrowserWindow(createWindowOptions(label));
   win.loadURL(url);
-  win.webContents.on("console-message", (_event, _level, message) => console.log(`${message}`));
+  win.webContents.on("console-message", (_event, _level, message) => void 0);
 }
 
 function openExternalPageWindow(url) {

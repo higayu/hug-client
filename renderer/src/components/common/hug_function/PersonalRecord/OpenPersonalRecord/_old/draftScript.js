@@ -80,7 +80,7 @@ export function getDraftScript() {
       draftBtn.addEventListener(
         "click",
         function () {
-          console.log(
+          false && (
             "💾 下書き保存ボタンがクリックされました"
           )
 
@@ -109,7 +109,7 @@ export function getDraftScript() {
               return
             }
 
-            console.log(
+            false && (
               "✅ 下書き保存ボタンを発見:",
               saveButton
             )
@@ -121,7 +121,7 @@ export function getDraftScript() {
               try {
                 saveButton.click()
 
-                console.log(
+                false && (
                   "✅ 標準クリック実行"
                 )
               } catch (error) {
@@ -145,7 +145,7 @@ export function getDraftScript() {
                     clickEvent
                   )
 
-                  console.log(
+                  false && (
                     "✅ dispatchEventクリック実行"
                   )
                 } catch (fallbackError) {

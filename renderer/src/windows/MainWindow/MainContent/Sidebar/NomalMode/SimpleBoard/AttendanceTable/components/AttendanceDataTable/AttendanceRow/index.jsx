@@ -67,14 +67,7 @@ export default function AttendanceRow({ row, busy, onAction, selected, onToggle,
       onClickCapture={(event) => {
         const control = event.target.closest?.('button, a, input, select, textarea, label, [role="button"], [role="dialog"]');
         const isControl = Boolean(control && event.currentTarget.contains(control));
-        console.log('[AttendanceRow] click', {
-          rowId: row.rId,
-          childId: row.childId,
-          selected,
-          selectionDisabled,
-          reason: isControl ? 'interactive-control' : selectionDisabled ? 'selection-limit' : 'toggle-selection',
-          target: event.target.tagName,
-        });
+        void 0;
       }}
       onClick={(event) => {
         if (selectionDisabled) return;
@@ -90,11 +83,7 @@ export default function AttendanceRow({ row, busy, onAction, selected, onToggle,
           checked={selected}
           disabled={selectionDisabled}
           onChange={() => {
-            console.log('[AttendanceRow] checkbox change', {
-              rowId: row.rId,
-              childId: row.childId,
-              selected: !selected,
-            });
+            void 0;
             onToggle();
           }}
           aria-label={`${row.name}を選択`}

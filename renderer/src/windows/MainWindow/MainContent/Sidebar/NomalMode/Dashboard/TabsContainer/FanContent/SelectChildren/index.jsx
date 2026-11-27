@@ -3,7 +3,7 @@ import TodayChildrenList from './TodayChildrenList'
 
 export default function SelectChildren({ spaceId }) {
   useEffect(() => {
-    console.log('🧰 FanContent SelectChildren: 実データモードで起動しました', { spaceId })
+    void 0
   }, [spaceId])
 
   return (

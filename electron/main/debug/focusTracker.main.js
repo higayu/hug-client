@@ -22,7 +22,7 @@ const { app, BrowserWindow, webContents } = require("electron")
 const LOG_PREFIX = "[FocusTracker:main]"
 
 function log(label, details) {
-  console.log(`${LOG_PREFIX} ${label}`, details ?? "")
+  void 0
 }
 
 function attachWindowTracking(win, source) {
@@ -100,7 +100,7 @@ function attachFocusTracker() {
     log("app: browser-window-blur", { id: win.id, title: win.getTitle() })
   })
 
-  console.log(`${LOG_PREFIX} started. ウィンドウ/フォーカスの動きを監視中...`)
+  void 0
 }
 
 module.exports = { attachFocusTracker }

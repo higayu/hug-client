@@ -97,11 +97,7 @@ export function usePersonRecordCheck(
         })
       );
 
-      console.log(`[HUG WM] 本日の個人記録（${logTag}）`, {
-        registered,
-        recordCount,
-        records: contactResult.records,
-      });
+      void 0;
     } catch (e) {
       console.error(`[${logTag}] 個人記録チェック例外:`, e);
 

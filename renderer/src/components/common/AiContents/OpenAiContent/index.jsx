@@ -10,9 +10,9 @@ export default function OpenAiContent({ spaceId, activePromptKey, onPromptChange
   const { appState, PROMPTS } = useAppState()
 
   useEffect(() => {
-    console.log("🟦 OpenAiContent コンポーネント初期化（マウント）")
-    console.log(" appState:", appState)
-    console.log("PROMPTSのデータ", PROMPTS)
+    void 0
+    void 0
+    void 0
   }, [])
 
   return (

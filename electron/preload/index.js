@@ -1,7 +1,7 @@
 // preload.js
 const { contextBridge, ipcRenderer } = require("electron");
 
-console.log("[preload.bundle.cjs] start");
+void 0;
 
 const { createElectronApi } = require("./electronApi");
 const { createDevApi } = require("./devApi");

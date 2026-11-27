@@ -201,7 +201,7 @@ const AllSyncButton = forwardRef(function AllSyncButton({
     console.groupCollapsed(
       `[個人記録の更新] 職員取得データ (${result.fetched_count ?? 0}件)`,
     )
-    console.log('取得データ:', result)
+    void 0
     console.table(result.staff ?? [])
     console.groupEnd()
 
@@ -235,7 +235,7 @@ const AllSyncButton = forwardRef(function AllSyncButton({
     console.groupCollapsed(
       `[個人記録の更新] 児童取得データ (${result.children?.length ?? 0}件)`,
     )
-    console.log('取得データ:', result)
+    void 0
     console.table(result.children ?? [])
     console.groupEnd()
 
@@ -272,7 +272,7 @@ const AllSyncButton = forwardRef(function AllSyncButton({
     console.groupCollapsed(
       `[個人記録の更新] Laravel児童送信データ (${childrenJson.length}件)`,
     )
-    console.log('送信データ:', payload)
+    void 0
     console.table(childrenJson)
     console.groupEnd()
 
@@ -434,7 +434,7 @@ const AllSyncButton = forwardRef(function AllSyncButton({
     console.groupCollapsed(
       `[個人記録の更新] 個人記録Laravel送信データ (${bulkRecords.length}件)`,
     )
-    console.log('送信データ:', payload)
+    void 0
     console.table(bulkRecords)
     console.groupEnd()
 

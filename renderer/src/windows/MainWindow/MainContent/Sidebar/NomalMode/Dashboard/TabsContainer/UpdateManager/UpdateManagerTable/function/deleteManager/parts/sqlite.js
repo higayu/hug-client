@@ -5,8 +5,8 @@ export async function handleSQLiteDelete(
   child,
 ) {
 
-  console.log("====== SQLite: handleSQLiteDelete START ======");
-  console.log('削除データ',child);
+  void 0;
+  void 0;
 
     const result3 = await window.electronAPI.sqlite_managers2_delete({
       children_id: child.children_id,
@@ -15,7 +15,7 @@ export async function handleSQLiteDelete(
       facility_id:child.facility_id,
     });
 
-    console.log("SQLite: managers_delete 完了:", result3);
-    console.log("====== SQLite: handleSQLiteDelete END ======");
+    void 0;
+    void 0;
     return true;
 }

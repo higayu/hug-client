@@ -428,10 +428,7 @@ export default function StaffTab({
           ),
       }
 
-      console.log(
-        '[StaffTab] 職員情報更新:',
-        payload,
-      )
+      void 0
 
       /*
        * Laravelへの更新処理は
@@ -442,10 +439,7 @@ export default function StaffTab({
           payload,
         )
 
-      console.log(
-        '[StaffTab] 更新結果:',
-        result,
-      )
+      void 0
 
       /*
        * Redux/databaseStateを

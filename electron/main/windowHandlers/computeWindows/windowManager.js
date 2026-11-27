@@ -62,7 +62,7 @@ function createDoubleWebviewWindow(
   }
 
   win.webContents.once("did-finish-load", () => {
-    console.log(`${label} window loaded`);
+    void 0;
   });
 
   return win;
@@ -80,19 +80,16 @@ function resolvePreloadPath() {
   // 新パス: bundle 済み preload を読む方式
   const bundlePath = path.join(app.getAppPath(), "electron", "preload", "preload.bundle.cjs");
 
-  console.log("[computeWindows/windowManager] preload bundlePath =", bundlePath);
-  console.log(
-    "[computeWindows/windowManager] preload bundle exists =",
-    fs.existsSync(bundlePath)
-  );
+  void 0;
+  void 0;
 
   if (fs.existsSync(bundlePath)) {
     return bundlePath;
   }
 
   // 旧パス確認用ログだけ残す
-  // console.log("[computeWindows/windowManager] old devPath =", devPath);
-  // console.log("[computeWindows/windowManager] old prodPath =", prodPath);
+  // false && ("[computeWindows/windowManager] old devPath =", devPath);
+  // false && ("[computeWindows/windowManager] old prodPath =", prodPath);
 
   throw new Error("preload.bundle.cjs not found: " + bundlePath);
 }

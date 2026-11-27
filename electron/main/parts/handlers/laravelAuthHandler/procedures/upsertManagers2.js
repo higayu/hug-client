@@ -11,7 +11,7 @@ async function upsertManagers2(payload = {}) {
     ...payload,
   };
 
-  console.log("📤 [Laravel Procedure] upsertManagers2:", request);
+  void 0;
 
   const result = await executeAuthenticatedOperation(
     () => laravelApiClient.upsertManagers2(request),
@@ -37,12 +37,12 @@ async function upsertManagers2(payload = {}) {
 
 const handler = async (_event, payload = {}) => {
   try {
-    console.log("📤 [Laravel Procedure] IPC upsertManagers2:", payload);
+    void 0;
 
     const result = await upsertManagers2(payload);
 
     if (result.success) {
-      console.log("✅ [Laravel Procedure] upsertManagers2 DONE:", result.data);
+      void 0;
     } else {
       console.error("❌ [Laravel Procedure] upsertManagers2 failed:", result);
     }

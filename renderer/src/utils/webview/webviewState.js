@@ -26,15 +26,9 @@ function dispatchActiveChanged(vw, reason = "") {
   }
 
   if (reason) {
-    console.log(`📣 active-webview-changed (${reason})`, {
-      id: vw.id,
-      url: url || "(unavailable)"
-    });
+    void 0;
   } else {
-    console.log("📣 active-webview-changed", {
-      id: vw.id,
-      url: url || "(unavailable)"
-    });
+    void 0;
   }
 
   document.dispatchEvent(
@@ -78,7 +72,7 @@ export function getActiveWebview() {
           return activeWebview;
         }
       }
-      if (url) console.log("📌 現在URL:", url);
+      if (url) void 0;
     } finally {
       console.groupEnd();
     }
@@ -89,7 +83,7 @@ export function getActiveWebview() {
   const visible = findVisibleWebview();
   if (visible) {
     activeWebview = visible;
-    console.log("✅ visible webview を active として復元:", visible.id);
+    void 0;
     console.groupEnd();
     return activeWebview;
   }
@@ -113,7 +107,7 @@ export function getActiveWebview() {
  * アクティブwebviewを更新（タブ切り替え時などに使用）
  */
 export function setActiveWebview(vw) {
-  console.log('🔵 setActiveWebview 実行');
+  void 0;
   if (!vw || !document.contains(vw)) {
     activeWebview = null;
     console.warn("⚠ setActiveWebview: vw が無効（null または DOM外）");
@@ -121,7 +115,7 @@ export function setActiveWebview(vw) {
   }
 
   activeWebview = vw;
-  console.log("✅ setActiveWebview:", vw.id);
+  void 0;
 
   // 初回だけイベントを仕込む（積み増し防止）
   if (!hooked.has(vw)) {
@@ -147,7 +141,7 @@ export function setActiveWebview(vw) {
  */
 export function getActiveId() {
   const id = activeWebview && document.contains(activeWebview) ? activeWebview.id : "(none)";
-  console.log("ℹ getActiveId():", id);
+  void 0;
   return id;
 }
 
@@ -169,7 +163,7 @@ export function getActiveWebContentsId() {
 
   try {
     const id = activeWebview.getWebContentsId();
-    console.log("ℹ WebContentsId:", id);
+    void 0;
     return id;
   } catch (e) {
     console.error("💥 getWebContentsId 実行中に例外:", e);

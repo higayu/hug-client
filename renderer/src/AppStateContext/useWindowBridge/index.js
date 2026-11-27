@@ -28,7 +28,7 @@ export function useWindowBridge({
         delete window[key]
       })
 
-      console.log('[useWindowBridge] window bridge unmounted')
+      void 0
     }
   }, [isInitialized, appState, actions])
 }

@@ -19,7 +19,7 @@ export async function splitChildrenData({ tables, staffId, weekdayId, facility_i
   let myWaitingChildren = [];
   let myExperienceChildren = [];
 
-  console.log('日付の引数',weekdayId);
+  void 0;
 
     // 各種データ取得
     myChildren = await GetchildrenByStaffAndDay({
@@ -32,15 +32,11 @@ export async function splitChildrenData({ tables, staffId, weekdayId, facility_i
     myWaitingChildren = await Get_waiting_children_pc({ tables, facility_id });
     myExperienceChildren = await Experience_children_v({ tables, facility_id });
 
-    console.log("✅ [splitChildrenData] 抽出完了:", {
-      week_children: myChildren.length,
-      waiting_children: myWaitingChildren.length,
-      experience_children: myExperienceChildren.length,
-    });
+    void 0;
 
-    console.log("✅ [splitChildrenData] 抽出完了:", myWaitingChildren);
-    console.log("✅ [splitChildrenData] 抽出完了:", myExperienceChildren);
-    console.log("✅ [splitChildrenData] 抽出完了:", myChildren);
+    void 0;
+    void 0;
+    void 0;
 
   return {
     week_children: myChildren,

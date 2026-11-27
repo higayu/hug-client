@@ -32,8 +32,8 @@ export async function insertManager(
     CURRENT_DAY_OF_WEEK,
   }
 ) {
-  console.log("===== insertManager START =====");
-  console.log("🔥 CURRENT_DAY_OF_WEEK:", CURRENT_DAY_OF_WEEK);
+  void 0;
+  void 0;
 
   try {
     // =============================================================
@@ -41,7 +41,7 @@ export async function insertManager(
     // =============================================================
     if (!databaseType) {
       console.warn("⚠️ databaseType が設定されていません");
-      console.log("===== insertManager END (error: no databaseType) =====");
+      void 0;
       return false;
     }
 
@@ -52,8 +52,8 @@ export async function insertManager(
 
     const resolvedDatabaseType = databaseType;
 
-    console.log("databaseType:", databaseType);
-    console.log("resolvedDatabaseType:", resolvedDatabaseType);
+    void 0;
+    void 0;
 
     // =============================================================
     // ID 正規化
@@ -62,9 +62,9 @@ export async function insertManager(
     const staffId = Number(STAFF_ID);
     const weekId = Number(CURRENT_DAY_OF_WEEK?.weekdayId);
 
-    console.log("FACILITY_ID:", FACILITY_ID, "→ facilityId:", facilityId);
-    console.log("STAFF_ID:", STAFF_ID, "→ staffId:", staffId);
-    console.log("weekdayId:", CURRENT_DAY_OF_WEEK?.weekdayId, "→ weekId:", weekId);
+    void 0;
+    void 0;
+    void 0;
 
     // =============================================================
     // 必須値チェック
@@ -74,7 +74,7 @@ export async function insertManager(
         FACILITY_ID,
         facilityId,
       });
-      console.log("===== insertManager END (error: invalid FACILITY_ID) =====");
+      void 0;
       return false;
     }
 
@@ -83,7 +83,7 @@ export async function insertManager(
         STAFF_ID,
         staffId,
       });
-      console.log("===== insertManager END (error: invalid STAFF_ID) =====");
+      void 0;
       return false;
     }
 
@@ -92,13 +92,13 @@ export async function insertManager(
         CURRENT_DAY_OF_WEEK,
         weekId,
       });
-      console.log("===== insertManager END (error: invalid weekdayId) =====");
+      void 0;
       return false;
     }
 
     if (!selectedChildren) {
       console.warn("⚠️ selectedChildren が空です");
-      console.log("===== insertManager END (error: no selectedChildren) =====");
+      void 0;
       return false;
     }
 
@@ -109,7 +109,7 @@ export async function insertManager(
 
     if (childrenList.length === 0) {
       console.warn("⚠️ 選択された児童がありません");
-      console.log("===== insertManager END (error: empty childrenList) =====");
+      void 0;
       return false;
     }
 
@@ -123,10 +123,10 @@ export async function insertManager(
       return false;
     }
 
-    console.log("選択された児童数:", childrenList.length);
-    console.log("施設ID:", facilityId);
-    console.log("スタッフID:", staffId);
-    console.log("曜日ID:", weekId);
+    void 0;
+    void 0;
+    void 0;
+    void 0;
 
     // =============================================================
     // DB種別ごとの処理関数を決定
@@ -138,9 +138,9 @@ export async function insertManager(
     // 児童ごとに登録処理
     // =============================================================
     for (const child of childrenList) {
-      console.log("-------------------------------------------");
-      console.log("▶ 児童処理開始:", child?.children_id, child?.children_name);
-      console.log("→ 使用DB:", dbLabel);
+      void 0;
+      void 0;
+      void 0;
 
       const childId = Number(child?.children_id);
 
@@ -149,8 +149,8 @@ export async function insertManager(
           child,
           childId,
         });
-        console.log("▶ 児童処理スキップ");
-        console.log("-------------------------------------------");
+        void 0;
+        void 0;
         continue;
       }
 
@@ -168,16 +168,16 @@ export async function insertManager(
         STAFF_ID: staffId,
       });
 
-      console.log(`✔ ${dbLabel} 処理完了:`, childId);
-      console.log("▶ 児童処理終了:", childId);
-      console.log("-------------------------------------------");
+      void 0;
+      void 0;
+      void 0;
     }
 
-    console.log("===== insertManager END (success) =====");
+    void 0;
     return true;
   } catch (err) {
     console.error("❌ insertManager エラー:", err);
-    console.log("===== insertManager END (failed) =====");
+    void 0;
     return false;
   }
 }

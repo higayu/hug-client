@@ -172,14 +172,9 @@ export async function handleLaravelInsert(
     priority = 0,
   },
 ) {
-  console.log(
-    "====== laravel: handleLaravel APIInsert START ======",
-  );
+  void 0;
 
-  console.log(
-    "処理する児童:",
-    child,
-  );
+  void 0;
 
   try {
     if (
@@ -239,40 +234,19 @@ export async function handleLaravelInsert(
         "support_end_time",
       );
 
-    console.log(
-      "targetFacilityId:",
-      targetFacilityId,
-    );
+    void 0;
 
-    console.log(
-      "targetStaffId:",
-      targetStaffId,
-    );
+    void 0;
 
-    console.log(
-      "targetWeekId:",
-      targetWeekId,
-    );
+    void 0;
 
-    console.log(
-      "targetChildId:",
-      targetChildId,
-    );
+    void 0;
 
-    console.log(
-      "targetPriority:",
-      targetPriority,
-    );
+    void 0;
 
-    console.log(
-      "supportStartTime:",
-      supportStartTime,
-    );
+    void 0;
 
-    console.log(
-      "supportEndTime:",
-      supportEndTime,
-    );
+    void 0;
 
     if (
       supportStartTime !== null &&
@@ -361,10 +335,7 @@ export async function handleLaravelInsert(
         supportEndTime,
     };
 
-    console.log(
-      "📡 laravel_procedure_registerManagerAssignment:",
-      payload,
-    );
+    void 0;
 
     // ============================================================
     // 一括登録プロシージャ実行
@@ -386,10 +357,7 @@ export async function handleLaravelInsert(
     const result =
       await registerFunction(payload);
 
-    console.log(
-      "📥 laravel register_manager_assignment response:",
-      result,
-    );
+    void 0;
 
     if (!result?.success) {
       throw new Error(
@@ -400,25 +368,7 @@ export async function handleLaravelInsert(
       );
     }
 
-    console.log(
-      "✅ laravel: register_manager_assignment 完了",
-      {
-        children_id:
-          targetChildId,
-        facility_id:
-          targetFacilityId,
-        staff_id:
-          targetStaffId,
-        day_of_week_id:
-          targetWeekId,
-        data:
-          result.data ?? null,
-        reauthenticated:
-          result.meta
-            ?.reauthenticated ??
-          false,
-      },
-    );
+    void 0;
 
     return true;
   } catch (error) {
@@ -429,8 +379,6 @@ export async function handleLaravelInsert(
 
     return false;
   } finally {
-    console.log(
-      "====== laravel: handleLaravel APIInsert END ======",
-    );
+    void 0;
   }
 }

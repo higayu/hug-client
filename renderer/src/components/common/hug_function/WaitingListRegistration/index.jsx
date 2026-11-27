@@ -171,10 +171,7 @@ async function selectChildInWaitingListPage(webview, childId) {
       return false
     }
 
-    console.log(
-      '[WaitingListRegistration] 児童を自動選択しました',
-      result,
-    )
+    void 0
 
     return true
   } catch (error) {
@@ -391,18 +388,7 @@ export default function WaitingListRegistration({
       scheduleChildSelection,
     )
 
-    console.log(
-      '[WaitingListRegistration] キャンセル待ち登録タブを開きます',
-      {
-        tabId: newId,
-        spaceId: effectiveSpaceId,
-        childId,
-        childName,
-        targetDate,
-        facilityId,
-        url: url.toString(),
-      },
-    )
+    void 0
 
     activateTab(newId)
   }, [

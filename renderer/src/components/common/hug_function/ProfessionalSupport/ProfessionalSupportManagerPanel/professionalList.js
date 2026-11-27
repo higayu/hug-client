@@ -36,10 +36,10 @@ export function addProfessionalSupportListAction(
   const newId =
     `hugview-${appState.CURRENT_YMD}-${document.querySelectorAll('webview').length}`
 
-  console.log('専門的支援一覧起動')
-  console.log('🔍 児童ID', childId)
-  console.log('🔍 児童名', childName)
-  console.log('🔍 日付', appState.CURRENT_YMD)
+  void 0
+  void 0
+  void 0
+  void 0
 
   // 月初日を作成
   const monthStartYmd =
@@ -63,8 +63,8 @@ export function addProfessionalSupportListAction(
       monthStartYmd
     )
 
-  console.log('🔍 月初日', monthStartYmdJa)
-  console.log('🔍 日付', currentYmdJa)
+  void 0
+  void 0
 
   const newWebview =
     createWebview(

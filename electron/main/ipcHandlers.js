@@ -1,5 +1,5 @@
 // main/ipcHandlers.js
-console.log("🔥 ipcHandlers.js LOADED");
+void 0;
 
 const { ipcMain, app, BrowserWindow, clipboard, shell } = require("electron");
 const path = require("path");
@@ -42,7 +42,7 @@ function safeRegister(name, callback) {
   try {
     callback();
 
-    console.log(`✅ [IPC] ${name} registered`);
+    void 0;
     return true;
   } catch (error) {
     console.error(
@@ -69,16 +69,14 @@ function registerHandle(channel, handler) {
 
   ipcMain.handle(channel, handler);
 
-  console.log(
-    `✅ [IPC] handle registered: ${channel}`,
-  );
+  void 0;
 }
 
 function registerIpcHandlers(
   mainWindow,
   tempNoteHandler,
 ) {
-  console.log("🔥 registerIpcHandlers START");
+  void 0;
 
   safeRegister("webview complete-page save", registerWebviewPageSaveIpc);
 
@@ -211,9 +209,7 @@ function registerIpcHandlers(
 
           await wc.session.clearCache();
 
-          console.log(
-            `🧹 WebView cache cleared (wcId=${wcId})`,
-          );
+          void 0;
 
           return true;
         } catch (error) {
@@ -239,15 +235,9 @@ function registerIpcHandlers(
           const preloadPath =
             resolvePreloadPath();
 
-          console.log(
-            "🔍 [get-preload-path] resolved:",
-            preloadPath,
-          );
+          void 0;
 
-          console.log(
-            "🔍 [get-preload-path] app.isPackaged:",
-            app.isPackaged,
-          );
+          void 0;
 
           if (
             !preloadPath ||
@@ -264,10 +254,7 @@ function registerIpcHandlers(
           const fileUrl =
             pathToFileURL(preloadPath).href;
 
-          console.log(
-            "✅ [get-preload-path]",
-            fileUrl,
-          );
+          void 0;
 
           return fileUrl;
         } catch (error) {
@@ -452,9 +439,7 @@ function registerIpcHandlers(
   // 既存シグネチャとの互換性維持
   void tempNoteHandler;
 
-  console.log(
-    "✅ registerIpcHandlers END",
-  );
+  void 0;
 }
 
 module.exports = {

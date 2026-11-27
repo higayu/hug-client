@@ -47,7 +47,7 @@ export async function fetchAttendanceTableInWebview(webview, opts) {
       };
 
       try {
-        console.log("[HUG WM] fetch開始:", TARGET_URL);
+        false && ("[HUG WM] fetch開始:", TARGET_URL);
 
         const response = await fetch(TARGET_URL, {
           method: "GET",
