@@ -204,15 +204,7 @@ const laravelApiClient = require(
         payload
       );
   
-    console.log(
-      "📤 [Laravel managers2] delete request:",
-      {
-        path:
-          "/managers2",
-  
-        key,
-      }
-    );
+    void 0;
   
     const result =
       await executeAuthenticatedOperation(
@@ -227,10 +219,7 @@ const laravelApiClient = require(
         "担当者情報の削除に失敗しました。"
       );
   
-    console.log(
-      "📥 [Laravel managers2] delete response:",
-      result
-    );
+    void 0;
   
     if (result?.success === false) {
       return result;
@@ -271,10 +260,7 @@ const laravelApiClient = require(
       payload = {}
     ) => {
       try {
-        console.log(
-          "🗑 [Laravel managers2] IPC delete:",
-          payload
-        );
+        void 0;
   
         const result =
           await deleteManagers2(
@@ -282,16 +268,7 @@ const laravelApiClient = require(
           );
   
         if (result.success) {
-          console.log(
-            "✅ [Laravel managers2] delete DONE:",
-            {
-              key:
-                result.meta?.key,
-  
-              data:
-                result.data,
-            }
-          );
+          void 0;
         } else {
           console.error(
             "❌ [Laravel managers2] delete failed:",

@@ -41,14 +41,21 @@ export function parseAttendanceEditHtml(html = "") {
   const parser = new DOMParser();
   const document = parser.parseFromString(String(html), "text/html");
 
+  const form = document.querySelector("#form");
+  if (!form || !form.querySelector('[name="id"]')?.value) {
+    throw new Error("HUG編集フォームを確認できません");
+  }
+  const providingType = form.querySelector('input[name="providing_type"]:checked')?.value ?? "";
+
   const getValue = (name) =>
-    document.querySelector(`[name="${name}"]`)?.value ?? "";
+    form.querySelector(`[name="${name}"]`)?.value ?? "";
 
   const pageName =
     document.querySelector(".nameBox p")?.textContent?.replace(/さん\s*$/, "")?.trim() ||
     "";
 
   return {
+    providingType,
     attendanceId: getValue("id"),
     childId: getValue("c_id"),
     facilityId: getValue("f_id"),
@@ -76,7 +83,7 @@ export async function openAttendanceEditPage(options = {}) {
 
   const absoluteUrl = new URL(targetUrl, HUG_WM_BASE_URL).href;
 
-  console.log("[Attendance Edit] GET開始:", absoluteUrl);
+  void 0;
 
   const loadedPromise = new Promise((resolve, reject) => {
     const timeoutId = setTimeout(() => {
@@ -97,7 +104,7 @@ export async function openAttendanceEditPage(options = {}) {
           (() => document.documentElement.outerHTML)();
         `);
 
-        console.log("[Attendance Edit] GET完了 HTML:", html);
+        void 0;
         resolve(html);
       } catch (error) {
         reject(error);
@@ -110,7 +117,7 @@ export async function openAttendanceEditPage(options = {}) {
   await webview.executeJavaScript(`
     (() => {
       const targetUrl = ${JSON.stringify(absoluteUrl)};
-      console.log("[Attendance Edit] location.href GET:", targetUrl);
+      false && ("[Attendance Edit] location.href GET:", targetUrl);
       location.href = targetUrl;
       return targetUrl;
     })();
@@ -135,6 +142,8 @@ export async function saveAttendanceEditTimes({
   startMinute = "",
   endHour = "",
   endMinute = "",
+  providingType = null,
+  expectedRecord = null,
   webview = null,
 } = {}) {
   const targetWebview = webview || (await getHugWebviewForCache());
@@ -143,17 +152,22 @@ export async function saveAttendanceEditTimes({
     throw new Error("HUG WebViewを取得できませんでした");
   }
 
+  if (providingType !== null && !["", "1", "2", "9"].includes(providingType)) {
+    throw new Error("提供形態が不正です");
+  }
   const values = {
+    providing_type: providingType,
     s_hour: String(startHour ?? ""),
     s_min: String(startMinute ?? ""),
     e_hour: String(endHour ?? ""),
     e_min: String(endMinute ?? ""),
   };
 
-  console.log("[Attendance Edit] 保存開始:", values);
+  void 0;
 
   // requestSubmit() は送信開始直後に制御が戻るため、
   // HUG側のPOST完了（ページ再読込）を待ってから呼び出し元へ返す。
+  let cleanupSaveWait = () => {};
   const saveCompletedPromise = new Promise((resolve, reject) => {
     const timeoutId = setTimeout(() => {
       targetWebview.removeEventListener("did-finish-load", handleFinishLoad);
@@ -178,9 +192,14 @@ export async function saveAttendanceEditTimes({
       }
     };
 
+    cleanupSaveWait = () => {
+      clearTimeout(timeoutId);
+      targetWebview.removeEventListener("did-finish-load", handleFinishLoad);
+    };
     targetWebview.addEventListener("did-finish-load", handleFinishLoad);
   });
 
+  saveCompletedPromise.catch(() => {});
   let result;
 
   try {
@@ -188,8 +207,30 @@ export async function saveAttendanceEditTimes({
     (() => {
       const values = ${JSON.stringify(values)};
 
+      const form = document.querySelector('#form');
+      if (!form) throw new Error("HUG編集フォームが見つかりません");
+      const expected = ${JSON.stringify(expectedRecord)};
+      if (expected) {
+        for (const [name, key] of Object.entries({id:"attendanceId", c_id:"childId", f_id:"facilityId", s_id:"serviceId", date:"date"})) {
+          if (!expected[key] || form.elements.namedItem(name)?.value !== expected[key]) {
+            throw new Error("編集対象が変更されています。開き直してください");
+          }
+        }
+      }
+      const radios = Array.from(form.querySelectorAll('input[type="radio"][name="providing_type"]'));
+      const current = radios.find(radio => radio.checked)?.value ?? "";
+      const desired = values.providing_type;
+      if (desired !== null && desired !== current) {
+        const radio = radios.find(item => item.value === desired);
+        if (!radio || !["1", "2"].includes(desired) || radio.matches(":disabled") || !radio.getClientRects().length || getComputedStyle(radio).visibility !== "visible") {
+          throw new Error("指定された提供形態は選択できません");
+        }
+        radio.click();
+        if (!radio.checked) throw new Error("提供形態を変更できませんでした");
+      }
+
       const setSelectValue = (name, value) => {
-        const element = document.querySelector('[name="' + name + '"]');
+        const element = form.querySelector('[name="' + name + '"]');
         if (!element) {
           throw new Error('編集項目が見つかりません: ' + name);
         }
@@ -204,12 +245,11 @@ export async function saveAttendanceEditTimes({
       setSelectValue('e_hour', values.e_hour);
       setSelectValue('e_min', values.e_min);
 
-      const form = document.querySelector('#form');
-      if (!form) {
-        throw new Error('HUG編集フォーム #form が見つかりません');
+      if (desired !== null && (form.querySelector('input[name="providing_type"]:checked')?.value ?? "") !== desired) {
+        throw new Error("時間変更により提供形態が変化しました。HUG側の条件を確認してください");
       }
 
-      console.log('[Attendance Edit] HUGフォームへ時間反映:', values);
+      false && ('[Attendance Edit] HUGフォームへ時間反映:', values);
 
       if (typeof form.requestSubmit === 'function') {
         form.requestSubmit();
@@ -231,12 +271,13 @@ export async function saveAttendanceEditTimes({
     })();
   `);
   } catch (error) {
+    cleanupSaveWait();
     throw error;
   }
 
   const savePage = await saveCompletedPromise;
 
-  console.log("[Attendance Edit] HUG保存完了:", savePage);
+  void 0;
 
   return {
     ...result,

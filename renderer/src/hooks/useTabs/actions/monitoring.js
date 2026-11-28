@@ -12,11 +12,11 @@ import {
 // ============================================
 // addMonitoringTabAction
 // ============================================
-export function addMonitoringTabAction(appState, space) {
+export function addMonitoringTabAction(appState,selectedChildId, selectedChildName) {
   // ===============================
   // 児童選択チェック
   // ===============================
-  if (!space?.childId) {
+  if (!selectedChildId) {
     alert('子どもを選択してください')
     return
   }
@@ -55,7 +55,7 @@ export function addMonitoringTabAction(appState, space) {
   const newWebview =
     createWebview(
       newId,
-      `https://www.hug-ayumu.link/hug/wm/individual_monitoring.php?mode=edit&c_id=${space?.childId}&f_id=${appState.FACILITY_ID}`
+      `https://www.hug-ayumu.link/hug/wm/individual_monitoring.php?mode=edit&c_id=${selectedChildId}&f_id=${appState.FACILITY_ID}`
     )
 
   webviewContainer.appendChild(
@@ -68,7 +68,7 @@ export function addMonitoringTabAction(appState, space) {
   const tabButton =
     createTabButton(
       newId,
-      `モニタリング : ${space?.childName}`,
+      `モニタリング : ${selectedChildName}`,
       appState.closeButtonsVisible
     )
 
@@ -143,7 +143,7 @@ export function addMonitoringTabAction(appState, space) {
 
             target.scrollIntoView()
 
-            console.log(
+            false && (
               '✅ #target までスクロールしました'
             )
           })();

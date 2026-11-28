@@ -22,7 +22,7 @@ async function upsertServiceRecord(payload = {}) {
     status: normalizeStatus(payload?.status),
   };
 
-  console.log("📤 [Laravel Procedure] upsertServiceRecord:", normalizedPayload);
+  void 0;
 
   const result = await executeAuthenticatedOperation(
     () => laravelApiClient.upsertServiceRecord(normalizedPayload),
@@ -48,12 +48,12 @@ async function upsertServiceRecord(payload = {}) {
 
 const handler = async (_event, payload = {}) => {
   try {
-    console.log("📤 [Laravel Procedure] IPC upsertServiceRecord:", payload);
+    void 0;
 
     const result = await upsertServiceRecord(payload);
 
     if (result.success) {
-      console.log("✅ [Laravel Procedure] upsertServiceRecord DONE:", result.data);
+      void 0;
     } else {
       console.error("❌ [Laravel Procedure] upsertServiceRecord failed:", result);
     }

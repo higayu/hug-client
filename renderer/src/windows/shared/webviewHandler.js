@@ -12,18 +12,18 @@ async function clickAdditionRadio(webview) {
       const radio = document.querySelector('input[type="radio"][name="tableChange"][value="2"]');
       if (radio) {
         radio.click();
-        console.log("click addition radio button");
+        false && ("click addition radio button");
         true;
       } else {
-        console.log("addition radio button not found");
+        false && ("addition radio button not found");
         false;
       }
     `);
     
     if (success) {
-      console.log("click addition radio button success");
+      void 0;
     } else {
-      console.log("click addition radio button failed");
+      void 0;
     }
     
     return success;
@@ -58,14 +58,14 @@ async function waitForPageReady(webview, maxAttempts = 30, interval = 500) {
  */
 async function extractTableData(webview, selector = "table", pageName = "ページ") {
   return await webview.executeJavaScript(`
-    console.log("${pageName}:", document.title);
+    false && ("${pageName}:", document.title);
     let el = document.querySelector("${selector}");
     if (!el) {
-      console.log("${selector} not found. search table");
+      false && ("${selector} not found. search table");
       el = document.querySelector("table");
       if (!el) throw new Error("${pageName}にテーブルが見つかりません");
     }
-    console.log("table found:", el.className);
+    false && ("table found:", el.className);
     el.outerHTML;
   `);
 }

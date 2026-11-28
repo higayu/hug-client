@@ -18,7 +18,7 @@ import ServerConnectButton from '@/components/common/Synchronization/ServerConne
 import DataBaseButton from '@/components/common/Synchronization/DataBaseButton';
 import OpenProfessionalSupportButton from './OpenProfessionalSupportButton';
 import AutoLoginButton from '@/components/AutoLoginButton';
-import SleepButton from './SleepButton';
+import SleepButton from '@/components/common/Synchronization/SleepButton';
 
 export default function ToolsListNavi({
   className = '',
@@ -197,7 +197,13 @@ export default function ToolsListNavi({
     >
       {({ closeMenu }) => (
         <ul className="m-0 list-none p-0 py-1">
-          <SleepButton onSleep={closeMenu} />
+          <li className="m-0 p-0">
+            <SleepButton 
+              onSleep={closeMenu}
+              role="menuitem"
+              className='flex w-full items-center gap-2 border-none bg-slate-600 px-4 py-2 text-left text-sm text-white hover:bg-slate-800 focus:bg-slate-800 disabled:opacity-50'
+            />
+          </li> 
           <li className="m-0 p-0">
             <button
               id="cash-Clear"

@@ -16,7 +16,7 @@ export async function getActiveWebviewHtml() {
       'document.documentElement?.outerHTML || ""',
     )
 
-    console.log('[GetWebViewHtmlButton] active webview HTML:', html)
+    void 0
     return html
   } catch (error) {
     console.warn(

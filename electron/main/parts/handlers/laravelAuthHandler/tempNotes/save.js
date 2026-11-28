@@ -45,14 +45,7 @@ async function saveTempNote(
       mode
     );
 
-  console.log(
-    "📤 [Laravel TempNote] save request:",
-    {
-      mode,
-      path: "/temp_notes",
-      payload: normalizedPayload,
-    }
-  );
+  void 0;
 
   const fallbackMessage =
     getFallbackMessage(mode);
@@ -67,10 +60,7 @@ async function saveTempNote(
       fallbackMessage
     );
 
-  console.log(
-    "📥 [Laravel TempNote] save response:",
-    result
-  );
+  void 0;
 
   if (result?.success === false) {
     return result;
@@ -101,13 +91,7 @@ function createTempNoteSaveHandler(mode) {
     payload = {}
   ) => {
     try {
-      console.log(
-        "📝 [Laravel TempNote] IPC save:",
-        {
-          mode,
-          payload,
-        }
-      );
+      void 0;
 
       const result =
         await saveTempNote(
@@ -116,17 +100,7 @@ function createTempNoteSaveHandler(mode) {
         );
 
       if (result.success) {
-        console.log(
-          "✅ [Laravel TempNote] save DONE:",
-          {
-            mode,
-            data: result.data,
-            reauthenticated:
-              result.meta
-                ?.reauthenticated ??
-              false,
-          }
-        );
+        void 0;
       } else {
         console.error(
           "❌ [Laravel TempNote] save failed:",

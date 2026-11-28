@@ -59,6 +59,7 @@ app.whenReady().then(
       console.log(
         "🚀 [main] Electron起動処理開始",
       );
+      void 0;
 
       // ========================================================
       // Laravel API関連IPC登録
@@ -71,17 +72,13 @@ app.whenReady().then(
       // get-database-type
       // ========================================================
 
-      console.log(
-        "🔧 [main] DB・Laravel IPC登録開始",
-      );
+      void 0;
 
       await handleApiCalls(
         ipcMain,
       );
 
-      console.log(
-        "✅ [main] DB・Laravel IPC登録完了",
-      );
+      void 0;
 
       // ========================================================
       // メニュー
@@ -134,9 +131,7 @@ app.whenReady().then(
         mainWindow,
       );
 
-      console.log(
-        "✅ [main] Electron起動処理完了",
-      );
+      void 0;
     } catch (error) {
       console.error(
         "❌ [main] Electron起動処理に失敗しました:",

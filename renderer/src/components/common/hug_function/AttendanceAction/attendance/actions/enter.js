@@ -49,11 +49,7 @@ export async function clickEnterButton(column5Html, targetChildrenId, opts = {})
       const choice = Number(opts.mailDialogChoice) === 1 ? 1 : 0;
       const result = await clickHugMailDialogChoice(webview, choice);
 
-      console.log("[Attendance MailDialog] Renderer選択をHUGへ反映", {
-        action: "入室",
-        choice,
-        result,
-      });
+      void 0;
 
       let refreshResult = null;
       if (!opts.skipRefresh) {
@@ -84,10 +80,7 @@ export async function clickEnterButton(column5Html, targetChildrenId, opts = {})
     if (opts.mailDialogAction === "cancel") {
       const webview = await getHugWebviewForCache();
       const result = await cancelHugMailDialog(webview);
-      console.log("[Attendance MailDialog] RendererキャンセルをHUGへ反映", {
-        action: "入室",
-        result,
-      });
+      void 0;
       return { success: true, cancelled: true, ...result };
     }
 

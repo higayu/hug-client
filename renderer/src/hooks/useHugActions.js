@@ -17,7 +17,7 @@ export function useHugActions(spaceId) {
 
   // 自動ログイン
   const handleLogin = useCallback(async ({ webviewId = null } = {}) => {
-    console.log('🖱️ [HugActions] login requested', { webviewId })
+    void 0
 
     const vw = webviewId
       ? document.getElementById(webviewId)
@@ -41,7 +41,7 @@ export function useHugActions(spaceId) {
       return
     }
 
-    console.log('🚀 自動ログイン開始...')
+    void 0
 
     try {
       const navigationCompleted = new Promise((resolve) => {
@@ -111,10 +111,10 @@ export function useHugActions(spaceId) {
 
   // URLの取得
   const handleGetUrl = useCallback(async () => {
-    console.log('🖱️ [HugActions] Get-Url clicked')
+    void 0
 
     try {
-      console.log('🔄 URLの取得処理を開始...')
+      void 0
 
       const vw = getActiveWebview()
 
@@ -124,7 +124,7 @@ export function useHugActions(spaceId) {
       }
 
       const url = vw.getURL()
-      console.log('📋 取得したURL:', url)
+      void 0
 
       if (!url || url === 'about:blank') {
         showErrorToast('❌ URLが取得できませんでした')
@@ -132,7 +132,7 @@ export function useHugActions(spaceId) {
       }
 
       await navigator.clipboard.writeText(url)
-      console.log('✅ URLをクリップボードにコピーしました:', url)
+      void 0
 
       const urlObj = new URL(url)
       const shortUrl = urlObj.hostname + urlObj.pathname
@@ -159,7 +159,7 @@ export function useHugActions(spaceId) {
         document.body.removeChild(textArea)
 
         showSuccessToast('✅ URLをクリップボードにコピーしました（フォールバック）')
-        console.log('✅ フォールバック方式でコピー成功')
+        void 0
       } catch (fallbackErr) {
         console.error('❌ フォールバック方式も失敗:', fallbackErr)
         showErrorToast('❌ URLのコピーに失敗しました')

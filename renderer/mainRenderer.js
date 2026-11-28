@@ -16,19 +16,17 @@ window.attendanceTableAPI = {
   parseAttendanceTable,
 };
 
-console.log("loaded mainRenderer.js");
+void 0;
 
 window.addEventListener("DOMContentLoaded", async () => {
-  console.log("DOMContentLoaded fired");
-  console.log(
-    "ℹ️ [mainRenderer] React側の useAppInitialization.js に初期化・終了確認処理を移行済み"
-  );
+  void 0;
+  void 0;
 
   // ============================================================
   // ボタン表示を更新
   // ============================================================
   setTimeout(() => {
-    console.log("🔄 [mainRenderer] updateButtonVisibility");
+    void 0;
     updateButtonVisibility();
   }, 100);
 
@@ -40,23 +38,20 @@ window.addEventListener("DOMContentLoaded", async () => {
   if (importSettingButton) {
     importSettingButton.addEventListener("click", async () => {
       try {
-        console.log("🔄 [mainRenderer] config import START");
+        void 0;
 
         const result = await window.electronAPI.importConfigFile();
 
-        console.log("🔄 [mainRenderer] config import result:", result);
+        void 0;
 
         if (result?.success) {
           const reloadOk = await loadAllReload();
 
-          console.log("🔄 [mainRenderer] config import reload result:", {
-            reloadOk,
-            IniState: window.IniState,
-          });
+          void 0;
 
           if (reloadOk) {
             updateButtonVisibility();
-            console.log("✅ [mainRenderer] config file imported and reloaded");
+            void 0;
           }
         }
       } catch (err) {
@@ -75,19 +70,15 @@ window.addEventListener("DOMContentLoaded", async () => {
   if (loadIniButton) {
     loadIniButton.addEventListener("click", async () => {
       try {
-        console.log("🔄 [mainRenderer] manual ini reload START");
+        void 0;
 
         const reloadOk = await loadAllReload();
 
-        console.log("🔄 [mainRenderer] manual ini reload DONE:", {
-          reloadOk,
-          IniState: window.IniState,
-          AppState: window.AppState,
-        });
+        void 0;
 
         if (reloadOk) {
           updateButtonVisibility();
-          console.log("✅ [mainRenderer] ini.json manually loaded");
+          void 0;
         }
       } catch (err) {
         console.error("❌ [mainRenderer] ini.json manually load failed:", err);
@@ -234,5 +225,5 @@ window.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
-  console.log("✅ [mainRenderer] legacy DOM setup complete");
+  void 0;
 });

@@ -41,11 +41,7 @@ async function downloadLatestUpdateHandler(event) {
 
       // 現行のLaravel APIとの互換性を維持。将来的にはバージョンIDを固定するAPIが望ましい。
       const downloadURL = `${baseURL}/app/download/latest`;
-      console.log('[AppUpdate] Download starting:', {
-        latestVersion: versionInfo.latest_version,
-        expectedSha256,
-        downloadURL,
-      });
+      void 0;
 
       const response = await axios.get(downloadURL, {
         responseType: 'stream',
@@ -106,18 +102,7 @@ async function downloadLatestUpdateHandler(event) {
         }
         const isWindowsExecutable = fileSignature.toString('ascii') === 'MZ';
 
-        console.log('[AppUpdate] Installer verification:', {
-          latestVersion: versionInfo.latest_version,
-          expectedSha256,
-          actualSha256,
-          match: actualSha256 === expectedSha256,
-          transferred,
-          contentLength: headers['content-length'] ?? null,
-          contentType: headers['content-type'] ?? null,
-          contentEncoding: headers['content-encoding'] ?? null,
-          fileSignature: fileSignature.toString('hex'),
-          filenameFromResponse: headerFileName ?? null,
-        });
+        void 0;
 
         if (!isWindowsExecutable) {
           throw new Error('ダウンロード内容がWindowsインストーラーではありません。HTMLエラーページや別形式のファイルが配信されている可能性があります。');

@@ -132,32 +132,26 @@ function ChildrenTableList() {
   // ログ確認
   // =============================================================
   useEffect(() => {
-    console.log("=== ChildrenTableList / 今日の利用者データ確認 ===");
-    console.log("appState.attendanceData:", attendanceData);
-    console.log("今日の利用者一覧 childrenList:", childrenList);
-    console.log("rowCount:", attendanceData?.rowCount);
-    console.log("facilityId:", attendanceData?.facilityId);
-    console.log("FACILITY_ID:", FACILITY_ID);
-    console.log("currentFacilityId:", currentFacilityId);
-    console.log("dateStr:", attendanceData?.dateStr);
-    console.log("extractedAt:", attendanceData?.extractedAt);
+    void 0;
+    void 0;
+    void 0;
+    void 0;
+    void 0;
+    void 0;
+    void 0;
+    void 0;
+    void 0;
   }, [attendanceData, childrenList, FACILITY_ID, currentFacilityId]);
 
   useEffect(() => {
-    console.log("=== managers2 現在施設・現在職員・現在曜日 抽出 ===");
-    console.log("現在の施設ID:", currentFacilityId);
-    console.log("現在の職員ID:", currentStaffId);
-    console.log("現在の曜日ID:", currentWeekdayId);
-    console.log("児童と職員の紐づけ managers2:", managersData);
-    console.log(
-      "抽出結果 currentFacilityStaffTodayManagers:",
-      currentFacilityStaffTodayManagers
-    );
-    console.log(
-      "登録済み children_id:",
-      currentFacilityStaffTodayManagers.map((manager) => manager.children_id)
-    );
-    console.log("registeredChildrenIdSet:", [...registeredChildrenIdSet]);
+    void 0;
+    void 0;
+    void 0;
+    void 0;
+    void 0;
+    void 0;
+    void 0;
+    void 0;
   }, [
     currentFacilityId,
     currentStaffId,
@@ -196,7 +190,7 @@ function ChildrenTableList() {
     }
 
     if (registeredChildrenIdSet.has(numId)) {
-      console.log("登録済みのため選択不可:", numId);
+      void 0;
       return;
     }
 

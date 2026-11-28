@@ -87,9 +87,7 @@ export function useAttendanceFetch(logTag = "GetTodayUsersChildren") {
         new Date().toISOString().slice(0, 10);
 
       if (isFetchingRef.current) {
-        console.log(
-          `[${logTag}] 取得中のためスキップ`
-        );
+        void 0;
         return null;
       }
 
@@ -200,20 +198,7 @@ export function useAttendanceFetch(logTag = "GetTodayUsersChildren") {
           );
         }
 
-        console.log(
-          `[${logTag}] WebAutomation V2 利用者データ取得完了`,
-          {
-            flowKey:
-              ATTENDANCE_FETCH_FLOW_KEY,
-            facilityId,
-            dateStr,
-            rowCount:
-              attendanceData.rowCount,
-            silent,
-            pageUrl:
-              result.pageUrl || null,
-          }
-        );
+        void 0;
 
         return {
           success: true,

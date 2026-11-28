@@ -9,21 +9,12 @@ export default function AttendanceDataTable({
   useEffect(() => {
     const safeRows = Array.isArray(rows) ? rows : [];
 
-    console.log('=== AttendanceDataTable / 出席データ取得結果確認 ===');
-    console.log('取得結果 rows:', safeRows);
-    console.log('rowCount:', safeRows.length);
-    console.log(
-      '入室可能 count:',
-      safeRows.filter((row) => row?.canEnter).length,
-    );
-    console.log(
-      '退室可能 count:',
-      safeRows.filter((row) => row?.canLeave).length,
-    );
-    console.log(
-      '欠席 count:',
-      safeRows.filter((row) => row?.isAbsent).length,
-    );
+    void 0;
+    void 0;
+    void 0;
+    void 0;
+    void 0;
+    void 0;
 
     if (safeRows.length > 0) {
       console.table(

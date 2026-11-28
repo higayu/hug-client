@@ -36,7 +36,7 @@ export async function fetchAttendanceTableDataLegacy(
   try {
     if (webviewParam) {
       webview = webviewParam;
-      console.log("🌐 [ATTENDANCE] 指定されたWebViewを使用:", webview.id);
+      void 0;
     } else if (useMainWebview) {
       webview = getActiveWebview();
       if (!webview) throw new Error("メインwebviewが見つかりません");
@@ -46,7 +46,7 @@ export async function fetchAttendanceTableDataLegacy(
 
     const targetUrl = `https://www.hug-ayumu.link/hug/wm/attendance.php?mode=detail&f_id=${facility_id}&date=${date_str}`;
 
-    console.log("📥 [ATTENDANCE] テーブルデータ取得開始:", targetUrl);
+    void 0;
     if (showToast && window.showInfoToast) {
       window.showInfoToast("📥 データ取得中...", 2000);
     }
@@ -55,7 +55,7 @@ export async function fetchAttendanceTableDataLegacy(
     if (!currentSrc.includes(targetUrl)) {
       webview.src = targetUrl;
     } else {
-      console.log("⚡ 既に同じURLを読み込み中のため再ロードをスキップ:", currentSrc);
+      void 0;
     }
 
     await waitForPageReady(webview);

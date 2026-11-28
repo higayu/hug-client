@@ -93,7 +93,7 @@ function ConfigTab() {
         throw new Error('ロックをONにする場合はパスコードを入力してください')
       }
 
-      console.log('[ConfigTab] Config.json保存内容:', configData)
+      void 0
 
       const result = await saveConfig(configData)
 
@@ -116,11 +116,11 @@ function ConfigTab() {
       // 🔥 データベースを再取得
       let dbSuccess = false
       try {
-        console.log('[ConfigTab] データベースを再取得します...')
+        void 0
         if (typeof reloadData === 'function') {
           dbSuccess = await reloadData({ reason: 'config-saved' })
           if (dbSuccess) {
-            console.log('[ConfigTab] データベース再取得成功')
+            void 0
           } else {
             console.warn('[ConfigTab] データベース再取得失敗')
           }
@@ -139,7 +139,7 @@ function ConfigTab() {
         showSuccessToast('Config.jsonの保存は成功しましたが、データ再取得に失敗しました')
       }
 
-      console.log('[ConfigTab] Config.json保存完了:', configData)
+      void 0
     } catch (error) {
       console.error('[ConfigTab] Config.json保存エラー:', error)
       showErrorToast(

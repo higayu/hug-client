@@ -29,7 +29,7 @@ async function fetchContactBookNote(pathAndQuery: string): Promise<{
     const staffSelectValue = staffSelect.value;
     const staffName = staffSelect.selectedOptions[0]?.textContent?.trim() ?? '';
 
-    console.log('記録者:', staffSelectValue, staffName);
+    void 0;
 
     const textarea = editDoc.querySelector<HTMLTextAreaElement>(
       'textarea[name="note"][data-field-key="note"]',

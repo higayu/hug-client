@@ -18,20 +18,7 @@ const { formatError, unwrapData } = require("../auth/utils");
  * }
  */
 async function syncProfessionalSupportMonth(payload = {}) {
-  console.log("📤 [Laravel Procedure] syncProfessionalSupportMonth:", {
-    facilityId: payload?.facilityId,
-    year: payload?.year,
-    month: payload?.month,
-    attendanceCount: Array.isArray(payload?.attendanceData)
-      ? payload.attendanceData.length
-      : 0,
-    additionCount: Array.isArray(payload?.additionData)
-      ? payload.additionData.length
-      : 0,
-    recordCount: Array.isArray(payload?.recordData)
-      ? payload.recordData.length
-      : 0,
-  });
+  void 0;
 
   const result = await executeAuthenticatedOperation(
     () =>
@@ -64,10 +51,7 @@ const handler = async (_event, payload = {}) => {
     const result = await syncProfessionalSupportMonth(payload);
 
     if (result?.success) {
-      console.log(
-        "✅ [Laravel Procedure] syncProfessionalSupportMonth DONE:",
-        result.data,
-      );
+      void 0;
     } else {
       console.error(
         "❌ [Laravel Procedure] syncProfessionalSupportMonth failed:",

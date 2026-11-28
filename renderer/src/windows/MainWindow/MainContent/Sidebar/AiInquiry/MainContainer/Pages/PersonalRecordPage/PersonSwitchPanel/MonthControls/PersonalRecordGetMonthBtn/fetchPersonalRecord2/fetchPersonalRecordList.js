@@ -149,7 +149,7 @@ export async function fetchPersonalRecordList(webview, opts) {
         });
         const listUrl = HUG_WM_BASE_URL + "contact_book.php?" + listParams.toString();
 
-        console.log("[HUG WM] 個人記録 一覧 fetch開始:", listUrl);
+        false && ("[HUG WM] 個人記録 一覧 fetch開始:", listUrl);
 
         const listResponse = await fetch(listUrl, {
           method: "GET",
@@ -218,7 +218,7 @@ export async function fetchPersonalRecordList(webview, opts) {
           })
           .filter(Boolean);
 
-        console.log(
+        false && (
           "[HUG WM] 個人記録 出席レコード数:",
           editTargets.length,
           "/ 行数:",
@@ -240,7 +240,7 @@ export async function fetchPersonalRecordList(webview, opts) {
               editPath: item.editPath,
               note
             });
-            console.log("[HUG WM] 活動内容 note:", {
+            false && ("[HUG WM] 活動内容 note:", {
               date: item.date,
               childName: item.childName,
               note

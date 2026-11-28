@@ -7,12 +7,12 @@ function CloseToggleSwitch({
   id = 'show-close-buttons',
 }) {
   useEffect(() => {
-    console.log('[CloseToggleSwitch] mounted:', { checked })
+    void 0
   }, [])
 
   const handleChange = (event) => {
     const next = event.target.checked
-    console.log('[CloseToggleSwitch] changed:', next)
+    void 0
     onChange?.(next)
   }
 

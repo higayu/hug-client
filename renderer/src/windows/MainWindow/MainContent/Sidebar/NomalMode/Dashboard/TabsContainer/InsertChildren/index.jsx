@@ -144,10 +144,10 @@ function InsertChildren() {
     );
   }, [managers2, currentStaffId, currentDayOfWeekId]);
 
-  console.log("児童と職員の紐づけ managers2:", managers2);
-  console.log("表示用 childrenList:", childrenList);
-  console.log("現在の職員ID:", currentStaffId);
-  console.log("現在の曜日ID:", currentDayOfWeekId);
+  void 0;
+  void 0;
+  void 0;
+  void 0;
 
   if (loading) {
     return <p>読み込み中...</p>;

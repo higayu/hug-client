@@ -389,10 +389,7 @@ function updateBaseURL() {
     .baseURL =
     baseURL;
 
-  console.log(
-    "🔧 [laravelApiClient] Laravel baseURL:",
-    baseURL,
-  );
+  void 0;
 
   return baseURL;
 }

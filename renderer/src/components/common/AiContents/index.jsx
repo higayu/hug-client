@@ -46,7 +46,7 @@ export default function AiContents({ spaceId, activePromptKey, onPromptChange, o
           staffId: STAFF_ID,
         });
 
-        console.log("[AiContents] AIプロンプト取得結果:", prompts);
+        void 0;
 
         if (!cancelled && prompts) {
           updateAppState({ PROMPTS: prompts });

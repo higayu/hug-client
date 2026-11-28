@@ -27,7 +27,7 @@ const syncFormValue = (elementId, value) => {
     element.value = String(value)
   }
 
-  console.log(`🖥 [reloadSettings] ${elementId} 同期:`, value)
+  void 0
 }
 
 /**
@@ -43,7 +43,7 @@ const syncFormValue = (elementId, value) => {
  */
 export async function loadAllReload() {
   try {
-    console.log('🔄 全設定リロード開始...')
+    void 0
 
     // =============================================================
     // 1) config.json 読み込み
@@ -55,7 +55,7 @@ export async function loadAllReload() {
       return false
     }
 
-    console.log('📄 [reloadSettings] config.json:', configData)
+    void 0
 
     // =============================================================
     // 3) config.json → Redux
@@ -92,7 +92,7 @@ export async function loadAllReload() {
       return false
     }
 
-    console.log('📄 [reloadSettings] ini.json:', iniData)
+    void 0
 
     const apiSettings = iniData.apiSettings || {}
 
@@ -105,13 +105,7 @@ export async function loadAllReload() {
     const debugFlg =
       apiSettings.debugFlg === true || apiSettings.debugFlg === 'true'
 
-    console.log('[reloadSettings] apiSettings normalized:', {
-      databaseType,
-      useAI,
-      facilityId,
-      baseURL,
-      debugFlg,
-    })
+    void 0
 
     // =============================================================
     // 5) ini.json → Redux
@@ -136,7 +130,7 @@ export async function loadAllReload() {
     // =============================================================
     if (window.IniState?.loadIni) {
       await window.IniState.loadIni()
-      console.log('✅ [reloadSettings] window.IniState.loadIni 実行完了')
+      void 0
     } else {
       console.warn('⚠️ [reloadSettings] window.IniState.loadIni が未初期化')
     }
@@ -179,7 +173,7 @@ export async function loadAllReload() {
       })
     )
 
-    console.log('✅ 全設定リロード完了')
+    void 0
     return true
   } catch (err) {
     console.error('❌ 全設定リロード中にエラー:', err)

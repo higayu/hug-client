@@ -147,7 +147,7 @@ export async function fetchAttendanceListInWebview(webview, opts) {
             rIdFromRowClass ||
             "";
 
-          console.log("[HUG Attendance] r_id resolve", {
+          false && ("[HUG Attendance] r_id resolve", {
             c_id,
             name,
             r_id,

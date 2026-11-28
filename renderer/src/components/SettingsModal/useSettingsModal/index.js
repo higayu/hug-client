@@ -13,10 +13,10 @@ export function useSettingsModal(isOpen) {
     const loadSettings = async () => {
       setIsLoading(true)
       try {
-        console.log('🔄 [useSettingsModal] 設定を再読み込み中...')
+        void 0
         await loadIni()
         await loadConfig()
-        console.log('✅ [useSettingsModal] 設定の再読み込み完了')
+        void 0
       } catch (error) {
         console.error('❌ [useSettingsModal] 設定の再読み込みエラー:', error)
       } finally {

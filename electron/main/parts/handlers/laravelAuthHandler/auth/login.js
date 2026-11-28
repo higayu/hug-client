@@ -13,7 +13,7 @@ async function executeLaravelLogin({ force = false } = {}) {
 
   const { loginId, password } = loadLaravelCredentials();
 
-  console.log("🔐 [Laravel Auth] ログイン開始:", loginId);
+  void 0;
 
   const result = await laravelApiClient.login(loginId, password);
 
@@ -25,7 +25,7 @@ async function executeLaravelLogin({ force = false } = {}) {
   const expiresIn = result.expiresIn ?? result.expires_in ?? result.data?.expiresIn ?? result.data?.expires_in ?? null;
   const tokenType = result.tokenType ?? result.token_type ?? result.data?.tokenType ?? result.data?.token_type ?? "bearer";
 
-  console.log("✅ [Laravel Auth] ログイン成功:", user);
+  void 0;
 
   return {
     success: true,

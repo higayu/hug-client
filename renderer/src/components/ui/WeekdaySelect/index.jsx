@@ -43,13 +43,7 @@ function WeekdaySelect({
       return;
     }
 
-    console.log(
-      "[WeekdaySelect] 曜日変更",
-      {
-        weekdayId: weekdayObj.id,
-        weekdayLabel: weekdayObj.label_jp,
-      }
-    );
+    void 0;
 
     // AppStateの曜日のみ変更
     setCurrentDate({
@@ -66,13 +60,7 @@ function WeekdaySelect({
     });
   };
 
-  console.log(
-    "[WeekdaySelect] render",
-    {
-      weekdayId:
-        CURRENT_DAY_OF_WEEK.weekdayId,
-    }
-  );
+  void 0;
 
   return (
     <select

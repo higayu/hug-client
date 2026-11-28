@@ -223,20 +223,11 @@ export async function loadAttendanceDetailInWebview(
 
   if (isTargetAttendanceUrl(currentUrl, facilityId, dateStr)) {
     // 同一URLでも古いDOMが残ることがあるため必ずreloadする。
-    console.log("[Attendance WebView] 同一URLを強制reload", {
-      currentUrl,
-      facilityId: String(facilityId),
-      dateStr: String(dateStr),
-    });
+    void 0;
 
     webview.reload();
   } else {
-    console.log("[Attendance WebView] 出席詳細へ遷移", {
-      from: currentUrl,
-      to: url,
-      facilityId: String(facilityId),
-      dateStr: String(dateStr),
-    });
+    void 0;
 
     webview.src = url;
   }

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState, useId } from "react";
 import PersonSupportPlan from "../PersonSupportPlan";
 import ProfessionalPlan from "../ProfessionalPlan";
 import { fetchPersonSupportPlan } from "../PersonSupportPlan/function";
@@ -24,7 +24,18 @@ export default function PlanNotesPanel({
   updateControl,
   facilityId,
   loadDataBase,
+  isExpanded,
+  defaultExpanded = true,
+  onExpandedChange,
 }) {
+  const [localExpanded, setLocalExpanded] = useState(defaultExpanded);
+  const expanded = isExpanded ?? localExpanded;
+  const contentId = useId();
+  function toggleExpanded() {
+    const next = !expanded;
+    if (isExpanded == null) setLocalExpanded(next);
+    onExpandedChange?.(next);
+  }
   const individual = type === "individual";
   const attemptedRef = useRef(new Set());
   const latestRef = useRef({ onUpdated, loadDataBase });
@@ -64,17 +75,34 @@ export default function PlanNotesPanel({
   return (
     <section className={`w-full min-w-0 ${className}`}>
       <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-        <span className="text-xs font-medium text-gray-700">
+        <button
+          type="button"
+          onClick={toggleExpanded}
+          aria-expanded={expanded}
+          aria-controls={contentId}
+          className="bg-white p-1 flex min-w-0 items-center gap-1 rounded text-xs font-medium text-gray-700 hover:text-sky-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-sky-500"
+        >
+          <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" className={`h-4 w-4 shrink-0 transition-transform duration-200 motion-reduce:transition-none ${expanded ? "rotate-180" : ""}`}>
+            <path d="m5 7.5 5 5 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
           {individual ? "個別支援計画" : "専門的支援計画"}
-        </span>
+        </button>
         {updateControl !== undefined ? updateControl : individual ? (
           <PersonSupportPlan childId={childId} facilityId={facilityId} loadDataBase={loadDataBase} onUpdated={onUpdated} />
         ) : (
           <ProfessionalPlan childId={childId} facilityId={facilityId} loadDataBase={loadDataBase} onUpdated={onUpdated} />
         )}
       </div>
-      <div className="max-h-64 overflow-y-auto rounded bg-gray-700 p-2 text-xs text-white whitespace-pre-wrap">
-        {notes || emptyText}
+      <div
+        id={contentId}
+        aria-hidden={!expanded}
+        className={`grid transition-[grid-template-rows] duration-200 ease-in-out motion-reduce:transition-none ${expanded ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}
+      >
+        <div className="min-h-0 overflow-hidden">
+          <div className="max-h-64 overflow-y-auto rounded bg-gray-700 p-2 text-xs text-white whitespace-pre-wrap">
+            {notes || emptyText}
+          </div>
+        </div>
       </div>
     </section>
   );

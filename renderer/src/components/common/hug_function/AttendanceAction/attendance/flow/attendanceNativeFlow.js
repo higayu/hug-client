@@ -60,15 +60,7 @@ export async function executeAttendanceNativeFlow(
       ? 1
       : 0;
 
-  console.log("[Attendance V2] execute", {
-    flowKey,
-    action,
-    recordId,
-    childId,
-    facilityId,
-    dateStr,
-    mailFlg,
-  });
+  void 0;
 
   const result =
     await executeFlowV2(

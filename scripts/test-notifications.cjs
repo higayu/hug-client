@@ -76,7 +76,7 @@ async function main() {
     await page.waitForFunction(() => !document.querySelector('[data-sonner-toast]'))
     assert.ok(Date.now() - start >= 3000)
     assert.deepEqual(errors, [])
-    console.log('PASS: types, text/details, modal stacking and close click, auto/manual callbacks, burst/clear, default duration, print, stable compatibility API; no page errors')
+    void 0
   } finally {
     if (browser) await browser.close()
     await fs.rm(dir, { recursive: true, force: true })

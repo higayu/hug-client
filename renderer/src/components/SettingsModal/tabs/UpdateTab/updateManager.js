@@ -26,10 +26,10 @@ export async function getUpdateInfo() {
  */
 export async function checkForUpdates() {
   try {
-    console.log("🔄 手動アップデートチェック開始")
+    void 0
     const result = await window.electronAPI.checkForUpdates()
     if (result.success) {
-      console.log("✅ 手動アップデートチェック成功:", result.data)
+      void 0
       return result.data
     } else {
       console.error("❌ 手動アップデートチェックエラー:", result.error)
@@ -47,24 +47,24 @@ export async function checkForUpdates() {
  */
 export function displayUpdateInfo(debugInfo) {
   if (!debugInfo) {
-    console.log("⚠️ アップデート情報が取得されていません")
+    void 0
     return
   }
 
-  console.log("🔄 ===== アップデート情報 =====")
-  console.log("📊 現在のバージョン:", debugInfo.currentVersion)
-  console.log("🔍 チェック中:", debugInfo.isChecking ? "はい" : "いいえ")
-  console.log("📅 最終チェック時刻:", debugInfo.lastCheckTime || "未実行")
-  console.log("🔢 チェック回数:", debugInfo.checkCount)
-  console.log("✅ アップデート利用可能:", debugInfo.updateAvailable ? "はい" : "いいえ")
+  void 0
+  void 0
+  void 0
+  void 0
+  void 0
+  void 0
   if (debugInfo.newVersion) {
-    console.log("🆕 新しいバージョン:", debugInfo.newVersion)
+    void 0
   }
-  console.log("📥 ダウンロード進捗:", debugInfo.downloadProgress + "%")
+  void 0
   if (debugInfo.lastError) {
-    console.log("❌ 最後のエラー:", debugInfo.lastError)
+    void 0
   }
-  console.log("🔄 =================================")
+  void 0
 }
 
 /**

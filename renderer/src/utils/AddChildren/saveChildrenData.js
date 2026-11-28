@@ -32,7 +32,7 @@ export async function saveChildrenData({
   databaseType,
 }) {
   try {
-    console.log('===== saveChildrenData START =====');
+    void 0;
 
     // =============================================================
     // DB種別を DATABASE_TYPE に統一
@@ -50,35 +50,35 @@ export async function saveChildrenData({
 
     const resolvedDatabaseType = rawDatabaseType;
 
-    console.log('DATABASE_TYPE:', DATABASE_TYPE);
-    console.log('databaseType:', databaseType);
-    console.log('appState.DATABASE_TYPE:', appState?.DATABASE_TYPE);
-    console.log('resolvedDatabaseType:', resolvedDatabaseType);
+    void 0;
+    void 0;
+    void 0;
+    void 0;
 
     // =============================================================
     // 必須チェック
     // =============================================================
     if (!selectedChildren) {
       console.warn('⚠️ selectedChildren が指定されていません。');
-      console.log('===== saveChildrenData END (no selectedChildren) =====');
+      void 0;
       return false;
     }
 
     if (!STAFF_ID) {
       console.warn('⚠️ STAFF_ID が指定されていません。');
-      console.log('===== saveChildrenData END (no STAFF_ID) =====');
+      void 0;
       return false;
     }
 
     if (!FACILITY_ID) {
       console.warn('⚠️ FACILITY_ID が指定されていません。');
-      console.log('===== saveChildrenData END (no FACILITY_ID) =====');
+      void 0;
       return false;
     }
 
     if (!CURRENT_DAY_OF_WEEK?.weekdayId) {
       console.warn('⚠️ CURRENT_DAY_OF_WEEK.weekdayId が取得できません。');
-      console.log('===== saveChildrenData END (no weekdayId) =====');
+      void 0;
       return false;
     }
 
@@ -91,7 +91,7 @@ export async function saveChildrenData({
 
     if (childrenList.length === 0) {
       console.warn('⚠️ selectedChildren が空配列です。');
-      console.log('===== saveChildrenData END (empty selectedChildren) =====');
+      void 0;
       return false;
     }
 
@@ -101,8 +101,8 @@ export async function saveChildrenData({
     const dbHandler = Laravel APIFnc;
     const dbLabel = resolvedDatabaseType;
 
-    console.log('使用DB:', dbLabel);
-    console.log('選択児童数:', childrenList.length);
+    void 0;
+    void 0;
 
     // =============================================================
     // 登録処理
@@ -113,12 +113,8 @@ export async function saveChildrenData({
         continue;
       }
 
-      console.log('-------------------------------------------');
-      console.log('▶ 児童データ登録開始:', {
-        children_id: child.children_id,
-        children_name: child.children_name,
-        dbLabel,
-      });
+      void 0;
+      void 0;
 
       await dbHandler({
         child,
@@ -129,17 +125,17 @@ export async function saveChildrenData({
         FACILITY_ID,
       });
 
-      console.log('✔ 児童データ登録完了:', child.children_id);
-      console.log('-------------------------------------------');
+      void 0;
+      void 0;
     }
 
-    console.log('✅ 全ての児童データ登録が完了しました。');
-    console.log('===== saveChildrenData END (success) =====');
+    void 0;
+    void 0;
 
     return true;
   } catch (error) {
     console.error('❌ saveChildrenData エラー:', error);
-    console.log('===== saveChildrenData END (failed) =====');
+    void 0;
     return false;
   }
 }

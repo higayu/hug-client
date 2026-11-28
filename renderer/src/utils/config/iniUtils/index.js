@@ -30,9 +30,9 @@ function normalizeIni(data) {
 
 export async function loadIni() {
   try {
-    console.log('🔄 [INI] ini.json読み込み開始')
+    void 0
     const result = await window.electronAPI.readIni()
-    console.log('🔍 [INI] readIni結果:', result)
+    void 0
     
     if (!result.success) {
       console.error('❌ [INI] 読み込みエラー:', result.error)
@@ -40,8 +40,8 @@ export async function loadIni() {
     }
 
     const data = normalizeIni(result.data)
-    console.log('🔍 [INI] 読み込んだデータ(normalized):', data)
-    console.log('✅ [INI] ini.json読み込み成功:', data)
+    void 0
+    void 0
     return data
   } catch (err) {
     console.error('❌ [INI] ini.json読み込みエラー:', err)

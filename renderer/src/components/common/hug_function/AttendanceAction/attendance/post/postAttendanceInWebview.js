@@ -52,7 +52,7 @@ export async function postAttendanceDataListInWebview(
           );
         }
 
-        console.log("[Attendance POST][request]", {
+        false && ("[Attendance POST][request]", {
           url: ajaxUrl,
           method: postConfig.method,
           postConfig,
@@ -85,7 +85,7 @@ export async function postAttendanceDataListInWebview(
             "",
         };
 
-        console.log("[Attendance POST][response]", {
+        false && ("[Attendance POST][response]", {
           ...responseMeta,
           responseText: text,
         });

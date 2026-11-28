@@ -23,23 +23,11 @@ export async function handleEnterClick({
       rendererMailResolved: true,
     }
 
-    console.log('[EnterButton] onEnter呼び出し', {
-      childId,
-      childName,
-      dateStr,
-      payload,
-    })
+    void 0
 
     const result = await onEnter(payload)
 
-    console.log('[EnterButton] 入室処理結果', {
-      childId,
-      childName,
-      recordId,
-      rowSelector,
-      mailFlg: normalizedMailFlg,
-      result,
-    })
+    void 0
 
     return result
   } catch (error) {

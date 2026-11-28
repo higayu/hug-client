@@ -161,7 +161,7 @@ async function executeNativeOnclickInWebview(
               detectedAfterMs: Date.now() - startedAt,
             };
 
-            console.log(
+            false && (
               "[Attendance MutationObserver] HUGメールモーダル検知・自動選択",
               info
             );
@@ -243,7 +243,7 @@ async function executeNativeOnclickInWebview(
           outerHTML: (button.outerHTML || "").slice(0, 500),
         };
 
-        console.log(
+        false && (
           "[Attendance DOM Click] MutationObserverを開始してからHUG実ボタンをclickします",
           {
             kind: ${JSON.stringify(kind)},
@@ -409,23 +409,11 @@ async function executeNativeOnclickInWebview(
     })()
   `;
 
-  console.log("[Attendance DOM Click][renderer] executeJavaScript開始", {
-    kind,
-    rId: String(rId),
-    cellPrefix,
-    selectorTemplate,
-    functionName,
-    mailFlg: normalizedMailFlg,
-    detectMailDialog,
-    mailDialogSelector,
-    mailDialogButtonSelector,
-    mailDialogTimeoutMs,
-    attendanceActionCompletionTimeoutMs,
-  });
+  void 0;
 
   const result = await webview.executeJavaScript(script);
 
-  console.log("[Attendance DOM Click][renderer] 実行結果", result);
+  void 0;
 
   if (!result?.success) {
     throw new Error(
@@ -572,7 +560,7 @@ export async function clickHugMailDialogChoice(webview, sendMail) {
         dialogVisible: Boolean(wrapper && wrapper.offsetParent !== null),
       };
 
-      console.log("[Attendance MailDialog] HUG実ボタンをclickします", info);
+      false && ("[Attendance MailDialog] HUG実ボタンをclickします", info);
       target.click();
 
       return {
@@ -584,12 +572,10 @@ export async function clickHugMailDialogChoice(webview, sendMail) {
     })()
   `;
 
-  console.log("[Attendance MailDialog][renderer] 選択実行", {
-    sendMail: normalizedSendMail,
-  });
+  void 0;
 
   const result = await webview.executeJavaScript(script);
-  console.log("[Attendance MailDialog][renderer] 選択結果", result);
+  void 0;
 
   if (!result?.success) {
     throw new Error(result?.error || "HUGメール通知モーダルの操作に失敗しました");
@@ -625,7 +611,7 @@ export async function cancelHugMailDialog(webview) {
         };
       }
 
-      console.log("[Attendance MailDialog] HUGモーダルをキャンセルします");
+      false && ("[Attendance MailDialog] HUGモーダルをキャンセルします");
       closeButton.click();
 
       return {
@@ -637,7 +623,7 @@ export async function cancelHugMailDialog(webview) {
   `;
 
   const result = await webview.executeJavaScript(script);
-  console.log("[Attendance MailDialog][renderer] キャンセル結果", result);
+  void 0;
 
   if (!result?.success) {
     throw new Error(result?.error || "HUGメール通知モーダルのキャンセルに失敗しました");

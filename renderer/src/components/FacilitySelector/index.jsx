@@ -30,7 +30,7 @@ function FacilitySelector() {
    * useAppStateのdatabaseState.facilitysだけを使用する。
    */
   const { databaseState } = useAppState();
-  console.log("databaseStateの値",databaseState);
+  void 0;
   /*
    * onMouseDownとonContextMenuの二重発火防止
    */
@@ -113,19 +113,9 @@ function FacilitySelector() {
    * デバッグログ
    */
   useEffect(() => {
-    console.log(
-      '📦 [FacilitySelector] DB施設データ:',
-      facilitys,
-    );
+    void 0;
 
-    console.log(
-      '🏢 [FacilitySelector] 現在の施設:',
-      {
-        facilityId,
-        facilityLabel,
-        currentFacility,
-      },
-    );
+    void 0;
   }, [
     facilitys,
     facilityId,
@@ -162,10 +152,7 @@ function FacilitySelector() {
             '📁 設定フォルダーを開きました',
           );
 
-          console.log(
-            '✅ 設定フォルダーを開きました:',
-            result.path,
-          );
+          void 0;
 
           return;
         }
@@ -219,9 +206,7 @@ function FacilitySelector() {
         lastRightClickHandledAtRef.current =
           now;
 
-        console.log(
-          '🖱️ [FacilitySelector] 右クリック検知 → 設定フォルダーを開く',
-        );
+        void 0;
 
         await openConfigFolder();
       },
@@ -255,15 +240,7 @@ function FacilitySelector() {
     useCallback(() => {
       showInfoToast(TITLE);
 
-      console.log(
-        '🏢 [FacilitySelector] 施設ラベルクリック:',
-        {
-          facilityId,
-          facilityLabel,
-          currentFacility,
-          message: TITLE,
-        },
-      );
+      void 0;
     }, [
       showInfoToast,
       facilityId,

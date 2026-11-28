@@ -11,9 +11,7 @@ import {
  */
 export async function clickAbsenceButton(column5Html, targetChildrenId) {
   try {
-    console.log("🔘 [ATTENDANCE] 欠席モーダル表示 START (Cache)", {
-      targetChildrenId,
-    });
+    void 0;
 
     const webview = await resolveAttendanceWebview({ loadDetailPage: true });
 
@@ -60,7 +58,7 @@ export async function clickAbsenceButton(column5Html, targetChildrenId) {
     const result = await webview.executeJavaScript(script);
 
     if (result?.success) {
-      console.log("✅ [ATTENDANCE] 欠席モーダル表示 OK:", result.logInfo);
+      void 0;
       window.showSuccessToast?.("✅ 欠席モーダルを開きました", 2000);
       return { success: true, absenceId };
     }

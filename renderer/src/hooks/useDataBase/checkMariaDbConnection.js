@@ -71,10 +71,7 @@ async function getCurrentDatabaseType() {
   if (appStateValue !== undefined && appStateValue !== null) {
     const normalized = normalizeDatabaseType(appStateValue);
 
-    console.log("✅ AppState DATABASE_TYPE:", {
-      raw: appStateValue,
-      normalized,
-    });
+    void 0;
 
     console.groupEnd();
     return normalized;
@@ -95,11 +92,7 @@ async function getCurrentDatabaseType() {
       ) {
         const normalized = normalizeDatabaseType(apiSettingsDatabaseType);
 
-        console.log("✅ window.getApiSettings databaseType:", {
-          raw: apiSettingsDatabaseType,
-          normalized,
-          apiSettings,
-        });
+        void 0;
 
         console.groupEnd();
         return normalized;
@@ -117,10 +110,7 @@ async function getCurrentDatabaseType() {
   if (iniValue !== undefined && iniValue !== null) {
     const normalized = normalizeDatabaseType(iniValue);
 
-    console.log("✅ IniState databaseType:", {
-      raw: iniValue,
-      normalized,
-    });
+    void 0;
 
     console.groupEnd();
     return normalized;
@@ -137,10 +127,7 @@ async function getCurrentDatabaseType() {
       const result = await window.electronAPI.getDatabaseType();
       const normalized = normalizeDatabaseType(result);
 
-      console.log("✅ electronAPI.getDatabaseType:", {
-        raw: result,
-        normalized,
-      });
+      void 0;
 
       console.groupEnd();
       return normalized;
@@ -176,10 +163,7 @@ function getAutoSwitchingEnabled() {
   if (window.AppState?.AUTO_SWITCHING !== undefined) {
     const result = toBooleanFlag(window.AppState.AUTO_SWITCHING, true);
 
-    console.log("✅ AppState AUTO_SWITCHING:", {
-      raw: window.AppState.AUTO_SWITCHING,
-      result,
-    });
+    void 0;
 
     console.groupEnd();
     return result;
@@ -192,10 +176,7 @@ function getAutoSwitchingEnabled() {
     const fnResult = window.isAutoSwitchingEnabled();
     const result = toBooleanFlag(fnResult, true);
 
-    console.log("✅ window.isAutoSwitchingEnabled:", {
-      raw: fnResult,
-      result,
-    });
+    void 0;
 
     console.groupEnd();
     return result;
@@ -215,11 +196,7 @@ function getAutoSwitchingEnabled() {
       ) {
         const result = toBooleanFlag(apiSettingsAutoSwitching, true);
 
-        console.log("✅ window.getApiSettings autoSwitching:", {
-          raw: apiSettingsAutoSwitching,
-          result,
-          apiSettings,
-        });
+        void 0;
 
         console.groupEnd();
         return result;
@@ -237,10 +214,7 @@ function getAutoSwitchingEnabled() {
   if (iniValue !== undefined && iniValue !== null) {
     const result = toBooleanFlag(iniValue, true);
 
-    console.log("✅ IniState autoSwitching:", {
-      raw: iniValue,
-      result,
-    });
+    void 0;
 
     console.groupEnd();
     return result;
@@ -254,10 +228,7 @@ function getAutoSwitchingEnabled() {
     const appStateResult = window.AppState.isAutoSwitchingEnabled();
     const result = toBooleanFlag(appStateResult, true);
 
-    console.log("✅ AppState isAutoSwitchingEnabled:", {
-      raw: appStateResult,
-      result,
-    });
+    void 0;
 
     console.groupEnd();
     return result;
@@ -303,29 +274,12 @@ export async function checkMariaDbConnection(dispatch, options = {}) {
   const currentDatabaseType = await getCurrentDatabaseType();
   const autoSwitching = getAutoSwitchingEnabled();
 
-  console.log("📌 options:", {
-    autoFallbackToSqlite,
-    switchToMariaDbOnSuccess,
-    persistIni,
-  });
+  void 0;
 
-  console.log("📌 current settings:", {
-    currentDatabaseType,
-    autoSwitching,
+  void 0;
 
-    rawAppStateDatabaseType: window.AppState?.DATABASE_TYPE,
-    rawAppStateAutoSwitching: window.AppState?.AUTO_SWITCHING,
-
-    rawIniDatabaseType: window.IniState?.apiSettings?.databaseType,
-    rawIniAutoSwitching: window.IniState?.apiSettings?.autoSwitching,
-
-    hasWindowGetApiSettings: typeof window.getApiSettings === "function",
-    hasWindowLoadIni: typeof window.loadIni === "function",
-    hasWindowUpdateIniSetting: typeof window.updateIniSetting === "function",
-  });
-
-  console.log("🕒 checkedAt:", checkedAt);
-  console.log("🧩 dispatch exists:", Boolean(dispatch));
+  void 0;
+  void 0;
 
   if (dispatch) {
     dispatch(
@@ -345,7 +299,7 @@ export async function checkMariaDbConnection(dispatch, options = {}) {
 
     const res = await window.electronAPI.checkMariaDbConnection();
 
-    console.log("📥 Electron IPC response:", res);
+    void 0;
 
     const connected = res?.connected === true;
 
@@ -376,7 +330,7 @@ export async function checkMariaDbConnection(dispatch, options = {}) {
       switchResult: null,
     };
 
-    console.log("🧾 normalized result:", result);
+    void 0;
 
     if (dispatch) {
       dispatch(
@@ -404,13 +358,7 @@ export async function checkMariaDbConnection(dispatch, options = {}) {
       currentDatabaseType !== "mariadb" &&
       switchToMariaDbOnSuccess;
 
-    console.log("🔀 MariaDB切替判定:", {
-      connected,
-      currentDatabaseType,
-      autoSwitching,
-      switchToMariaDbOnSuccess,
-      shouldSwitchToMariaDb,
-    });
+    void 0;
 
     if (shouldSwitchToMariaDb) {
       const reason =
@@ -432,7 +380,7 @@ export async function checkMariaDbConnection(dispatch, options = {}) {
         switchResult: switched,
       };
 
-      console.log("✅ MariaDB自動切替完了 result:", switchedResult);
+      void 0;
       console.groupEnd();
 
       return switchedResult;
@@ -442,11 +390,7 @@ export async function checkMariaDbConnection(dispatch, options = {}) {
     // 接続成功だが切替しない
     // =============================================================
     if (connected) {
-      console.log("✅ 接続成功。ただし DB切替なし:", {
-        currentDatabaseType,
-        autoSwitching,
-        switchToMariaDbOnSuccess,
-      });
+      void 0;
 
       console.groupEnd();
       return result;
@@ -480,7 +424,7 @@ export async function checkMariaDbConnection(dispatch, options = {}) {
           fallbackToSqlite: false,
         };
 
-        console.log("⏭ すでに SQLite のため fallback切替は省略:", sqliteResult);
+        void 0;
         console.groupEnd();
 
         return sqliteResult;
@@ -501,13 +445,13 @@ export async function checkMariaDbConnection(dispatch, options = {}) {
         switchResult: switched,
       };
 
-      console.log("✅ SQLite自動切替完了 result:", fallbackResult);
+      void 0;
       console.groupEnd();
 
       return fallbackResult;
     }
 
-    console.log("✅ 接続確認のみ完了 result:", result);
+    void 0;
     console.groupEnd();
 
     return result;
@@ -571,7 +515,7 @@ export async function checkMariaDbConnection(dispatch, options = {}) {
           fallbackToSqlite: false,
         };
 
-        console.log("⏭ 例外後、すでに SQLite のため fallback省略:", sqliteResult);
+        void 0;
         console.groupEnd();
 
         return sqliteResult;
@@ -592,13 +536,13 @@ export async function checkMariaDbConnection(dispatch, options = {}) {
         switchResult: switched,
       };
 
-      console.log("✅ 例外後 SQLite自動切替完了 result:", fallbackResult);
+      void 0;
       console.groupEnd();
 
       return fallbackResult;
     }
 
-    console.log("✅ エラー結果を返します:", baseResult);
+    void 0;
     console.groupEnd();
 
     return baseResult;
@@ -637,14 +581,7 @@ export async function switchDatabaseType({
         : "SQLite に切り替えました");
 
   console.group("🔁 [switchDatabaseType] DB種別切替開始");
-  console.log("📌 params:", {
-    databaseType,
-    resolvedDatabaseType,
-    resolvedMessage,
-    persistIni,
-    checkedAt,
-    dispatchExists: Boolean(dispatch),
-  });
+  void 0;
 
   try {
     // =============================================================
@@ -681,9 +618,9 @@ export async function switchDatabaseType({
 
     if (persistIni) {
       iniResult = await updateIniDatabaseType(resolvedDatabaseType);
-      console.log("💾 ini.json 更新結果:", iniResult);
+      void 0;
     } else {
-      console.log("💾 persistIni=false のため ini.json は更新しません");
+      void 0;
     }
 
     // =============================================================
@@ -744,7 +681,7 @@ export async function switchDatabaseType({
       reloadResult,
     };
 
-    console.log("✅ [switchDatabaseType] DB種別切替完了:", result);
+    void 0;
     console.groupEnd();
 
     return result;
@@ -771,7 +708,7 @@ export async function switchDatabaseType({
       error,
     };
 
-    console.log("===== switchDatabaseType END failed =====", result);
+    void 0;
     console.groupEnd();
 
     return result;
@@ -791,12 +728,7 @@ function applyDatabaseTypeToRedux(
 ) {
   const connected = databaseType !== "sqlite";
 
-  console.log("📤 [applyDatabaseTypeToRedux]", {
-    databaseType,
-    connected,
-    message,
-    checkedAt,
-  });
+  void 0;
 
   dispatch(setDatabaseType(databaseType));
 
@@ -842,11 +774,7 @@ function syncWindowAppStateDatabaseType({
   window.AppState.SERVER_CONNECTION_MESSAGE = message;
   window.AppState.SERVER_CONNECTION_CHECKED_AT = checkedAt;
 
-  console.log("✅ window.AppState updated:", {
-    DATABASE_TYPE: window.AppState.DATABASE_TYPE,
-    SERVER_CONNECTED: window.AppState.SERVER_CONNECTED,
-    SERVER_CONNECTION_MESSAGE: window.AppState.SERVER_CONNECTION_MESSAGE,
-  });
+  void 0;
 
   console.groupEnd();
   return true;
@@ -882,11 +810,7 @@ async function updateIniDatabaseType(databaseType) {
         databaseType: normalizedDatabaseType,
       });
 
-      console.log("✅ ini databaseType updated via window.updateIniSetting:", {
-        databaseType: normalizedDatabaseType,
-        rawResult: res,
-        result,
-      });
+      void 0;
 
       console.groupEnd();
       return result;
@@ -906,11 +830,7 @@ async function updateIniDatabaseType(databaseType) {
         databaseType: normalizedDatabaseType,
       });
 
-      console.log("✅ ini databaseType updated via electronAPI:", {
-        databaseType: normalizedDatabaseType,
-        rawResult: res,
-        result,
-      });
+      void 0;
 
       console.groupEnd();
       return result;
@@ -988,7 +908,7 @@ async function reloadIniStateIfPossible() {
     if (typeof window.loadIni === "function") {
       const result = await window.loadIni();
 
-      console.log("✅ window.loadIni 実行完了:", result);
+      void 0;
       console.groupEnd();
 
       return {
@@ -1004,7 +924,7 @@ async function reloadIniStateIfPossible() {
     if (window.IniState?.loadIni) {
       const result = await window.IniState.loadIni();
 
-      console.log("✅ window.IniState.loadIni 実行完了:", result);
+      void 0;
       console.groupEnd();
 
       return {
@@ -1051,7 +971,7 @@ function syncDatabaseTypeSelect(databaseType) {
 
   if (databaseTypeSelect) {
     databaseTypeSelect.value = databaseType;
-    console.log("✅ select value 更新:", databaseType);
+    void 0;
   } else {
     console.warn(
       "⚠️ #api-database-type が見つかりません。ApiTab未表示の可能性があります。"

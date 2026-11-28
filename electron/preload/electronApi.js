@@ -495,7 +495,15 @@ function createElectronApi(ipcRenderer, isDebugMode) {
 
     // ---- 設定 ----
     getAppLockStatus: () => ipcRenderer.invoke("app-lock-status"),
+    lockApp: () => ipcRenderer.invoke("app-lock-lock"),
     unlockApp: (passcode) => ipcRenderer.invoke("app-lock-unlock", passcode),
+    onAppLockStateChanged: (callback) => {
+      if (typeof callback !== "function") return () => {};
+
+      const listener = (_event, state) => callback(state);
+      ipcRenderer.on("app-lock-state-changed", listener);
+      return () => ipcRenderer.removeListener("app-lock-state-changed", listener);
+    },
     readConfig: () =>
       ipcRenderer.invoke("read-config"),
 
@@ -572,6 +580,15 @@ function createElectronApi(ipcRenderer, isDebugMode) {
     // ---- UI / Window ----
     openInformationWindow: () =>
       ipcRenderer.invoke("open-information-window"),
+
+    inquiryGetAppVersion: () =>
+      ipcRenderer.invoke("inquiry:get-app-version"),
+
+    inquiryCaptureScreen: () =>
+      ipcRenderer.invoke("inquiry:capture-screen"),
+
+    inquirySubmit: (payload) =>
+      ipcRenderer.invoke("laravel:inquiries:store", payload),
 
     openPhpMyAdminWindow: () =>
       ipcRenderer.invoke("open-php-my-admin-window"),

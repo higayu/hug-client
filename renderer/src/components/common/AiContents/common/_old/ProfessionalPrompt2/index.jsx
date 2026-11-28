@@ -40,12 +40,7 @@ export default function ProfessionalPrompt2({
   );
 
   const logDbg = (field, msg, extra = {}) => {
-    console.log(`[${DBG}:${field}]`, msg, {
-      childId: selectedChildId,
-      date: CURRENT_YMD,
-      aiTextLen: aiText.length,
-      ...extra,
-    });
+    void 0;
   };
 
   // 🔥 初期値セット（PROMPTS 全体を監視）

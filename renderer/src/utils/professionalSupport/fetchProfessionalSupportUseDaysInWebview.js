@@ -149,7 +149,7 @@ export async function fetchProfessionalSupportUseDaysInWebview(webview, opts) {
         let countParams;
 
         if (INTERVIEW_DATE) {
-          console.log("[HUG WM] リクエストのみ取得（面談日:", INTERVIEW_DATE, ")");
+          false && ("[HUG WM] リクエストのみ取得（面談日:", INTERVIEW_DATE, ")");
           countParams = await fetchCountParamsViaGetData(INTERVIEW_DATE, "insert");
         } else {
           const formUrl =
@@ -191,16 +191,16 @@ export async function fetchProfessionalSupportUseDaysInWebview(webview, opts) {
 
         const useDays = await fetchUseDays(countParams);
 
-        console.log("[HUG WM] 専門的支援 利用日数チェック");
-        console.log("[HUG WM] 児童ID:", C_ID);
-        console.log("[HUG WM] 面談日:", countParams.interview_date);
-        console.log(
+        false && ("[HUG WM] 専門的支援 利用日数チェック");
+        false && ("[HUG WM] 児童ID:", C_ID);
+        false && ("[HUG WM] 面談日:", countParams.interview_date);
+        false && (
           "[HUG WM] s_id / f_id:",
           countParams.s_id,
           "/",
           countParams.f_id
         );
-        console.log("[HUG WM] 新規作成時の利用日数:", useDays.days, "日");
+        false && ("[HUG WM] 新規作成時の利用日数:", useDays.days, "日");
 
         return {
           ok: true,

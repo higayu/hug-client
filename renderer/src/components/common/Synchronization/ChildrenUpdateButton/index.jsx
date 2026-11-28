@@ -40,14 +40,8 @@ export default function ChildrenUpdateButton({
         },
       )
 
-      console.log(
-        "[HUG WM] 取得した児童データ:",
-        result,
-      )
-      console.log(
-        "[HUG WM] 児童データのサンプル:",
-        result.children?.slice(0, 3),
-      )
+      void 0
+      void 0
 
 
       if (!window.electronAPI?.syncHugChildrens) {
@@ -88,20 +82,14 @@ export default function ChildrenUpdateButton({
         children: childrenJson,
       }
 
-      console.log(
-        "[HUG WM] DB送信ペイロード:",
-        JSON.stringify(payload, null, 2),
-      )
+      void 0
 
       const syncResult =
         await window.electronAPI.syncHugChildrens(
           payload,
         )
 
-      console.log(
-        "[HUG WM] DB同期結果:",
-        syncResult,
-      )
+      void 0
 
       const responseSummary =
         syncResult == null

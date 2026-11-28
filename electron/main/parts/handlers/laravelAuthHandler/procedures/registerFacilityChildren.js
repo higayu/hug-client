@@ -5,7 +5,7 @@ const { executeAuthenticatedOperation } = require("../auth/authenticated");  // 
 const { formatError, unwrapData } = require("../auth/utils");
 
 async function registerFacilityChildren(payload = {}) {
-  console.log("📤 [Laravel Procedure] registerFacilityChildren:", payload);
+  void 0;
 
   const result = await executeAuthenticatedOperation(
     () => laravelApiClient.registerFacilityChildren(payload),
@@ -31,12 +31,12 @@ async function registerFacilityChildren(payload = {}) {
 
 const handler = async (_event, payload = {}) => {
   try {
-    console.log("📤 [Laravel Procedure] IPC registerFacilityChildren:", payload);
+    void 0;
 
     const result = await registerFacilityChildren(payload);
 
     if (result.success) {
-      console.log("✅ [Laravel Procedure] registerFacilityChildren DONE:", result.data);
+      void 0;
     } else {
       console.error("❌ [Laravel Procedure] registerFacilityChildren failed:", result);
     }

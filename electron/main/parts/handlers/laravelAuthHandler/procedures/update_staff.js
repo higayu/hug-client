@@ -5,7 +5,7 @@ const { executeAuthenticatedOperation } = require("../auth/authenticated");
 const { formatError, unwrapData } = require("../auth/utils");
 
 async function updateStaff(payload = {}) {
-  console.log("📤 [Laravel Procedure] updateStaff:", payload);
+  void 0;
 
   const result = await executeAuthenticatedOperation(
     () => laravelApiClient.updateStaff(payload),
@@ -31,12 +31,12 @@ async function updateStaff(payload = {}) {
 
 const handler = async (_event, payload = {}) => {
   try {
-    console.log("📤 [Laravel Procedure] IPC updateStaff:", payload);
+    void 0;
 
     const result = await updateStaff(payload);
 
     if (result.success) {
-      console.log("✅ [Laravel Procedure] updateStaff DONE:", result.data);
+      void 0;
     } else {
       console.error("❌ [Laravel Procedure] updateStaff failed:", result);
     }

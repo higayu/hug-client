@@ -562,15 +562,7 @@ const AiRecordEditer = () => {
             : '',
         );
 
-        console.log(
-          '[AiRecordEditer/loadFsoaipRecord]',
-          {
-            facilityId,
-            childId,
-            targetDate,
-            record,
-          },
-        );
+        void 0;
       } catch (error) {
         console.error(
           '[AiRecordEditer/loadFsoaipRecord]',
@@ -1076,10 +1068,7 @@ const AiRecordEditer = () => {
       return;
     }
 
-    console.log(
-      '[AiRecordEditer/register] 送信する値',
-      payload,
-    );
+    void 0;
 
     const shouldRegister = await confirmDialog(
       `【F-SOAIP登録内容の確認】\n` +
@@ -1116,10 +1105,7 @@ const AiRecordEditer = () => {
       const result =
         await serviceRecordUpsert(payload);
 
-      console.log(
-        '[AiRecordEditer/register] 保存結果',
-        result,
-      );
+      void 0;
 
       if (result?.success === false || result?.ok === false) {
         throw new Error(

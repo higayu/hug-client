@@ -30,7 +30,7 @@ function useAutoLogin() {
         return;
       }
 
-      console.log('Laravel認証成功:', res.data?.user);
+      void 0;
 
       dispatch(
         setLaravelAuthentication({

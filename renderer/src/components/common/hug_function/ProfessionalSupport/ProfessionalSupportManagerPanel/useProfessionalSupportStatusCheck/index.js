@@ -44,12 +44,7 @@ export function useProfessionalSupportStatusCheck(
   const effectiveFacilityId = facilityId || null;
   const effectiveCurrentYmd = currentYmd || "";
 
-  console.log(`[HUG WM] 有効な取得条件（${logTag}）`, {
-    effectiveChildId,
-    effectiveFacilityId,
-    effectiveCurrentYmd,
-    effectiveCurrentYmdType: typeof effectiveCurrentYmd,
-  });
+  void 0;
 
   const selectedChild = useMemo(() => {
     if (!effectiveChildId) return null;
@@ -114,14 +109,7 @@ export function useProfessionalSupportStatusCheck(
   }, []);
 
   useEffect(() => {
-    console.log(`[HUG WM] 専門的支援チェック 状態リセット（${logTag}）`, {
-      effectiveChildId,
-      effectiveCurrentYmd,
-      normalizedEffectiveCurrentYmd: normalizeYmdForDebug(effectiveCurrentYmd),
-      previousRecordCount: todayProfessionalSupportRecordCount,
-      previousDisplayKind: useDaysDisplayKind,
-      previousLastUseDaysResult: lastUseDaysResult,
-    });
+    void 0;
 
     setTodayProfessionalSupportRecordCount(null);
     setUseDaysDisplayKind(null);
@@ -136,20 +124,9 @@ export function useProfessionalSupportStatusCheck(
   const runCheck = useCallback(async () => {
     console.groupCollapsed(`[HUG WM] 専門的支援チェック開始（${logTag}）`);
 
-    console.log(`[HUG WM] 取得条件の解決結果（${logTag}）`, {
-      effective: {
-        childId: effectiveChildId,
-        facilityId: effectiveFacilityId,
-        currentYmd: effectiveCurrentYmd,
-        normalizedCurrentYmd: normalizeYmdForDebug(effectiveCurrentYmd),
-      },
-    });
+    void 0;
 
-    console.log(`[HUG WM] childrenData 検索結果（${logTag}）`, {
-      childrenDataLength: safeChildrenData.length,
-      selectedChild,
-      currentUseDays: useDays,
-    });
+    void 0;
 
     if (!effectiveChildId) {
       console.warn(`[HUG WM] 専門的支援チェック中断（${logTag}）`, {
@@ -178,12 +155,7 @@ export function useProfessionalSupportStatusCheck(
     setUseDaysDisplayKind(null);
     setLastUseDaysResult(null);
 
-    console.log(`[HUG WM] チェック状態を初期化（${logTag}）`, {
-      checking: true,
-      todayProfessionalSupportRecordCount: null,
-      useDaysDisplayKind: null,
-      lastUseDaysResult: null,
-    });
+    void 0;
 
     const requestPayload = {
       childId: effectiveChildId,
@@ -194,9 +166,7 @@ export function useProfessionalSupportStatusCheck(
     const timerLabel = `[HUG WM] HUG利用日数取得時間（${logTag}）`;
 
     try {
-      console.log(`[HUG WM] HUG利用日数取得リクエスト送信（${logTag}）`, {
-        requestPayload,
-      });
+      void 0;
 
       console.time(timerLabel);
 
@@ -206,24 +176,11 @@ export function useProfessionalSupportStatusCheck(
 
       console.timeEnd(timerLabel);
 
-      console.log(`[HUG WM] HUG利用日数取得レスポンス受信（${logTag}）`, {
-        useDaysResult,
-        ok: useDaysResult?.ok,
-        days: useDaysResult?.days,
-        daysType: typeof useDaysResult?.days,
-        rows: useDaysResult?.rows,
-        rowsIsArray: Array.isArray(useDaysResult?.rows),
-        rowsLength: Array.isArray(useDaysResult?.rows)
-          ? useDaysResult.rows.length
-          : null,
-        error: useDaysResult?.error,
-      });
+      void 0;
 
       setLastUseDaysResult(useDaysResult);
 
-      console.log(`[HUG WM] lastUseDaysResult 保存（${logTag}）`, {
-        lastUseDaysResult: useDaysResult,
-      });
+      void 0;
 
       if (!useDaysResult?.ok) {
         const errorMessage =
@@ -272,15 +229,7 @@ export function useProfessionalSupportStatusCheck(
         ? useDaysResult.rows
         : [];
 
-      console.log(`[HUG WM] 当日判定 入力値（${logTag}）`, {
-        effectiveCurrentYmd,
-        effectiveCurrentYmdType: typeof effectiveCurrentYmd,
-        targetYmdForDebug,
-        requestPayload,
-        responseDays: useDaysResult.days,
-        responseRowsLength: rowsForDebug.length,
-        responseRows: rowsForDebug,
-      });
+      void 0;
 
       const rowsWithDateDebug = rowsForDebug.map((row, index) => {
         /**
@@ -332,16 +281,9 @@ export function useProfessionalSupportStatusCheck(
         }))
       );
 
-      console.log(`[HUG WM] 当日判定 rows詳細（${logTag}）`, {
-        rowsWithDateDebug,
-      });
+      void 0;
 
-      console.log(`[HUG WM] 当日判定 結果（${logTag}）`, {
-        targetYmdForDebug,
-        totalRows: rowsForDebug.length,
-        todayRowsCount: todayRowsForDebug.length,
-        todayRows: todayRowsForDebug,
-      });
+      void 0;
 
       console.groupEnd();
 
@@ -366,39 +308,15 @@ export function useProfessionalSupportStatusCheck(
       const recordCount = todayRecordCount;
       const registered = todayRecordCount > 0;
 
-      console.log(`[HUG WM] 登録判定カウント比較（${logTag}）`, {
-        monthlyRecordCount,
-        todayRecordCount,
-        finalRecordCount: recordCount,
-        registered,
-        rawDays,
-        note: "現在は当日判定として todayRecordCount を使用しています",
-      });
+      void 0;
 
-      console.log(`[HUG WM] 取得結果 days 正規化（${logTag}）`, {
-        originalDays: useDaysResult.days,
-        originalDaysType: typeof useDaysResult.days,
-        normalizedRawDays: rawDays,
-        monthlyRecordCount,
-        todayRecordCount,
-        recordCount,
-        registered,
-      });
+      void 0;
 
-      console.log(`[HUG WM] 状態更新前（${logTag}）`, {
-        beforeUseDays: useDays,
-        beforeSelectedChild: selectedChild,
-        beforeRecordCount: todayProfessionalSupportRecordCount,
-        beforeDisplayKind: useDaysDisplayKind,
-        beforeLastUseDaysResult: lastUseDaysResult,
-      });
+      void 0;
 
       patchChildUseSpeDate(effectiveChildId, rawDays);
 
-      console.log(`[HUG WM] childrenData useSpeDate 反映実行（${logTag}）`, {
-        childId: effectiveChildId,
-        patchedUseSpeDate: rawDays,
-      });
+      void 0;
 
       setUseDaysDisplayKind("raw");
       setTodayProfessionalSupportRecordCount(recordCount);
@@ -415,39 +333,13 @@ export function useProfessionalSupportStatusCheck(
         })
       );
 
-      console.log(`[HUG WM] recordStatusSlice 保存完了（${logTag}）`, {
-        ymd: effectiveCurrentYmd,
-        childId: effectiveChildId,
-        professionalSupport: {
-          registered,
-          recordCount,
-          monthlyRecordCount,
-          todayRecordCount,
-          useDays: rawDays,
-          useDaysDisplayKind: "raw",
-          lastUseDaysResult: useDaysResult,
-        },
-      });
+      void 0;
 
-      console.log(`[HUG WM] 状態更新後 setState 実行（${logTag}）`, {
-        useDaysDisplayKind: "raw",
-        todayProfessionalSupportRecordCount: recordCount,
-        lastUseDaysResult: useDaysResult,
-        displayUseDays: rawDays,
-      });
+      void 0;
 
-      console.log(`[HUG WM] 専門的支援 利用日数チェック完了（${logTag}）`, {
-        requestPayload,
-        response: useDaysResult,
-        rawDays,
-        monthlyRecordCount,
-        todayRecordCount,
-        recordCount,
-        registered,
-        displayKind: "raw",
-      });
+      void 0;
 
-      console.log("[HUG WM] 表示用の利用日数:", rawDays, "日");
+      void 0;
     } catch (e) {
       try {
         console.timeEnd(timerLabel);
@@ -483,12 +375,7 @@ export function useProfessionalSupportStatusCheck(
 
       alert(errorMessage);
     } finally {
-      console.log(`[HUG WM] 専門的支援チェック終了（${logTag}）`, {
-        effectiveChildId,
-        effectiveFacilityId,
-        effectiveCurrentYmd,
-        checking: false,
-      });
+      void 0;
 
       setChecking(false);
       console.groupEnd();

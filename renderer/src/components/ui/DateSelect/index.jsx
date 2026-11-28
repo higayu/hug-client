@@ -19,10 +19,7 @@ export default function DateSelect({
   const handleChange = (e) => {
     const selectedDate = e.target.value;
 
-    console.log("[DateSelect] handleChange", {
-      selectedDate,
-      CURRENT_YMD,
-    });
+    void 0;
 
     if (!selectedDate) {
       return;
@@ -43,9 +40,7 @@ export default function DateSelect({
     );
   };
 
-  console.log("[DateSelect] render", {
-    CURRENT_YMD,
-  });
+  void 0;
 
   return (
     <input

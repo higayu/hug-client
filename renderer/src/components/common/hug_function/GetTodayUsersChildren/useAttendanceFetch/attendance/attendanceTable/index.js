@@ -351,11 +351,7 @@ export async function extractColumnData(tableHTML, automationConfig = {}) {
       }
     })
 
-    console.log('✅ [ATTENDANCE][DIRECT] 列データ抽出完了:', {
-      extractedCount: extractedData.length,
-      sample: extractedData,
-      columns: config.columns
-    })
+    void 0
 
     return {
       success: true,

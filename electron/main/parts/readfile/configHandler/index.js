@@ -1,18 +1,31 @@
 // main/parts/readfile/configHandler/index.js
 const fs = require("fs");
 const path = require("path");
-const { app, dialog, shell } = require("electron");
+const { app, BrowserWindow, dialog, shell } = require("electron");
 const { getDataDir, getConfigPath } = require("../../utils/pathResolver");
 const { DEFAULT_CONFIG, getDefaultConfig } = require("./defaultConfig");
 
 const CONFIG_IPC_CHANNELS = [
   "app-lock-status",
+  "app-lock-lock",
   "app-lock-unlock",
   "read-config",
   "save-config",
   "import-config-file",
   "open-config-folder",
 ];
+
+// BrowserWindow ごとではなく、Electron アプリ全体で共有するロック状態。
+// アプリを再起動したときは、ロック有効設定なら再度ロックされる。
+let isAppLocked = true;
+
+function notifyAppLockState(locked) {
+  for (const browserWindow of BrowserWindow.getAllWindows()) {
+    if (!browserWindow.isDestroyed()) {
+      browserWindow.webContents.send("app-lock-state-changed", { locked });
+    }
+  }
+}
 
 function removeHandlerIfRegistered(ipcMain, channel) {
   try {
@@ -41,9 +54,22 @@ function handleConfigAccess(ipcMain) {
     try {
       const config = readLockConfig();
       return { success: true, enabled: config.APP_LOCK_ENABLED === true,
-        configured: typeof config.APP_LOCK_PASSCODE === "string" && config.APP_LOCK_PASSCODE.length > 0 };
+        configured: typeof config.APP_LOCK_PASSCODE === "string" && config.APP_LOCK_PASSCODE.length > 0,
+        locked: config.APP_LOCK_ENABLED === true && isAppLocked };
     } catch {
       return { success: false, error: "設定ファイルを読み込めませんでした。設定を確認してアプリを再起動してください。" };
+    }
+  });
+  ipcMain.handle("app-lock-lock", () => {
+    try {
+      const config = readLockConfig();
+      if (config.APP_LOCK_ENABLED !== true) return { success: true, locked: false };
+
+      isAppLocked = true;
+      notifyAppLockState(true);
+      return { success: true, locked: true };
+    } catch {
+      return { success: false, error: "ロック設定を読み込めませんでした。" };
     }
   });
   ipcMain.handle("app-lock-unlock", (_event, passcode) => {
@@ -51,6 +77,10 @@ function handleConfigAccess(ipcMain) {
       const config = readLockConfig();
       const valid = config.APP_LOCK_ENABLED !== true ||
         (typeof passcode === "string" && passcode.length > 0 && passcode === config.APP_LOCK_PASSCODE);
+      if (valid) {
+        isAppLocked = false;
+        notifyAppLockState(false);
+      }
       return { success: valid };
     } catch {
       return { success: false };

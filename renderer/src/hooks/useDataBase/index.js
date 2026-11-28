@@ -54,7 +54,7 @@ export function useDataBase({ autoLoad = false } = {}) {
 
   // ✅ reloadData関数を追加
   const reloadData = useCallback(async (options = {}) => {
-    console.log('[useDataBase] reloadData 開始', options);
+    void 0;
     
     try {
       // 強制的にデータベースを再読み込み
@@ -65,7 +65,7 @@ export function useDataBase({ autoLoad = false } = {}) {
       });
       
       if (result) {
-        console.log('[useDataBase] reloadData 完了');
+        void 0;
       } else {
         console.warn('[useDataBase] reloadData 失敗');
       }

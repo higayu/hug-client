@@ -47,10 +47,10 @@ function logGroup(label, details) {
     `%c${LOG_PREFIX} ${label}`,
     "color:#2563eb;font-weight:bold;",
   )
-  console.log("time:", new Date().toISOString())
+  void 0
   if (details) {
     Object.entries(details).forEach(([key, value]) => {
-      console.log(`${key}:`, value)
+      void 0
     })
   }
   // どこから呼ばれたか（呼び出し元コード）をスタックトレースで残す
@@ -169,7 +169,7 @@ export function startFocusTracker() {
     }
   }, 500)
 
-  console.log(`${LOG_PREFIX} started. コンソールでフォーカス移動を監視中...`)
+  void 0
 }
 
 export function stopFocusTracker() {
@@ -177,5 +177,5 @@ export function stopFocusTracker() {
   // startFocusTracker内の変数をモジュールスコープに出して個別にdisconnect/clearする。
   // 調査用の簡易実装のため、通常はページのリロードで停止すれば十分。
   window.__focusTrackerStarted = false
-  console.log(`${LOG_PREFIX} stopped (フラグのみ解除。完全停止には画面リロードを推奨)`)
+  void 0
 }

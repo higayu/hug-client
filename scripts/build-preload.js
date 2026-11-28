@@ -17,7 +17,7 @@ async function buildPreload() {
       logLevel: 'info',
     });
 
-    console.log('electron/preload/preload.bundle.cjs built successfully');
+    void 0;
   } catch (error) {
     console.error('Failed to build preload script');
     console.error(error);

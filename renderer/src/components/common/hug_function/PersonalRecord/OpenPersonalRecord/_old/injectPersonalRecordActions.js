@@ -34,7 +34,7 @@ export async function injectPersonalRecordActions(webview) {
         document.body.appendChild(pasteBtn)
         document.body.appendChild(draftBtn)
 
-        console.log("✅ 個人記録用ボタン生成完了")
+        false && ("✅ 個人記録用ボタン生成完了")
       } catch (error) {
         console.error(
           "❌ ボタン生成エラー:",

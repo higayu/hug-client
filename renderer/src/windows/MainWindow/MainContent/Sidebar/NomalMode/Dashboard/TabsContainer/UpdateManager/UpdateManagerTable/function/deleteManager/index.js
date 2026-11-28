@@ -7,18 +7,18 @@ export async function deleteManager(
   databaseType,
   facility_id
 ) {
-  console.log("===== 削除Manager START =====");
+  void 0;
 
-  console.log("databaseType:", databaseType);
+  void 0;
 
   if (!databaseType) {
     console.warn("⚠️ databaseType が設定されていません");
-    console.log("===== 削除停止Manager END (error: no databaseType) =====");
+    void 0;
     return false;
   }
 
     if (databaseType === 'laravel') {
-      console.log("→ 使用DB: Laravel API");
+      void 0;
       const result =  await handleLaravelDelete(selectedChildren);
       if(result){
           return true;
@@ -26,6 +26,6 @@ export async function deleteManager(
     } else {
       console.warn("⚠️ 不明な databaseType:", databaseType);
     }
-  console.log("===== 削除Manager END =====");
+  void 0;
   return false;
 }

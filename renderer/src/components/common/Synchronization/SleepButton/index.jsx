@@ -4,7 +4,12 @@ import { useAppState } from '@/AppStateContext'
 import { useAppLock } from '@/components/ui/AppLook'
 import { useToast } from '@/utils/notifications.jsx'
 
-export default function SleepButton({ onSleep }) {
+export default function SleepButton({
+  onSleep,
+  className = '',
+  label = 'Sleep（ロック）',
+  role,
+}) {
   const { appState } = useAppState()
   const appLock = useAppLock()
   const { showErrorToast } = useToast()
@@ -26,12 +31,17 @@ export default function SleepButton({ onSleep }) {
   }
 
   return (
-    <li className="m-0 p-0">
-      <button type="button" role="menuitem" disabled={busy} onClick={handleSleep}
-        className="flex w-full items-center gap-2 border-none bg-slate-600 px-4 py-2 text-left text-sm text-white hover:bg-slate-800 focus:bg-slate-800 disabled:opacity-50">
-        <MoonIcon className="h-4 w-4" aria-hidden="true" />
-        Sleep（ロック）
-      </button>
-    </li>
+    <button
+      type="button"
+      role={role}
+      aria-label={label || 'Sleep（ロック）'}
+      title={label || 'Sleep（ロック）'}
+      disabled={busy}
+      onClick={handleSleep}
+      className={className}
+    >
+      <MoonIcon className="h-4 w-4" aria-hidden="true" />
+      {label}
+    </button>
   )
 }

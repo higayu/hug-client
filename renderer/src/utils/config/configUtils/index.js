@@ -18,7 +18,7 @@ export async function saveConfig(configData) {
       return false;
     }
 
-    console.log(MESSAGES.SUCCESS.CONFIG_SAVED);
+    void 0;
     return true;
   } catch (err) {
     console.error(MESSAGES.ERROR.CONFIG_SAVE, err);
@@ -34,11 +34,11 @@ export async function loadConfig() {
   const output = document.getElementById(ELEMENT_IDS.CONFIG_OUTPUT);
 
   try {
-    console.log("🔄 [CONFIG] config.json読み込み開始");
+    void 0;
 
     const result = await window.electronAPI.readConfig();
 
-    console.log("🔍 [CONFIG] readConfig結果:", result);
+    void 0;
 
     if (!result.success) {
       console.error("❌ [CONFIG] 読み込みエラー:", result.error);
@@ -52,7 +52,7 @@ export async function loadConfig() {
 
     const data = result.data ?? {};
 
-    console.log("🔍 [CONFIG] 読み込んだデータ:", data);
+    void 0;
 
     // =============================================================
     // CURRENT_DAY_OF_WEEK を自動セット
@@ -69,7 +69,7 @@ export async function loadConfig() {
     // CURRENT_DAY_OF_WEEK は新仕様なので削除しない
     delete data.DATE_STR;
 
-    console.log("✅ [CONFIG] config.json読み込み成功:", data);
+    void 0;
 
     if (output) {
       output.textContent = JSON.stringify(data, null, 2);

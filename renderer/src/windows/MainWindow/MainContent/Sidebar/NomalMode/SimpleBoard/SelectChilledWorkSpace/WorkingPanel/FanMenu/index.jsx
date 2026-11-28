@@ -59,10 +59,7 @@ export default function FanMenu({ spaceId }) {
   const handleItemClick = (item) => {
     activateSpace()
 
-    console.log('[FanMenu] MainPanel切り替え:', {
-      spaceId,
-      panelId: item.id,
-    })
+    void 0
 
     dispatch(
       setSpaceActiveFanContentPanel({

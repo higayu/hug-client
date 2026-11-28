@@ -39,14 +39,7 @@ export async function clickAbsenceButton(
       );
     }
 
-    console.log(
-      "🔘 [ATTENDANCE V2] 欠席モーダル表示 START",
-      {
-        targetChildrenId:
-          childId,
-        absenceId,
-      }
-    );
+    void 0;
 
     const result =
       await executeFlowV2(
@@ -64,10 +57,7 @@ export async function clickAbsenceButton(
       );
     }
 
-    console.log(
-      "✅ [ATTENDANCE V2] 欠席モーダル表示 OK",
-      result
-    );
+    void 0;
 
     window.showSuccessToast?.(
       "✅ 欠席モーダルを開きました",

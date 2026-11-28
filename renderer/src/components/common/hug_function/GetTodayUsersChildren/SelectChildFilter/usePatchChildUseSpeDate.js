@@ -73,20 +73,7 @@ export function usePatchChildUseSpeDate({ setSplitChildren } = {}) {
         const nextWaitingChildren = patchList(prevWaitingChildren)
         const nextExperienceChildren = patchList(prevExperienceChildren)
 
-        console.log("[usePatchChildUseSpeDate] useSpeDate patch", {
-          childId: targetId,
-          useSpeDate,
-          before: {
-            weekChildrenLength: prevWeekChildren.length,
-            waitingChildrenLength: prevWaitingChildren.length,
-            experienceChildrenLength: prevExperienceChildren.length,
-          },
-          after: {
-            weekChildrenLength: nextWeekChildren.length,
-            waitingChildrenLength: nextWaitingChildren.length,
-            experienceChildrenLength: nextExperienceChildren.length,
-          },
-        })
+        void 0
 
         return {
           ...safePrev,

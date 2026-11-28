@@ -10,7 +10,7 @@ function main() {
     const staffId = 73;
     const dayOfWeekId = 6;
 
-    console.log("better-sqlite3 query executing...");
+    void 0;
 
     const sql = `
       SELECT
@@ -32,7 +32,7 @@ function main() {
     const stmt = db.prepare(sql);
     const result = stmt.all(staffId, dayOfWeekId);
 
-    console.log("result:", JSON.stringify(result, null, 2));
+    void 0;
 
     db.close();
   } catch (err) {

@@ -47,11 +47,7 @@ export async function clickExitButton(column6Html, targetChildrenId, opts = {}) 
       const choice = Number(opts.mailDialogChoice) === 1 ? 1 : 0;
       const result = await clickHugMailDialogChoice(webview, choice);
 
-      console.log("[Attendance MailDialog] Renderer選択をHUGへ反映", {
-        action: "退室",
-        choice,
-        result,
-      });
+      void 0;
 
       let refreshResult = null;
       if (!opts.skipRefresh) {
@@ -82,10 +78,7 @@ export async function clickExitButton(column6Html, targetChildrenId, opts = {}) 
     if (opts.mailDialogAction === "cancel") {
       const webview = await getHugWebviewForCache();
       const result = await cancelHugMailDialog(webview);
-      console.log("[Attendance MailDialog] RendererキャンセルをHUGへ反映", {
-        action: "退室",
-        result,
-      });
+      void 0;
       return { success: true, cancelled: true, ...result };
     }
 
@@ -94,13 +87,7 @@ export async function clickExitButton(column6Html, targetChildrenId, opts = {}) 
     const dateStr =
       opts.dateStr || state?.CURRENT_YMD || new Date().toISOString().slice(0, 10);
 
-    console.log("[clickExitButton] 退室処理開始", {
-      targetChildrenId,
-      facilityId,
-      dateStr,
-      column6Html,
-      opts,
-    });
+    void 0;
 
     const resolved = await resolveAttendanceRowItem({
       facilityId,
@@ -135,13 +122,7 @@ export async function clickExitButton(column6Html, targetChildrenId, opts = {}) 
         childId: targetChildrenId,
       });
 
-      console.log("[clickExitButton] onclick再取得結果", {
-        ok: fetched?.ok,
-        error: fetched?.error,
-        fetchedItem: fetched?.item,
-        leaveOnclick: fetched?.item?.leaveOnclick,
-        extractedRId: fetched?.item?.r_id,
-      });
+      void 0;
 
       if (fetched?.ok && fetched?.item) {
         item = {
@@ -155,13 +136,7 @@ export async function clickExitButton(column6Html, targetChildrenId, opts = {}) 
       }
     }
 
-    console.log("[clickExitButton] 解決した退室対象 item", {
-      item,
-      resolvedWebview: Boolean(resolvedWebview),
-      r_id: item?.r_id,
-      c_id: item?.c_id,
-      leaveOnclick: item?.leaveOnclick,
-    });
+    void 0;
 
     if (!item) {
       throw new Error("退室対象データを作成できませんでした");

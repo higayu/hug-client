@@ -38,9 +38,7 @@ export function useUpdateUI() {
   const checkForUpdates =
     useCallback(async () => {
       try {
-        console.log(
-          '[Update] 起動時アップデート確認開始',
-        )
+        void 0
 
         if (
           typeof window.electronAPI
@@ -58,10 +56,7 @@ export function useUpdateUI() {
           await window.electronAPI
             .checkForUpdates()
 
-        console.log(
-          '[Update] 起動時アップデート確認結果:',
-          result,
-        )
+        void 0
 
         if (!result?.success) {
           console.warn(
@@ -79,16 +74,7 @@ export function useUpdateUI() {
         if (
           !result.update_available
         ) {
-          console.log(
-            '[Update] 現在のアプリは最新版です。',
-            {
-              currentVersion:
-                result.current_version,
-
-              latestVersion:
-                result.latest_version,
-            },
-          )
+          void 0
 
           return
         }
@@ -96,22 +82,7 @@ export function useUpdateUI() {
         /*
          * 新しいバージョンあり
          */
-        console.log(
-          '[Update] 新しいバージョンがあります。',
-          {
-            currentVersion:
-              result.current_version,
-
-            latestVersion:
-              result.latest_version,
-
-            forceUpdate:
-              result.force_update,
-
-            updateRequired:
-              result.update_required,
-          },
-        )
+        void 0
 
         setUpdateInfo(result)
 
@@ -157,9 +128,7 @@ export function useUpdateUI() {
         setDownloadProgress(0)
         setIsDownloading(true)
 
-        console.log(
-          '[Update] 最新版ダウンロード開始',
-        )
+        void 0
 
         if (
           typeof window.electronAPI
@@ -175,10 +144,7 @@ export function useUpdateUI() {
           await window.electronAPI
             .downloadLatestUpdate()
 
-        console.log(
-          '[Update] ダウンロード結果:',
-          downloadResult,
-        )
+        void 0
 
         if (
           !downloadResult?.success
@@ -191,9 +157,7 @@ export function useUpdateUI() {
 
         setDownloadProgress(100)
 
-        console.log(
-          '[Update] ダウンロード完了',
-        )
+        void 0
 
         /*
          * ダウンロードした
@@ -209,18 +173,13 @@ export function useUpdateUI() {
           )
         }
 
-        console.log(
-          '[Update] インストーラー起動',
-        )
+        void 0
 
         const installResult =
           await window.electronAPI
             .installDownloadedUpdate()
 
-        console.log(
-          '[Update] インストーラー起動結果:',
-          installResult,
-        )
+        void 0
 
         if (
           !installResult?.success
@@ -266,10 +225,7 @@ export function useUpdateUI() {
       window.electronAPI
         .onUpdateDownloadProgress(
           (progress) => {
-            console.log(
-              '[Update] download progress:',
-              progress,
-            )
+            void 0
 
             /*
              * main側の返却形式に対応

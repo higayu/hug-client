@@ -4,6 +4,7 @@ const fs = require("fs");
 const { resolvePreloadPath } = require("./windowManager");
 
 let informationWindow = null;
+let applicationWindow = null;
 
 function isDevelopmentMode() {
   const hasProdFlag =
@@ -73,7 +74,8 @@ async function openInformationWindow() {
   return true;
 }
 
-function registerInformationWindow(ipcMain) {
+function registerInformationWindow(ipcMain, mainWindow = null) {
+  applicationWindow = mainWindow;
   try {
     ipcMain.removeHandler("open-information-window");
   } catch (_) {}
@@ -88,6 +90,44 @@ function registerInformationWindow(ipcMain) {
         success: false,
         error: error?.message || String(error),
       };
+    }
+  });
+
+  for (const channel of ["inquiry:get-app-version", "inquiry:capture-screen"]) {
+    try { ipcMain.removeHandler(channel); } catch (_) {}
+  }
+
+  ipcMain.handle("inquiry:get-app-version", () => app.getVersion());
+
+  ipcMain.handle("inquiry:capture-screen", async (event) => {
+    const dialogWindow = BrowserWindow.fromWebContents(event.sender);
+    if (!dialogWindow || dialogWindow !== informationWindow) {
+      return { success: false, message: "この画面からは撮影できません。" };
+    }
+    const targetWindow = applicationWindow && !applicationWindow.isDestroyed()
+      ? applicationWindow
+      : BrowserWindow.getAllWindows().find((win) => win !== dialogWindow && !win.isDestroyed());
+
+    if (!targetWindow) {
+      return { success: false, message: "撮影するアプリ画面が見つかりません。" };
+    }
+
+    try {
+      dialogWindow.hide();
+      const image = await targetWindow.webContents.capturePage();
+      return {
+        success: true,
+        name: `hug-client-${Date.now()}.png`,
+        type: "image/png",
+        bytes: image.toPNG(),
+      };
+    } catch (error) {
+      return { success: false, message: error?.message || "アプリ画面の撮影に失敗しました。" };
+    } finally {
+      if (!dialogWindow.isDestroyed()) {
+        dialogWindow.show();
+        dialogWindow.focus();
+      }
     }
   });
 }

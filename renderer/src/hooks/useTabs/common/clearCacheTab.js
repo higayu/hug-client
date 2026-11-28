@@ -22,7 +22,7 @@ export async function clearActiveWebviewCache() {
     const result = await window.electronAPI.clearWebviewCache(wcId);
 
     if (result) {
-      console.log("🧹 WebView cache cleared:", activeView.id);
+      void 0;
       return true;
     } else {
       console.warn("⚠ キャッシュ削除に失敗しました");

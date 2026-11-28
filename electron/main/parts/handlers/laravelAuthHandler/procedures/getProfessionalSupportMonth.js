@@ -15,11 +15,7 @@ const { formatError, unwrapData } = require("../auth/utils");
  * }
  */
 async function getProfessionalSupportMonth(payload = {}) {
-  console.log("📥 [Laravel Procedure] getProfessionalSupportMonth:", {
-    facilityId: payload?.facilityId,
-    year: payload?.year,
-    month: payload?.month,
-  });
+  void 0;
 
   const result = await executeAuthenticatedOperation(
     () =>
@@ -59,10 +55,7 @@ const handler = async (_event, payload = {}) => {
           ? result.data.data.length
           : undefined;
 
-      console.log(
-        "✅ [Laravel Procedure] getProfessionalSupportMonth DONE:",
-        { count },
-      );
+      void 0;
     } else {
       console.error(
         "❌ [Laravel Procedure] getProfessionalSupportMonth failed:",

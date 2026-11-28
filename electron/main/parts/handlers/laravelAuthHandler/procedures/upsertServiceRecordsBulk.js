@@ -54,15 +54,7 @@ async function upsertServiceRecordsBulk(payload = {}) {
       : null,
   };
 
-  console.log("📤 [Laravel Procedure] upsertServiceRecordsBulk:", {
-    recordCount: records.length,
-    recorded_staff_id: normalizedPayload.recorded_staff_id,
-    updated_staff_id: normalizedPayload.updated_staff_id,
-    save_sync_history: normalizedPayload.save_sync_history,
-    sync_facility_id: normalizedPayload.sync_facility_id,
-    target_year: normalizedPayload.target_year,
-    target_month: normalizedPayload.target_month,
-  });
+  void 0;
 
   const result = await executeAuthenticatedOperation(
     () =>
@@ -96,10 +88,7 @@ const handler = async (_event, payload = {}) => {
     const result = await upsertServiceRecordsBulk(payload);
 
     if (result?.success) {
-      console.log(
-        "✅ [Laravel Procedure] upsertServiceRecordsBulk DONE:",
-        result.data,
-      );
+      void 0;
     } else {
       console.error(
         "❌ [Laravel Procedure] upsertServiceRecordsBulk failed:",

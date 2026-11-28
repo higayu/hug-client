@@ -2,17 +2,17 @@
 
 ```bash
   const clickEnterButton = async () => {
-    console.log("① clickEnterButton 開始");
+    false && ("① clickEnterButton 開始");
 
     const vw = getActiveWebview();
-    console.log("② webview取得", vw);
+    false && ("② webview取得", vw);
 
     if (!vw) {
       console.warn("❌ webview が取得できない");
       return;
     }
 
-    console.log("③ webview isLoading:", vw.isLoading?.());
+    false && ("③ webview isLoading:", vw.isLoading?.());
 
     // WebView ready 待ち
   await vw.executeJavaScript(`
@@ -39,7 +39,7 @@
       document.execCommand("insertText", false, text);
 
       editor.dispatchEvent(new Event("input", { bubbles: true }));
-      console.log("✅ editor input injected");
+      false && ("✅ editor input injected");
     };
 
     return new Promise((resolve) => {
@@ -49,7 +49,7 @@
         return resolve(true);
       }
 
-      console.log("⏳ editor not found, waiting...");
+      false && ("⏳ editor not found, waiting...");
 
       const observer = new MutationObserver(() => {
         const ed = findEditor();
@@ -75,7 +75,7 @@
   `);
 
 
-    console.log("⑥ executeJavaScript 呼び出し直前");
+    false && ("⑥ executeJavaScript 呼び出し直前");
 
     let success;
     try {
@@ -85,17 +85,17 @@
       return;
     }
 
-    console.log("⑦ executeJavaScript 完了:", success);
+    false && ("⑦ executeJavaScript 完了:", success);
   };
 ```
 
 # 改行を追加
 ```bash
   const clickEnterButton = async () => {
-    console.log("① clickEnterButton 開始");
+    false && ("① clickEnterButton 開始");
 
     const vw = getActiveWebview();
-    console.log("② webview取得", vw);
+    false && ("② webview取得", vw);
 
     if (!vw) {
       console.warn("❌ webview が取得できない");
@@ -106,7 +106,7 @@
       return;
     }
 
-    console.log("③ webview isLoading:", vw.isLoading?.());
+    false && ("③ webview isLoading:", vw.isLoading?.());
 
     const TextValue = `${text1}\n\n${aiText}`;
 
@@ -136,7 +136,7 @@
       document.execCommand("insertText", false, text);
 
       editor.dispatchEvent(new Event("input", { bubbles: true }));
-      console.log("✅ editor input injected");
+      false && ("✅ editor input injected");
     };
 
     return new Promise((resolve) => {
@@ -146,7 +146,7 @@
         return resolve(true);
       }
 
-      console.log("⏳ editor not found, waiting...");
+      false && ("⏳ editor not found, waiting...");
 
       const observer = new MutationObserver(() => {
         const ed = findEditor();
@@ -172,7 +172,7 @@
   `);
 
 
-    console.log("⑥ executeJavaScript 呼び出し直前");
+    false && ("⑥ executeJavaScript 呼び出し直前");
 
     let success;
     try {
@@ -182,17 +182,17 @@
       return;
     }
 
-    console.log("⑦ executeJavaScript 完了:", success);
+    false && ("⑦ executeJavaScript 完了:", success);
   };
 ```
 
 # クリック追加バージョン
 ```bash
   const clickEnterButton = async () => {
-    console.log("① clickEnterButton 開始");
+    false && ("① clickEnterButton 開始");
 
     const vw = getActiveWebview();
-    console.log("② webview取得", vw);
+    false && ("② webview取得", vw);
 
     if (!vw) {
       console.warn("❌ webview が取得できない");
@@ -204,7 +204,7 @@
       return;
     }
 
-    console.log("③ webview isLoading:", vw.isLoading?.());
+    false && ("③ webview isLoading:", vw.isLoading?.());
 
     const TextValue = `${text1}\n\n${aiText}`;
 
@@ -244,7 +244,7 @@
             const btn = findButton();
             if (btn && !btn.disabled) {
               btn.click();
-              console.log("🚀 send button clicked");
+              false && ("🚀 send button clicked");
             } else {
               console.warn("❌ send button not ready");
             }
@@ -283,7 +283,7 @@
 
 
 
-    console.log("⑥ executeJavaScript 呼び出し直前");
+    false && ("⑥ executeJavaScript 呼び出し直前");
 
     let success;
     try {
@@ -293,6 +293,6 @@
       return;
     }
 
-    console.log("⑦ executeJavaScript 完了:", success);
+    false && ("⑦ executeJavaScript 完了:", success);
   };
 ```

@@ -155,13 +155,13 @@ function ConfirmModal({ show, message, list = [], onConfirm, onCancel }) {
   const initializedForOpenRef = useRef(false);
 
   useEffect(() => {
-    console.log("職員ID", STAFF_ID);
-    console.log("施設ID 初期値 FACILITY_ID", FACILITY_ID);
-    console.log("曜日ID", weekdayId);
-    console.log("day_of_week マスタ", database?.day_of_week);
-    console.log("facilitys データ", facilityOptions);
-    console.log("managers データ", database?.managers);
-    console.log("managers2 データ", database?.managers2);
+    void 0;
+    void 0;
+    void 0;
+    void 0;
+    void 0;
+    void 0;
+    void 0;
   }, [database, STAFF_ID, FACILITY_ID, weekdayId, facilityOptions]);
 
   /**
@@ -210,7 +210,7 @@ function ConfirmModal({ show, message, list = [], onConfirm, onCancel }) {
       };
     });
 
-    console.log("🧩 ConfirmModal 初期 selectedValues:", initialValues);
+    void 0;
 
     initializedForOpenRef.current = true;
     setSelectedValues(initialValues);
@@ -221,12 +221,7 @@ function ConfirmModal({ show, message, list = [], onConfirm, onCancel }) {
   const handleSelectChange = (childrenId, key, value) => {
     const id = String(childrenId);
 
-    console.log("🔁 select変更:", {
-      childrenId,
-      id,
-      key,
-      value,
-    });
+    void 0;
 
     setSubmitError("");
     setSelectedValues((prev) => ({
@@ -368,7 +363,7 @@ function ConfirmModal({ show, message, list = [], onConfirm, onCancel }) {
       };
     });
 
-    console.log("送信データ(updatedList):", updatedList);
+    void 0;
     setIsSubmitting(true);
     try {
       const succeeded = await onConfirm(updatedList);

@@ -101,126 +101,43 @@ export default function AttendanceActionSection({
       "[AttendanceActionSection] 入退室ボタン表示判定",
     )
 
-    console.log(
-      "childId:",
-      childId,
-    )
+    void 0
 
-    console.log(
-      "childName:",
-      childName,
-    )
+    void 0
 
-    console.log(
-      "dateStr:",
-      dateStr,
-    )
+    void 0
 
-    console.log(
-      "column5:",
-      column5,
-    )
+    void 0
 
-    console.log(
-      "column5Html:",
-      column5Html,
-    )
+    void 0
 
-    console.log(
-      "column6:",
-      column6,
-    )
+    void 0
 
-    console.log(
-      "column6Html:",
-      column6Html,
-    )
+    void 0
 
-    console.log(
-      "isAbsent:",
-      isAbsent,
-    )
+    void 0
 
-    console.log(
-      "hasEntered:",
-      hasEntered,
-    )
+    void 0
 
-    console.log(
-      "hasExited:",
-      hasExited,
-    )
+    void 0
 
-    console.log(
-      "isUIEnabled:",
-      isUIEnabled,
-    )
+    void 0
 
-    console.log(
-      "isStop:",
-      isStop,
-    )
+    void 0
 
-    console.log(
-      "isDeveloperMode:",
-      isDeveloperMode,
-    )
+    void 0
 
-    console.log(
-      "loadingAction:",
-      loadingAction,
-    )
+    void 0
 
-    console.log(
-      "disabled:",
-      disabled,
-    )
+    void 0
 
-    console.log(
-      "canPostEnter(column5Html):",
-      showEnter,
-    )
+    void 0
 
-    console.log(
-      "canPostLeave(column6Html, column5):",
-      showLeave,
-    )
+    void 0
 
-    console.log(
-      "afternoonBlocked:",
-      afternoonBlocked,
-    )
+    void 0
 
-    console.log(
-      "表示結果:",
-      {
-        absenceBadge:
-          isAbsent,
-
-        enterTimeView:
-          hasEntered,
-
-        leaveTimeView:
-          hasEntered &&
-          hasExited,
-
-        showEnterButton:
-          !isAbsent &&
-          !hasEntered &&
-          showEnter,
-
-        showLeaveButton:
-          !isAbsent &&
-          hasEntered &&
-          showLeave,
-
-        showAbsenceButton:
-          !isAbsent &&
-          !hasEntered &&
-          isDeveloperMode,
-
-      },
-    )
+    void 0
 
     console.groupEnd()
   }, [

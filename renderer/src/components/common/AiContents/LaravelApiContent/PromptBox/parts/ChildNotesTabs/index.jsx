@@ -33,6 +33,9 @@ export default function ChildNotesTabs({
   defaultTab = "notes",
   displayMode = "tabs", // "single" | "tabs"
   noteKey, // single時: "notes" | "notes2" | "notes3"
+  isExpanded,
+  defaultExpanded = false,
+  onExpandedChange,
 }) {
   const appState = useAppState();
   const { loadDataBase } = useDataBase();
@@ -52,6 +55,16 @@ export default function ChildNotesTabs({
   const activeTab = isSingle
     ? normalizeKey(noteKey ?? defaultTab)
     : selectedTab;
+
+  const [expandedByTab, setExpandedByTab] = useState({});
+  const expanded = isExpanded ?? expandedByTab[activeTab] ?? defaultExpanded;
+
+  function handleExpandedChange(next) {
+    if (isExpanded == null) {
+      setExpandedByTab((previous) => ({ ...previous, [activeTab]: next }));
+    }
+    onExpandedChange?.(next, activeTab);
+  }
 
   // タブ表示で defaultTab を親から変更した場合にも追従する。
   useEffect(() => {
@@ -175,20 +188,7 @@ export default function ChildNotesTabs({
   // DEBUG
   // =============================================================
   useEffect(() => {
-    console.log(`[${DBG}]`, {
-      selectedChildId,
-      activeTab,
-      found: Boolean(selectedChild),
-      childId:
-        selectedChild?.id ??
-        selectedChild?.children_id ??
-        null,
-      childName:
-        selectedChild?.name ??
-        null,
-      notesLength:
-        activeNotes.length,
-    });
+    void 0;
   }, [
     selectedChildId,
     activeTab,
@@ -262,6 +262,8 @@ export default function ChildNotesTabs({
           type={activeTab === "notes" ? "individual" : "professional"}
           notes={activeNotes}
           emptyText={emptyText}
+          isExpanded={expanded}
+          onExpandedChange={handleExpandedChange}
         />
       ) : (
         <ChildNotes notes={activeNotes} emptyText={emptyText} />

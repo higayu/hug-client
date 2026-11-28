@@ -11,6 +11,7 @@ const aiRecordEditer = require("./aiRecordEditer");
 const healthAnalysis = require("./healthAnalysis");
 const webAutomationV2 = require("./webAutomationV2");
 const troubleshootingKnowledge = require("./troubleshootingKnowledge");
+const inquiries = require("./inquiries");
 const personalRecordSyncs = require("./personalRecordSyncs");
 const recordTypes = require("./recordTypes");
 const laravelApiClient = require("../../../../../src/laravelApiClient");
@@ -102,6 +103,7 @@ const IPC_CHANNELS = [
   "laravel:troubleshooting-knowledge:list",
   "laravel:troubleshooting-knowledge:get",
   "laravel:troubleshooting-knowledge:update",
+  "laravel:inquiries:store",
 
   // 個人記録一括同期履歴
   "laravel:personal-record-syncs:get-month",
@@ -137,27 +139,13 @@ function createFetchTableAllHandler(
     params = {}
   ) => {
     try {
-      console.log(
-        "🔄 [Laravel API] fetchTableAll START"
-      );
+      void 0;
 
       const result =
         await fetchAllTables(params);
 
       if (result?.success) {
-        console.log(
-          "✅ [Laravel API] fetchTableAll DONE:",
-          {
-            tableCount:
-              result.meta?.tableCount ??
-              0,
-
-            reauthenticated:
-              result.meta
-                ?.reauthenticated ??
-              false,
-          }
-        );
+        void 0;
       } else {
         console.error(
           "❌ [Laravel API] fetchTableAll failed:",
@@ -566,14 +554,13 @@ function registerLaravelAuthHandlers(
     troubleshootingKnowledge.updateHandler
   );
 
+  ipcMain.handle("laravel:inquiries:store", inquiries.storeHandler);
+
   ipcMain.handle("laravel:ai-prompt-histories:list", promptHistories.listHandler);
   ipcMain.handle("laravel:ai-prompt-histories:show", promptHistories.showHandler);
   ipcMain.handle("laravel:ai-prompt-histories:restore", promptHistories.restoreHandler);
 
-  console.log(
-    "✅ [registerLaravelAuthHandlers] Laravel IPC registered:",
-    IPC_CHANNELS
-  );
+  void 0;
 }
 
 module.exports = {

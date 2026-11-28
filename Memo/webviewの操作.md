@@ -21,7 +21,7 @@ import { getActiveWebview } from '@/utils/webviewState.js'
 import { createWebview, createTabButton, activateTab, closeTab } from '../common/index.js'
 
 export function addNormalTabAction(appState) {
-  console.log('🔍 [useTabs] ＋ボタンがクリックされました')
+  false && ('🔍 [useTabs] ＋ボタンがクリックされました')
 
   const tabsContainer = document.getElementById('tabs')
   const webviewContainer = document.getElementById('webview-container')
@@ -73,5 +73,5 @@ import { getActiveWebview } from '@/utils/webviewState.js'
 
   const vw = getActiveWebview()
   const url = vw && typeof vw.getURL === 'function' ? vw.getURL() : ''
-  console.log('URLの値',url);
+  false && ('URLの値',url);
 ```

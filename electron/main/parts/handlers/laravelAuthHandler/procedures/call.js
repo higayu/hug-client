@@ -5,7 +5,7 @@ const { executeAuthenticatedOperation } = require("../auth/authenticated");  // 
 const { formatError, unwrapData } = require("../auth/utils");
 
 async function callProcedure(procedureName, params = []) {
-  console.log("📤 [Laravel Procedure] call:", { procedure: procedureName, params });
+  void 0;
 
   const result = await executeAuthenticatedOperation(
     () => laravelApiClient.callProcedure(procedureName, params),
@@ -32,15 +32,12 @@ async function callProcedure(procedureName, params = []) {
 
 const handler = async (_event, procedureName, params = []) => {
   try {
-    console.log("📤 [Laravel Procedure] IPC call:", { procedure: procedureName, params });
+    void 0;
 
     const result = await callProcedure(procedureName, params);
 
     if (result.success) {
-      console.log("✅ [Laravel Procedure] call DONE:", {
-        procedure: procedureName,
-        data: result.data,
-      });
+      void 0;
     } else {
       console.error("❌ [Laravel Procedure] call failed:", result);
     }

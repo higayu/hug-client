@@ -33,16 +33,7 @@ export default function LeaveButton({
   const inFlightRef = useRef(false)
 
   const executeLeave = useCallback(async (mailFlg = 0) => {
-    console.log('[LeaveButton] 退室処理を実行', {
-      childId,
-      childName,
-      recordId,
-      rowSelector,
-      dateStr,
-      hasMail,
-      mailFlg,
-      hasOnLeave: typeof onLeave === 'function',
-    })
+    void 0
 
     return handleLeaveClick({
       onLeave,
@@ -56,16 +47,7 @@ export default function LeaveButton({
   }, [onLeave, childId, childName, recordId, rowSelector, dateStr, hasMail])
 
   const onClick = useCallback(() => {
-    console.log('[LeaveButton] renderer click', {
-      childId,
-      childName,
-      recordId,
-      rowSelector,
-      dateStr,
-      hasMail,
-      disabled,
-      loading,
-    })
+    void 0
 
     if (inFlightRef.current || disabled || loading || mailModalOpen) return undefined
 
@@ -94,15 +76,11 @@ export default function LeaveButton({
 
     setMailModalLoading(true)
     try {
-      console.log('[LeaveButton] Rendererメール選択 → HUG退室ボタン実行', {
-        mailFlg,
-        childId,
-        recordId,
-      })
+      void 0
 
       const result = await executeLeave(mailFlg)
 
-      console.log('[LeaveButton] 退室メール選択反映結果', result)
+      void 0
 
       if (result?.success !== false) {
         setMailModalOpen(false)

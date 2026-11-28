@@ -26,14 +26,7 @@ async function fetchTempNote(payload = {}) {
     params,
   } = buildTempNoteSearch(payload);
 
-  console.log(
-    "📥 [Laravel TempNote] get request:",
-    {
-      key,
-      path: "/temp_notes/_search",
-      params,
-    }
-  );
+  void 0;
 
   const result =
     await executeAuthenticatedOperation(
@@ -80,27 +73,13 @@ const handler = async (
   payload = {}
 ) => {
   try {
-    console.log(
-      "📝 [Laravel TempNote] IPC get:",
-      payload
-    );
+    void 0;
 
     const result =
       await fetchTempNote(payload);
 
     if (result.success) {
-      console.log(
-        "✅ [Laravel TempNote] get DONE:",
-        {
-          found:
-            result.meta?.found ??
-            Boolean(result.data),
-          data: result.data,
-          reauthenticated:
-            result.meta?.reauthenticated ??
-            false,
-        }
-      );
+      void 0;
     } else {
       console.error(
         "❌ [Laravel TempNote] get failed:",

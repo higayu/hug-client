@@ -14,7 +14,7 @@ export const sqliteApi = {
         return null;
       }
 
-      console.log("🔍 electronAPI keys:", Object.keys(window.electronAPI));
+      void 0;
 
       const timerName = `⌛ DB全テーブル取得時間_${uid}`;
       console.time(timerName);
@@ -51,36 +51,10 @@ export const sqliteApi = {
       console.timeEnd(timerName);
 
       // ===== 取得件数ログ =====
-      console.log("📊 取得件数:", {
-        children: children?.length ?? 0,
-        staffs: staffs?.length ?? 0,
-        managers2: managers2?.length ?? 0,
-        facility_children: facility_children?.length ?? 0,
-        facility_staff: facility_staff?.length ?? 0,
-        facilitys: facilitys?.length ?? 0,
-        pc: pc?.length ?? 0,
-        pc_to_children: pc_to_children?.length ?? 0,
-        pronunciation: pronunciation?.length ?? 0,
-        children_type: children_type?.length ?? 0,
-        day_of_week: day_of_week?.length ?? 0,
-        service_record: service_record?.length ?? 0,
-      });
+      void 0;
 
       // ===== 取得データログ =====
-      console.log("📋 取得データ:", {
-        children,
-        staffs,
-        managers2,
-        facility_children,
-        facility_staff,
-        facilitys,
-        pc,
-        pc_to_children,
-        pronunciation,
-        children_type,
-        day_of_week,
-        service_record,
-      });
+      void 0;
 
       console.groupEnd();
 

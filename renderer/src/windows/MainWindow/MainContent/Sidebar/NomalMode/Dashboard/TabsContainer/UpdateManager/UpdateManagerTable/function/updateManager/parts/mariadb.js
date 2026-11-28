@@ -33,8 +33,8 @@ const toNumberOrNull = (value) => {
 };
 
 export async function handleMariaDBUpdate(payload) {
-  console.log("====== MariaDB: handleMariaDBUpdate START ======");
-  console.log("[handleMariaDBUpdate] 処理する担当:", payload);
+  void 0;
+  void 0;
 
   try {
     if (!payload || typeof payload !== "object") {
@@ -119,31 +119,9 @@ export async function handleMariaDBUpdate(payload) {
       support_end_time: resolvedSupportEndTime,
     };
 
-    console.log("[handleMariaDBUpdate] UPDATE args:", request);
+    void 0;
 
-    console.log(
-      "[handleMariaDBUpdate] SQL preview:",
-      `
-      UPDATE managers2
-      SET
-        priority = ${data.priority},
-        support_start_time = ${
-          data.support_start_time == null
-            ? "NULL"
-            : `'${data.support_start_time}'`
-        },
-        support_end_time = ${
-          data.support_end_time == null
-            ? "NULL"
-            : `'${data.support_end_time}'`
-        }
-      WHERE
-        facility_id = ${values[0]}
-        AND children_id = ${values[1]}
-        AND staff_id = ${values[2]}
-        AND day_of_week_id = ${values[3]};
-      `
-    );
+    void 0;
 
     if (typeof window.electronAPI?.mariadb_managers2_update !== "function") {
       console.error(
@@ -155,7 +133,7 @@ export async function handleMariaDBUpdate(payload) {
 
     const result = await window.electronAPI.mariadb_managers2_update(request);
 
-    console.log("[handleMariaDBUpdate] managers2_update result:", result);
+    void 0;
 
     if (result === false) {
       console.error("❌ MariaDB: managers2_update が false を返しました");
@@ -167,12 +145,12 @@ export async function handleMariaDBUpdate(payload) {
       return false;
     }
 
-    console.log("✅ MariaDB: managers2_update 成功");
+    void 0;
     return true;
   } catch (error) {
     console.error("❌ MariaDB: managers2_update エラー:", error);
     return false;
   } finally {
-    console.log("====== MariaDB: handleMariaDBUpdate END ======");
+    void 0;
   }
 }

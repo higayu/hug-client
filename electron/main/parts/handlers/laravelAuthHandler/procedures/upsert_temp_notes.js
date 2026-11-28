@@ -183,14 +183,7 @@ async function upsertTempNotes(
   const params =
     buildProcedureParams(payload);
 
-  console.log(
-    "📤 [Laravel Procedure] upsertTempNotes:",
-    {
-      procedure: PROCEDURE_NAME,
-      payload,
-      params,
-    },
-  );
+  void 0;
 
   const result =
     await callProcedure(
@@ -251,15 +244,7 @@ function createHandler(
     };
 
     try {
-      console.log(
-        "📤 [Laravel Procedure] IPC upsertTempNotes:",
-        {
-          mode:
-            normalizedPayload.mode,
-          payload:
-            normalizedPayload,
-        },
-      );
+      void 0;
 
       const result =
         await upsertTempNotes(
@@ -267,19 +252,7 @@ function createHandler(
         );
 
       if (result.success) {
-        console.log(
-          "✅ [Laravel Procedure] upsertTempNotes DONE:",
-          {
-            mode:
-              result.meta?.mode,
-            data:
-              result.data,
-            reauthenticated:
-              result.meta
-                ?.reauthenticated ??
-              false,
-          },
-        );
+        void 0;
       } else {
         console.error(
           "❌ [Laravel Procedure] upsertTempNotes failed:",

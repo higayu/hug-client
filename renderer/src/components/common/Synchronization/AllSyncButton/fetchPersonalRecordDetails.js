@@ -232,7 +232,7 @@ export async function fetchPersonalRecordDetails(
               HUG_WM_BASE_URL
             ).href;
 
-          console.log(
+          false && (
             "[HUG WM] 個人記録 編集画面fetch開始:",
             editUrl
           );
@@ -359,7 +359,7 @@ export async function fetchPersonalRecordDetails(
               ).trim();
           }
 
-          console.log(
+          false && (
             "[HUG WM] 個人記録 詳細取得:",
             {
               editUrl,
@@ -453,7 +453,7 @@ export async function fetchPersonalRecordDetails(
               ""
           });
 
-          console.log(
+          false && (
             "[HUG WM] 個人記録 詳細取得成功:",
             {
               index:
@@ -652,10 +652,7 @@ export async function fetchPersonalRecordDetails(
         },
       )
 
-    console.log(
-      '[HUG WM] 個人記録 詳細取得後 records:',
-      mergedRecords,
-    )
+    void 0
 
     return {
       ...detailResult,

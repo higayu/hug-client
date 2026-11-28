@@ -152,21 +152,7 @@ export async function initializeAppState({
       merged.VITE_API_BASE_URL = apiSettings.baseURL || "";
     }
 
-    console.log("🧾 [initializeAppState] apiSettings normalized:", {
-      rawDatabaseType: apiSettings.databaseType,
-      databaseType,
-
-      rawUseAI: apiSettings.useAI,
-      useAI: merged.USE_AI,
-
-      rawFacilityId: apiSettings.facilityId,
-      FACILITY_ID: merged.FACILITY_ID,
-
-      rawDebugFlg: apiSettings.debugFlg,
-      DEBUG_FLG: merged.DEBUG_FLG,
-
-      CURRENT_DAY_OF_WEEK: merged.CURRENT_DAY_OF_WEEK,
-    });
+    void 0;
 
     // =============================================================
     // 4) Redux 反映
@@ -181,12 +167,7 @@ export async function initializeAppState({
     // =============================================================
     setIsInitialized(true);
 
-    console.log("✅ [initializeAppState] 初期化完了:", {
-      DATABASE_TYPE: merged.DATABASE_TYPE,
-      STAFF_ID: merged.STAFF_ID,
-      FACILITY_ID: merged.FACILITY_ID,
-      CURRENT_DAY_OF_WEEK: merged.CURRENT_DAY_OF_WEEK,
-    });
+    void 0;
 
     console.groupEnd();
 

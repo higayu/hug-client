@@ -33,8 +33,8 @@ const toNumberOrNull = (value) => {
 };
 
 export async function handleLaravelUpdate(payload) {
-  console.log("====== laravel: handleLaravel APIUpdate START ======");
-  console.log("[handleLaravel APIUpdate] 処理する担当:", payload);
+  void 0;
+  void 0;
 
   try {
     if (!payload || typeof payload !== "object") {
@@ -106,12 +106,12 @@ export async function handleLaravelUpdate(payload) {
       support_end_time: resolvedSupportEndTime,
     };
 
-    console.log("[handleLaravel APIUpdate] UPDATE args:", request);
+    void 0;
 
     // ★ 修正: 新しいAPIを呼び出し
     const result = await window.electronAPI.laravel_procedure_upsertManagers2(request);
 
-    console.log("[handleLaravel APIUpdate] upsertManagers2 result:", result);
+    void 0;
 
     if (result === false) {
       console.error("❌ laravel: upsertManagers2 が false を返しました");
@@ -123,12 +123,12 @@ export async function handleLaravelUpdate(payload) {
       return false;
     }
 
-    console.log("✅ laravel: upsertManagers2 成功");
+    void 0;
     return true;
   } catch (error) {
     console.error("❌ laravel: upsertManagers2 エラー:", error);
     return false;
   } finally {
-    console.log("====== laravel: handleLaravel APIUpdate END ======");
+    void 0;
   }
 }

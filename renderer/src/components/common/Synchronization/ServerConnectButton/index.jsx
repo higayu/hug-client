@@ -97,9 +97,7 @@ const ServerConnectButton = ({
   };
 
   const handleCheckConnection = async () => {
-    console.log("[ServerConnectButton] connection check start:", {
-      databaseType,
-    });
+    void 0;
 
     setChecking(true);
     setResult(null);

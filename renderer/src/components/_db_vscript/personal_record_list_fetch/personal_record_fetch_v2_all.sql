@@ -2917,7 +2917,7 @@ async function fetchPersonalRecordDetailsLegacy(
               HUG_WM_BASE_URL
             ).href;
 
-          console.log(
+          false && (
             "[HUG WM] 個人記録 編集画面fetch開始:",
             editUrl
           );
@@ -3044,7 +3044,7 @@ async function fetchPersonalRecordDetailsLegacy(
               ).trim();
           }
 
-          console.log(
+          false && (
             "[HUG WM] 個人記録 詳細取得:",
             {
               editUrl,
@@ -3138,7 +3138,7 @@ async function fetchPersonalRecordDetailsLegacy(
               ""
           });
 
-          console.log(
+          false && (
             "[HUG WM] 個人記録 詳細取得成功:",
             {
               index:
@@ -3337,7 +3337,7 @@ async function fetchPersonalRecordDetailsLegacy(
         },
       )
 
-    console.log(
+    false && (
       ''[HUG WM] 個人記録 詳細取得後 records:'',
       mergedRecords,
     )
@@ -3620,7 +3620,7 @@ async function fetchPersonalRecordDetailsLegacy(
               HUG_WM_BASE_URL
             ).href;
 
-          console.log(
+          false && (
             "[HUG WM] 個人記録 編集画面fetch開始:",
             editUrl
           );
@@ -3747,7 +3747,7 @@ async function fetchPersonalRecordDetailsLegacy(
               ).trim();
           }
 
-          console.log(
+          false && (
             "[HUG WM] 個人記録 詳細取得:",
             {
               editUrl,
@@ -3841,7 +3841,7 @@ async function fetchPersonalRecordDetailsLegacy(
               ""
           });
 
-          console.log(
+          false && (
             "[HUG WM] 個人記録 詳細取得成功:",
             {
               index:
@@ -4040,7 +4040,7 @@ async function fetchPersonalRecordDetailsLegacy(
         },
       )
 
-    console.log(
+    false && (
       ''[HUG WM] 個人記録 詳細取得後 records:'',
       mergedRecords,
     )

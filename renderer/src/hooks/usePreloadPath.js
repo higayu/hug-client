@@ -9,7 +9,7 @@ export function usePreloadPath() {
         const path = await window.electronAPI?.getPreloadPath?.()
         if (path) {
           setPreloadPath(path)
-          console.log('✅ [usePreloadPath] preloadパスを取得:', path)
+          void 0
         } else {
           console.warn('⚠️ [usePreloadPath] preloadパスが取得できませんでした')
         }

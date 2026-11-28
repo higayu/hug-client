@@ -36,11 +36,8 @@ export default function StaffChildrenUpdateButton({
     console.groupCollapsed(
       `[HUG一括同期] 職員取得データ (${result.fetched_count}件)`,
     );
-    console.log('取得データ:', result);
-    console.log(
-      '取得データ JSON:',
-      JSON.stringify(result, null, 2),
-    );
+    void 0;
+    void 0;
     console.table(result.staff ?? []);
     console.groupEnd();
 
@@ -55,22 +52,16 @@ export default function StaffChildrenUpdateButton({
     console.groupCollapsed(
       `[HUG一括同期] Laravel職員送信データ (${result.fetched_count}件)`,
     );
-    console.log('送信先API:', 'syncHugStaffs');
-    console.log('送信データ:', result);
-    console.log(
-      '送信データ JSON:',
-      JSON.stringify(result, null, 2),
-    );
+    void 0;
+    void 0;
+    void 0;
     console.table(result.staff ?? []);
     console.groupEnd();
 
     const syncResult =
       await window.electronAPI.syncHugStaffs(result);
 
-    console.log(
-      '[HUG一括同期] 職員DB同期結果:',
-      syncResult,
-    );
+    void 0;
 
     return {
       fetchedCount: result.fetched_count ?? 0,
@@ -92,11 +83,8 @@ export default function StaffChildrenUpdateButton({
     console.groupCollapsed(
       `[HUG一括同期] 児童取得データ (${result.children?.length ?? 0}件)`,
     );
-    console.log('取得データ:', result);
-    console.log(
-      '取得データ JSON:',
-      JSON.stringify(result, null, 2),
-    );
+    void 0;
+    void 0;
     console.table(result.children ?? []);
     console.groupEnd();
 
@@ -135,22 +123,16 @@ export default function StaffChildrenUpdateButton({
     console.groupCollapsed(
       `[HUG一括同期] Laravel児童送信データ (${childrenJson.length}件)`,
     );
-    console.log('送信先API:', 'syncHugChildrens');
-    console.log('送信データ:', payload);
-    console.log(
-      '送信データ JSON:',
-      JSON.stringify(payload, null, 2),
-    );
+    void 0;
+    void 0;
+    void 0;
     console.table(childrenJson);
     console.groupEnd();
 
     const syncResult =
       await window.electronAPI.syncHugChildrens(payload);
 
-    console.log(
-      '[HUG一括同期] 児童DB同期結果:',
-      syncResult,
-    );
+    void 0;
 
     const resultData = Array.isArray(syncResult)
       ? syncResult[0]

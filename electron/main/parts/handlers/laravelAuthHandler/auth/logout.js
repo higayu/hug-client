@@ -6,7 +6,7 @@ const handler = async () => {
   try {
     await clearLaravelAuthentication();
 
-    console.log("✅ [Laravel Auth] logout DONE");
+    void 0;
 
     return {
       success: true,

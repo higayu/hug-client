@@ -15,8 +15,8 @@ export async function handleMariaDBInsert(
     priority = 0,
   }
 ) {
-  console.log("====== MariaDB: handleMariaDBInsert START ======");
-  console.log("処理する児童:", child);
+  void 0;
+  void 0;
 
   try {
     // -----------------------------------------
@@ -27,10 +27,10 @@ export async function handleMariaDBInsert(
     const targetWeekId = Number(weekId);
     const targetChildId = Number(child?.children_id);
 
-    console.log("targetFacilityId:", targetFacilityId);
-    console.log("targetStaffId:", targetStaffId);
-    console.log("targetWeekId:", targetWeekId);
-    console.log("targetChildId:", targetChildId);
+    void 0;
+    void 0;
+    void 0;
+    void 0;
 
     if (!Number.isFinite(targetFacilityId)) {
       console.warn("⚠️ MariaDB: facility_id が不正です", {
@@ -86,29 +86,26 @@ export async function handleMariaDBInsert(
         leaving_at: child.leaving_at ?? null,
       };
 
-      console.log("📡 mariadb_children_insert:", childPayload);
+      void 0;
 
       await window.electronAPI.mariadb_children_insert(childPayload);
 
-      console.log("✅ MariaDB: children_insert 完了");
+      void 0;
 
       const facilityPayload = {
         children_id: targetChildId,
         facility_id: targetFacilityId,
       };
 
-      console.log("📡 mariadb_facility_children_insert:", facilityPayload);
+      void 0;
 
       await window.electronAPI.mariadb_facility_children_insert(
         facilityPayload
       );
 
-      console.log("✅ MariaDB: facility_children_insert 完了");
+      void 0;
     } else {
-      console.log(
-        "ℹ️ MariaDB: 児童は既に children テーブルに存在:",
-        targetChildId
-      );
+      void 0;
     }
 
     // ----------------------------------
@@ -130,17 +127,17 @@ export async function handleMariaDBInsert(
       support_end_time: child.support_end_time ?? null,
     };
 
-    console.log("📡 mariadb_managers2_insert:", payload);
+    void 0;
 
     await window.electronAPI.mariadb_managers2_insert(payload);
 
-    console.log("✅ MariaDB: managers2_insert 完了");
+    void 0;
 
     return true;
   } catch (error) {
     console.error("❌ MariaDB: managers2_insert エラー:", error);
     return false;
   } finally {
-    console.log("====== MariaDB: handleMariaDBInsert END ======");
+    void 0;
   }
 }

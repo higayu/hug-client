@@ -15,13 +15,13 @@ import { handleLaravelUpdate } from "./parts/laravel.js";
  * @returns {Promise<boolean>}
  */
 export async function updateManager(selectedChildren, databaseType) {
-  console.log("===== 更新Manager START =====");
-  console.log("databaseType:", databaseType);
-  console.log("selectedChildren:", selectedChildren);
+  void 0;
+  void 0;
+  void 0;
 
   if (!databaseType) {
     console.warn("⚠️ databaseType が設定されていません");
-    console.log("===== 更新停止Manager END (error: no databaseType) =====");
+    void 0;
     return false;
   }
 
@@ -71,38 +71,38 @@ export async function updateManager(selectedChildren, databaseType) {
 
     if (updateTargets.length === 0) {
       console.warn("⚠️ 更新対象がありません");
-      console.log("===== 更新Manager END (error: empty updateTargets) =====");
+      void 0;
       return false;
     }
 
-    console.log("→ 使用DB:", dbLabel);
-    console.log("更新対象件数:", updateTargets.length);
-    console.log("更新対象:", updateTargets);
+    void 0;
+    void 0;
+    void 0;
 
     // =============================================================
     // 1件ずつ更新
     // =============================================================
     for (const target of updateTargets) {
-      console.log("-------------------------------------------");
-      console.log("▶ managers2 更新開始:", target);
+      void 0;
+      void 0;
 
       const result = await updateHandler(target);
 
       if (!result) {
         console.error("❌ managers2 更新失敗:", target);
-        console.log("===== 更新Manager END (failed) =====");
+        void 0;
         return false;
       }
 
-      console.log("✔ managers2 更新完了:", target);
-      console.log("-------------------------------------------");
+      void 0;
+      void 0;
     }
 
-    console.log("===== 更新Manager END (success) =====");
+    void 0;
     return true;
   } catch (error) {
     console.error("❌ updateManager エラー:", error);
-    console.log("===== 更新Manager END (failed) =====");
+    void 0;
     return false;
   }
 }

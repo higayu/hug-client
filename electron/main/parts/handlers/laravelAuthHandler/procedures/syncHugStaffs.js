@@ -5,7 +5,7 @@ const { executeAuthenticatedOperation } = require("../auth/authenticated");  // 
 const { formatError, unwrapData } = require("../auth/utils");
 
 async function syncHugStaffs(payload = {}) {
-  console.log("📤 [Laravel Procedure] syncHugStaffs:", payload);
+  void 0;
 
   const result = await executeAuthenticatedOperation(
     () => laravelApiClient.syncHugStaffs(payload),
@@ -31,12 +31,12 @@ async function syncHugStaffs(payload = {}) {
 
 const handler = async (_event, payload = {}) => {
   try {
-    console.log("📤 [Laravel Procedure] IPC syncHugStaffs:", payload);
+    void 0;
 
     const result = await syncHugStaffs(payload);
 
     if (result.success) {
-      console.log("✅ [Laravel Procedure] syncHugStaffs DONE:", result.data);
+      void 0;
     } else {
       console.error("❌ [Laravel Procedure] syncHugStaffs failed:", result);
     }

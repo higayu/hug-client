@@ -48,7 +48,7 @@ function updateBaseURL() {
 
   axiosInstance.defaults.baseURL = baseURL;
 
-  console.log("🔧 [apiClient] SQL baseURL:", axiosInstance.defaults.baseURL);
+  void 0;
 
   return axiosInstance.defaults.baseURL;
 }
@@ -85,7 +85,7 @@ const apiClient = {
     const healthURL = getHealthURL();
 
     try {
-      console.log("🔍 [apiClient] health check:", healthURL);
+      void 0;
 
       const res = await healthAxiosInstance.get(healthURL);
 

@@ -66,7 +66,7 @@ async function callGemini(messages: AiMessage[], model: string, apiKey: string) 
 
 export async function callAi(messages: AiMessage[]) {
   const { provider, model, ollamaBaseUrl, geminiApiKey } = getAiSettings();
-  console.log(`[AI] provider=${provider}, model=${model}`);
+  void 0;
 
   if (provider === 'gemini') {
     return callGemini(messages, model, geminiApiKey);

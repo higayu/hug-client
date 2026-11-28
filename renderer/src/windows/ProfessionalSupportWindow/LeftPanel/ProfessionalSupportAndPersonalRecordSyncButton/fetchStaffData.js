@@ -738,14 +738,7 @@ export async function fetchStaffData(
     config?.request?.url ||
     HUG_WM_POST_URL
 
-  console.log(
-    '[fetchStaffData] 検索開始',
-    {
-      facilityId,
-      requestUrl,
-      postParams,
-    },
-  )
+  void 0
 
   /*
    * ==========================================
@@ -855,16 +848,7 @@ export async function fetchStaffData(
       calculatedPageCount,
     )
 
-  console.log(
-    '[fetchStaffData] ページ情報',
-    {
-      totalCount,
-      firstPageSize,
-      visibleMaxPage,
-      calculatedPageCount,
-      pageCount,
-    },
-  )
+  void 0
 
   /*
    * ==========================================
@@ -921,15 +905,7 @@ export async function fetchStaffData(
         pageResult.url,
     })
 
-    console.log(
-      `[fetchStaffData] page=${page}/${pageCount}`,
-      {
-        pageRowCount:
-          pageResult.rows.length,
-        accumulated:
-          staff.length,
-      },
-    )
+    void 0
 
     onProgress?.(
       page,
@@ -1003,17 +979,7 @@ export async function fetchStaffData(
     )
   }
 
-  console.log(
-    '[fetchStaffData] 取得完了',
-    {
-      totalCount,
-      rawFetchedCount,
-      fetchedCount:
-        staff.length,
-      pageCount,
-      pageDebug,
-    },
-  )
+  void 0
 
   return {
     total_count:

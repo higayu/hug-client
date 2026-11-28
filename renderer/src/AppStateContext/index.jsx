@@ -156,55 +156,25 @@ export function AppStateProvider({
       '[AppStateContext] render/state snapshot'
     )
 
-    console.log(
-      'isInitialized:',
-      isInitialized
-    )
+    void 0
 
-    console.log(
-      'redux.DATABASE_TYPE:',
-      redux.DATABASE_TYPE
-    )
+    void 0
 
-    console.log(
-      'redux.USE_AI:',
-      redux.USE_AI
-    )
+    void 0
 
-    console.log(
-      'redux.STAFF_ID:',
-      redux.STAFF_ID
-    )
+    void 0
 
-    console.log(
-      'redux.FACILITY_ID:',
-      redux.FACILITY_ID
-    )
+    void 0
 
-    console.log(
-      'redux.DEBUG_FLG:',
-      redux.DEBUG_FLG
-    )
+    void 0
 
-    console.log(
-      'redux.CURRENT_MODE:',
-      redux.CURRENT_MODE
-    )
+    void 0
 
-    console.log(
-      'redux.CURRENT_SELECTED_ITEM_ID:',
-      redux.CURRENT_SELECTED_ITEM_ID
-    )
+    void 0
 
-    console.log(
-      'redux.AI_INQUIRY_SELECTED_ITEM_ID:',
-      redux.AI_INQUIRY_SELECTED_ITEM_ID
-    )
+    void 0
 
-    console.log(
-      'iniState.apiSettings:',
-      iniState?.apiSettings
-    )
+    void 0
 
     console.groupEnd()
   }, [
@@ -234,10 +204,7 @@ export function AppStateProvider({
         const iniData =
           await loadIniFromUtils()
 
-        console.log(
-          '[AppStateContext/loadIni] 読み込んだiniData:',
-          iniData
-        )
+        void 0
 
         if (!iniData) {
           console.warn(
@@ -302,10 +269,7 @@ export function AppStateProvider({
               source.apiSettings ?? {},
           })
 
-        console.log(
-          '[AppStateContext/saveIni] 保存結果:',
-          result
-        )
+        void 0
 
         return result
       } catch (error) {
@@ -333,15 +297,9 @@ export function AppStateProvider({
         '[AppStateContext/updateIniSetting] START'
       )
 
-      console.log(
-        'path:',
-        path
-      )
+      void 0
 
-      console.log(
-        'value:',
-        value
-      )
+      void 0
 
       try {
         const result =
@@ -518,17 +476,7 @@ export function AppStateProvider({
       hasFacilityId &&
       reduxFacilityId !== iniFacilityId
     ) {
-      console.log(
-        '[FacilitySync/AppStateProvider] 施設ID差分を検出',
-        {
-          rawIniFacilityId:
-            apiSettings.facilityId,
-          currentFacilityId:
-            redux.FACILITY_ID,
-          nextFacilityId:
-            iniFacilityId,
-        }
-      )
+      void 0
 
       updates.FACILITY_ID =
         iniFacilityId
@@ -1009,7 +957,7 @@ export function AppStateProvider({
   const loadWebAutomationRules = useCallback(
     async ({ category } = {}) => {
       console.group('[AppStateContext/loadWebAutomationRules]')
-      console.log('category:', category)
+      void 0
 
       dispatch(setWebAutomationRulesLoading(true))
 

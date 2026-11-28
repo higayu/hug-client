@@ -18,16 +18,13 @@ function createMainWindow() {
   );
 
   // 起動時確認ログ
-  console.log("[main/window] __dirname =", __dirname);
-  console.log("[main/window] app.getAppPath() =", app.getAppPath());
-  console.log("[main/window] app.isPackaged =", app.isPackaged);
-  console.log("[main/window] preloadPath =", preloadPath);
-  console.log("[main/window] preload exists =", fs.existsSync(preloadPath));
-  console.log("[main/window] rendererDistPath =", rendererDistPath);
-  console.log(
-    "[main/window] renderer dist exists =",
-    fs.existsSync(rendererDistPath)
-  );
+  void 0;
+  void 0;
+  void 0;
+  void 0;
+  void 0;
+  void 0;
+  void 0;
 
   const hasProdFlag =
     process.argv.includes("--prod") ||
@@ -68,9 +65,9 @@ function createMainWindow() {
     },
   });
 
-  console.log("[main/window] preload dev API enabled =", enableDevDiagnostics);
+  void 0;
 
-  console.log("[main/window] isDev =", isDev);
+  void 0;
 
   if (isDev) {
     // 開発環境: Vite 開発サーバー

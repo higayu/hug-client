@@ -183,20 +183,7 @@ export async function runAttendanceUpdate({
         );
 
       if (!silent) {
-        console.log(
-          "[ATTENDANCE V2] 更新反映確認",
-          {
-            attempt,
-            maxAttempts,
-            targetChildrenId,
-            action,
-            reflected,
-            column5:
-              targetRow?.column5,
-            column6:
-              targetRow?.column6,
-          }
-        );
+        void 0;
       }
 
       if (reflected) {
@@ -319,14 +306,7 @@ export async function runAttendanceUpdate({
   }
 
   if (!silent) {
-    console.log(
-      "[ATTENDANCE V2] runAttendanceUpdate 完了",
-      {
-        rowCount:
-          extracted?.rowCount,
-        reflected,
-      }
-    );
+    void 0;
   }
 
   return {

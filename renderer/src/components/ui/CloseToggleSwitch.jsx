@@ -16,12 +16,12 @@ function CloseToggleSwitch({
 }) {
 
   useEffect(() => {
-    console.log('🔘 [CloseToggleSwitch] mounted:', { checked })
+    void 0
   }, [])
 
   const handleChange = (e) => {
     const next = e.target.checked
-    console.log('🔘 [CloseToggleSwitch] changed:', next)
+    void 0
     onChange?.(next)
   }
 
