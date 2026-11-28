@@ -17,7 +17,7 @@ function OfflineProfessionalSupport({ record, facilityId, appState, busy, onOpen
   return <ProfessionalSupportManagerPanel
     {...supportPanelData}
     facilityId={facilityId}
-    staffId={record.updated_staff_id}
+    staffId={record.professional_staff_id}
     currentYmd={record.date}
     selectedChildId={record.childId}
     selectedChildName={record.childName}
@@ -38,7 +38,7 @@ function OfflineProfessionalSupport({ record, facilityId, appState, busy, onOpen
   />
 }
 
-function OfflineRecordContent({ FACILITY_ID, dbChildren = [], dbFacilityChildren = [], iniState, appState, STAFF_ID }) {
+function OfflineRecordContent({ FACILITY_ID, dbChildren = [], dbFacilityChildren = [], iniState, appState, STAFF_ID, dbStaffs = [] }) {
   const enabled = iniState?.appSettings?.features?.offlineRecords?.enabled !== false
   const [open, setOpen] = useState(false)
   const [records, setRecords] = useState([])
@@ -73,14 +73,14 @@ function OfflineRecordContent({ FACILITY_ID, dbChildren = [], dbFacilityChildren
 
   function change(record, key, value) {
     setDrafts(previous => ({ ...previous, [record.id]: {
-      ...record, updated_staff_id: Number(STAFF_ID), [key]: value, ...(key !== 'transferred' ? { transferred: false } : {}),
+      ...record, [key]: value, ...(key !== 'transferred' ? { transferred: false } : {}),
     } }))
     setMessage('')
   }
   function addRecord() {
     const child = children.find(child => String(child.id) === selectedChildId)
     if (!child || allRows.some(record => String(record.childId) === String(child.id))) return
-    const record = { ...blank(selectedDate), childId: child.id, childName: child.name, updated_staff_id: Number(STAFF_ID) }
+    const record = { ...blank(selectedDate), childId: child.id, childName: child.name, personal_staff_id: Number(STAFF_ID), professional_staff_id: Number(STAFF_ID) }
     setDrafts(previous => {
       // 連続した追加操作でも、最新の未保存行を確認して重複を防ぐ。
       if (Object.values(previous).some(draft => String(draft.childId) === String(child.id) && draft.date === selectedDate)) return previous
@@ -132,8 +132,8 @@ function OfflineRecordContent({ FACILITY_ID, dbChildren = [], dbFacilityChildren
     finally { setBusy(false) }
   }
   function exportCsv() {
-    const rows = [['施設ID', '児童名', '日付', '入室', '退室', '個人記録', '専門的支援加算の記録', 'HUG転記', '作成職員ID', '記録ID'],
-      ...records.map(r => [r.facility_id, r.childName, r.date, r.enteredAt, r.leftAt, r.personalNote, r.professionalNote, r.transferred ? '転記済み' : '未転記', r.created_staff_id, r.id])]
+    const rows = [['施設ID', '児童名', '日付', '入室', '退室', '個人記録', '専門的支援加算の記録', 'HUG転記', '作成職員ID', '個人記録職員ID', '専門的支援加算職員ID', '記録ID'],
+      ...records.map(r => [r.facility_id, r.childName, r.date, r.enteredAt, r.leftAt, r.personalNote, r.professionalNote, r.transferred ? '転記済み' : '未転記', r.created_staff_id, r.personal_staff_id, r.professional_staff_id, r.id])]
     const csv = rows.map(row => row.map(value => {
       const text = String(value ?? '')
       return `"${(/^[=+@\-\t\r\n]/.test(text) ? "'" + text : text).replaceAll('"', '""')}"`
@@ -231,7 +231,7 @@ function OfflineRecordContent({ FACILITY_ID, dbChildren = [], dbFacilityChildren
                             currentYmd={record.date}
                             initialContents={record.personalNote}
                             facilityId={FACILITY_ID}
-                            staffId={record.updated_staff_id}
+                            staffId={record.personal_staff_id}
                             onOpened={() => setOpen(false)}
                             onError={cause => setError(cause.message || String(cause))}
                             disabled={busy || loading}
@@ -248,6 +248,13 @@ function OfflineRecordContent({ FACILITY_ID, dbChildren = [], dbFacilityChildren
                           <input type="time" className={field} aria-label={`${record.childName}の${index === 0 ? '入室' : '退室'}時刻`} value={record[key]} disabled={busy} onChange={event => change(record, key, event.target.value)} />
                         </td>)}
                         {['personalNote', 'professionalNote'].map((key, index) => <td key={key} className="min-w-[240px] border border-slate-300 p-2">
+                          <label className="mb-2 flex flex-col gap-1">
+                            {index === 0 ? '個人記録の職員' : '専門的支援加算の職員'}
+                            <select className={field} aria-label={`${record.childName}の${index === 0 ? '個人記録' : '専門的支援加算'}の職員`} value={record[index === 0 ? 'personal_staff_id' : 'professional_staff_id'] ?? ''} disabled={busy} onChange={event => change(record, index === 0 ? 'personal_staff_id' : 'professional_staff_id', Number(event.target.value))}>
+                              <option value="" disabled>職員を選択してください</option>
+                              {dbStaffs.map(staff => <option key={staff.id} value={staff.id}>{staff.name}</option>)}
+                            </select>
+                          </label>
                           {key === 'professionalNote' && <div className="mb-2">
                             <OfflineProfessionalSupport record={record} facilityId={FACILITY_ID} appState={appState} busy={busy || loading} onOpened={() => setOpen(false)} />
                           </div>}

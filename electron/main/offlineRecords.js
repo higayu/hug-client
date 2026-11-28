@@ -3,9 +3,9 @@ const { executeAuthenticatedOperation } = require('./parts/handlers/laravelAuthH
 
 function registerOfflineRecords(ipcMain) {
   const operations = {
-    list: payload => client.get('/hug-outage-records', { params: payload }),
-    save: payload => client.post('/hug-outage-records', payload),
-    deleteTransferred: payload => client.post('/hug-outage-records/delete-transferred', payload),
+    list: payload => client.listHugOutageRecords(payload),
+    save: payload => client.saveHugOutageRecord(payload),
+    deleteTransferred: payload => client.deleteTransferredHugOutageRecords(payload),
   };
   for (const [action, operation] of Object.entries(operations)) {
     ipcMain.handle(`offline-records:${action}`, (_event, payload) =>

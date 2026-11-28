@@ -482,6 +482,23 @@ function prepareRequest() {
 }
 
 const laravelApiClient = {
+  // HUG停止中の共有記録。2種類の担当職員IDを含むpayloadをそのまま送る。
+  listHugOutageRecords: async (scope) => {
+    prepareRequest();
+    const response = await laravelAxiosInstance.get('/hug-outage-records', { params: scope });
+    return response.data;
+  },
+  saveHugOutageRecord: async (record) => {
+    prepareRequest();
+    const response = await laravelAxiosInstance.post('/hug-outage-records', record);
+    return response.data;
+  },
+  deleteTransferredHugOutageRecords: async (payload) => {
+    prepareRequest();
+    const response = await laravelAxiosInstance.post('/hug-outage-records/delete-transferred', payload);
+    return response.data;
+  },
+
   /**
    * Laravel APIのbaseURLを更新する。
    */
