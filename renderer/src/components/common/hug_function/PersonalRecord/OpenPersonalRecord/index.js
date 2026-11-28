@@ -9,21 +9,22 @@ import {
 } from '@/hooks/useTabs/common/index.js'
 
 import { executeFlowV2 } from "@/components/WebAutomationV2/executeFlowV2"
+import { loadTempNote } from '@/hooks/useNote/noteUtils.js'
 import { mountPersonalRecordControls } from './PersonalRecordModal.jsx'
 
-export function addPersonalRecordTabAction4(appState, space) {
+export async function addPersonalRecordTabAction4(appState, space) {
   if (!space?.childId) {
     alert('子どもを選択してください')
     return
   }
 
   const memoContext = {
-    STAFF_ID: appState.STAFF_ID,
-    FACILITY_ID: appState.FACILITY_ID,
+    STAFF_ID: space.staffId ?? appState.STAFF_ID,
+    FACILITY_ID: space.facilityId ?? appState.FACILITY_ID,
     CURRENT_DAY_OF_WEEK: { ...appState.CURRENT_DAY_OF_WEEK },
     DATABASE_TYPE: appState.DATABASE_TYPE,
   }
-  const recordDate = appState.CURRENT_YMD
+  const recordDate = space.currentYmd ?? appState.CURRENT_YMD
 
   const tabsContainer = document.getElementById('tabs')
   const webviewContainer = document.getElementById('webview-panel-content')
@@ -33,8 +34,21 @@ export function addPersonalRecordTabAction4(appState, space) {
     return
   }
 
+  // 本文未指定の既存呼び出しだけ、一時メモを呼び出し側で解決する。
+  let initialContents = space.initialContents
+  if (initialContents === undefined) {
+    try {
+      const note = { value: { memo1: '', memo2: '' } }
+      await loadTempNote(space.childId, note, memoContext, { throwOnError: true })
+      initialContents = note.value.memo1 ?? ''
+    } catch (error) {
+      alert('一時メモの取得に失敗しました: ' + error.message)
+      return
+    }
+  }
+
   const newId =
-    `hugview-${appState.CURRENT_YMD}-${document.querySelectorAll('webview').length}`
+    `hugview-${recordDate}-${document.querySelectorAll('webview').length}`
 
   const newWebview = createWebview(
     newId,
@@ -76,14 +90,15 @@ export function addPersonalRecordTabAction4(appState, space) {
   newWebview.addEventListener('did-finish-load', async () => {
     try {
       const result = await executeFlowV2('personal_record_dom_edit', {
-        action: 'open', currentYmd: recordDate, staffId: memoContext.STAFF_ID,
-        childId: space.childId,
+        action: 'open', currentYmd: recordDate, staffId: memoContext.STAFF_ID, facilityId: memoContext.FACILITY_ID,
+        childId: space.childId, initialContents,
       }, { webview: newWebview })
       if (!result?.found) throw new Error('記録欄が見つかりません')
       if (!newWebview.isConnected) return
-      controls = mountPersonalRecordControls(newWebview, space.childName, space.childId, recordDate, true, memoContext)
+      controls = mountPersonalRecordControls(newWebview, space.childName, space.childId, recordDate, true, memoContext, initialContents)
     } catch (error) { alert('個人記録の初期設定に失敗しました: ' + error.message) }
   }, { once: true })
 
   activateTab(newId)
+  return { webview: newWebview, id: newId }
 }

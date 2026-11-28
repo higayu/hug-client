@@ -12,6 +12,7 @@ import {
 import './index.css'
 
 import { useSettingsModal } from './useSettingsModal'
+import OfflineTab from './tabs/OfflineTab'
 
 import {
   ApiTab,
@@ -37,6 +38,11 @@ const DEFAULT_TAB_ID = 'api'
 
 // ベースとなるタブ（常に表示）
 const BASE_TABS = [
+  {
+    id: 'offline',
+    label: 'サーバ停止中の機能',
+    component: OfflineTab,
+  },
   {
     id: 'api',
     label: 'API設定',

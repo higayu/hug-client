@@ -36,9 +36,13 @@ export default function ProfessionalSupportManagerPanel({
   selectedChildId,
   selectedChildName = '',
   professionalPlanNotes = '',
+  initialContents,
+  onOpened,
   staffId,
   enterTime = '',
   leaveTime = '',
+  initialStartTime,
+  initialEndTime,
   onOpenProfessionalSupportList = null,
   isAbsent = false,
   hasEntered = false,
@@ -70,6 +74,11 @@ export default function ProfessionalSupportManagerPanel({
 
 
   const childId = selectedChildId ? String(selectedChildId) : ''
+  // 明示的な空文字も尊重し、別の児童の時刻へフォールバックしない。
+  const startTime = initialStartTime ?? enterTime
+  const endTime = initialEndTime ?? leaveTime
+  const canUseStartTime = initialStartTime !== undefined ? Boolean(startTime) : hasEntered
+  const canUseEndTime = initialEndTime !== undefined ? Boolean(endTime) : hasExited
   const dateStr = currentYmd || ''
   const resolvedFacilityId = facilityId ?? ''
   const { loadTemp } = useNote()
@@ -139,8 +148,8 @@ export default function ProfessionalSupportManagerPanel({
     isStop ||
     Boolean(loadingAction) ||
     isAbsent ||
-    !hasEntered ||
-    !hasExited ||
+    !canUseStartTime ||
+    !canUseEndTime ||
     linkedLoading ||
     plusLoading ||
     !childId ||
@@ -226,15 +235,20 @@ export default function ProfessionalSupportManagerPanel({
     setPostModalPreparing(true)
     setLinkedLoading(true)
     try {
-      let note = { memo1: '', memo2: '' }
-      const proxy = { get value() { return note }, set value(v) { note = v || {} } }
-      await loadTemp(childId, proxy)
-      addProfessionalSupportTabAction(store.getState().appState, {
+      let contents = initialContents
+      if (contents === undefined) {
+        let note = { memo1: '', memo2: '' }
+        const proxy = { get value() { return note }, set value(v) { note = v || {} } }
+        await loadTemp(childId, proxy)
+        contents = note.memo2 || ''
+      }
+      const tab = addProfessionalSupportTabAction(store.getState().appState, {
         childId, childName: selectedChildName, facilityId: resolvedFacilityId,
-        staffId, dateStr, startTime: enterTime, endTime: leaveTime,
-        contents: note.memo2 || '', professionalPlanNotes,
+        staffId, dateStr, startTime, endTime,
+        contents, professionalPlanNotes,
       })
       setAction('idle', 'HUGタブで編集・保存してください')
+      if (tab) onOpened?.(tab)
     } catch (error) {
       setAction('error', error?.message || String(error))
     } finally { setPostModalPreparing(false); setLinkedLoading(false) }
@@ -242,8 +256,8 @@ export default function ProfessionalSupportManagerPanel({
 
   const getLinkedTitle = () => {
     if (isAbsent) return '欠席のため専門的支援は使用できません'
-    if (!hasEntered) return '入室後・退室後に使用できます'
-    if (!hasExited) return '退室後に使用できます'
+    if (!canUseStartTime) return '入室後・退室後に使用できます'
+    if (!canUseEndTime) return '退室後に使用できます'
     if (!isUIEnabled || isStop) return '現在操作できません'
     if (loadingAction) return '他の処理中のため使用できません'
     if (!childId) return '児童が選択されていません'

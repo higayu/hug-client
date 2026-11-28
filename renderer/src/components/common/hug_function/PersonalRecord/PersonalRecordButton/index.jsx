@@ -10,6 +10,11 @@ export default function PersonalRecordButton({
   selectedChildId = '',
   selectedChildName = '',
   currentYmd = '',
+  initialContents,
+  facilityId,
+  staffId,
+  onOpened,
+  onError,
   ...buttonProps
 }) {
   const { appState } = useAppState();
@@ -17,7 +22,7 @@ export default function PersonalRecordButton({
     ? String(selectedChildId)
     : '';
 
-  const handleClick = useCallback(() => {
+  const handleClick = useCallback(async () => {
     if (!childId) {
       console.warn(
         '[PersonalRecordButton] 選択児童IDを取得できません',
@@ -26,24 +31,32 @@ export default function PersonalRecordButton({
       return;
     }
 
-    console.log(
-      '[PersonalRecordButton] 個人記録を開きます',
-      {
-        childId,
-        childName: selectedChildName,
-      }
-    );
+    void 0;
 
-    openPersonalRecordTab({
-      appState,
-      selectedChildId: childId,
-      selectedChildName,
-      currentYmd,
-    });
+    try {
+      const tab = await openPersonalRecordTab({
+        appState,
+        selectedChildId: childId,
+        selectedChildName,
+        currentYmd,
+        initialContents,
+        facilityId,
+        staffId,
+      });
+      if (tab) onOpened?.(tab);
+    } catch (error) {
+      if (onError) onError(error);
+      else alert(error.message || String(error));
+    }
   }, [
     appState,
     childId,
     currentYmd,
+    initialContents,
+    facilityId,
+    staffId,
+    onOpened,
+    onError,
     selectedChildId,
     selectedChildName,
   ]);

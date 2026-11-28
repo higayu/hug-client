@@ -7,7 +7,6 @@ import PlanNotesPanel from '@/components/common/hug_function/Plan/PlanNotesPanel
 import { fetchPersonSupportPlan } from '@/components/common/hug_function/Plan/PersonSupportPlan/function'
 import { selectChildren, setAllTables } from '@/store/slices/databaseSlice'
 import { laravelApi } from '@/hooks/useDataBase/sql/laravelApi'
-import { loadTempNote } from '@/hooks/useNote/noteUtils.js'
 import {
   isPersonalRecordEditPage,
   readPersonalRecord,
@@ -47,7 +46,13 @@ function findIndividualPlan(childId) {
   return typeof child?.notes === 'string' ? child.notes : ''
 }
 
-function PersonalRecordControls({ webview, childName, childId, date, initialOpen, memoContext }) {
+function PersonalRecordControls({ webview, childName, childId, date, initialOpen, memoContext, initialContents }) {
+  // 開いた記録の対象を保持し、後から切り替わった画面の選択値に依存しない。
+  const recordContext = {
+    childId, currentYmd: date,
+    facilityId: memoContext?.FACILITY_ID,
+    staffId: memoContext?.STAFF_ID,
+  }
   const [open, setOpen] = useState(false)
   const [value, setValue] = useState('')
   const [original, setOriginal] = useState('')
@@ -71,7 +76,7 @@ function PersonalRecordControls({ webview, childName, childId, date, initialOpen
     setPlanBusy(true)
     setPlanError('')
     try {
-      const facilityId = store.getState().appState?.FACILITY_ID || memoContext?.FACILITY_ID
+      const facilityId = memoContext?.FACILITY_ID || store.getState().appState?.FACILITY_ID
       if (!facilityId) throw new Error('施設IDを取得できません')
       const markdown = await fetchPersonSupportPlan({
         facilityId,
@@ -95,11 +100,9 @@ function PersonalRecordControls({ webview, childName, childId, date, initialOpen
     setMessage('')
     try {
       if (!isPersonalRecordEditPage(webview)) throw new Error('個人記録の編集画面ではありません')
-      const result = await readPersonalRecord(webview)
+      const result = await readPersonalRecord(webview, recordContext)
       if (!result?.found) throw new Error('個人記録の入力欄が見つかりません')
-      const note = { value: { memo1: '', memo2: '' } }
-      await loadTempNote(childId, note, memoContext, { throwOnError: true })
-      const aiText = note.value.memo1 ?? ''
+      const aiText = initialContents
       setValue(result.value)
       setAiValue(aiText ?? '')
       setOriginal(result.value)
@@ -119,7 +122,7 @@ function PersonalRecordControls({ webview, childName, childId, date, initialOpen
     try {
       if (!isPersonalRecordEditPage(webview)) throw new Error('編集画面が切り替わっています')
       const finalText = buildPersonalRecordText(value, aiValue, saveMode, hasInitialRecord)
-      const result = await writePersonalRecord(webview, finalText)
+      const result = await writePersonalRecord(webview, finalText, recordContext)
       if (!result?.ok) throw new Error(result?.message || '入力に失敗しました')
       setOriginal(finalText)
       setOpen(false)
@@ -140,11 +143,11 @@ function PersonalRecordControls({ webview, childName, childId, date, initialOpen
       if (!isPersonalRecordEditPage(webview)) throw new Error('編集画面が切り替わっています')
       if (open) {
         const finalText = buildPersonalRecordText(value, aiValue, saveMode, hasInitialRecord)
-        const result = await writePersonalRecord(webview, finalText)
+        const result = await writePersonalRecord(webview, finalText, recordContext)
         if (!result?.ok) throw new Error(result?.message || '入力に失敗しました')
         setOriginal(finalText)
       }
-      const result = await clickPersonalRecordDraft(webview)
+      const result = await clickPersonalRecordDraft(webview, recordContext)
       if (!result?.ok) throw new Error(result?.message || '保存ボタンを押せませんでした')
       setOpen(false)
       setMessage('下書き保存ボタンを押しました。保存結果はWebViewで確認してください。')
@@ -224,7 +227,7 @@ function PersonalRecordControls({ webview, childName, childId, date, initialOpen
                   </label>
                   <label className="flex items-center gap-2">
                     <input type="radio" name="personal-record-save-mode" value="overwrite" checked={saveMode === 'overwrite'} onChange={() => setSaveMode('overwrite')} />
-                    上書き（一時メモの内容に置換）
+                    上書き（渡された記録の内容に置換）
                   </label>
                 </div>
               </fieldset>
@@ -232,9 +235,9 @@ function PersonalRecordControls({ webview, childName, childId, date, initialOpen
             <p className="text-sm text-slate-600">
               {hasInitialRecord
                 ? saveMode === 'overwrite'
-                  ? '上書きでは保存済み記録を使わず、一時メモ１の内容で置き換えます。'
-                  : '追記では既存記録と一時メモ１を改行2つで結合します。'
-                : '新しい個人記録として一時メモ１の内容を入力します。'}
+                  ? '上書きでは保存済み記録を使わず、呼び出し元の記録の内容で置き換えます。'
+                  : '追記では既存記録と呼び出し元の記録を改行2つで結合します。'
+                : '新しい個人記録として呼び出し元の記録の内容を入力します。'}
             </p>
             <div className={`${recordLayoutClass} min-h-0 flex-1 gap-3`}>
               {hasInitialRecord && (
@@ -260,7 +263,7 @@ function PersonalRecordControls({ webview, childName, childId, date, initialOpen
               )}
               <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-1">
                 <div className="flex items-center justify-between gap-2">
-                  <label htmlFor="personal-record-ai" className="text-sm font-semibold text-slate-800">{hasInitialRecord && saveMode === 'overwrite' ? '一時メモ１（上書きする新しい記録）' : hasInitialRecord ? '一時メモ１（追記内容）' : '一時メモ１（記録内容）'}</label>
+                  <label htmlFor="personal-record-ai" className="text-sm font-semibold text-slate-800">{hasInitialRecord && saveMode === 'overwrite' ? '呼び出し元の記録（上書きする新しい記録）' : hasInitialRecord ? '呼び出し元の記録（追記内容）' : '呼び出し元の記録（記録内容）'}</label>
                   <span className="text-xs text-slate-500">日付: {date || '未指定'} / 児童ID: {childId || '未指定'}</span>
                 </div>
                 <textarea
@@ -269,11 +272,11 @@ function PersonalRecordControls({ webview, childName, childId, date, initialOpen
                   value={aiValue}
                   onChange={e => setAiValue(e.target.value)}
                   className="min-h-0 w-full flex-1 resize-none overflow-y-auto rounded-lg border border-slate-300 bg-white p-3 text-sm text-slate-900"
-                  placeholder="保存済みの一時メモ１は空です"
+                  placeholder="保存済みの呼び出し元の記録は空です"
                 />
               </div>
             </div>
-            {(value !== original || aiValue !== '') && <p className="text-xs text-amber-700">{hasInitialRecord && saveMode === 'overwrite' ? '「入力欄に反映」で一時メモ１の内容に置き換えます。' : '「入力欄に反映」で既存記録と一時メモ１を結合します（両方ある場合は改行2つ）。'} モーダルを閉じると未反映編集は破棄されます。</p>}
+            {(value !== original || aiValue !== '') && <p className="text-xs text-amber-700">{hasInitialRecord && saveMode === 'overwrite' ? '「入力欄に反映」で呼び出し元の記録の内容に置き換えます。' : '「入力欄に反映」で既存記録と呼び出し元の記録を結合します（両方ある場合は改行2つ）。'} モーダルを閉じると未反映編集は破棄されます。</p>}
             {message && <p role="alert" className="text-sm text-red-700">{message}</p>}
             <footer className="flex flex-wrap justify-end gap-2">
               <button type="button" onClick={() => setOpen(false)} disabled={busy} className="rounded-lg border px-4 py-2 text-slate-800">キャンセル</button>
@@ -288,7 +291,7 @@ function PersonalRecordControls({ webview, childName, childId, date, initialOpen
 }
 
 // renderer側に単一タブ専用のReactルートを作成します。
-export function mountPersonalRecordControls(webview, childName, childId, date, initialOpen = true, memoContext = store.getState().appState) {
+export function mountPersonalRecordControls(webview, childName, childId, date, initialOpen = true, memoContext = store.getState().appState, initialContents = '') {
   const host = document.createElement('div')
   host.dataset.personalRecordControls = webview.id
   document.body.appendChild(host)
@@ -305,6 +308,6 @@ export function mountPersonalRecordControls(webview, childName, childId, date, i
     if (!webview.isConnected) destroy()
   })
   observer.observe(document.body, { childList: true, subtree: true })
-  root.render(<PersonalRecordControls webview={webview} childName={childName} childId={childId} date={date} initialOpen={initialOpen} memoContext={memoContext} />)
+  root.render(<PersonalRecordControls webview={webview} childName={childName} childId={childId} date={date} initialOpen={initialOpen} memoContext={memoContext} initialContents={initialContents} />)
   return { destroy, open: () => webview.dispatchEvent(new Event('personal-record-open-modal')) }
 }

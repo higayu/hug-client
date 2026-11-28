@@ -4,6 +4,7 @@ import { AppStateProvider } from '@/AppStateContext'
 import Toolbar from './Header/Toolbar'
 import Tabs from './Header/Tabs'
 import MainContent from './MainContent'
+import OfflineRecords from './OfflineRecords'
 
 import { usePreloadPath } from '@/hooks/usePreloadPath'
 import { useActiveWebviewLogger } from '@/hooks/useTabs/useActiveWebviewLogger'
@@ -37,6 +38,7 @@ function MainWindowContent() {
         <Toolbar />
 
         <Tabs />
+        <OfflineRecords />
 
         {/*
          * MainContent

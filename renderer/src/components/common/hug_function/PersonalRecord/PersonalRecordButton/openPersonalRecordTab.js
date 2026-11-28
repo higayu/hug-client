@@ -5,14 +5,21 @@ export function openPersonalRecordTab({
   selectedChildId,
   selectedChildName,
   currentYmd,
+  initialContents,
+  facilityId,
+  staffId,
 }) {
   const nextAppState = {
     ...appState,
     ...(currentYmd ? { CURRENT_YMD: currentYmd } : {}),
   };
 
-  addPersonalRecordTabAction4(nextAppState, {
+  return addPersonalRecordTabAction4(nextAppState, {
     childId: selectedChildId ? String(selectedChildId) : '',
     childName: selectedChildName || '',
+    initialContents,
+    facilityId,
+    staffId,
+    currentYmd,
   });
 }

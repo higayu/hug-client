@@ -17,7 +17,7 @@ export function addProfessionalSupportTabAction(appState, space = {}) {
   tab.querySelector('.close-btn')?.addEventListener('click', async e => { e.stopPropagation(); if (await confirmDialog('このタブを閉じますか？')) { closed=true; controls?.destroy(); closeTab(id) } })
   webview.addEventListener('did-finish-load', async () => {
     if(started || closed) return; started=true
-    try { const initial=await setupProfessionalSupport(webview,data); if(!closed && webview.isConnected) controls=mountProfessionalSupportControls(webview,{...data,...initial,contents:data.contents || initial.contents},tab) }
+    try { const initial=await setupProfessionalSupport(webview,data); if(!closed && webview.isConnected) controls=mountProfessionalSupportControls(webview,{...initial,...data},tab) }
     catch(e) { if(!closed) alert(`専門的支援の初期設定に失敗しました: ${e.message}`) }
   })
   panel.appendChild(webview); tabs.appendChild(tab); activateTab(id)

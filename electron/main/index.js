@@ -55,6 +55,7 @@ registerAppLifecycleHandlers();
 app.whenReady().then(
   async () => {
     try {
+      require('./offlineRecords').registerOfflineRecords(ipcMain);
       console.log(
         "🚀 [main] Electron起動処理開始",
       );
