@@ -54,6 +54,8 @@ export default function EditButton({
   const [startMinute, setStartMinute] = useState('')
   const [endHour, setEndHour] = useState('')
   const [endMinute, setEndMinute] = useState('')
+  const [providingType, setProvidingType] = useState('')
+  const [saveError, setSaveError] = useState('')
 
   const resolvedName = String(name || childName || '').trim()
   const resolvedLocationHref = String(locationHref || editUrl || '').trim()
@@ -75,6 +77,8 @@ export default function EditButton({
     // 編集ボタンを押した時点で先にRenderer側モーダルを表示する。
     // HUG編集画面のGET中はモーダル内で「取得中」を表示する。
     setLoadError('')
+    setSaveError('')
+    setProvidingType('')
     setEditData(null)
     setStartHour('')
     setStartMinute('')
@@ -99,6 +103,7 @@ export default function EditButton({
       setStartMinute(parsed.startMinute ?? '')
       setEndHour(parsed.endHour ?? '')
       setEndMinute(parsed.endMinute ?? '')
+      setProvidingType(parsed.providingType ?? '')
 
       onOpened?.({
         ...result,
@@ -139,6 +144,7 @@ export default function EditButton({
   const handleSave = useCallback(async () => {
     if (isSaving) return
 
+    setSaveError('')
     setIsSaving(true)
 
     try {
@@ -147,10 +153,12 @@ export default function EditButton({
         startMinute,
         endHour,
         endMinute,
+        providingType,
       }
 
       const result = await saveAttendanceEditTimes({
         ...values,
+        expectedRecord: editData,
         webview: editWebview || webview,
       })
 
@@ -182,6 +190,7 @@ export default function EditButton({
         locationHref: resolvedLocationHref,
       })
     } catch (error) {
+      setSaveError(error instanceof Error ? error.message : String(error))
       console.error('[Attendance Edit] 保存失敗:', error)
       onError?.(error)
     } finally {
@@ -193,6 +202,7 @@ export default function EditButton({
     startMinute,
     endHour,
     endMinute,
+    providingType,
     editWebview,
     webview,
     editData,
@@ -229,6 +239,9 @@ export default function EditButton({
         startMinute={startMinute}
         endHour={endHour}
         endMinute={endMinute}
+        providingType={providingType}
+        onProvidingTypeChange={setProvidingType}
+        saveError={saveError}
         onStartHourChange={setStartHour}
         onStartMinuteChange={setStartMinute}
         onEndHourChange={setEndHour}

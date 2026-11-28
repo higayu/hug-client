@@ -65,6 +65,9 @@ export default function AttendanceEditModal({
   startMinute = '',
   endHour = '',
   endMinute = '',
+  providingType = '',
+  onProvidingTypeChange,
+  saveError = '',
   onStartHourChange,
   onStartMinuteChange,
   onEndHourChange,
@@ -89,11 +92,11 @@ export default function AttendanceEditModal({
           className="hug-attendance-edit-modal"
           role="dialog"
           aria-modal="true"
-          aria-label="入退室時間の編集"
+          aria-label="入退室情報の編集"
         >
           <div className="hug-attendance-edit-header">
             <div>
-              <h2>入退室時間の編集</h2>
+              <h2>入退室情報の編集</h2>
               <p>{name || editData?.name || '名前未取得'}</p>
             </div>
 
@@ -141,6 +144,25 @@ export default function AttendanceEditModal({
                   onMinuteChange={onEndMinuteChange}
                   disabled={isSaving}
                 />
+
+                {editData?.providingType && (
+                  <fieldset className="hug-attendance-edit-time-row" disabled={isSaving}>
+                    <legend className="hug-attendance-edit-time-label">提供形態</legend>
+                    <div className="flex flex-wrap gap-4">
+                      {[['1', '放課後'], ['2', '学休日']].map(([value, label]) => (
+                        <label key={value} className="inline-flex items-center gap-2">
+                          <input type="radio" name="attendance-edit-providing-type"
+                            checked={providingType === value}
+                            onChange={() => onProvidingTypeChange?.(value)} />
+                          {label}
+                        </label>
+                      ))}
+                    </div>
+                    {providingType === '9' && <p className="text-sm">現在：基本報酬を算定しない（変更しない場合は維持）</p>}
+                  </fieldset>
+                )}
+                {saveError && <div role="alert" className="mt-2 text-sm text-red-600">{saveError}</div>}
+
               </>
             )}
           </div>
